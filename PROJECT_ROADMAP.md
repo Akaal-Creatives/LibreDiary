@@ -73,8 +73,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create Organization model
 - [x] Create OrganizationMember model with roles
 - [x] Create Page model with hierarchy
-- [ ] Create initial migration
-- [ ] Seed super admin user
+- [x] Create initial migration
+- [x] Seed super admin user
 
 ### 1.3 Frontend Setup (`apps/web`)
 
