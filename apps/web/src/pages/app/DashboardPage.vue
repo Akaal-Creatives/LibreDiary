@@ -40,7 +40,21 @@ function createNewPage() {
       <div class="actions-grid">
         <button class="action-card" @click="createNewPage">
           <div class="action-icon-wrapper">
-            <span class="action-icon">✏️</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 21L7.5 17.5M7.5 17.5L16 9C16.9 8.1 18.4 8.1 19.3 9C20.2 9.9 20.2 11.4 19.3 12.3L10.8 20.8H7.5V17.5Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M14.5 10.5L17.5 13.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
           </div>
           <div class="action-content">
             <h3>New Page</h3>
@@ -61,7 +75,19 @@ function createNewPage() {
 
         <button class="action-card">
           <div class="action-icon-wrapper">
-            <span class="action-icon">📋</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect
+                x="4"
+                y="4"
+                width="16"
+                height="16"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M4 9H20" stroke="currentColor" stroke-width="1.5" />
+              <path d="M9 9V20" stroke="currentColor" stroke-width="1.5" />
+            </svg>
           </div>
           <div class="action-content">
             <h3>Templates</h3>
@@ -82,7 +108,22 @@ function createNewPage() {
 
         <button class="action-card">
           <div class="action-icon-wrapper">
-            <span class="action-icon">📥</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 4V14M12 14L8 10M12 14L16 10"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M4 17V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V17"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </div>
           <div class="action-content">
             <h3>Import</h3>
@@ -116,7 +157,24 @@ function createNewPage() {
           class="page-card"
           @click="navigateToPage(page.id)"
         >
-          <div class="page-card-icon">{{ page.icon ?? '📄' }}</div>
+          <div class="page-card-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M4 3H12L16 7V17C16 17.5523 15.5523 18 15 18H5C4.44772 18 4 17.5523 4 17V4C4 3.44772 4.44772 3 5 3Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 3V7H16"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
           <div class="page-card-content">
             <h4 class="page-card-title">{{ page.title }}</h4>
             <p class="page-card-meta">Edited recently</p>
@@ -129,7 +187,28 @@ function createNewPage() {
     <section v-else class="empty-section">
       <div class="empty-state">
         <div class="empty-illustration">
-          <span class="empty-icon">📝</span>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path
+              d="M8 6H24L32 14V34C32 35.1046 31.1046 36 30 36H10C8.89543 36 8 35.1046 8 34V8C8 6.89543 8.89543 6 10 6Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M24 6V14H32"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M14 22H26M14 28H22"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
         </div>
         <h3 class="empty-title">Your workspace is empty</h3>
         <p class="empty-description">
@@ -253,12 +332,9 @@ function createNewPage() {
   justify-content: center;
   width: 48px;
   height: 48px;
+  color: var(--color-accent);
   background: var(--color-accent-subtle);
   border-radius: var(--radius-lg);
-}
-
-.action-icon {
-  font-size: 1.5rem;
 }
 
 .action-content {
@@ -282,7 +358,7 @@ function createNewPage() {
 .action-arrow {
   flex-shrink: 0;
   color: var(--color-text-tertiary);
-  transition: transform var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .action-card:hover .action-arrow {
@@ -321,8 +397,15 @@ function createNewPage() {
 }
 
 .page-card-icon {
+  display: flex;
   flex-shrink: 0;
-  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-md);
 }
 
 .page-card-content {
@@ -365,12 +448,9 @@ function createNewPage() {
   width: 80px;
   height: 80px;
   margin-bottom: var(--space-6);
+  color: var(--color-accent);
   background: var(--color-accent-subtle);
   border-radius: var(--radius-2xl);
-}
-
-.empty-icon {
-  font-size: 2.5rem;
 }
 
 .empty-title {

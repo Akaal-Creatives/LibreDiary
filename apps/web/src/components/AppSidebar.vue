@@ -29,7 +29,31 @@ function createNewPage() {
     <!-- Workspace Header -->
     <div class="sidebar-header">
       <button class="workspace-switcher">
-        <span class="workspace-icon">📓</span>
+        <span class="workspace-icon">
+          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+            <rect
+              x="4"
+              y="3"
+              width="16"
+              height="22"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M8 8H16M8 12H16M8 16H12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
         <span class="workspace-name">{{
           authStore.currentOrganization?.name ?? 'LibreDiary'
         }}</span>
@@ -141,7 +165,30 @@ function createNewPage() {
           </button>
         </div>
         <div v-if="pagesStore.rootPages.length === 0" class="empty-state">
-          <span class="empty-icon">📝</span>
+          <span class="empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 4H14L20 10V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V5C4 4.44772 4.44772 4 5 4Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M14 4V10H20"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M9 14H15M9 17H13"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
           <span class="empty-text">No pages yet</span>
         </div>
         <button
@@ -151,7 +198,24 @@ function createNewPage() {
           :class="{ active: pagesStore.currentPageId === page.id }"
           @click="navigateToPage(page.id)"
         >
-          <span class="page-icon">{{ page.icon ?? '📄' }}</span>
+          <span class="page-icon">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M4 3H12L16 7V17C16 17.5523 15.5523 18 15 18H5C4.44772 18 4 17.5523 4 17V4C4 3.44772 4.44772 3 5 3Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 3V7H16"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
           <span class="page-title">{{ page.title }}</span>
         </button>
       </div>
@@ -247,7 +311,10 @@ function createNewPage() {
 }
 
 .workspace-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
 }
 
 .workspace-name {
@@ -419,8 +486,15 @@ function createNewPage() {
 }
 
 .page-icon {
+  display: flex;
   flex-shrink: 0;
-  font-size: 1rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+}
+
+.nav-item.active .page-icon {
+  color: var(--color-accent);
 }
 
 .page-title {
@@ -440,7 +514,9 @@ function createNewPage() {
 }
 
 .empty-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.5;
 }
 

@@ -16,7 +16,17 @@ function goHome() {
       <!-- Illustration -->
       <div class="illustration">
         <div class="illustration-circle">
-          <span class="illustration-icon">🔍</span>
+          <svg class="illustration-icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="2" />
+            <path d="M29 29L40 40" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path
+              d="M14 20H26M20 14V26"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              opacity="0.5"
+            />
+          </svg>
         </div>
         <div class="illustration-dots">
           <span class="dot"></span>
@@ -120,7 +130,7 @@ function goHome() {
 }
 
 .illustration-icon {
-  font-size: 3rem;
+  color: var(--color-accent);
 }
 
 .illustration-dots {

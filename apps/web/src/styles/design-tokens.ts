@@ -281,6 +281,70 @@ export const breakpoints = {
 } as const;
 
 // =============================================================================
+// ICONOGRAPHY
+// =============================================================================
+
+/**
+ * Icon Guidelines
+ *
+ * IMPORTANT: Always use flat, single-color SVG icons. Never use:
+ * - Colorful 3D emojis (e.g., 📝, 🏠, 📋)
+ * - Multi-colored icons
+ * - Gradient-filled icons
+ *
+ * Icon Style:
+ * - Stroke-based (outline) icons preferred over filled
+ * - Stroke width: 1.5px for consistency
+ * - Single color using currentColor (inherits from parent)
+ * - Rounded line caps and joins (stroke-linecap="round" stroke-linejoin="round")
+ *
+ * Icon Sizes:
+ * - Small (16px): Inline with text, buttons
+ * - Medium (18-20px): Navigation, action buttons
+ * - Large (24px): Feature highlights, empty states
+ * - XLarge (32-48px): Hero sections, illustrations
+ *
+ * Icon Colors:
+ * - Default: var(--color-text-secondary) or currentColor
+ * - Interactive: var(--color-text-primary) on hover
+ * - Accent: var(--color-accent) for primary actions
+ * - Muted: var(--color-text-tertiary) for disabled/placeholder
+ *
+ * Example SVG structure:
+ * ```html
+ * <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+ *   <path d="..." stroke="currentColor" stroke-width="1.5"
+ *         stroke-linecap="round" stroke-linejoin="round"/>
+ * </svg>
+ * ```
+ */
+export const iconography = {
+  // Sizes
+  sizes: {
+    sm: '16px',
+    md: '20px',
+    lg: '24px',
+    xl: '32px',
+    '2xl': '48px',
+  },
+
+  // Stroke
+  strokeWidth: '1.5',
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+
+  // Colors (use CSS variables)
+  colors: {
+    default: 'currentColor',
+    primary: 'var(--color-text-primary)',
+    secondary: 'var(--color-text-secondary)',
+    tertiary: 'var(--color-text-tertiary)',
+    accent: 'var(--color-accent)',
+    inverse: 'var(--color-text-inverse)',
+  },
+} as const;
+
+// =============================================================================
 // COMPONENT-SPECIFIC TOKENS
 // =============================================================================
 
