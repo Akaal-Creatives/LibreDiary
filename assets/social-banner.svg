@@ -1,0 +1,73 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1280" height="640" fill="#F6F8F6"/>
+
+  <!-- Subtle grid pattern for texture -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8E2" stroke-width="0.5"/>
+    </pattern>
+    <linearGradient id="fadeGrid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F6F8F6;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#F6F8F6;stop-opacity:0" />
+      <stop offset="70%" style="stop-color:#F6F8F6;stop-opacity:0" />
+      <stop offset="100%" style="stop-color:#F6F8F6;stop-opacity:1" />
+    </linearGradient>
+    <mask id="gridMask">
+      <rect width="1280" height="640" fill="white"/>
+      <rect width="1280" height="640" fill="url(#fadeGrid)"/>
+    </mask>
+  </defs>
+  <rect width="1280" height="640" fill="url(#grid)" mask="url(#gridMask)" opacity="0.6"/>
+
+  <!-- Decorative accent shapes -->
+  <circle cx="1180" cy="120" r="200" fill="#6B8F71" opacity="0.06"/>
+  <circle cx="100" cy="520" r="160" fill="#6B8F71" opacity="0.05"/>
+  <circle cx="1100" cy="480" r="80" fill="#6B8F71" opacity="0.04"/>
+
+  <!-- Logo (scaled up for banner) -->
+  <g transform="translate(576, 160)">
+    <rect x="16" y="12" width="64" height="88" rx="8" stroke="#6B8F71" stroke-width="5" fill="none"/>
+    <path d="M32 32H64M32 48H64M32 64H48" stroke="#6B8F71" stroke-width="5" stroke-linecap="round"/>
+    <path d="M80 28V92C80 96.4183 83.5817 100 88 100C92.4183 100 96 96.4183 96 92V28" stroke="#6B8F71" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- App Name -->
+  <text x="640" y="320" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="56" font-weight="700" fill="#2C2F2C" letter-spacing="-0.02em">LibreDiary</text>
+
+  <!-- Tagline -->
+  <text x="640" y="370" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="400" fill="#5C635C">A self-hosted, local-first workspace for notes, docs, and databases.</text>
+
+  <!-- Feature pills -->
+  <g transform="translate(640, 420)">
+    <!-- Open Source -->
+    <g transform="translate(-320, 0)">
+      <rect x="0" y="0" width="140" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
+      <text x="70" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Open Source</text>
+    </g>
+
+    <!-- Real-Time Sync -->
+    <g transform="translate(-160, 0)">
+      <rect x="0" y="0" width="140" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
+      <text x="70" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Real-Time Sync</text>
+    </g>
+
+    <!-- Self-Hosted -->
+    <g transform="translate(20, 0)">
+      <rect x="0" y="0" width="120" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
+      <text x="60" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Self-Hosted</text>
+    </g>
+
+    <!-- Privacy First -->
+    <g transform="translate(160, 0)">
+      <rect x="0" y="0" width="130" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
+      <text x="65" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Privacy First</text>
+    </g>
+  </g>
+
+  <!-- Bottom tagline -->
+  <text x="640" y="520" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="16" font-weight="500" fill="#8A918A">Built for focus. Designed for clarity. Always under your control.</text>
+
+  <!-- Accent line -->
+  <rect x="560" y="550" width="160" height="3" rx="1.5" fill="#6B8F71" opacity="0.4"/>
+</svg>
