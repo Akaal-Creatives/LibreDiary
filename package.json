@@ -1,0 +1,53 @@
+{
+  "name": "librediary",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source, self-hosted, local-first workspace platform",
+  "license": "AGPL-3.0",
+  "author": {
+    "name": "Akaal Creatives",
+    "url": "https://www.akaalcreatives.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akaalcreatives/librediary"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@librediary/web",
+    "dev:server": "turbo run dev --filter=@librediary/server",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,vue,md,json,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,vue,md,json,yaml}\"",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "db:generate": "pnpm --filter @librediary/server db:generate",
+    "db:migrate": "pnpm --filter @librediary/server db:migrate",
+    "db:push": "pnpm --filter @librediary/server db:push",
+    "db:studio": "pnpm --filter @librediary/server db:studio",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.4.0",
+    "turbo": "^2.3.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

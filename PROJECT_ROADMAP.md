@@ -29,25 +29,25 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 0: Project Setup
 
 ### 0.1 Development Environment
-- [ ] Initialize pnpm monorepo with Turborepo
-- [ ] Configure workspaces: `apps/`, `packages/`
-- [ ] Setup TypeScript base configuration
-- [ ] Configure ESLint + Prettier
-- [ ] Setup Husky + lint-staged for pre-commit hooks
-- [ ] Create `.env.example` with all variables
-- [ ] Setup Docker Compose for local development (PostgreSQL)
+- [x] Initialize pnpm monorepo with Turborepo
+- [x] Configure workspaces: `apps/`, `packages/`
+- [x] Setup TypeScript base configuration
+- [x] Configure ESLint + Prettier
+- [x] Setup Husky + lint-staged for pre-commit hooks
+- [x] Create `.env.example` with all variables
+- [x] Setup Docker Compose for local development (PostgreSQL)
 
 ### 0.2 Shared Package (`packages/shared`)
-- [ ] Create package structure with tsup build
-- [ ] Define TypeScript types (User, Org, Page, etc.)
-- [ ] Create Zod validation schemas
-- [ ] Add utility functions (slugify, formatDate, etc.)
-- [ ] Export API response types
+- [x] Create package structure with tsup build
+- [x] Define TypeScript types (User, Org, Page, etc.)
+- [x] Create Zod validation schemas
+- [x] Add utility functions (slugify, formatDate, etc.)
+- [x] Export API response types
 
 ### 0.3 Documentation
-- [ ] Create CONTRIBUTING.md
-- [ ] Create development setup guide
-- [ ] Document environment variables
+- [x] Create CONTRIBUTING.md
+- [x] Create development setup guide
+- [x] Document environment variables
 
 ---
 

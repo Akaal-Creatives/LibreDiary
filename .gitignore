@@ -1,3 +1,9 @@
+# Project temp folder (Claude AI context)
+.tmp/
+
+# Turborepo
+.turbo/
+
 # Logs
 logs
 *.log

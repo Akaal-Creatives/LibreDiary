@@ -1,0 +1,71 @@
+# LibreDiary Docker Compose - Development
+# Use: docker compose -f tooling/docker/docker-compose.dev.yml up -d
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: librediary-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: librediary
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # MinIO (S3-compatible storage) - Optional
+  # ===========================================
+  minio:
+    image: minio/minio:latest
+    container_name: librediary-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    restart: unless-stopped
+    profiles:
+      - storage
+
+  # ===========================================
+  # Meilisearch (Full-text search) - Phase 2
+  # ===========================================
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: librediary-meilisearch
+    environment:
+      MEILI_MASTER_KEY: masterkey
+      MEILI_ENV: development
+    volumes:
+      - meilisearch_data:/meili_data
+    ports:
+      - "7700:7700"
+    restart: unless-stopped
+    profiles:
+      - search
+
+volumes:
+  postgres_data:
+    name: librediary_postgres_dev
+  minio_data:
+    name: librediary_minio_dev
+  meilisearch_data:
+    name: librediary_meilisearch_dev
