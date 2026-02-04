@@ -1,24 +1,292 @@
-/* LibreDiary Global Styles */
+/* LibreDiary Design System
+ * Organic Minimalism — Calm, Creative, Grounded
+ * Optimized for long work sessions and focused productivity
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* ============================================
+   CSS Custom Properties - Design Tokens
+   ============================================ */
 
 :root {
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  --font-family-mono: "SF Mono", "Consolas", "Liberation Mono", Menlo, Courier,
-    monospace;
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+
+  /* Font Sizes - Fluid Scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-slower: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Shadows - Soft, Organic */
+  --shadow-xs: 0 1px 2px rgba(44, 47, 44, 0.04);
+  --shadow-sm: 0 2px 4px rgba(44, 47, 44, 0.06);
+  --shadow-md: 0 4px 12px rgba(44, 47, 44, 0.08);
+  --shadow-lg: 0 8px 24px rgba(44, 47, 44, 0.1);
+  --shadow-xl: 0 16px 48px rgba(44, 47, 44, 0.12);
+
+  /* Z-Index Scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
 }
 
-* {
+/* ============================================
+   Light Theme (Default)
+   Calm, organic, nature-inspired
+   ============================================ */
+
+[data-theme='light'],
+:root {
+  /* Core Palette */
+  --color-background: #F6F8F6;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-sunken: #EFF2EF;
+
+  /* Borders */
+  --color-border: #E2E8E2;
+  --color-border-subtle: #EDF0ED;
+  --color-border-strong: #D1D9D1;
+
+  /* Text */
+  --color-text-primary: #2C2F2C;
+  --color-text-secondary: #5C635C;
+  --color-text-tertiary: #8A918A;
+  --color-text-inverse: #FFFFFF;
+
+  /* Accent - Sage Green */
+  --color-accent: #6B8F71;
+  --color-accent-hover: #5A7D60;
+  --color-accent-active: #4A6B50;
+  --color-accent-subtle: rgba(107, 143, 113, 0.08);
+  --color-accent-muted: rgba(107, 143, 113, 0.15);
+
+  /* Semantic Colors */
+  --color-success: #5A9A6B;
+  --color-success-subtle: rgba(90, 154, 107, 0.1);
+  --color-warning: #C4973B;
+  --color-warning-subtle: rgba(196, 151, 59, 0.1);
+  --color-error: #C45C5C;
+  --color-error-subtle: rgba(196, 92, 92, 0.1);
+  --color-info: #5A8A9A;
+  --color-info-subtle: rgba(90, 138, 154, 0.1);
+
+  /* Interactive States */
+  --color-hover: rgba(44, 47, 44, 0.04);
+  --color-active: rgba(44, 47, 44, 0.08);
+  --color-focus-ring: rgba(107, 143, 113, 0.4);
+  --color-selection: rgba(107, 143, 113, 0.15);
+
+  /* Specific Components */
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: var(--color-border);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --input-bg: #FFFFFF;
+  --input-border: var(--color-border);
+  --input-focus-border: var(--color-accent);
+
+  /* Shadows for Light Mode */
+  --shadow-card: 0 1px 3px rgba(44, 47, 44, 0.04), 0 1px 2px rgba(44, 47, 44, 0.02);
+  --shadow-dropdown: 0 4px 16px rgba(44, 47, 44, 0.1), 0 2px 4px rgba(44, 47, 44, 0.04);
+}
+
+/* ============================================
+   Dark Theme
+   Color Psychology: Grounding, restful, deep focus
+   Forest at dusk — protective, calm, contemplative
+   ============================================ */
+
+[data-theme='dark'] {
+  /* Core Palette - Deep forest tones */
+  --color-background: #161917;
+  --color-surface: #1E2220;
+  --color-surface-elevated: #262B28;
+  --color-surface-sunken: #121413;
+
+  /* Borders - Subtle definition */
+  --color-border: #2E3430;
+  --color-border-subtle: #252A27;
+  --color-border-strong: #3A423C;
+
+  /* Text - Soft, not harsh */
+  --color-text-primary: #E4E8E4;
+  --color-text-secondary: #9CA69C;
+  --color-text-tertiary: #6B756B;
+  --color-text-inverse: #161917;
+
+  /* Accent - Brighter sage for dark mode visibility */
+  --color-accent: #88B08E;
+  --color-accent-hover: #9BC0A1;
+  --color-accent-active: #7AA080;
+  --color-accent-subtle: rgba(136, 176, 142, 0.1);
+  --color-accent-muted: rgba(136, 176, 142, 0.18);
+
+  /* Semantic Colors - Adjusted for dark */
+  --color-success: #7AB888;
+  --color-success-subtle: rgba(122, 184, 136, 0.12);
+  --color-warning: #D4A74B;
+  --color-warning-subtle: rgba(212, 167, 75, 0.12);
+  --color-error: #D47777;
+  --color-error-subtle: rgba(212, 119, 119, 0.12);
+  --color-info: #7ABAD4;
+  --color-info-subtle: rgba(122, 186, 212, 0.12);
+
+  /* Interactive States */
+  --color-hover: rgba(255, 255, 255, 0.04);
+  --color-active: rgba(255, 255, 255, 0.08);
+  --color-focus-ring: rgba(136, 176, 142, 0.5);
+  --color-selection: rgba(136, 176, 142, 0.2);
+
+  /* Specific Components */
+  --sidebar-bg: #1A1E1B;
+  --sidebar-border: var(--color-border);
+  --header-bg: rgba(30, 34, 32, 0.9);
+  --input-bg: #1E2220;
+  --input-border: var(--color-border);
+  --input-focus-border: var(--color-accent);
+
+  /* Shadows for Dark Mode - Deeper, more diffuse */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html,
-body {
-  font-family: var(--font-family);
+html {
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Scrollbar styling */
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: var(--text-4xl); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); font-weight: 600; }
+
+p {
+  margin: 0;
+  line-height: var(--leading-relaxed);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+
+::selection {
+  background: var(--color-selection);
+  color: var(--color-text-primary);
+}
+
+/* ============================================
+   Focus Styles
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Scrollbar - Subtle, organic
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -29,19 +297,81 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--color-text-tertiary);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-/* Dark mode scrollbar */
-.va-dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
 }
 
-.va-dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.text-accent { color: var(--color-accent); }
+
+.bg-surface { background-color: var(--color-surface); }
+.bg-elevated { background-color: var(--color-surface-elevated); }
+.bg-sunken { background-color: var(--color-surface-sunken); }
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-slower) ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-slow) ease-out;
 }

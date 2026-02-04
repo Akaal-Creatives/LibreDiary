@@ -50,20 +50,30 @@ function onContentUpdate(content: string) {
 
 <template>
   <div class="page-view">
+    <!-- Loading State -->
     <div v-if="loading" class="page-loading">
-      <VaProgressCircle indeterminate />
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Loading...</span>
     </div>
 
+    <!-- Page Content -->
     <div v-else class="page-content">
-      <div class="page-header">
-        <div class="page-icon">
-          {{ pagesStore.currentPage?.icon ?? '📄' }}
+      <!-- Page Header -->
+      <header class="page-header">
+        <button class="page-icon-btn" title="Change icon">
+          <span class="page-icon">{{ pagesStore.currentPage?.icon ?? '📄' }}</span>
+        </button>
+        <div class="page-meta">
+          <h1 class="page-title" contenteditable="true" spellcheck="false" @blur="updateTitle">
+            {{ pageTitle }}
+          </h1>
+          <div class="page-info">
+            <span class="info-item">Last edited recently</span>
+          </div>
         </div>
-        <h1 class="page-title" contenteditable="true" spellcheck="false" @blur="updateTitle">
-          {{ pageTitle }}
-        </h1>
-      </div>
+      </header>
 
+      <!-- Page Body -->
       <div class="page-body">
         <TiptapEditor
           v-model="pageContent"
@@ -77,46 +87,110 @@ function onContentUpdate(content: string) {
 
 <style scoped>
 .page-view {
-  max-width: 850px;
+  max-width: 800px;
   margin: 0 auto;
+  padding: var(--space-4) 0;
 }
 
+/* Loading State */
 .page-loading {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   align-items: center;
   justify-content: center;
-  padding: 60px;
+  padding: var(--space-20);
 }
 
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* Page Header */
 .page-header {
   display: flex;
+  gap: var(--space-4);
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.page-icon-btn {
+  flex-shrink: 0;
+  padding: var(--space-2);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.page-icon-btn:hover {
+  background: var(--color-hover);
 }
 
 .page-icon {
-  font-size: 48px;
-  cursor: pointer;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.page-meta {
+  flex: 1;
+  min-width: 0;
+  padding-top: var(--space-2);
 }
 
 .page-title {
-  flex: 1;
-  margin: 0;
+  margin: 0 0 var(--space-2);
   padding: 0;
-  font-size: 40px;
+  font-size: var(--text-4xl);
   font-weight: 700;
   line-height: 1.2;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
   border: none;
   outline: none;
 }
 
 .page-title:empty::before {
-  color: var(--va-secondary);
+  color: var(--color-text-tertiary);
   content: 'Untitled';
 }
 
+.page-title:focus {
+  outline: none;
+}
+
+.page-info {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.info-item {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* Page Body */
 .page-body {
-  min-height: 300px;
+  min-height: 400px;
 }
 </style>

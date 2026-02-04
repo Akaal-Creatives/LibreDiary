@@ -81,12 +81,10 @@ defineExpose({
 </template>
 
 <style>
-/* Tiptap Editor Styles */
+/* Tiptap Editor Styles - Using LibreDiary Design System */
 .tiptap-editor {
   width: 100%;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
-    'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .editor-content {
@@ -95,7 +93,7 @@ defineExpose({
 
 .editor-content .ProseMirror {
   min-height: 200px;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   outline: none;
 }
 
@@ -108,7 +106,7 @@ defineExpose({
   height: 0;
   float: left;
   pointer-events: none;
-  color: var(--va-secondary, #94a3b8);
+  color: var(--color-text-tertiary);
   content: attr(data-placeholder);
 }
 
@@ -116,36 +114,42 @@ defineExpose({
   height: 0;
   float: left;
   pointer-events: none;
-  color: var(--va-secondary, #94a3b8);
+  color: var(--color-text-tertiary);
   content: attr(data-placeholder);
 }
 
 /* Heading styles */
 .editor-content .ProseMirror h1 {
   margin-top: 1.5em;
-  font-size: 2em;
+  font-size: var(--text-3xl);
   font-weight: 700;
   line-height: 1.2;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
 }
 
 .editor-content .ProseMirror h2 {
   margin-top: 1.25em;
-  font-size: 1.5em;
+  font-size: var(--text-2xl);
   font-weight: 600;
   line-height: 1.3;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .editor-content .ProseMirror h3 {
   margin-top: 1em;
-  font-size: 1.25em;
+  font-size: var(--text-xl);
   font-weight: 600;
   line-height: 1.4;
+  color: var(--color-text-primary);
 }
 
 /* Paragraph */
 .editor-content .ProseMirror p {
-  font-size: 1em;
-  line-height: 1.7;
+  font-size: var(--text-base);
+  line-height: 1.75;
+  color: var(--color-text-primary);
 }
 
 /* Lists */
@@ -156,54 +160,71 @@ defineExpose({
 
 .editor-content .ProseMirror li {
   margin: 0.25em 0;
+  color: var(--color-text-primary);
 }
 
 .editor-content .ProseMirror li p {
   margin: 0;
 }
 
+.editor-content .ProseMirror li::marker {
+  color: var(--color-text-tertiary);
+}
+
 /* Blockquote */
 .editor-content .ProseMirror blockquote {
-  margin: 1em 0;
-  padding-left: 1em;
-  color: var(--va-secondary, #64748b);
-  border-left: 3px solid var(--va-primary, #6366f1);
+  margin: 1.5em 0;
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-sunken);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.editor-content .ProseMirror blockquote p {
+  margin: 0;
+  color: inherit;
 }
 
 /* Code */
 .editor-content .ProseMirror code {
   padding: 0.2em 0.4em;
-  font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.875em;
-  background-color: var(--va-surface-variant, #f1f5f9);
-  border-radius: 4px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-subtle);
+  border-radius: var(--radius-sm);
 }
 
 .editor-content .ProseMirror pre {
-  padding: 1em;
+  padding: var(--space-4);
   overflow-x: auto;
-  font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.875em;
-  background-color: var(--va-surface-variant, #f1f5f9);
-  border-radius: 8px;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .editor-content .ProseMirror pre code {
   padding: 0;
+  color: inherit;
   background: none;
   border-radius: 0;
 }
 
 /* Horizontal rule */
 .editor-content .ProseMirror hr {
-  margin: 1.5em 0;
+  margin: var(--space-8) 0;
   border: none;
-  border-top: 1px solid var(--va-surface-variant, #e2e8f0);
+  border-top: 1px solid var(--color-border);
 }
 
 /* Strong and emphasis */
 .editor-content .ProseMirror strong {
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .editor-content .ProseMirror em {
@@ -212,18 +233,21 @@ defineExpose({
 
 /* Links */
 .editor-content .ProseMirror a {
-  color: var(--va-primary, #6366f1);
+  color: var(--color-accent);
   text-decoration: underline;
+  text-decoration-color: var(--color-accent-muted);
+  text-underline-offset: 2px;
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .editor-content .ProseMirror a:hover {
-  text-decoration: none;
+  text-decoration-color: var(--color-accent);
 }
 
 /* Selection */
 .editor-content .ProseMirror ::selection {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--color-accent-subtle);
 }
 
 /* Task lists (if enabled) */
@@ -234,12 +258,56 @@ defineExpose({
 
 .editor-content .ProseMirror ul[data-type='taskList'] li {
   display: flex;
-  gap: 0.5em;
+  gap: var(--space-2);
   align-items: flex-start;
 }
 
 .editor-content .ProseMirror ul[data-type='taskList'] li > label {
   flex-shrink: 0;
   margin-top: 0.25em;
+}
+
+.editor-content .ProseMirror ul[data-type='taskList'] li > label input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+/* Focus ring for accessibility */
+.editor-content .ProseMirror:focus-visible {
+  outline: none;
+}
+
+/* Image styles */
+.editor-content .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+}
+
+/* Table styles (if enabled) */
+.editor-content .ProseMirror table {
+  width: 100%;
+  margin: var(--space-4) 0;
+  border-collapse: collapse;
+}
+
+.editor-content .ProseMirror th,
+.editor-content .ProseMirror td {
+  padding: var(--space-3);
+  text-align: left;
+  border: 1px solid var(--color-border);
+}
+
+.editor-content .ProseMirror th {
+  font-weight: 600;
+  background: var(--color-surface-sunken);
+}
+
+/* Strikethrough */
+.editor-content .ProseMirror s {
+  text-decoration: line-through;
+  opacity: 0.7;
 }
 </style>
