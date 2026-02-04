@@ -1,6 +1,13 @@
-# LibreDiary
+<p align="center">
+  <img src="assets/logo.svg" alt="LibreDiary Logo" width="56" height="56">
+</p>
 
-A self-hosted, local-first workspace for notes, docs, and databases. Built for focus, designed for clarity, and always under your control.
+<h1 align="center">LibreDiary</h1>
+
+<p align="center">
+  A self-hosted, local-first workspace for notes, docs, and databases.<br>
+  Built for focus, designed for clarity, and always under your control.
+</p>
 
 ## Overview
 
