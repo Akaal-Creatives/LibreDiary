@@ -1,73 +1,164 @@
-<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="1280" height="640" fill="#F6F8F6"/>
-
-  <!-- Subtle grid pattern for texture -->
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 1280 640">
+  <!-- Generator: Adobe Illustrator 30.2.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 105)  -->
   <defs>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8E2" stroke-width="0.5"/>
-    </pattern>
-    <linearGradient id="fadeGrid" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#F6F8F6;stop-opacity:1" />
-      <stop offset="30%" style="stop-color:#F6F8F6;stop-opacity:0" />
-      <stop offset="70%" style="stop-color:#F6F8F6;stop-opacity:0" />
-      <stop offset="100%" style="stop-color:#F6F8F6;stop-opacity:1" />
+    <style>
+      .st0, .st1, .st2, .st3 {
+        fill: none;
+      }
+
+      .st4 {
+        mask: url(#mask);
+      }
+
+      .st5 {
+        fill: #8a918a;
+        font-size: 16px;
+      }
+
+      .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12, .st13, .st14, .st15 {
+        isolation: isolate;
+      }
+
+      .st16 {
+        font-family: AppleBraille-Outline6Dot, 'Apple Braille';
+      }
+
+      .st6 {
+        fill: #5c635c;
+        font-size: 22px;
+      }
+
+      .st7, .st10 {
+        font-size: 14px;
+      }
+
+      .st7, .st10, .st11, .st12, .st13, .st14, .st15 {
+        fill: #6b8f71;
+      }
+
+      .st17 {
+        fill: url(#linear-gradient);
+      }
+
+      .st18 {
+        letter-spacing: 0em;
+      }
+
+      .st18, .st19, .st20, .st10 {
+        font-family: MyriadPro-Regular, 'Myriad Pro';
+      }
+
+      .st19 {
+        letter-spacing: 0em;
+      }
+
+      .st8 {
+        fill: #2c2f2c;
+        font-family: Helvetica-Bold, Helvetica;
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: 0em;
+      }
+
+      .st21 {
+        fill: #f6f8f6;
+      }
+
+      .st22 {
+        fill: #fff;
+      }
+
+      .st9 {
+        fill: url(#grid);
+        opacity: .6;
+      }
+
+      .st11 {
+        opacity: 0;
+      }
+
+      .st12 {
+        opacity: .1;
+      }
+
+      .st13 {
+        opacity: 0;
+      }
+
+      .st14 {
+        opacity: 0;
+      }
+
+      .st15 {
+        opacity: .4;
+      }
+
+      .st1, .st3 {
+        stroke: #6b8f71;
+        stroke-width: 5px;
+      }
+
+      .st2 {
+        stroke: #e2e8e2;
+        stroke-width: .5px;
+      }
+
+      .st3 {
+        stroke-linecap: round;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="140.4" y1="820.7" x2="140.4" y2="819.7" gradientTransform="translate(-179060 525261) scale(1280 -640)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f6f8f6"/>
+      <stop offset=".3" stop-color="#f6f8f6" stop-opacity="0"/>
+      <stop offset=".7" stop-color="#f6f8f6" stop-opacity="0"/>
+      <stop offset="1" stop-color="#f6f8f6"/>
     </linearGradient>
-    <mask id="gridMask">
-      <rect width="1280" height="640" fill="white"/>
-      <rect width="1280" height="640" fill="url(#fadeGrid)"/>
+    <mask id="mask" x="-.2" y="0" width="1280.2" height="640" maskUnits="userSpaceOnUse">
+      <g id="gridMask">
+        <rect class="st22" width="1280" height="640"/>
+        <rect class="st17" width="1280" height="640"/>
+      </g>
     </mask>
+    <pattern id="grid" x="0" y="0" width="40" height="40" patternTransform="translate(-20 -15363) scale(1 -1)" patternUnits="userSpaceOnUse" viewBox="0 0 40 40">
+      <g>
+        <rect class="st0" width="40" height="40"/>
+        <path class="st2" d="M40,40H0V0"/>
+      </g>
+    </pattern>
   </defs>
-  <rect width="1280" height="640" fill="url(#grid)" mask="url(#gridMask)" opacity="0.6"/>
-
-  <!-- Decorative accent shapes -->
-  <circle cx="1180" cy="120" r="200" fill="#6B8F71" opacity="0.06"/>
-  <circle cx="100" cy="520" r="160" fill="#6B8F71" opacity="0.05"/>
-  <circle cx="1100" cy="480" r="80" fill="#6B8F71" opacity="0.04"/>
-
-  <!-- Logo (scaled up for banner) -->
-  <g transform="translate(576, 160)">
-    <rect x="16" y="12" width="64" height="88" rx="8" stroke="#6B8F71" stroke-width="5" fill="none"/>
-    <path d="M32 32H64M32 48H64M32 64H48" stroke="#6B8F71" stroke-width="5" stroke-linecap="round"/>
-    <path d="M80 28V92C80 96.4183 83.5817 100 88 100C92.4183 100 96 96.4183 96 92V28" stroke="#6B8F71" stroke-width="5" stroke-linecap="round"/>
+  <rect class="st21" width="1280" height="640"/>
+  <g class="st4">
+    <rect class="st9" width="1280" height="640"/>
   </g>
-
-  <!-- App Name -->
-  <text x="640" y="320" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="56" font-weight="700" fill="#2C2F2C" letter-spacing="-0.02em">LibreDiary</text>
-
-  <!-- Tagline -->
-  <text x="640" y="370" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="400" fill="#5C635C">A self-hosted, local-first workspace for notes, docs, and databases.</text>
-
-  <!-- Feature pills -->
-  <g transform="translate(640, 420)">
-    <!-- Open Source -->
-    <g transform="translate(-320, 0)">
-      <rect x="0" y="0" width="140" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
-      <text x="70" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Open Source</text>
+  <circle class="st14" cx="1180" cy="120" r="200"/>
+  <circle class="st13" cx="100" cy="520" r="160"/>
+  <circle class="st11" cx="1100" cy="480" r="80"/>
+  <g>
+    <rect class="st1" x="600" y="172" width="64" height="88" rx="8" ry="8"/>
+    <path class="st3" d="M616,192h32M616,208h32M616,224h16"/>
+    <path class="st3" d="M664,188v64c0,4.4,3.6,8,8,8s8-3.6,8-8v-64"/>
+  </g>
+  <text class="st8" transform="translate(506.5 320)"><tspan x="0" y="0">LibreDiary</tspan></text>
+  <text class="st6" transform="translate(328.8 370)"><tspan class="st20" x="0" y="0">A</tspan><tspan class="st16" x="13.5" y="0"> </tspan><tspan class="st20" x="21" y="0">self-hosted,</tspan><tspan class="st16" x="127.4" y="0"> </tspan><tspan class="st20" x="134.9" y="0">local-first</tspan><tspan class="st16" x="219.2" y="0"> </tspan><tspan class="st18" x="226.8" y="0">workspace</tspan><tspan class="st16" x="325.3" y="0"> </tspan><tspan class="st20" x="332.8" y="0">for</tspan><tspan class="st16" x="358.5" y="0"> </tspan><tspan class="st20" x="366" y="0">notes,</tspan><tspan class="st16" x="421.8" y="0"> </tspan><tspan class="st20" x="429.4" y="0">docs,</tspan><tspan class="st16" x="477" y="0"> </tspan><tspan class="st20" x="484.5" y="0">and</tspan><tspan class="st16" x="519.7" y="0"> </tspan><tspan class="st20" x="527.2" y="0">databases.</tspan></text>
+  <g>
+    <g>
+      <path class="st12" d="M353,420h104c9.9,0,18,8.1,18,18h0c0,9.9-8.1,18-18,18h-104c-9.9,0-18-8.1-18-18h0c0-9.9,8.1-18,18-18Z"/>
+      <text class="st7" transform="translate(366.4 443)"><tspan class="st20" x="0" y="0">Open</tspan><tspan class="st16" x="32.4" y="0"> </tspan><tspan class="st20" x="37.2" y="0">Source</tspan></text>
     </g>
-
-    <!-- Real-Time Sync -->
-    <g transform="translate(-160, 0)">
-      <rect x="0" y="0" width="140" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
-      <text x="70" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Real-Time Sync</text>
+    <g>
+      <path class="st12" d="M519.7,420h104c9.9,0,18,8.1,18,18h0c0,9.9-8.1,18-18,18h-104c-9.9,0-18-8.1-18-18h0c0-9.9,8.1-18,18-18Z"/>
+      <text class="st7" transform="translate(527.1 443)"><tspan class="st20" x="0" y="0">Real-Time</tspan><tspan class="st16" x="57.8" y="0"> </tspan><tspan class="st20" x="62.6" y="0">Sync</tspan></text>
     </g>
-
-    <!-- Self-Hosted -->
-    <g transform="translate(20, 0)">
-      <rect x="0" y="0" width="120" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
-      <text x="60" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Self-Hosted</text>
+    <g>
+      <path class="st12" d="M686.3,420h84c9.9,0,18,8.1,18,18h0c0,9.9-8.1,18-18,18h-84c-9.9,0-18-8.1-18-18h0c0-9.9,8.1-18,18-18Z"/>
+      <text class="st10" transform="translate(694.6 443)"><tspan x="0" y="0">Self-Hosted</tspan></text>
     </g>
-
-    <!-- Privacy First -->
-    <g transform="translate(160, 0)">
-      <rect x="0" y="0" width="130" height="36" rx="18" fill="#6B8F71" opacity="0.1"/>
-      <text x="65" y="23" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#6B8F71">Privacy First</text>
+    <g>
+      <path class="st12" d="M833,420h94c9.9,0,18,8.1,18,18h0c0,9.9-8.1,18-18,18h-94c-9.9,0-18-8.1-18-18h0c0-9.9,8.1-18,18-18Z"/>
+      <text class="st7" transform="translate(844.5 443)"><tspan class="st20" x="0" y="0">Privacy</tspan><tspan class="st16" x="41.6" y="0"> </tspan><tspan class="st20" x="46.4" y="0">First</tspan></text>
     </g>
   </g>
-
-  <!-- Bottom tagline -->
-  <text x="640" y="520" text-anchor="middle" font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="16" font-weight="500" fill="#8A918A">Built for focus. Designed for clarity. Always under your control.</text>
-
-  <!-- Accent line -->
-  <rect x="560" y="550" width="160" height="3" rx="1.5" fill="#6B8F71" opacity="0.4"/>
+  <text class="st5" transform="translate(424.1 520)"><tspan class="st20" x="0" y="0">Built</tspan><tspan class="st16" x="30.3" y="0"> </tspan><tspan class="st20" x="35.8" y="0">for</tspan><tspan class="st16" x="54.5" y="0"> </tspan><tspan class="st20" x="59.9" y="0">focus.</tspan><tspan class="st16" x="99" y="0"> </tspan><tspan class="st20" x="104.5" y="0">Designed</tspan><tspan class="st16" x="168.1" y="0"> </tspan><tspan class="st20" x="173.6" y="0">for</tspan><tspan class="st16" x="192.3" y="0"> </tspan><tspan class="st20" x="197.7" y="0">clarity.</tspan><tspan class="st16" x="241.5" y="0"> </tspan><tspan class="st20" x="247" y="0">Always</tspan><tspan class="st16" x="293.9" y="0"> </tspan><tspan class="st20" x="299.4" y="0">under</tspan><tspan class="st16" x="339.3" y="0"> </tspan><tspan class="st19" x="344.8" y="0">your</tspan><tspan class="st16" x="375.2" y="0"> </tspan><tspan class="st20" x="380.6" y="0">control.</tspan></text>
+  <path class="st15" d="M561.5,550h157c.8,0,1.5.7,1.5,1.5h0c0,.8-.7,1.5-1.5,1.5h-157c-.8,0-1.5-.7-1.5-1.5h0c0-.8.7-1.5,1.5-1.5Z"/>
 </svg>
