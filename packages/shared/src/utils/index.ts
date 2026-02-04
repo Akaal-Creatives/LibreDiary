@@ -154,13 +154,13 @@ export function sleep(ms: number): Promise<void> {
  */
 export function parseHexColor(color: string): { r: number; g: number; b: number } | null {
   const hexMatch = color.match(/^#([0-9A-Fa-f]{6})$/);
-  if (!hexMatch) return null;
+  if (!hexMatch || !hexMatch[1]) return null;
 
   const hex = hexMatch[1];
   return {
-    r: parseInt(hex.slice(0, 2), 16),
-    g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16),
+    r: parseInt(hex.substring(0, 2), 16),
+    g: parseInt(hex.substring(2, 4), 16),
+    b: parseInt(hex.substring(4, 6), 16),
   };
 }
 

@@ -1,0 +1,146 @@
+// LibreDiary Database Schema
+// Phase 1: Core models only
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  name            String?
+  avatarUrl       String?
+  locale          String    @default("en")
+
+  // Super Admin flag (platform-wide)
+  isSuperAdmin Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  // Relations
+  memberships  OrganizationMember[]
+  createdPages Page[]               @relation("PageCreatedBy")
+  updatedPages Page[]               @relation("PageUpdatedBy")
+
+  @@index([email])
+  @@index([deletedAt])
+}
+
+// ============================================
+// ORGANIZATIONS & MEMBERSHIPS
+// ============================================
+
+model Organization {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  // Branding
+  logoUrl     String?
+  accentColor String? @default("#6366f1") // Indigo
+
+  // Settings
+  allowedDomain String? // Domain lockdown (e.g., "company.com")
+
+  // AI Settings
+  aiEnabled Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  members OrganizationMember[]
+  pages   Page[]
+
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+model OrganizationMember {
+  id             String  @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrgRole @default(MEMBER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ============================================
+// PAGES & CONTENT
+// ============================================
+
+model Page {
+  id             String @id @default(cuid())
+  organizationId String
+
+  // Hierarchy
+  parentId String?
+  position Int     @default(0) // For ordering siblings
+
+  // Content
+  title    String  @default("Untitled")
+  icon     String? // Emoji or icon identifier
+  coverUrl String?
+
+  // Yjs document state (stored as bytes)
+  yjsState Bytes?
+
+  // Sharing
+  isPublic   Boolean @default(false)
+  publicSlug String? @unique
+
+  // Soft delete
+  trashedAt DateTime?
+
+  // Audit
+  createdById String
+  updatedById String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       Page?        @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Page[]       @relation("PageHierarchy")
+  createdBy    User         @relation("PageCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User?        @relation("PageUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([organizationId])
+  @@index([parentId])
+  @@index([trashedAt])
+  @@index([publicSlug])
+  @@index([createdById])
+}

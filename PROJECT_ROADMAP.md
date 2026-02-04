@@ -15,20 +15,21 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ## 3. Technical Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer        | Technology                                              |
+| ------------ | ------------------------------------------------------- |
 | **Frontend** | Vue 3 (Composition API), Vuestic UI, Tiptap, Pinia, Yjs |
-| **Backend** | Node.js, Fastify, Hocuspocus, Prisma, Better Auth |
-| **Database** | PostgreSQL (FTS), Meilisearch (Phase 2) |
-| **Storage** | Local/MinIO/S3, Backblaze B2 (backups) |
-| **AI** | OpenRouter (content translation) |
-| **Infra** | pnpm, Turborepo, Docker |
+| **Backend**  | Node.js, Fastify, Hocuspocus, Prisma, Better Auth       |
+| **Database** | PostgreSQL (FTS), Meilisearch (Phase 2)                 |
+| **Storage**  | Local/MinIO/S3, Backblaze B2 (backups)                  |
+| **AI**       | OpenRouter (content translation)                        |
+| **Infra**    | pnpm, Turborepo, Docker                                 |
 
 ---
 
 ## Phase 0: Project Setup
 
 ### 0.1 Development Environment
+
 - [x] Initialize pnpm monorepo with Turborepo
 - [x] Configure workspaces: `apps/`, `packages/`
 - [x] Setup TypeScript base configuration
@@ -38,6 +39,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Setup Docker Compose for local development (PostgreSQL)
 
 ### 0.2 Shared Package (`packages/shared`)
+
 - [x] Create package structure with tsup build
 - [x] Define TypeScript types (User, Org, Page, etc.)
 - [x] Create Zod validation schemas
@@ -45,6 +47,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Export API response types
 
 ### 0.3 Documentation
+
 - [x] Create CONTRIBUTING.md
 - [x] Create development setup guide
 - [x] Document environment variables
@@ -54,45 +57,50 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 1: Foundation - Basic Editor & Server
 
 ### 1.1 Backend Server Setup (`apps/server`)
-- [ ] Initialize Fastify with TypeScript
-- [ ] Configure CORS, Helmet, Cookie plugins
-- [ ] Setup Pino logger
-- [ ] Create environment validation (Zod)
-- [ ] Add health check endpoint (`/health`)
-- [ ] Add developer attribution endpoint (`/dev`)
-- [ ] Setup basic error handling middleware
+
+- [x] Initialize Fastify with TypeScript
+- [x] Configure CORS, Helmet, Cookie plugins
+- [x] Setup Pino logger
+- [x] Create environment validation (Zod)
+- [x] Add health check endpoint (`/health`)
+- [x] Add developer attribution endpoint (`/dev`)
+- [x] Setup basic error handling middleware
 
 ### 1.2 Database Setup
-- [ ] Initialize Prisma with PostgreSQL
-- [ ] Create User model (id, email, name, passwordHash, etc.)
-- [ ] Create Organization model
-- [ ] Create OrganizationMember model with roles
-- [ ] Create Page model with hierarchy
+
+- [x] Initialize Prisma with PostgreSQL
+- [x] Create User model (id, email, name, passwordHash, etc.)
+- [x] Create Organization model
+- [x] Create OrganizationMember model with roles
+- [x] Create Page model with hierarchy
 - [ ] Create initial migration
 - [ ] Seed super admin user
 
 ### 1.3 Frontend Setup (`apps/web`)
-- [ ] Initialize Vue 3 + Vite project
-- [ ] Configure Vuestic UI with color presets
-- [ ] Setup Vue Router with route guards
-- [ ] Setup Pinia stores (auth, pages)
-- [ ] Create basic layout components
-- [ ] Create home/landing page
-- [ ] Create 404 page
+
+- [x] Initialize Vue 3 + Vite project
+- [x] Configure Vuestic UI with color presets
+- [x] Setup Vue Router with route guards
+- [x] Setup Pinia stores (auth, pages)
+- [x] Create basic layout components
+- [x] Create home/landing page
+- [x] Create 404 page
 
 ### 1.4 Basic Tiptap Editor
-- [ ] Install Tiptap with starter-kit
-- [ ] Create Editor component wrapper
-- [ ] Add basic blocks: Paragraph, Heading (1-3), List
-- [ ] Implement markdown shortcuts
-- [ ] Add placeholder text
-- [ ] Style editor with Vuestic theme colors
+
+- [x] Install Tiptap with starter-kit
+- [x] Create Editor component wrapper
+- [x] Add basic blocks: Paragraph, Heading (1-3), List
+- [x] Implement markdown shortcuts
+- [x] Add placeholder text
+- [x] Style editor with Vuestic theme colors
 
 ---
 
 ## Phase 2: Authentication
 
 ### 2.1 Email/Password Auth
+
 - [ ] Create auth routes (register, login, logout)
 - [ ] Implement password hashing (Argon2)
 - [ ] Create session management (cookies)
@@ -103,6 +111,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add form validation with Zod schemas
 
 ### 2.2 Email Verification
+
 - [ ] Create VerificationToken model
 - [ ] Implement email sending service (SMTP)
 - [ ] Create verification email template
@@ -110,6 +119,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create email verification page
 
 ### 2.3 Password Reset
+
 - [ ] Create password reset token flow
 - [ ] Create reset email template
 - [ ] Add forgot-password endpoint
@@ -118,6 +128,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create reset password page
 
 ### 2.4 OAuth Integration
+
 - [ ] Install Better Auth + Arctic
 - [ ] Configure GitHub OAuth provider
 - [ ] Configure Google OAuth provider
@@ -126,6 +137,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Link OAuth accounts to existing users
 
 ### 2.5 Session Management
+
 - [ ] Add session listing endpoint
 - [ ] Add session revocation endpoint
 - [ ] Create sessions management UI
@@ -136,6 +148,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 3: Multi-Tenancy & Organizations
 
 ### 3.1 Organization Management
+
 - [ ] Create organization CRUD endpoints
 - [ ] Implement organization slug validation
 - [ ] Add organization settings (name, logo, accent color)
@@ -143,6 +156,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Implement logo upload
 
 ### 3.2 Membership & Roles
+
 - [ ] Define role hierarchy (Owner, Admin, Member)
 - [ ] Create membership management endpoints
 - [ ] Implement role-based authorization middleware
@@ -150,6 +164,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create role change UI
 
 ### 3.3 Invitation System
+
 - [ ] Create Invitation model
 - [ ] Generate secure invitation tokens
 - [ ] Create invite email template
@@ -158,17 +173,20 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add invitation management UI
 
 ### 3.4 Domain Lockdown
+
 - [ ] Add allowedDomain field to Organization
 - [ ] Validate email domain on registration
 - [ ] Add domain configuration UI
 
 ### 3.5 Workspace Switcher
+
 - [ ] Fetch user's organization memberships
 - [ ] Create workspace switcher dropdown
 - [ ] Persist selected workspace in localStorage
 - [ ] Update API calls with organization context
 
 ### 3.6 Super Admin
+
 - [ ] Create isSuperAdmin flag on User
 - [ ] Create super admin middleware
 - [ ] Create admin dashboard layout
@@ -176,6 +194,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add system-wide organization management
 
 ### 3.7 Setup Wizard
+
 - [ ] Detect first-run state (no super admin)
 - [ ] Create setup wizard pages
 - [ ] Collect super admin credentials
@@ -187,6 +206,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 4: Page System
 
 ### 4.1 Page CRUD
+
 - [ ] Create page endpoints (create, read, update, delete)
 - [ ] Implement soft delete (trashedAt)
 - [ ] Add organization scope to all queries
@@ -195,6 +215,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Auto-save page title changes
 
 ### 4.2 Page Hierarchy
+
 - [ ] Implement parent-child relationships
 - [ ] Create recursive page tree query
 - [ ] Implement position ordering for siblings
@@ -202,6 +223,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create drag-drop reordering UI
 
 ### 4.3 Sidebar Navigation
+
 - [ ] Create recursive page tree component
 - [ ] Add expand/collapse functionality
 - [ ] Implement page creation from sidebar
@@ -209,11 +231,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Highlight active page
 
 ### 4.4 Breadcrumbs
+
 - [ ] Create breadcrumb component
 - [ ] Fetch page path (ancestors)
 - [ ] Navigate on breadcrumb click
 
 ### 4.5 Page Icons & Covers
+
 - [ ] Add icon field to Page model
 - [ ] Create emoji picker component
 - [ ] Implement icon selection UI
@@ -222,12 +246,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Display cover in page header
 
 ### 4.6 Favorites
+
 - [ ] Create Favorite model
 - [ ] Add toggle favorite endpoint
 - [ ] Create favorites section in sidebar
 - [ ] Implement favorite reordering
 
 ### 4.7 Trash & Restore
+
 - [ ] Create trash listing endpoint
 - [ ] Add restore endpoint
 - [ ] Add permanent delete endpoint
@@ -239,6 +265,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 5: Real-Time Collaboration
 
 ### 5.1 Hocuspocus Setup
+
 - [ ] Install @hocuspocus/server
 - [ ] Create Hocuspocus server configuration
 - [ ] Implement onAuthenticate hook (verify session)
@@ -247,6 +274,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Setup WebSocket route (/collaboration/:pageId)
 
 ### 5.2 Yjs Integration
+
 - [ ] Install y-websocket provider
 - [ ] Create Y.Doc per page
 - [ ] Store yjsState as Bytes in Page model
@@ -254,6 +282,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Test multi-user editing
 
 ### 5.3 Presence & Cursors
+
 - [ ] Enable Yjs awareness
 - [ ] Create presence indicator component
 - [ ] Show user avatars viewing page
@@ -262,6 +291,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Show user name tooltips on cursors
 
 ### 5.4 Page Version History
+
 - [ ] Create PageVersion model
 - [ ] Save version on significant changes (debounced)
 - [ ] Create version listing endpoint
@@ -274,12 +304,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 6: Page Sharing & Permissions
 
 ### 6.1 Page-Level Permissions
+
 - [ ] Create PagePermission model
 - [ ] Define permission levels (View, Edit, Full Access)
 - [ ] Create permission check middleware
 - [ ] Integrate permissions into Hocuspocus auth hook
 
 ### 6.2 Share UI
+
 - [ ] Create share modal component
 - [ ] List current permissions
 - [ ] Add user to page with permission level
@@ -287,6 +319,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Update permission level
 
 ### 6.3 Public Pages
+
 - [ ] Add isPublic and publicSlug fields
 - [ ] Generate unique public slug
 - [ ] Create public page route (/public/:slug)
@@ -294,6 +327,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add share to web toggle in share modal
 
 ### 6.4 Guest Access
+
 - [ ] Create GuestAccess model
 - [ ] Generate guest access tokens
 - [ ] Create guest login page
@@ -305,6 +339,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 7: Comments & Mentions
 
 ### 7.1 Comments System
+
 - [ ] Create Comment model with threading
 - [ ] Create comment CRUD endpoints
 - [ ] Implement blockId reference for inline comments
@@ -312,6 +347,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create inline comment markers in editor
 
 ### 7.2 Comment UI
+
 - [ ] Display comment threads
 - [ ] Add reply functionality
 - [ ] Implement resolve/unresolve
@@ -319,6 +355,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add comment deletion
 
 ### 7.3 Mentions
+
 - [ ] Create Mention model
 - [ ] Implement @mention detection in comment input
 - [ ] Create user autocomplete dropdown
@@ -330,12 +367,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 8: Notifications
 
 ### 8.1 Notification System
+
 - [ ] Create Notification model
 - [ ] Define notification types (mention, comment, share, etc.)
 - [ ] Create notification service
 - [ ] Trigger notifications on relevant events
 
 ### 8.2 In-App Notifications
+
 - [ ] Create notification listing endpoint
 - [ ] Create mark-as-read endpoint
 - [ ] Create notification bell component
@@ -343,6 +382,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Show unread count badge
 
 ### 8.3 Email Notifications
+
 - [ ] Create email notification templates
 - [ ] Implement email sending for important events
 - [ ] Add emailSent tracking
@@ -354,6 +394,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 9: Search
 
 ### 9.1 PostgreSQL Full-Text Search
+
 - [ ] Add tsvector column to Page
 - [ ] Create search index trigger
 - [ ] Create search endpoint
@@ -361,12 +402,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create search UI with results
 
 ### 9.2 Search Enhancements
+
 - [ ] Add search filters (type, date, author)
 - [ ] Implement search highlighting
 - [ ] Add recent searches
 - [ ] Create global search shortcut (Cmd+K)
 
 ### 9.3 Meilisearch Integration (Future)
+
 - [ ] Setup Meilisearch Docker service
 - [ ] Create Meilisearch client
 - [ ] Index pages on create/update
@@ -379,6 +422,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 10: Databases (Tables)
 
 ### 10.1 Database Models
+
 - [ ] Create Database model
 - [ ] Create DatabaseProperty model with types
 - [ ] Create DatabaseRow model
@@ -386,12 +430,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create DatabaseView model
 
 ### 10.2 Database CRUD
+
 - [ ] Create database endpoints
 - [ ] Create property management endpoints
 - [ ] Create row CRUD endpoints
 - [ ] Create view management endpoints
 
 ### 10.3 Table View
+
 - [ ] Create data table component
 - [ ] Implement column resizing
 - [ ] Add cell editing by type
@@ -399,6 +445,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Implement filtering
 
 ### 10.4 Property Types
+
 - [ ] Implement Text property
 - [ ] Implement Number property
 - [ ] Implement Select/Multi-select properties
@@ -409,23 +456,27 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Implement Files property
 
 ### 10.5 Kanban View
+
 - [ ] Create kanban board component
 - [ ] Group rows by select property
 - [ ] Implement drag-drop between columns
 - [ ] Add column management
 
 ### 10.6 Calendar View
+
 - [ ] Create calendar component
 - [ ] Display rows by date property
 - [ ] Implement month/week/day views
 - [ ] Add drag to reschedule
 
 ### 10.7 Gallery View
+
 - [ ] Create gallery grid component
 - [ ] Display row cards with cover image
 - [ ] Implement card layout options
 
 ### 10.8 Advanced Features
+
 - [ ] Implement Relations between databases
 - [ ] Implement Rollup calculations
 - [ ] Implement Formula properties
@@ -436,17 +487,20 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 11: Templates
 
 ### 11.1 Template System
+
 - [ ] Create Template model
 - [ ] Create template CRUD endpoints
 - [ ] Store template content as Yjs state
 
 ### 11.2 Template Management
+
 - [ ] Create template library page
 - [ ] Create template from page
 - [ ] Implement template categories
 - [ ] Add template search
 
 ### 11.3 Template Usage
+
 - [ ] Create page from template endpoint
 - [ ] Add "Use template" in new page flow
 - [ ] Create quick-start templates
@@ -456,6 +510,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 12: File Storage
 
 ### 12.1 Storage Service
+
 - [ ] Create storage service interface
 - [ ] Implement local disk storage
 - [ ] Implement MinIO storage
@@ -464,6 +519,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create file download endpoint
 
 ### 12.2 File Management
+
 - [ ] Create File model
 - [ ] Track file metadata (size, type)
 - [ ] Implement file type validation
@@ -471,6 +527,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create file deletion
 
 ### 12.3 Admin Storage Config
+
 - [ ] Create storage settings UI
 - [ ] Validate storage credentials
 - [ ] Migrate between storage providers (optional)
@@ -480,6 +537,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 13: Backup System
 
 ### 13.1 Backup Implementation
+
 - [ ] Create Backup model
 - [ ] Implement pg_dump automation
 - [ ] Compress backups (gzip)
@@ -487,6 +545,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Upload to Backblaze B2
 
 ### 13.2 Backup Management
+
 - [ ] Create backup listing endpoint
 - [ ] Implement scheduled backups (cron)
 - [ ] Create manual backup trigger
@@ -498,6 +557,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 14: API & Webhooks
 
 ### 14.1 Public API
+
 - [ ] Create API token model
 - [ ] Implement token generation
 - [ ] Create API authentication middleware
@@ -505,12 +565,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add rate limiting per token
 
 ### 14.2 API Token Management
+
 - [ ] Create token listing endpoint
 - [ ] Create token revocation
 - [ ] Create API tokens UI
 - [ ] Track token last used
 
 ### 14.3 Webhooks
+
 - [ ] Create Webhook model
 - [ ] Create WebhookDelivery model
 - [ ] Implement webhook triggering service
@@ -518,6 +580,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Implement retry logic
 
 ### 14.4 Webhook Management
+
 - [ ] Create webhook CRUD endpoints
 - [ ] Create webhooks management UI
 - [ ] Display delivery logs
@@ -528,6 +591,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 15: Admin Features
 
 ### 15.1 Audit Logging
+
 - [ ] Create AuditLog model
 - [ ] Implement audit logging service
 - [ ] Log user actions (CRUD, auth, permissions)
@@ -535,12 +599,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create audit logs UI with filters
 
 ### 15.2 System Settings
+
 - [ ] Create SystemSettings model
 - [ ] Create settings endpoints
 - [ ] Create admin settings pages
 - [ ] Implement setting validation
 
 ### 15.3 Admin Dashboard
+
 - [ ] Create system stats endpoints
 - [ ] Display user/org/page counts
 - [ ] Show storage usage
@@ -551,17 +617,20 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 16: AI Features
 
 ### 16.1 OpenRouter Integration
+
 - [ ] Create OpenRouter client
 - [ ] Implement API key configuration
 - [ ] Add AI enabled toggle
 
 ### 16.2 Content Translation
+
 - [ ] Create translation endpoint
 - [ ] Implement translation UI (context menu)
 - [ ] Support multiple target languages
 - [ ] Cache translations (optional)
 
 ### 16.3 AI Toggle
+
 - [ ] Add aiEnabled to Organization
 - [ ] Add global AI disable in SystemSettings
 - [ ] Hide AI features when disabled
@@ -571,6 +640,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 17: Internationalization
 
 ### 17.1 UI Translation
+
 - [ ] Setup vue-i18n
 - [ ] Extract UI strings to locale files
 - [ ] Create English locale (en.json)
@@ -578,6 +648,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Persist language preference
 
 ### 17.2 Community Translations
+
 - [ ] Document translation contribution process
 - [ ] Add locale files for common languages
 - [ ] Create translation status page
@@ -587,12 +658,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 18: Compliance
 
 ### 18.1 GDPR - Data Export
+
 - [ ] Create user data export endpoint
 - [ ] Export user's pages, comments, files
 - [ ] Generate downloadable archive
 - [ ] Create data export UI
 
 ### 18.2 GDPR - Account Deletion
+
 - [ ] Create account deletion endpoint
 - [ ] Implement cascading deletes
 - [ ] Add deletion confirmation flow
@@ -603,12 +676,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 19: Editor Enhancements
 
 ### 19.1 Slash Commands
+
 - [ ] Create slash command extension
 - [ ] Build command menu component
 - [ ] Add block type commands
 - [ ] Add keyboard navigation
 
 ### 19.2 Additional Block Types
+
 - [ ] Add Code block with syntax highlighting
 - [ ] Add Quote block
 - [ ] Add Callout/Alert block
@@ -617,6 +692,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add Toggle/Collapsible block
 
 ### 19.3 Drag & Drop
+
 - [ ] Implement block drag handles
 - [ ] Add drop indicators
 - [ ] Reorder blocks via drag
@@ -627,6 +703,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Phase 20: Polish & Distribution
 
 ### 20.1 UI/UX Polish
+
 - [ ] Implement dark/light mode toggle
 - [ ] Add loading skeletons
 - [ ] Add keyboard shortcuts
@@ -634,24 +711,28 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add onboarding tour
 
 ### 20.2 Performance
+
 - [ ] Add API response caching
 - [ ] Implement lazy loading
 - [ ] Optimize database queries
 - [ ] Add service worker for offline viewing
 
 ### 20.3 Accessibility
+
 - [ ] Audit for WCAG 2.1 AA
 - [ ] Add ARIA labels
 - [ ] Ensure keyboard navigation
 - [ ] Test with screen readers
 
 ### 20.4 Production Docker
+
 - [ ] Create production Dockerfile
 - [ ] Create docker-compose.production.yml
 - [ ] Add health checks
 - [ ] Document deployment process
 
 ### 20.5 Documentation
+
 - [ ] Create user documentation
 - [ ] Create admin documentation
 - [ ] Create API documentation
@@ -662,6 +743,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ## Future Phases
 
 ### Embeds (Requires Security Review)
+
 - [ ] Design embed sandbox strategy
 - [ ] Implement YouTube embed
 - [ ] Implement Figma embed
@@ -669,12 +751,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Implement generic oEmbed support
 
 ### Import/Export
+
 - [ ] Import from Notion
 - [ ] Import from Markdown files
 - [ ] Export to Markdown
 - [ ] Export to PDF
 
 ### Mobile Apps
+
 - [ ] Create PWA manifest
 - [ ] Implement service worker
 - [ ] Design mobile-optimized views
