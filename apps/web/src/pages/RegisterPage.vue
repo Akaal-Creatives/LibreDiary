@@ -1,39 +1,67 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTheme } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
-import { ApiError } from '@/services';
+import { authService, ApiError } from '@/services';
+
+const props = defineProps<{
+  token: string;
+}>();
 
 const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
 
 const email = ref('');
+const name = ref('');
 const password = ref('');
+const confirmPassword = ref('');
+const organizationName = ref('');
 const loading = ref(false);
+const loadingInvite = ref(true);
 const error = ref('');
+const inviteError = ref('');
 
-async function handleSubmit() {
-  loading.value = true;
-  error.value = '';
-
+onMounted(async () => {
   try {
-    await authStore.login(email.value, password.value);
-
-    // Redirect to intended destination or app home
-    const redirect = route.query.redirect as string;
-    router.push(redirect || '/app');
+    const invite = await authService.getInvite(props.token);
+    email.value = invite.email;
+    organizationName.value = invite.organization.name;
   } catch (err) {
     if (err instanceof ApiError) {
-      if (err.code === 'LOGIN_ERROR') {
-        error.value = 'Invalid email or password';
-      } else {
-        error.value = err.message;
-      }
+      inviteError.value = err.message;
     } else {
-      error.value = 'An unexpected error occurred';
+      inviteError.value = 'Invalid or expired invite link';
+    }
+  } finally {
+    loadingInvite.value = false;
+  }
+});
+
+async function handleSubmit() {
+  error.value = '';
+
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match';
+    return;
+  }
+
+  if (password.value.length < 8) {
+    error.value = 'Password must be at least 8 characters';
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    await authStore.register(email.value, password.value, props.token, name.value || undefined);
+    router.push('/app');
+  } catch (err) {
+    if (err instanceof ApiError) {
+      error.value = err.message;
+    } else {
+      error.value = 'Registration failed. Please try again.';
     }
   } finally {
     loading.value = false;
@@ -44,13 +72,13 @@ function goHome() {
   router.push('/');
 }
 
-function goToForgotPassword() {
-  router.push('/forgot-password');
+function goToLogin() {
+  router.push('/login');
 }
 </script>
 
 <template>
-  <div class="login-page">
+  <div class="register-page">
     <!-- Theme Toggle -->
     <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -86,7 +114,7 @@ function goToForgotPassword() {
       </svg>
     </button>
 
-    <div class="login-container">
+    <div class="register-container">
       <!-- Brand -->
       <button class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
@@ -115,14 +143,40 @@ function goToForgotPassword() {
         <span class="brand-name">LibreDiary</span>
       </button>
 
-      <!-- Login Card -->
-      <div class="login-card">
-        <div class="login-header">
-          <h1>Welcome back</h1>
-          <p>Sign in to continue to your workspace</p>
+      <!-- Loading State -->
+      <div v-if="loadingInvite" class="register-card">
+        <div class="loading-state">
+          <div class="loading-spinner large"></div>
+          <p>Loading invite...</p>
+        </div>
+      </div>
+
+      <!-- Invalid Invite -->
+      <div v-else-if="inviteError" class="register-card">
+        <div class="error-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M24 16V28M24 34V34.1"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <h2>Invalid Invite</h2>
+          <p>{{ inviteError }}</p>
+          <button class="secondary-btn" @click="goToLogin">Go to Login</button>
+        </div>
+      </div>
+
+      <!-- Registration Form -->
+      <div v-else class="register-card">
+        <div class="register-header">
+          <h1>Join {{ organizationName }}</h1>
+          <p>Create your account to get started</p>
         </div>
 
-        <form class="login-form" @submit.prevent="handleSubmit">
+        <form class="register-form" @submit.prevent="handleSubmit">
           <div v-if="error" class="error-message">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
@@ -138,13 +192,17 @@ function goToForgotPassword() {
 
           <div class="form-field">
             <label for="email">Email</label>
+            <input id="email" v-model="email" type="email" readonly class="readonly" />
+          </div>
+
+          <div class="form-field">
+            <label for="name">Name (optional)</label>
             <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              autocomplete="email"
+              id="name"
+              v-model="name"
+              type="text"
+              placeholder="Your name"
+              autocomplete="name"
             />
           </div>
 
@@ -154,20 +212,33 @@ function goToForgotPassword() {
               id="password"
               v-model="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="At least 8 characters"
               required
-              autocomplete="current-password"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="confirm-password">Confirm Password</label>
+            <input
+              id="confirm-password"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              required
+              autocomplete="new-password"
             />
           </div>
 
           <button type="submit" class="submit-btn" :disabled="loading">
             <span v-if="loading" class="loading-spinner"></span>
-            <span v-else>Sign In</span>
+            <span v-else>Create Account</span>
           </button>
         </form>
 
-        <div class="login-footer">
-          <button class="forgot-link" @click="goToForgotPassword">Forgot your password?</button>
+        <div class="register-footer">
+          <span>Already have an account?</span>
+          <button class="link-btn" @click="goToLogin">Sign in</button>
         </div>
       </div>
 
@@ -189,7 +260,7 @@ function goToForgotPassword() {
 </template>
 
 <style scoped>
-.login-page {
+.register-page {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,7 +293,7 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-sm);
 }
 
-.login-container {
+.register-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,7 +326,7 @@ function goToForgotPassword() {
   color: var(--color-accent);
 }
 
-.login-card {
+.register-card {
   width: 100%;
   padding: var(--space-10);
   background: var(--color-surface);
@@ -264,23 +335,66 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-lg);
 }
 
-.login-header {
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.loading-state p,
+.error-state p {
+  color: var(--color-text-secondary);
+}
+
+.error-state svg {
+  color: var(--color-error);
+}
+
+.error-state h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.secondary-btn {
+  padding: var(--space-3) var(--space-6);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.secondary-btn:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.register-header {
   margin-bottom: var(--space-8);
   text-align: center;
 }
 
-.login-header h1 {
+.register-header h1 {
   margin-bottom: var(--space-2);
   font-size: var(--text-2xl);
   font-weight: 600;
 }
 
-.login-header p {
+.register-header p {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 
-.login-form {
+.register-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -331,6 +445,11 @@ function goToForgotPassword() {
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
+.form-field input.readonly {
+  background: var(--color-surface-hover);
+  cursor: not-allowed;
+}
+
 .submit-btn {
   display: flex;
   align-items: center;
@@ -367,30 +486,42 @@ function goToForgotPassword() {
   animation: spin 0.8s linear infinite;
 }
 
+.loading-spinner.large {
+  width: 32px;
+  height: 32px;
+  border-color: var(--color-accent);
+  border-top-color: transparent;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.login-footer {
+.register-footer {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
   margin-top: var(--space-6);
-  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 
-.forgot-link {
+.link-btn {
   padding: 0;
   font-family: inherit;
   font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--color-accent);
-  text-decoration: none;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
-.forgot-link:hover {
+.link-btn:hover {
   color: var(--color-accent-hover);
 }
 

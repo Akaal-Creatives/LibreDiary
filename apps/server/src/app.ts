@@ -8,6 +8,7 @@ import {
   errorHandlerPlugin,
 } from './plugins/index.js';
 import { healthRoutes, devRoutes } from './routes/index.js';
+import { authRoutes } from './modules/auth/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -47,6 +48,9 @@ export async function buildApp() {
         success: true,
         data: { message: 'LibreDiary API v1' },
       }));
+
+      // Auth routes
+      await api.register(authRoutes, { prefix: '/auth' });
     },
     { prefix: '/api/v1' }
   );

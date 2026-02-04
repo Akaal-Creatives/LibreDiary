@@ -1,56 +1,52 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTheme } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/services';
 
+const props = defineProps<{
+  token: string;
+}>();
+
 const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
 
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
+const loading = ref(true);
 const error = ref('');
+const success = ref(false);
 
-async function handleSubmit() {
-  loading.value = true;
-  error.value = '';
-
+onMounted(async () => {
   try {
-    await authStore.login(email.value, password.value);
-
-    // Redirect to intended destination or app home
-    const redirect = route.query.redirect as string;
-    router.push(redirect || '/app');
+    await authStore.verifyEmail(props.token);
+    success.value = true;
   } catch (err) {
     if (err instanceof ApiError) {
-      if (err.code === 'LOGIN_ERROR') {
-        error.value = 'Invalid email or password';
-      } else {
-        error.value = err.message;
-      }
+      error.value = err.message;
     } else {
-      error.value = 'An unexpected error occurred';
+      error.value = 'Failed to verify email. Please try again.';
     }
   } finally {
     loading.value = false;
   }
-}
+});
 
 function goHome() {
   router.push('/');
 }
 
-function goToForgotPassword() {
-  router.push('/forgot-password');
+function goToApp() {
+  router.push('/app');
+}
+
+function goToLogin() {
+  router.push('/login');
 }
 </script>
 
 <template>
-  <div class="login-page">
+  <div class="verify-page">
     <!-- Theme Toggle -->
     <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -86,7 +82,7 @@ function goToForgotPassword() {
       </svg>
     </button>
 
-    <div class="login-container">
+    <div class="verify-container">
       <!-- Brand -->
       <button class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
@@ -115,59 +111,51 @@ function goToForgotPassword() {
         <span class="brand-name">LibreDiary</span>
       </button>
 
-      <!-- Login Card -->
-      <div class="login-card">
-        <div class="login-header">
-          <h1>Welcome back</h1>
-          <p>Sign in to continue to your workspace</p>
+      <!-- Verify Email Card -->
+      <div class="verify-card">
+        <!-- Loading State -->
+        <div v-if="loading" class="loading-state">
+          <div class="loading-spinner large"></div>
+          <p>Verifying your email...</p>
         </div>
 
-        <form class="login-form" @submit.prevent="handleSubmit">
-          <div v-if="error" class="error-message">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M8 5V8.5M8 11V11.01"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-            {{ error }}
-          </div>
-
-          <div class="form-field">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              autocomplete="email"
+        <!-- Success State -->
+        <div v-else-if="success" class="success-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M16 24L22 30L32 18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
-          </div>
-
-          <div class="form-field">
-            <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="Enter your password"
-              required
-              autocomplete="current-password"
-            />
-          </div>
-
-          <button type="submit" class="submit-btn" :disabled="loading">
-            <span v-if="loading" class="loading-spinner"></span>
-            <span v-else>Sign In</span>
+          </svg>
+          <h2>Email verified!</h2>
+          <p>Your email has been successfully verified.</p>
+          <button v-if="authStore.isAuthenticated" class="submit-btn" @click="goToApp">
+            Go to App
           </button>
-        </form>
+          <button v-else class="submit-btn" @click="goToLogin">Sign In</button>
+        </div>
 
-        <div class="login-footer">
-          <button class="forgot-link" @click="goToForgotPassword">Forgot your password?</button>
+        <!-- Error State -->
+        <div v-else class="error-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M24 16V28M24 34V34.1"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <h2>Verification failed</h2>
+          <p>{{ error }}</p>
+          <button v-if="authStore.isAuthenticated" class="secondary-btn" @click="goToApp">
+            Go to App
+          </button>
+          <button v-else class="secondary-btn" @click="goToLogin">Go to Login</button>
         </div>
       </div>
 
@@ -189,7 +177,7 @@ function goToForgotPassword() {
 </template>
 
 <style scoped>
-.login-page {
+.verify-page {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,7 +210,7 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-sm);
 }
 
-.login-container {
+.verify-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,7 +243,7 @@ function goToForgotPassword() {
   color: var(--color-accent);
 }
 
-.login-card {
+.verify-card {
   width: 100%;
   padding: var(--space-10);
   background: var(--color-surface);
@@ -264,71 +252,49 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-lg);
 }
 
-.login-header {
-  margin-bottom: var(--space-8);
+.loading-state,
+.success-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
   text-align: center;
 }
 
-.login-header h1 {
-  margin-bottom: var(--space-2);
-  font-size: var(--text-2xl);
-  font-weight: 600;
-}
-
-.login-header p {
-  font-size: var(--text-sm);
+.loading-state p {
   color: var(--color-text-secondary);
 }
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+.success-state svg {
+  color: var(--color-success);
 }
 
-.error-message {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--text-sm);
+.success-state h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.success-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.error-state svg {
   color: var(--color-error);
-  background: var(--color-error-subtle);
-  border-radius: var(--radius-md);
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+.error-state h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
 }
 
-.form-field label {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.form-field input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  font-family: inherit;
-  font-size: var(--text-base);
-  color: var(--color-text-primary);
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-lg);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.form-field input::placeholder {
-  color: var(--color-text-tertiary);
-}
-
-.form-field input:focus {
-  border-color: var(--input-focus-border);
-  box-shadow: 0 0 0 3px var(--color-focus-ring);
+.error-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
 }
 
 .submit-btn {
@@ -337,7 +303,7 @@ function goToForgotPassword() {
   justify-content: center;
   width: 100%;
   height: 48px;
-  margin-top: var(--space-2);
+  margin-top: var(--space-4);
   font-family: inherit;
   font-size: var(--text-base);
   font-weight: 600;
@@ -353,45 +319,43 @@ function goToForgotPassword() {
   background: var(--color-accent-hover);
 }
 
-.submit-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+.secondary-btn {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.secondary-btn:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .loading-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--color-text-inverse);
+  border: 2px solid var(--color-accent);
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner.large {
+  width: 32px;
+  height: 32px;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
-}
-
-.login-footer {
-  margin-top: var(--space-6);
-  text-align: center;
-}
-
-.forgot-link {
-  padding: 0;
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-accent);
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-}
-
-.forgot-link:hover {
-  color: var(--color-accent-hover);
 }
 
 .back-link {

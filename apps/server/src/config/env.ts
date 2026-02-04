@@ -25,6 +25,17 @@ const envSchema = z.object({
     .default('true'),
   RATE_LIMIT_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().default(60), // seconds
+
+  // SMTP
+  SMTP_HOST: z.string().default('localhost'),
+  SMTP_PORT: z.coerce.number().default(1025),
+  SMTP_SECURE: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().default('noreply@librediary.local'),
 });
 
 export type Env = z.infer<typeof envSchema>;

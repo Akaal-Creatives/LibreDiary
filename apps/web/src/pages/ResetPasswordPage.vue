@@ -1,39 +1,45 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useTheme } from '@/composables';
-import { useAuthStore } from '@/stores/auth';
-import { ApiError } from '@/services';
+import { authService, ApiError } from '@/services';
+
+const props = defineProps<{
+  token: string;
+}>();
 
 const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
 
-const email = ref('');
 const password = ref('');
+const confirmPassword = ref('');
 const loading = ref(false);
 const error = ref('');
+const success = ref(false);
 
 async function handleSubmit() {
-  loading.value = true;
   error.value = '';
 
-  try {
-    await authStore.login(email.value, password.value);
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match';
+    return;
+  }
 
-    // Redirect to intended destination or app home
-    const redirect = route.query.redirect as string;
-    router.push(redirect || '/app');
+  if (password.value.length < 8) {
+    error.value = 'Password must be at least 8 characters';
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    await authService.resetPassword(props.token, password.value);
+    success.value = true;
   } catch (err) {
     if (err instanceof ApiError) {
-      if (err.code === 'LOGIN_ERROR') {
-        error.value = 'Invalid email or password';
-      } else {
-        error.value = err.message;
-      }
+      error.value = err.message;
     } else {
-      error.value = 'An unexpected error occurred';
+      error.value = 'Failed to reset password. Please try again.';
     }
   } finally {
     loading.value = false;
@@ -44,13 +50,13 @@ function goHome() {
   router.push('/');
 }
 
-function goToForgotPassword() {
-  router.push('/forgot-password');
+function goToLogin() {
+  router.push('/login');
 }
 </script>
 
 <template>
-  <div class="login-page">
+  <div class="reset-page">
     <!-- Theme Toggle -->
     <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -86,7 +92,7 @@ function goToForgotPassword() {
       </svg>
     </button>
 
-    <div class="login-container">
+    <div class="reset-container">
       <!-- Brand -->
       <button class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
@@ -115,60 +121,91 @@ function goToForgotPassword() {
         <span class="brand-name">LibreDiary</span>
       </button>
 
-      <!-- Login Card -->
-      <div class="login-card">
-        <div class="login-header">
-          <h1>Welcome back</h1>
-          <p>Sign in to continue to your workspace</p>
+      <!-- Reset Password Card -->
+      <div class="reset-card">
+        <!-- Success State -->
+        <div v-if="success" class="success-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M16 24L22 30L32 18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h2>Password reset!</h2>
+          <p>Your password has been successfully changed.</p>
+          <button class="submit-btn" @click="goToLogin">Sign In</button>
         </div>
 
-        <form class="login-form" @submit.prevent="handleSubmit">
-          <div v-if="error" class="error-message">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
-              <path
-                d="M8 5V8.5M8 11V11.01"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
+        <!-- Form State -->
+        <template v-else>
+          <div class="reset-header">
+            <h1>Reset password</h1>
+            <p>Enter your new password</p>
+          </div>
+
+          <form class="reset-form" @submit.prevent="handleSubmit">
+            <div v-if="error" class="error-message">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M8 5V8.5M8 11V11.01"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              {{ error }}
+            </div>
+
+            <div class="form-field">
+              <label for="password">New Password</label>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                placeholder="At least 8 characters"
+                required
+                autocomplete="new-password"
               />
-            </svg>
-            {{ error }}
+            </div>
+
+            <div class="form-field">
+              <label for="confirm-password">Confirm Password</label>
+              <input
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+
+            <button type="submit" class="submit-btn" :disabled="loading">
+              <span v-if="loading" class="loading-spinner"></span>
+              <span v-else>Reset Password</span>
+            </button>
+          </form>
+
+          <div class="reset-footer">
+            <button class="link-btn" @click="goToLogin">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M10 12L6 8L10 4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Back to Login
+            </button>
           </div>
-
-          <div class="form-field">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              autocomplete="email"
-            />
-          </div>
-
-          <div class="form-field">
-            <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="Enter your password"
-              required
-              autocomplete="current-password"
-            />
-          </div>
-
-          <button type="submit" class="submit-btn" :disabled="loading">
-            <span v-if="loading" class="loading-spinner"></span>
-            <span v-else>Sign In</span>
-          </button>
-        </form>
-
-        <div class="login-footer">
-          <button class="forgot-link" @click="goToForgotPassword">Forgot your password?</button>
-        </div>
+        </template>
       </div>
 
       <!-- Back link -->
@@ -189,7 +226,7 @@ function goToForgotPassword() {
 </template>
 
 <style scoped>
-.login-page {
+.reset-page {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,7 +259,7 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-sm);
 }
 
-.login-container {
+.reset-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,7 +292,7 @@ function goToForgotPassword() {
   color: var(--color-accent);
 }
 
-.login-card {
+.reset-card {
   width: 100%;
   padding: var(--space-10);
   background: var(--color-surface);
@@ -264,23 +301,46 @@ function goToForgotPassword() {
   box-shadow: var(--shadow-lg);
 }
 
-.login-header {
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.success-state svg {
+  color: var(--color-success);
+}
+
+.success-state h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.success-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.reset-header {
   margin-bottom: var(--space-8);
   text-align: center;
 }
 
-.login-header h1 {
+.reset-header h1 {
   margin-bottom: var(--space-2);
   font-size: var(--text-2xl);
   font-weight: 600;
 }
 
-.login-header p {
+.reset-header p {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 
-.login-form {
+.reset-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -373,24 +433,27 @@ function goToForgotPassword() {
   }
 }
 
-.login-footer {
+.reset-footer {
   margin-top: var(--space-6);
   text-align: center;
 }
 
-.forgot-link {
+.link-btn {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
   padding: 0;
   font-family: inherit;
   font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--color-accent);
-  text-decoration: none;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
-.forgot-link:hover {
+.link-btn:hover {
   color: var(--color-accent-hover);
 }
 

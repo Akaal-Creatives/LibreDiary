@@ -36,9 +36,62 @@ model User {
   memberships  OrganizationMember[]
   createdPages Page[]               @relation("PageCreatedBy")
   updatedPages Page[]               @relation("PageUpdatedBy")
+  sessions     Session[]
+  invitesSent  Invite[]             @relation("InvitesSent")
 
   @@index([email])
   @@index([deletedAt])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  userAgent    String?
+  ipAddress    String?
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id         String    @id @default(cuid())
+  identifier String
+  token      String    @unique
+  type       TokenType
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  usedAt     DateTime?
+
+  @@index([identifier])
+  @@index([token])
+}
+
+model Invite {
+  id             String       @id @default(cuid())
+  email          String
+  token          String       @unique
+  organizationId String
+  role           OrgRole      @default(MEMBER)
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("InvitesSent", fields: [invitedById], references: [id])
+
+  @@index([email])
+  @@index([token])
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
 }
 
 // ============================================
@@ -68,6 +121,7 @@ model Organization {
   // Relations
   members OrganizationMember[]
   pages   Page[]
+  invites Invite[]
 
   @@index([slug])
   @@index([deletedAt])

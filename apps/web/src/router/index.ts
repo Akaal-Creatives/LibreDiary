@@ -15,6 +15,32 @@ const routes: RouteRecordRaw[] = [
     meta: { guest: true },
   },
   {
+    path: '/register/:token',
+    name: 'register',
+    component: () => import('@/pages/RegisterPage.vue'),
+    meta: { guest: true },
+    props: true,
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/pages/ForgotPasswordPage.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/reset-password/:token',
+    name: 'reset-password',
+    component: () => import('@/pages/ResetPasswordPage.vue'),
+    meta: { guest: true },
+    props: true,
+  },
+  {
+    path: '/verify-email/:token',
+    name: 'verify-email',
+    component: () => import('@/pages/VerifyEmailPage.vue'),
+    props: true,
+  },
+  {
     path: '/app',
     component: () => import('@/layouts/AppLayout.vue'),
     meta: { requiresAuth: true },
@@ -44,9 +70,23 @@ const router = createRouter({
   routes,
 });
 
+// Track if initialization has been attempted
+let initializationPromise: Promise<void> | null = null;
+
 // Navigation guards
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
+
+  // Initialize auth state on first navigation
+  if (!authStore.initialized && !initializationPromise) {
+    initializationPromise = authStore.initialize();
+  }
+
+  // Wait for initialization to complete
+  if (initializationPromise) {
+    await initializationPromise;
+    initializationPromise = null;
+  }
 
   // Check if route requires authentication
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
