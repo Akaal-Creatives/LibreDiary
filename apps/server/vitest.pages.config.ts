@@ -1,24 +1,16 @@
 import { defineConfig } from 'vitest/config';
 
+// Config specifically for pages service tests (memory-intensive)
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
-    // Exclude pages service tests from default run due to memory issues
-    // Run separately with: pnpm test:pages-service
-    exclude: ['**/node_modules/**', '**/pages/__tests__/*.service.test.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/index.ts'],
-    },
+    include: ['src/modules/pages/__tests__/*.service.test.ts'],
+    // Exclude the problematic file - run it separately
+    exclude: ['**/node_modules/**', '**/pages-crud-write.service.test.ts'],
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 10000,
-    // Increase teardown timeout for cleanup
     teardownTimeout: 60000,
-    // Set environment variables early, before modules are loaded
     env: {
       NODE_ENV: 'test',
       APP_SECRET: 'test-secret-key-must-be-at-least-32-characters-long',
