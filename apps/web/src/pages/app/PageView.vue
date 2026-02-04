@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { usePagesStore } from '@/stores';
 import { TiptapEditor } from '@/components/editor';
+import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
+import EmojiPicker from '@/components/EmojiPicker.vue';
 
 const pagesStore = usePagesStore();
 
@@ -10,8 +12,13 @@ const props = defineProps<{
 }>();
 
 const loading = ref(true);
+const error = ref<string | null>(null);
 const pageTitle = ref('');
 const pageContent = ref('');
+const showEmojiPicker = ref(false);
+
+// Debounce timer for title saving
+let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 onMounted(() => {
   loadPage();
@@ -24,51 +31,150 @@ watch(
   }
 );
 
+onUnmounted(() => {
+  // Clear any pending save timeout
+  if (titleSaveTimeout) {
+    clearTimeout(titleSaveTimeout);
+  }
+});
+
 async function loadPage() {
   loading.value = true;
+  error.value = null;
   pagesStore.setCurrentPage(props.pageId);
 
-  // TODO: Fetch page data from API
-  // For now, use mock data
-  pageTitle.value = pagesStore.currentPage?.title ?? 'Untitled';
-  pageContent.value = '';
+  try {
+    const page = await pagesStore.fetchPage(props.pageId);
+    pageTitle.value = page.title;
+    // Note: Content loading is deferred to Phase 5 (Real-Time Collaboration)
+    pageContent.value = '';
 
-  loading.value = false;
+    // Expand ancestors in sidebar
+    pagesStore.expandToPage(props.pageId);
+  } catch (e) {
+    error.value = 'Failed to load page';
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
 }
 
 function updateTitle(event: Event) {
   const target = event.target as HTMLHeadingElement;
-  pageTitle.value = target.textContent ?? 'Untitled';
-  // TODO: Save to API
+  const newTitle = target.textContent?.trim() || 'Untitled';
+  pageTitle.value = newTitle;
+
+  // Debounce save
+  if (titleSaveTimeout) {
+    clearTimeout(titleSaveTimeout);
+  }
+
+  titleSaveTimeout = setTimeout(async () => {
+    try {
+      await pagesStore.updatePageData(props.pageId, { title: newTitle });
+    } catch (e) {
+      console.error('Failed to save title:', e);
+    }
+  }, 500);
 }
 
 function onContentUpdate(content: string) {
   pageContent.value = content;
-  // TODO: Save to API (debounced)
+  // Note: Content saving is deferred to Phase 5 (Real-Time Collaboration)
+}
+
+async function selectIcon(icon: string | null) {
+  showEmojiPicker.value = false;
+  try {
+    await pagesStore.updatePageData(props.pageId, { icon });
+  } catch (e) {
+    console.error('Failed to save icon:', e);
+  }
+}
+
+function toggleEmojiPicker() {
+  showEmojiPicker.value = !showEmojiPicker.value;
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+
+  // Less than a minute
+  if (diff < 60000) {
+    return 'just now';
+  }
+
+  // Less than an hour
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  }
+
+  // Less than a day
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  }
+
+  // Format as date
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
 }
 </script>
 
 <template>
   <div class="page-view">
+    <!-- Breadcrumbs -->
+    <div class="page-breadcrumbs">
+      <PageBreadcrumbs />
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="page-loading">
       <div class="loading-spinner"></div>
       <span class="loading-text">Loading...</span>
     </div>
 
+    <!-- Error State -->
+    <div v-else-if="error" class="page-error">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="error-icon">
+        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+        <path d="M24 14V26" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <circle cx="24" cy="32" r="2" fill="currentColor" />
+      </svg>
+      <h2 class="error-title">{{ error }}</h2>
+      <button class="error-retry" @click="loadPage">Try again</button>
+    </div>
+
     <!-- Page Content -->
     <div v-else class="page-content">
       <!-- Page Header -->
       <header class="page-header">
-        <button class="page-icon-btn" title="Change icon">
-          <span class="page-icon">{{ pagesStore.currentPage?.icon ?? '📄' }}</span>
-        </button>
+        <div class="icon-wrapper">
+          <button class="page-icon-btn" title="Change icon" @click="toggleEmojiPicker">
+            <span class="page-icon">{{ pagesStore.currentPage?.icon ?? '📄' }}</span>
+          </button>
+          <div v-if="showEmojiPicker" class="emoji-picker-wrapper">
+            <EmojiPicker
+              :model-value="pagesStore.currentPage?.icon"
+              @update:model-value="selectIcon"
+              @close="showEmojiPicker = false"
+            />
+          </div>
+        </div>
         <div class="page-meta">
           <h1 class="page-title" contenteditable="true" spellcheck="false" @blur="updateTitle">
             {{ pageTitle }}
           </h1>
           <div class="page-info">
-            <span class="info-item">Last edited recently</span>
+            <span v-if="pagesStore.currentPage?.updatedAt" class="info-item">
+              Edited {{ formatDate(pagesStore.currentPage.updatedAt) }}
+            </span>
           </div>
         </div>
       </header>
@@ -90,6 +196,12 @@ function onContentUpdate(content: string) {
   max-width: 800px;
   margin: 0 auto;
   padding: var(--space-4) 0;
+}
+
+/* Breadcrumbs */
+.page-breadcrumbs {
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-4);
 }
 
 /* Loading State */
@@ -122,14 +234,58 @@ function onContentUpdate(content: string) {
   color: var(--color-text-tertiary);
 }
 
+/* Error State */
+.page-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20);
+  text-align: center;
+}
+
+.error-icon {
+  color: var(--color-error);
+  opacity: 0.5;
+}
+
+.error-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.error-retry {
+  padding: var(--space-2) var(--space-4);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.error-retry:hover {
+  background: var(--color-accent-hover);
+}
+
 /* Page Header */
 .page-header {
   display: flex;
   gap: var(--space-4);
   align-items: flex-start;
   margin-bottom: var(--space-8);
-  padding-bottom: var(--space-6);
+  padding: 0 var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border);
+}
+
+.icon-wrapper {
+  position: relative;
 }
 
 .page-icon-btn {
@@ -149,6 +305,14 @@ function onContentUpdate(content: string) {
 .page-icon {
   font-size: 3rem;
   line-height: 1;
+}
+
+.emoji-picker-wrapper {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  margin-top: var(--space-2);
 }
 
 .page-meta {
@@ -192,5 +356,6 @@ function onContentUpdate(content: string) {
 /* Page Body */
 .page-body {
   min-height: 400px;
+  padding: 0 var(--space-4);
 }
 </style>

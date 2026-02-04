@@ -10,6 +10,7 @@ import {
 import { healthRoutes, devRoutes } from './routes/index.js';
 import { authRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
+import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -55,6 +56,11 @@ export async function buildApp() {
 
       // Organization routes
       await api.register(organizationRoutes, { prefix: '/organizations' });
+
+      // Page routes (nested under organizations)
+      await api.register(pagesRoutes, { prefix: '/organizations/:orgId/pages' });
+      await api.register(trashRoutes, { prefix: '/organizations/:orgId/trash' });
+      await api.register(favoritesRoutes, { prefix: '/organizations/:orgId/favorites' });
     },
     { prefix: '/api/v1' }
   );

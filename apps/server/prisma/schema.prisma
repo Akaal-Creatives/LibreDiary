@@ -38,6 +38,7 @@ model User {
   updatedPages Page[]               @relation("PageUpdatedBy")
   sessions     Session[]
   invitesSent  Invite[]             @relation("InvitesSent")
+  favorites    Favorite[]
 
   @@index([email])
   @@index([deletedAt])
@@ -191,10 +192,29 @@ model Page {
   children     Page[]       @relation("PageHierarchy")
   createdBy    User         @relation("PageCreatedBy", fields: [createdById], references: [id])
   updatedBy    User?        @relation("PageUpdatedBy", fields: [updatedById], references: [id])
+  favorites    Favorite[]
 
   @@index([organizationId])
   @@index([parentId])
   @@index([trashedAt])
   @@index([publicSlug])
   @@index([createdById])
+}
+
+// ============================================
+// FAVORITES
+// ============================================
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  pageId    String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pageId])
+  @@index([userId])
 }

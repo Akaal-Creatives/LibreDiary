@@ -61,6 +61,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/app/PageView.vue'),
         props: true,
       },
+      {
+        path: 'trash',
+        name: 'trash',
+        component: () => import('@/pages/app/TrashPage.vue'),
+      },
       // Organization Settings
       {
         path: 'settings/organization',

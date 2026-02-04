@@ -16,3 +16,10 @@ export type {
   CreateInviteInput,
   OrganizationWithMembership,
 } from './organizations.service';
+export { pagesService } from './pages.service';
+export type {
+  CreatePageInput,
+  UpdatePageInput,
+  MovePageInput,
+  FavoriteWithPage,
+} from './pages.service';

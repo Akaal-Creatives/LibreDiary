@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
 import { useTheme } from '@/composables';
+import type { PageWithChildren, Page } from '@librediary/shared';
 import OrganizationSwitcher from './OrganizationSwitcher.vue';
+import PageTreeItem from './PageTreeItem.vue';
+import PageContextMenu from './PageContextMenu.vue';
+import FavoritesSection from './FavoritesSection.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -11,17 +15,104 @@ const pagesStore = usePagesStore();
 const { theme, toggleTheme } = useTheme();
 
 const searchQuery = ref('');
+const contextMenu = ref<{
+  show: boolean;
+  x: number;
+  y: number;
+  page: Page | PageWithChildren | null;
+}>({
+  show: false,
+  x: 0,
+  y: 0,
+  page: null,
+});
 
-function navigateToPage(pageId: string) {
-  router.push({ name: 'page', params: { pageId } });
-}
+// Fetch pages when organization changes
+watch(
+  () => authStore.currentOrganizationId,
+  async (orgId) => {
+    if (orgId) {
+      try {
+        await pagesStore.fetchPageTree();
+        await pagesStore.fetchFavorites();
+      } catch (e) {
+        console.error('Failed to fetch pages:', e);
+      }
+    }
+  },
+  { immediate: true }
+);
 
 function navigateToDashboard() {
   router.push({ name: 'dashboard' });
 }
 
-function createNewPage() {
-  // TODO: Implement page creation
+function navigateToTrash() {
+  router.push({ name: 'trash' });
+}
+
+async function createNewPage(parentId?: string) {
+  try {
+    const page = await pagesStore.createPage({
+      title: 'Untitled',
+      parentId: parentId ?? null,
+    });
+    router.push({ name: 'page', params: { pageId: page.id } });
+  } catch (e) {
+    console.error('Failed to create page:', e);
+  }
+}
+
+function showContextMenu(event: MouseEvent, page: PageWithChildren) {
+  event.preventDefault();
+  contextMenu.value = {
+    show: true,
+    x: event.clientX,
+    y: event.clientY,
+    page,
+  };
+}
+
+function closeContextMenu() {
+  contextMenu.value.show = false;
+}
+
+async function handleAddSubpage(page: Page | PageWithChildren) {
+  await createNewPage(page.id);
+}
+
+async function handleDuplicate(page: Page | PageWithChildren) {
+  try {
+    const newPage = await pagesStore.duplicatePage(page.id);
+    router.push({ name: 'page', params: { pageId: newPage.id } });
+  } catch (e) {
+    console.error('Failed to duplicate page:', e);
+  }
+}
+
+function handleRename(page: Page | PageWithChildren) {
+  // Navigate to page and focus on title
+  router.push({ name: 'page', params: { pageId: page.id } });
+}
+
+async function handleToggleFavorite(page: Page | PageWithChildren) {
+  try {
+    await pagesStore.toggleFavorite(page.id);
+  } catch (e) {
+    console.error('Failed to toggle favorite:', e);
+  }
+}
+
+async function handleMoveToTrash(page: Page | PageWithChildren) {
+  try {
+    await pagesStore.trashPage(page.id);
+    // Navigate to dashboard if the trashed page was the current page
+    if (pagesStore.currentPageId === page.id) {
+      router.push({ name: 'dashboard' });
+    }
+  } catch (e) {
+    console.error('Failed to trash page:', e);
+  }
 }
 </script>
 
@@ -52,7 +143,7 @@ function createNewPage() {
           />
         </svg>
         <input v-model="searchQuery" type="text" placeholder="Search..." class="search-input" />
-        <span class="search-shortcut">⌘K</span>
+        <span class="search-shortcut">K</span>
       </div>
     </div>
 
@@ -81,7 +172,7 @@ function createNewPage() {
           </span>
           <span>Home</span>
         </button>
-        <button class="nav-item create-btn" @click="createNewPage">
+        <button class="nav-item create-btn" @click="createNewPage()">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
@@ -104,11 +195,14 @@ function createNewPage() {
         </button>
       </div>
 
+      <!-- Favorites Section -->
+      <FavoritesSection />
+
       <!-- Pages Section -->
       <div class="nav-section">
         <div class="nav-section-header">
           <span class="nav-section-title">Pages</span>
-          <button class="section-action" title="Add page" @click="createNewPage">
+          <button class="section-action" title="Add page" @click="createNewPage()">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path
                 d="M7 2.5V11.5"
@@ -125,7 +219,14 @@ function createNewPage() {
             </svg>
           </button>
         </div>
-        <div v-if="pagesStore.rootPages.length === 0" class="empty-state">
+
+        <!-- Loading State -->
+        <div v-if="pagesStore.loading" class="loading-state">
+          <div class="spinner" />
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="pagesStore.rootPages.length === 0" class="empty-state">
           <span class="empty-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -152,32 +253,42 @@ function createNewPage() {
           </span>
           <span class="empty-text">No pages yet</span>
         </div>
-        <button
-          v-for="page in pagesStore.rootPages"
-          :key="page.id"
-          class="nav-item page-item"
-          :class="{ active: pagesStore.currentPageId === page.id }"
-          @click="navigateToPage(page.id)"
-        >
-          <span class="page-icon">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+
+        <!-- Page Tree -->
+        <div v-else class="page-tree">
+          <PageTreeItem
+            v-for="page in pagesStore.pageTree"
+            :key="page.id"
+            :page="page"
+            @contextmenu="showContextMenu"
+          />
+        </div>
+      </div>
+
+      <!-- Trash Link -->
+      <div class="nav-section">
+        <button class="nav-item trash-link" @click="navigateToTrash">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
-                d="M4 3H12L16 7V17C16 17.5523 15.5523 18 15 18H5C4.44772 18 4 17.5523 4 17V4C4 3.44772 4.44772 3 5 3Z"
+                d="M3 5.25H15"
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"
-                stroke-linejoin="round"
               />
               <path
-                d="M12 3V7H16"
+                d="M6 5.25V4.5C6 3.67157 6.67157 3 7.5 3H10.5C11.3284 3 12 3.67157 12 4.5V5.25"
                 stroke="currentColor"
                 stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+              />
+              <path
+                d="M4.5 5.25L5.25 14.25C5.28 14.6642 5.58579 15 6 15H12C12.4142 15 12.72 14.6642 12.75 14.25L13.5 5.25"
+                stroke="currentColor"
+                stroke-width="1.5"
               />
             </svg>
           </span>
-          <span class="page-title">{{ page.title }}</span>
+          <span>Trash</span>
         </button>
       </div>
     </nav>
@@ -233,6 +344,22 @@ function createNewPage() {
         </span>
       </button>
     </div>
+
+    <!-- Context Menu -->
+    <Teleport to="body">
+      <PageContextMenu
+        v-if="contextMenu.show && contextMenu.page"
+        :page="contextMenu.page"
+        :x="contextMenu.x"
+        :y="contextMenu.y"
+        @close="closeContextMenu"
+        @add-subpage="handleAddSubpage"
+        @duplicate="handleDuplicate"
+        @rename="handleRename"
+        @toggle-favorite="handleToggleFavorite"
+        @move-to-trash="handleMoveToTrash"
+      />
+    </Teleport>
   </aside>
 </template>
 
@@ -400,27 +527,38 @@ function createNewPage() {
   background: var(--color-accent-subtle);
 }
 
-.page-item {
-  padding-left: var(--space-2);
-}
-
-.page-icon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
+.trash-link {
   color: var(--color-text-tertiary);
 }
 
-.nav-item.active .page-icon {
-  color: var(--color-accent);
+.trash-link:hover {
+  color: var(--color-text-secondary);
 }
 
-.page-title {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.page-tree {
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {
