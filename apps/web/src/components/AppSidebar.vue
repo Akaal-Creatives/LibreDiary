@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
 import { useTheme } from '@/composables';
+import OrganizationSwitcher from './OrganizationSwitcher.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -28,47 +29,7 @@ function createNewPage() {
   <aside class="sidebar">
     <!-- Workspace Header -->
     <div class="sidebar-header">
-      <button class="workspace-switcher">
-        <span class="workspace-icon">
-          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-            <rect
-              x="4"
-              y="3"
-              width="16"
-              height="22"
-              rx="2"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M8 8H16M8 12H16M8 16H12"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-        </span>
-        <span class="workspace-name">{{
-          authStore.currentOrganization?.name ?? 'LibreDiary'
-        }}</span>
-        <span class="workspace-chevron">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              d="M3 4.5L6 7.5L9 4.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </span>
-      </button>
+      <OrganizationSwitcher />
     </div>
 
     <!-- Search -->
@@ -286,48 +247,6 @@ function createNewPage() {
 /* Header */
 .sidebar-header {
   padding: var(--space-4);
-}
-
-.workspace-switcher {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  text-align: left;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  transition: background var(--transition-fast);
-}
-
-.workspace-switcher:hover {
-  background: var(--color-hover);
-}
-
-.workspace-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-accent);
-}
-
-.workspace-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.workspace-chevron {
-  display: flex;
-  align-items: center;
-  color: var(--color-text-tertiary);
 }
 
 /* Search */

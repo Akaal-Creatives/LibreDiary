@@ -48,6 +48,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'app-home',
+        redirect: { name: 'dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'dashboard',
         component: () => import('@/pages/app/DashboardPage.vue'),
       },
       {
@@ -55,6 +60,29 @@ const routes: RouteRecordRaw[] = [
         name: 'page',
         component: () => import('@/pages/app/PageView.vue'),
         props: true,
+      },
+      // Organization Settings
+      {
+        path: 'settings/organization',
+        name: 'organization-settings',
+        component: () => import('@/pages/app/settings/OrganizationSettingsPage.vue'),
+      },
+      {
+        path: 'settings/members',
+        name: 'organization-members',
+        component: () => import('@/pages/app/settings/MembersPage.vue'),
+      },
+      {
+        path: 'settings/invites',
+        name: 'organization-invites',
+        component: () => import('@/pages/app/settings/InvitesPage.vue'),
+        meta: { minRole: 'ADMIN' },
+      },
+      // Create Organization
+      {
+        path: 'create-organization',
+        name: 'create-organization',
+        component: () => import('@/pages/app/CreateOrganizationPage.vue'),
       },
     ],
   },
