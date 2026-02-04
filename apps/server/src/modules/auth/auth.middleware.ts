@@ -18,7 +18,7 @@ const SESSION_COOKIE_NAME = 'session_token';
  * Validates session and attaches user to request
  */
 export async function requireAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const token = request.cookies[SESSION_COOKIE_NAME];
+  const token = request.cookies?.[SESSION_COOKIE_NAME];
 
   if (!token) {
     return reply.status(401).send({
@@ -72,7 +72,7 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply):
  * Attaches user to request if valid session exists, continues if not
  */
 export async function optionalAuth(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
-  const token = request.cookies[SESSION_COOKIE_NAME];
+  const token = request.cookies?.[SESSION_COOKIE_NAME];
 
   if (!token) {
     return;

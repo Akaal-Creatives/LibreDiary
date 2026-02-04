@@ -11,7 +11,10 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo",
+    "clean": "rm -rf dist .turbo coverage",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -38,9 +41,11 @@
     "@librediary/tsconfig": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^7.0.9",
+    "@vitest/coverage-v8": "^4.0.18",
     "prisma": "^6.2.0",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }
