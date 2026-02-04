@@ -39,7 +39,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Core Features
 
-- [ ] **Phase 2: Authentication** — Email/password, OAuth, session management
+- [x] **Phase 2: Authentication** — Email/password, session management, invite-only registration
 - [ ] **Phase 3: Multi-Tenancy** — Organizations, roles, invitations, domain lockdown
 - [ ] **Phase 4: Page System** — CRUD, hierarchy, sidebar, favorites, trash
 - [ ] **Phase 5: Real-Time Collaboration** — Hocuspocus, Yjs, presence, cursors
@@ -119,3 +119,7 @@ GNU AGPLv3 — Derivative works used as a service must share source code.
 ## Credits
 
 Developed by [Akaal Creatives](https://www.akaalcreatives.com)
+
+## Disclaimer
+
+“Notion is a registered trademark of Notion Labs, Inc. This project is not affiliated with or endorsed by Notion.”
