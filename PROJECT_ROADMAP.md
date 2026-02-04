@@ -203,62 +203,62 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 4: Page System
+## Phase 4: Page System ✅
 
 ### 4.1 Page CRUD
 
-- [ ] Create page endpoints (create, read, update, delete)
-- [ ] Implement soft delete (trashedAt)
-- [ ] Add organization scope to all queries
-- [ ] Implement page loading in frontend
-- [ ] Create page title editing
-- [ ] Auto-save page title changes
+- [x] Create page endpoints (create, read, update, delete)
+- [x] Implement soft delete (trashedAt)
+- [x] Add organization scope to all queries
+- [x] Implement page loading in frontend
+- [x] Create page title editing
+- [x] Auto-save page title changes
 
 ### 4.2 Page Hierarchy
 
-- [ ] Implement parent-child relationships
-- [ ] Create recursive page tree query
-- [ ] Implement position ordering for siblings
-- [ ] Add move page endpoint
-- [ ] Create drag-drop reordering UI
+- [x] Implement parent-child relationships
+- [x] Create recursive page tree query
+- [x] Implement position ordering for siblings
+- [x] Add move page endpoint
+- [x] Create drag-drop reordering UI
 
 ### 4.3 Sidebar Navigation
 
-- [ ] Create recursive page tree component
-- [ ] Add expand/collapse functionality
-- [ ] Implement page creation from sidebar
-- [ ] Add context menu (rename, delete, duplicate)
-- [ ] Highlight active page
+- [x] Create recursive page tree component
+- [x] Add expand/collapse functionality
+- [x] Implement page creation from sidebar
+- [x] Add context menu (rename, delete, duplicate)
+- [x] Highlight active page
 
 ### 4.4 Breadcrumbs
 
-- [ ] Create breadcrumb component
-- [ ] Fetch page path (ancestors)
-- [ ] Navigate on breadcrumb click
+- [x] Create breadcrumb component
+- [x] Fetch page path (ancestors)
+- [x] Navigate on breadcrumb click
 
 ### 4.5 Page Icons & Covers
 
-- [ ] Add icon field to Page model
-- [ ] Create emoji picker component
-- [ ] Implement icon selection UI
-- [ ] Add coverUrl field to Page
-- [ ] Create cover image upload
-- [ ] Display cover in page header
+- [x] Add icon field to Page model
+- [x] Create emoji picker component
+- [x] Implement icon selection UI
+- [x] Add coverUrl field to Page
+- [ ] Create cover image upload (deferred to Phase 12: File Storage)
+- [x] Display cover in page header
 
 ### 4.6 Favorites
 
-- [ ] Create Favorite model
-- [ ] Add toggle favorite endpoint
-- [ ] Create favorites section in sidebar
-- [ ] Implement favorite reordering
+- [x] Create Favorite model
+- [x] Add toggle favorite endpoint
+- [x] Create favorites section in sidebar
+- [x] Implement favorite reordering
 
 ### 4.7 Trash & Restore
 
-- [ ] Create trash listing endpoint
-- [ ] Add restore endpoint
-- [ ] Add permanent delete endpoint
-- [ ] Create trash page UI
-- [ ] Implement auto-delete after 30 days (cron job)
+- [x] Create trash listing endpoint
+- [x] Add restore endpoint
+- [x] Add permanent delete endpoint
+- [x] Create trash page UI
+- [ ] Implement auto-delete after 30 days (cron job - future enhancement)
 
 ---
 
