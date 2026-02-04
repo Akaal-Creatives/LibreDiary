@@ -1,6 +1,114 @@
 # LibreDiary
-**LibreDiary** is a premier open-source, local-first workspace designed for complete data sovereignty. Built with **Vue 3** and **Vuestic UI**, it transforms fragmented notes into a unified knowledge base using a high-performance, block-based interface.
 
-Unlike cloud-dependent tools, **LibreDiary** is engineered for self-hosting, ensuring your information remains private and accessible offline. It features a robust **CRDT-powered sync engine** for real-time collaboration, a polymorphic storage layer supporting everything from local disks to S3-compatible buckets, and an enterprise-grade SSO system with domain-lockdown capabilities.
+A self-hosted, local-first workspace for notes, docs, and databases. Built for focus, designed for clarity, and always under your control.
 
-Whether you are organizing a solo project or scaling a team, **LibreDiary** provides a distraction-free environment that balances extensibility with effortless deployment. It is more than a journal; it is your private digital second brain.
+## Overview
+
+LibreDiary is an open-source alternative to Notion, designed for complete data sovereignty. Unlike cloud-dependent tools, LibreDiary is engineered for self-hosting, ensuring your information remains private and accessible offline.
+
+**Key Features:**
+
+- Block-based editor powered by Tiptap
+- Real-time collaboration with CRDT sync
+- Multi-tenant organization support
+- Polymorphic storage (local, S3, MinIO)
+- Enterprise SSO with domain lockdown
+
+## Tech Stack
+
+| Layer          | Technology                            |
+| -------------- | ------------------------------------- |
+| Frontend       | Vue 3, Vuestic UI, Tiptap, Pinia, Yjs |
+| Backend        | Node.js, Fastify, Hocuspocus, Prisma  |
+| Database       | PostgreSQL                            |
+| Infrastructure | pnpm, Turborepo, Docker               |
+
+## Development Milestones
+
+### Foundation
+
+- [x] **Phase 0: Project Setup** — Monorepo, TypeScript, ESLint, Docker
+- [x] **Phase 1: Basic Editor & Server** — Fastify backend, Prisma ORM, Vue 3 frontend, Tiptap editor
+
+### Core Features
+
+- [ ] **Phase 2: Authentication** — Email/password, OAuth, session management
+- [ ] **Phase 3: Multi-Tenancy** — Organizations, roles, invitations, domain lockdown
+- [ ] **Phase 4: Page System** — CRUD, hierarchy, sidebar, favorites, trash
+- [ ] **Phase 5: Real-Time Collaboration** — Hocuspocus, Yjs, presence, cursors
+
+### Advanced Features
+
+- [ ] **Phase 6: Sharing & Permissions** — Page-level permissions, public pages, guest access
+- [ ] **Phase 7: Comments & Mentions** — Threaded comments, @mentions
+- [ ] **Phase 8: Notifications** — In-app and email notifications
+- [ ] **Phase 9: Search** — Full-text search with PostgreSQL
+
+### Data Management
+
+- [ ] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views
+- [ ] **Phase 11: Templates** — Template library and quick-start templates
+- [ ] **Phase 12: File Storage** — Local, MinIO, S3 storage providers
+- [ ] **Phase 13: Backup System** — Automated encrypted backups
+
+### Platform
+
+- [ ] **Phase 14: API & Webhooks** — Public API, tokens, webhook system
+- [ ] **Phase 15: Admin Features** — Audit logs, system settings, dashboard
+- [ ] **Phase 16: AI Features** — Content translation via OpenRouter
+- [ ] **Phase 17: Internationalization** — Multi-language UI support
+
+### Compliance & Polish
+
+- [ ] **Phase 18: GDPR Compliance** — Data export, account deletion
+- [ ] **Phase 19: Editor Enhancements** — Slash commands, additional blocks, drag & drop
+- [ ] **Phase 20: Production Ready** — Performance, accessibility, Docker deployment
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/librediary.git
+cd librediary
+
+# Install dependencies
+pnpm install
+
+# Setup environment
+cp .env.example .env
+
+# Start development services
+docker compose up -d
+
+# Run database migrations
+pnpm db:push
+
+# Start development servers
+pnpm dev
+```
+
+## Project Structure
+
+```
+librediary/
+├── apps/
+│   ├── server/     # Fastify backend API
+│   └── web/        # Vue 3 frontend
+├── packages/
+│   ├── shared/     # Shared types, schemas, utilities
+│   ├── tsconfig/   # TypeScript configurations
+│   └── eslint-config/  # ESLint configurations
+└── tooling/        # Build and dev tools
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+
+## License
+
+GNU AGPLv3 — Derivative works used as a service must share source code.
+
+## Credits
+
+Developed by [Akaal Creatives](https://www.akaalcreatives.com)
