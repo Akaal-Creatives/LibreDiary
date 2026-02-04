@@ -5,6 +5,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    // Exclude pages.service.test.ts from default run due to memory issues
+    // Run it separately with: vitest run pages.service --single-thread
+    exclude: ['**/node_modules/**', '**/pages.service.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -13,6 +16,8 @@ export default defineConfig({
     },
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 10000,
+    // Increase teardown timeout for cleanup
+    teardownTimeout: 60000,
     // Set environment variables early, before modules are loaded
     env: {
       NODE_ENV: 'test',

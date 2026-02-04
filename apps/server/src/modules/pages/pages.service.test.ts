@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Use vi.hoisted() to ensure mock variables are available when vi.mock is hoisted
 const { mockPrismaPage, mockPrismaFavorite, mockPrisma } = vi.hoisted(() => {
@@ -52,6 +52,14 @@ function resetMocks() {
 describe('Pages Service', () => {
   beforeEach(() => {
     resetMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterAll(() => {
+    vi.restoreAllMocks();
   });
 
   const now = new Date();
