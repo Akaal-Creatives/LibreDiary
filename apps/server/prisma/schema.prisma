@@ -39,6 +39,7 @@ model User {
   sessions     Session[]
   invitesSent  Invite[]             @relation("InvitesSent")
   favorites    Favorite[]
+  pageVersions PageVersion[]        @relation("PageVersionCreatedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -193,12 +194,33 @@ model Page {
   createdBy    User         @relation("PageCreatedBy", fields: [createdById], references: [id])
   updatedBy    User?        @relation("PageUpdatedBy", fields: [updatedById], references: [id])
   favorites    Favorite[]
+  versions     PageVersion[]
 
   @@index([organizationId])
   @@index([parentId])
   @@index([trashedAt])
   @@index([publicSlug])
   @@index([createdById])
+}
+
+// ============================================
+// PAGE VERSIONS (Version History)
+// ============================================
+
+model PageVersion {
+  id        String   @id @default(cuid())
+  pageId    String
+  version   Int
+  title     String
+  yjsState  Bytes?
+  createdById String
+  createdAt DateTime @default(now())
+
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("PageVersionCreatedBy", fields: [createdById], references: [id])
+
+  @@unique([pageId, version])
+  @@index([pageId])
 }
 
 // ============================================

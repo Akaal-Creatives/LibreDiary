@@ -11,6 +11,7 @@ import { healthRoutes, devRoutes } from './routes/index.js';
 import { authRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
+import { versionsRoutes } from './modules/collaboration/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -61,6 +62,11 @@ export async function buildApp() {
       await api.register(pagesRoutes, { prefix: '/organizations/:orgId/pages' });
       await api.register(trashRoutes, { prefix: '/organizations/:orgId/trash' });
       await api.register(favoritesRoutes, { prefix: '/organizations/:orgId/favorites' });
+
+      // Collaboration routes (versions)
+      await api.register(versionsRoutes, {
+        prefix: '/organizations/:orgId/pages/:pageId/versions',
+      });
     },
     { prefix: '/api/v1' }
   );
