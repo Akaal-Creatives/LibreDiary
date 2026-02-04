@@ -145,49 +145,49 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 3: Multi-Tenancy & Organizations
+## Phase 3: Multi-Tenancy & Organizations ✅
 
 ### 3.1 Organization Management
 
-- [ ] Create organization CRUD endpoints
-- [ ] Implement organization slug validation
-- [ ] Add organization settings (name, logo, accent color)
-- [ ] Create organization settings page
+- [x] Create organization CRUD endpoints
+- [x] Implement organization slug validation
+- [x] Add organization settings (name, logo, accent color)
+- [x] Create organization settings page
 - [ ] Implement logo upload
 
 ### 3.2 Membership & Roles
 
-- [ ] Define role hierarchy (Owner, Admin, Member)
-- [ ] Create membership management endpoints
-- [ ] Implement role-based authorization middleware
-- [ ] Create members list UI
-- [ ] Create role change UI
+- [x] Define role hierarchy (Owner, Admin, Member)
+- [x] Create membership management endpoints
+- [x] Implement role-based authorization middleware
+- [x] Create members list UI
+- [x] Create role change UI
 
 ### 3.3 Invitation System
 
-- [ ] Create Invitation model
-- [ ] Generate secure invitation tokens
-- [ ] Create invite email template
-- [ ] Add invite endpoint
-- [ ] Create invitation acceptance flow
-- [ ] Add invitation management UI
+- [x] Create Invitation model
+- [x] Generate secure invitation tokens
+- [x] Create invite email template
+- [x] Add invite endpoint
+- [x] Create invitation acceptance flow
+- [x] Add invitation management UI
 
 ### 3.4 Domain Lockdown
 
-- [ ] Add allowedDomain field to Organization
-- [ ] Validate email domain on registration
-- [ ] Add domain configuration UI
+- [x] Add allowedDomain field to Organization
+- [x] Validate email domain on registration
+- [x] Add domain configuration UI
 
 ### 3.5 Workspace Switcher
 
-- [ ] Fetch user's organization memberships
-- [ ] Create workspace switcher dropdown
-- [ ] Persist selected workspace in localStorage
-- [ ] Update API calls with organization context
+- [x] Fetch user's organization memberships
+- [x] Create workspace switcher dropdown
+- [x] Persist selected workspace in localStorage
+- [x] Update API calls with organization context
 
 ### 3.6 Super Admin
 
-- [ ] Create isSuperAdmin flag on User
+- [x] Create isSuperAdmin flag on User
 - [ ] Create super admin middleware
 - [ ] Create admin dashboard layout
 - [ ] Add system-wide user management
