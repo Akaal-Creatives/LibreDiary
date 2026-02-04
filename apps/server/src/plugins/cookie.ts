@@ -1,8 +1,9 @@
 import cookie from '@fastify/cookie';
+import fp from 'fastify-plugin';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../config/index.js';
 
-export async function cookiePlugin(fastify: FastifyInstance) {
+async function cookiePluginImpl(fastify: FastifyInstance) {
   await fastify.register(cookie, {
     secret: env.SESSION_SECRET ?? env.APP_SECRET,
     parseOptions: {
@@ -13,3 +14,8 @@ export async function cookiePlugin(fastify: FastifyInstance) {
     },
   });
 }
+
+// Wrap with fastify-plugin to make decorators available globally
+export const cookiePlugin = fp(cookiePluginImpl, {
+  name: 'cookie-plugin',
+});

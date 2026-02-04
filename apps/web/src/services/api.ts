@@ -31,7 +31,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     credentials: 'include',
   };
 
-  if (body) {
+  if (body !== undefined) {
     config.body = JSON.stringify(body);
   }
 

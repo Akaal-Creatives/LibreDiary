@@ -21,7 +21,7 @@ async function main() {
 
   const superAdmin = await prisma.user.create({
     data: {
-      email: 'admin@localhost',
+      email: 'admin@librediary.local',
       name: 'Super Admin',
       passwordHash,
       emailVerified: true,
@@ -70,7 +70,7 @@ async function main() {
   console.log('Seed completed successfully!');
   console.log('');
   console.log('Default credentials:');
-  console.log('  Email: admin@localhost');
+  console.log('  Email: admin@librediary.local');
   console.log('  Password: changeme123');
   console.log('');
   console.log('IMPORTANT: Change this password after first login!');

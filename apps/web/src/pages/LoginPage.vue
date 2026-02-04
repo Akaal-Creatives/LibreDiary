@@ -29,6 +29,13 @@ async function handleSubmit() {
     if (err instanceof ApiError) {
       if (err.code === 'LOGIN_ERROR') {
         error.value = 'Invalid email or password';
+      } else if (err.code === 'VALIDATION_ERROR' && err.details) {
+        // Show specific validation errors
+        const fieldErrors = err.details as Record<string, string[]>;
+        const messages = Object.entries(fieldErrors)
+          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+          .join('; ');
+        error.value = messages || err.message;
       } else {
         error.value = err.message;
       }
