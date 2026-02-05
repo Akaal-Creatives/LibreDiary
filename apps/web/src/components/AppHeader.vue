@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { usePagesStore } from '@/stores';
+import { usePagesStore, useSyncStore } from '@/stores';
 
 const pagesStore = usePagesStore();
+const syncStore = useSyncStore();
 </script>
 
 <template>
@@ -14,6 +15,53 @@ const pagesStore = usePagesStore();
       </nav>
       <span v-else class="header-title">Dashboard</span>
     </div>
+
+    <!-- Sync Status Indicator -->
+    <Transition name="sync-fade" mode="out-in">
+      <div
+        v-if="syncStore.status !== 'idle'"
+        :key="syncStore.status"
+        class="sync-indicator"
+        :class="`sync-${syncStore.status}`"
+        :title="syncStore.statusMessage"
+      >
+        <!-- Pending/Saving: Breathing Dot -->
+        <div
+          v-if="syncStore.status === 'pending' || syncStore.status === 'saving'"
+          class="sync-dot"
+        >
+          <span class="dot-core"></span>
+          <span class="dot-ring"></span>
+          <span class="dot-ring dot-ring-outer"></span>
+        </div>
+
+        <!-- Saved: Blooming Checkmark -->
+        <div v-else-if="syncStore.status === 'saved'" class="sync-check">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="check-icon">
+            <path
+              d="M2.5 7.5L5.5 10.5L11.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="check-path"
+            />
+          </svg>
+        </div>
+
+        <!-- Error: Gentle Alert -->
+        <div v-else-if="syncStore.status === 'error'" class="sync-error">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="error-icon">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M7 4V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <circle cx="7" cy="10" r="0.75" fill="currentColor" />
+          </svg>
+        </div>
+
+        <!-- Status Text -->
+        <span class="sync-text">{{ syncStore.statusMessage }}</span>
+      </div>
+    </Transition>
 
     <div class="header-right">
       <!-- Page Actions -->
@@ -229,5 +277,185 @@ const pagesStore = usePagesStore();
 .more-btn:hover {
   color: var(--color-text-primary);
   background: var(--color-hover);
+}
+
+/* ===========================================
+   SYNC STATUS INDICATOR
+   Organic minimalism - breathing, alive, unobtrusive
+   =========================================== */
+
+.sync-indicator {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sync-text {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* Pending/Saving State - Breathing Dot */
+.sync-pending,
+.sync-saving {
+  color: var(--color-accent, #6b8f71);
+  background: color-mix(in srgb, var(--color-accent, #6b8f71) 8%, transparent);
+}
+
+.sync-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+}
+
+.dot-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: breathe-core 2s ease-in-out infinite;
+}
+
+.dot-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.4;
+  transform: translate(-50%, -50%);
+  animation: breathe-ring 2s ease-in-out infinite;
+}
+
+.dot-ring-outer {
+  width: 16px;
+  height: 16px;
+  opacity: 0.15;
+  animation: breathe-ring-outer 2s ease-in-out infinite;
+}
+
+@keyframes breathe-core {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+@keyframes breathe-ring {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.25;
+  }
+}
+
+@keyframes breathe-ring-outer {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.08;
+  }
+}
+
+/* Saved State - Blooming Checkmark */
+.sync-saved {
+  color: var(--color-accent, #6b8f71);
+  background: color-mix(in srgb, var(--color-accent, #6b8f71) 8%, transparent);
+}
+
+.sync-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon {
+  animation: check-bloom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.check-path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: check-draw 0.4s ease-out 0.1s forwards;
+}
+
+@keyframes check-bloom {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Error State - Gentle Pulse */
+.sync-error {
+  color: var(--color-error, #c75050);
+  background: color-mix(in srgb, var(--color-error, #c75050) 8%, transparent);
+}
+
+.error-icon {
+  animation: error-pulse 2s ease-in-out infinite;
+}
+
+@keyframes error-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Transition animations */
+.sync-fade-enter-active,
+.sync-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sync-fade-enter-from {
+  transform: translateY(-4px);
+  opacity: 0;
+}
+
+.sync-fade-leave-to {
+  transform: translateY(4px);
+  opacity: 0;
 }
 </style>

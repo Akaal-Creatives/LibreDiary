@@ -172,6 +172,9 @@ model Page {
   // Yjs document state (stored as bytes)
   yjsState Bytes?
 
+  // HTML content (for REST-based saving before Yjs integration)
+  htmlContent String?
+
   // Sharing
   isPublic   Boolean @default(false)
   publicSlug String? @unique

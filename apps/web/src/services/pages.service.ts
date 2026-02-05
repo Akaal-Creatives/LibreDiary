@@ -17,6 +17,7 @@ export interface UpdatePageInput {
   coverUrl?: string | null;
   isPublic?: boolean;
   publicSlug?: string | null;
+  htmlContent?: string | null;
 }
 
 export interface MovePageInput {

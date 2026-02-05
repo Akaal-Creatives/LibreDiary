@@ -25,6 +25,7 @@ const updatePageSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens')
     .nullish(),
+  htmlContent: z.string().nullish(),
 });
 
 const movePageSchema = z.object({
@@ -234,6 +235,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
             coverUrl: body.data.coverUrl,
             isPublic: body.data.isPublic,
             publicSlug: body.data.publicSlug,
+            htmlContent: body.data.htmlContent,
           }
         );
 

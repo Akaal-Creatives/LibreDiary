@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted } from 'vue';
-import { usePagesStore } from '@/stores';
+import { usePagesStore, useSyncStore } from '@/stores';
 import { TiptapEditor } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 
 const pagesStore = usePagesStore();
+const syncStore = useSyncStore();
 
 const props = defineProps<{
   pageId: string;
@@ -17,8 +18,9 @@ const pageTitle = ref('');
 const pageContent = ref('');
 const showEmojiPicker = ref(false);
 
-// Debounce timer for title saving
+// Debounce timers for saving
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let contentSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 onMounted(() => {
   loadPage();
@@ -32,9 +34,12 @@ watch(
 );
 
 onUnmounted(() => {
-  // Clear any pending save timeout
+  // Clear any pending save timeouts
   if (titleSaveTimeout) {
     clearTimeout(titleSaveTimeout);
+  }
+  if (contentSaveTimeout) {
+    clearTimeout(contentSaveTimeout);
   }
 });
 
@@ -46,8 +51,7 @@ async function loadPage() {
   try {
     const page = await pagesStore.fetchPage(props.pageId);
     pageTitle.value = page.title;
-    // Note: Content loading is deferred to Phase 5 (Real-Time Collaboration)
-    pageContent.value = '';
+    pageContent.value = page.htmlContent || '';
 
     // Expand ancestors in sidebar
     pagesStore.expandToPage(props.pageId);
@@ -64,23 +68,47 @@ function updateTitle(event: Event) {
   const newTitle = target.textContent?.trim() || 'Untitled';
   pageTitle.value = newTitle;
 
+  const opId = `title-${props.pageId}`;
+  syncStore.startOperation(opId, 'title');
+
   // Debounce save
   if (titleSaveTimeout) {
     clearTimeout(titleSaveTimeout);
   }
 
   titleSaveTimeout = setTimeout(async () => {
+    syncStore.markSaving(opId);
     try {
       await pagesStore.updatePageData(props.pageId, { title: newTitle });
+      syncStore.markSaved(opId);
     } catch (e) {
       console.error('Failed to save title:', e);
+      syncStore.markError(opId, 'Failed to save title');
     }
   }, 500);
 }
 
 function onContentUpdate(content: string) {
   pageContent.value = content;
-  // Note: Content saving is deferred to Phase 5 (Real-Time Collaboration)
+
+  const opId = `content-${props.pageId}`;
+  syncStore.startOperation(opId, 'content');
+
+  // Debounce content save
+  if (contentSaveTimeout) {
+    clearTimeout(contentSaveTimeout);
+  }
+
+  contentSaveTimeout = setTimeout(async () => {
+    syncStore.markSaving(opId);
+    try {
+      await pagesStore.updatePageData(props.pageId, { htmlContent: content });
+      syncStore.markSaved(opId);
+    } catch (e) {
+      console.error('Failed to save content:', e);
+      syncStore.markError(opId, 'Failed to save content');
+    }
+  }, 1000); // 1 second debounce for content (longer than title)
 }
 
 async function selectIcon(icon: string | null) {

@@ -17,6 +17,7 @@ export interface UpdatePageInput {
   coverUrl?: string | null;
   isPublic?: boolean;
   publicSlug?: string | null;
+  htmlContent?: string | null;
 }
 
 export interface MovePageInput {
@@ -206,6 +207,7 @@ export async function updatePage(
       ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
       ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
       ...(input.publicSlug !== undefined && { publicSlug: input.publicSlug }),
+      ...(input.htmlContent !== undefined && { htmlContent: input.htmlContent }),
       updatedById: userId,
     },
   });

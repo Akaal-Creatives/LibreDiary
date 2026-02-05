@@ -46,6 +46,7 @@ const { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } = vi.hoisted(() 
     icon: null,
     coverUrl: null,
     yjsState: null,
+    htmlContent: null,
     isPublic: false,
     publicSlug: null,
     trashedAt: null,
@@ -92,6 +93,27 @@ describe('Pages Service - Write Operations', () => {
       });
 
       expect(result.title).toBe('Updated Title');
+    });
+
+    it('should update page htmlContent', async () => {
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPage.update.mockResolvedValue({
+        ...mockPage,
+        htmlContent: '<p>Hello World</p>',
+      });
+
+      const result = await pagesService.updatePage('org-123', 'page-123', 'user-123', {
+        htmlContent: '<p>Hello World</p>',
+      });
+
+      expect(result.htmlContent).toBe('<p>Hello World</p>');
+      expect(mockPrismaPage.update).toHaveBeenCalledWith({
+        where: { id: 'page-123' },
+        data: expect.objectContaining({
+          htmlContent: '<p>Hello World</p>',
+          updatedById: 'user-123',
+        }),
+      });
     });
 
     it('should throw if page not found', async () => {

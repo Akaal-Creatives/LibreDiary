@@ -138,6 +138,7 @@ export interface Page {
   title: string;
   icon: string | null;
   coverUrl: string | null;
+  htmlContent: string | null;
   isPublic: boolean;
   publicSlug: string | null;
   trashedAt: string | null;
