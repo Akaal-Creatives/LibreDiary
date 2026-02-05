@@ -9,6 +9,13 @@
   Built for focus, designed for clarity, and always under your control.
 </p>
 
+<p align="center">
+  <a href="https://github.com/akaalcreatives/librediary/actions/workflows/ci.yml"><img src="https://github.com/akaalcreatives/librediary/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/akaalcreatives/librediary/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/akaalcreatives/librediary"><img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg" alt="Node.js"></a>
+  <a href="https://github.com/akaalcreatives/librediary"><img src="https://img.shields.io/badge/pnpm-%3E%3D9.0.0-orange.svg" alt="pnpm"></a>
+</p>
+
 ## Overview
 
 LibreDiary is an open-source alternative to Notion, designed for complete data sovereignty. Unlike cloud-dependent tools, LibreDiary is engineered for self-hosting, ensuring your information remains private and accessible offline.
