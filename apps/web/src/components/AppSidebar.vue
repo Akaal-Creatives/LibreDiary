@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
-import { useTheme } from '@/composables';
+import { useTheme, useToast } from '@/composables';
 import type { PageWithChildren, Page } from '@librediary/shared';
 import OrganizationSwitcher from './OrganizationSwitcher.vue';
 import PageTreeItem from './PageTreeItem.vue';
@@ -13,6 +13,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
 const { theme, toggleTheme } = useTheme();
+const toast = useToast();
 
 const searchQuery = ref('');
 const contextMenu = ref<{
@@ -37,6 +38,7 @@ watch(
         await pagesStore.fetchFavorites();
       } catch (e) {
         console.error('Failed to fetch pages:', e);
+        toast.error('Failed to load pages');
       }
     }
   },
@@ -60,6 +62,7 @@ async function createNewPage(parentId?: string) {
     router.push({ name: 'page', params: { pageId: page.id } });
   } catch (e) {
     console.error('Failed to create page:', e);
+    toast.error('Failed to create page');
   }
 }
 
@@ -84,9 +87,11 @@ async function handleAddSubpage(page: Page | PageWithChildren) {
 async function handleDuplicate(page: Page | PageWithChildren) {
   try {
     const newPage = await pagesStore.duplicatePage(page.id);
+    toast.success('Page duplicated');
     router.push({ name: 'page', params: { pageId: newPage.id } });
   } catch (e) {
     console.error('Failed to duplicate page:', e);
+    toast.error('Failed to duplicate page');
   }
 }
 
@@ -97,21 +102,26 @@ function handleRename(page: Page | PageWithChildren) {
 
 async function handleToggleFavorite(page: Page | PageWithChildren) {
   try {
+    const wasFavorite = pagesStore.isFavorite(page.id);
     await pagesStore.toggleFavorite(page.id);
+    toast.success(wasFavorite ? 'Removed from favorites' : 'Added to favorites');
   } catch (e) {
     console.error('Failed to toggle favorite:', e);
+    toast.error('Failed to update favorites');
   }
 }
 
 async function handleMoveToTrash(page: Page | PageWithChildren) {
   try {
     await pagesStore.trashPage(page.id);
+    toast.success('Moved to trash');
     // Navigate to dashboard if the trashed page was the current page
     if (pagesStore.currentPageId === page.id) {
       router.push({ name: 'dashboard' });
     }
   } catch (e) {
     console.error('Failed to trash page:', e);
+    toast.error('Failed to move to trash');
   }
 }
 </script>

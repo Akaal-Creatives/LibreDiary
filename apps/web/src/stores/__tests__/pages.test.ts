@@ -44,7 +44,6 @@ describe('usePagesStore', () => {
     icon: '📄',
     coverUrl: null,
     htmlContent: '<p>Content</p>',
-    yjsState: null,
     isPublic: false,
     publicSlug: null,
     parentId: null,
@@ -82,7 +81,6 @@ describe('usePagesStore', () => {
     userId: 'user-1',
     pageId: 'page-1',
     position: 0,
-    createdAt: new Date().toISOString(),
   };
 
   const mockFavoriteWithPage: FavoriteWithPage = {
@@ -116,6 +114,7 @@ describe('usePagesStore', () => {
       name: 'Test User',
       emailVerified: true,
       isSuperAdmin: false,
+      locale: 'en',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       avatarUrl: null,

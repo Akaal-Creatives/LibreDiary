@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import type { OrgRole } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
   open: boolean;
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const orgsStore = useOrganizationsStore();
+const toast = useToast();
 
 const email = ref('');
 const role = ref<OrgRole>('MEMBER');
@@ -57,6 +59,7 @@ async function handleSubmit() {
       email: email.value.trim(),
       role: role.value,
     });
+    toast.success(`Invitation sent to ${email.value.trim()}`);
     emit('invited');
     emit('close');
   } catch (err) {
@@ -139,6 +142,24 @@ function close() {
                 Cancel
               </button>
               <button type="submit" class="btn btn-primary" :disabled="submitting">
+                <svg
+                  v-if="submitting"
+                  class="btn-spinner"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-dasharray="28"
+                    stroke-dashoffset="7"
+                  />
+                </svg>
                 {{ submitting ? 'Sending...' : 'Send Invite' }}
               </button>
             </div>
@@ -308,6 +329,16 @@ function close() {
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
+}
+
+.btn-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Transitions */

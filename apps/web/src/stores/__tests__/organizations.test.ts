@@ -54,7 +54,6 @@ describe('useOrganizationsStore', () => {
     organizationId: 'org-1',
     role: 'OWNER',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
   const mockMemberWithUser: MemberWithUser = {
@@ -100,6 +99,7 @@ describe('useOrganizationsStore', () => {
       name: 'Test User',
       emailVerified: true,
       isSuperAdmin: false,
+      locale: 'en',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       avatarUrl: null,
@@ -283,6 +283,7 @@ describe('useOrganizationsStore', () => {
           name: 'Test User',
           emailVerified: true,
           isSuperAdmin: false,
+          locale: 'en',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           avatarUrl: null,
