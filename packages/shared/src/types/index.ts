@@ -98,7 +98,7 @@ export interface Organization {
   slug: string;
   logoUrl: string | null;
   accentColor: string | null;
-  allowedDomain: string | null;
+  allowedDomains: string[];
   aiEnabled: boolean;
   createdAt: string;
   updatedAt: string;

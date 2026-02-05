@@ -112,7 +112,7 @@ model Organization {
   accentColor String? @default("#6366f1") // Indigo
 
   // Settings
-  allowedDomain String? // Domain lockdown (e.g., "company.com")
+  allowedDomains String[] @default([]) // Domain lockdown (e.g., ["company.com", "corp.com"])
 
   // AI Settings
   aiEnabled Boolean @default(true)
