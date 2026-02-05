@@ -1,0 +1,78 @@
+version: 2
+updates:
+  # Root package.json
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  # Web app
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - web
+    groups:
+      vue-ecosystem:
+        patterns:
+          - vue*
+          - "@vue/*"
+          - pinia
+          - vue-router
+
+  # Server app
+  - package-ecosystem: npm
+    directory: /apps/server
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - server
+    groups:
+      fastify-ecosystem:
+        patterns:
+          - fastify
+          - "@fastify/*"
+      prisma:
+        patterns:
+          - prisma
+          - "@prisma/*"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - github-actions
