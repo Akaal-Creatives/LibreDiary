@@ -25,13 +25,14 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const config: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
       ...headers,
     },
     credentials: 'include',
   };
 
+  // Only set Content-Type and body when there's actually a body to send
   if (body !== undefined) {
+    (config.headers as Record<string, string>)['Content-Type'] = 'application/json';
     config.body = JSON.stringify(body);
   }
 
