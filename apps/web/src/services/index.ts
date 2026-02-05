@@ -2,6 +2,7 @@ export { api, ApiError } from './api';
 export { authService } from './auth.service';
 export type {
   AuthResponse,
+  OrgMembership,
   LoginInput,
   RegisterInput,
   SessionInfo,
