@@ -18,6 +18,8 @@ const emit = defineEmits<{
 }>();
 
 const menuRef = ref<HTMLElement>();
+const focusedIndex = ref(0);
+const menuActions = ['addSubpage', 'duplicate', 'rename', 'toggleFavorite', 'moveToTrash'];
 
 function handleClickOutside(event: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
@@ -25,9 +27,35 @@ function handleClickOutside(event: MouseEvent) {
   }
 }
 
+function focusItem(index: number) {
+  const buttons = menuRef.value?.querySelectorAll<HTMLButtonElement>('.menu-item');
+  if (buttons && buttons[index]) {
+    buttons[index].focus();
+    focusedIndex.value = index;
+  }
+}
+
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    emit('close');
+  switch (event.key) {
+    case 'Escape':
+      emit('close');
+      break;
+    case 'ArrowDown':
+      event.preventDefault();
+      focusItem((focusedIndex.value + 1) % menuActions.length);
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      focusItem((focusedIndex.value - 1 + menuActions.length) % menuActions.length);
+      break;
+    case 'Home':
+      event.preventDefault();
+      focusItem(0);
+      break;
+    case 'End':
+      event.preventDefault();
+      focusItem(menuActions.length - 1);
+      break;
   }
 }
 
@@ -69,6 +97,9 @@ onMounted(async () => {
     if (rect.bottom > viewportHeight) {
       menuRef.value.style.top = `${props.y - rect.height}px`;
     }
+
+    // Focus first menu item for keyboard navigation
+    focusItem(0);
   }
 });
 
@@ -194,9 +225,11 @@ onUnmounted(() => {
   transition: all var(--transition-fast);
 }
 
-.menu-item:hover {
+.menu-item:hover,
+.menu-item:focus {
   color: var(--color-text-primary);
   background: var(--color-hover);
+  outline: none;
 }
 
 .menu-item.danger {

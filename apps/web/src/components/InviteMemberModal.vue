@@ -84,10 +84,10 @@ function close() {
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="open" class="modal-overlay" @click.self="close">
-        <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
           <div class="modal-header">
-            <h2 class="modal-title">Invite Member</h2>
-            <button class="close-button" :disabled="submitting" @click="close">
+            <h2 id="invite-modal-title" class="modal-title">Invite Member</h2>
+            <button class="close-button" aria-label="Close" :disabled="submitting" @click="close">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M4.5 4.5L13.5 13.5M4.5 13.5L13.5 4.5"

@@ -51,6 +51,8 @@ function handleContextMenu(event: MouseEvent) {
         v-if="hasChildren"
         class="expand-btn"
         :class="{ expanded: isExpanded }"
+        :aria-expanded="isExpanded"
+        :aria-label="isExpanded ? `Collapse ${page.title}` : `Expand ${page.title}`"
         @click="toggleExpanded"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

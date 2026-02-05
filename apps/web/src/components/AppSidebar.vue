@@ -212,7 +212,12 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <div class="nav-section">
         <div class="nav-section-header">
           <span class="nav-section-title">Pages</span>
-          <button class="section-action" title="Add page" @click="createNewPage()">
+          <button
+            class="section-action"
+            title="Add page"
+            aria-label="Add new page"
+            @click="createNewPage()"
+          >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path
                 d="M7 2.5V11.5"

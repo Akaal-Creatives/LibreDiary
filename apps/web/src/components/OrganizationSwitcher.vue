@@ -70,7 +70,13 @@ const currentRole = computed(() => authStore.currentUserRole);
 
 <template>
   <div class="org-switcher">
-    <button class="switcher-button" @click="toggleDropdown">
+    <button
+      class="switcher-button"
+      aria-haspopup="listbox"
+      :aria-expanded="isOpen"
+      aria-label="Switch organization"
+      @click="toggleDropdown"
+    >
       <!-- Org Logo or Avatar -->
       <span
         v-if="currentOrg?.logoUrl"
