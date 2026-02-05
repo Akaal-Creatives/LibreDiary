@@ -96,7 +96,7 @@ describe('Organizations Service', () => {
     slug: 'test-org',
     logoUrl: null,
     accentColor: '#6366f1',
-    allowedDomain: null,
+    allowedDomains: [],
     aiEnabled: true,
     createdAt: now,
     updatedAt: now,
@@ -318,20 +318,33 @@ describe('Organizations Service', () => {
   });
 
   describe('validateEmailDomain', () => {
-    it('should return true if no domain restriction', () => {
-      expect(orgService.validateEmailDomain('user@any.com', null)).toBe(true);
+    it('should return true if no domain restriction (empty array)', () => {
+      expect(orgService.validateEmailDomain('user@any.com', [])).toBe(true);
     });
 
-    it('should return true if domain matches', () => {
-      expect(orgService.validateEmailDomain('user@company.com', 'company.com')).toBe(true);
+    it('should return true if domain matches single allowed domain', () => {
+      expect(orgService.validateEmailDomain('user@company.com', ['company.com'])).toBe(true);
     });
 
-    it('should return false if domain does not match', () => {
-      expect(orgService.validateEmailDomain('user@other.com', 'company.com')).toBe(false);
+    it('should return true if domain matches any of multiple allowed domains', () => {
+      expect(orgService.validateEmailDomain('user@company.com', ['company.com', 'corp.com'])).toBe(
+        true
+      );
+      expect(orgService.validateEmailDomain('user@corp.com', ['company.com', 'corp.com'])).toBe(
+        true
+      );
+    });
+
+    it('should return false if domain does not match any allowed domain', () => {
+      expect(orgService.validateEmailDomain('user@other.com', ['company.com'])).toBe(false);
+      expect(orgService.validateEmailDomain('user@other.com', ['company.com', 'corp.com'])).toBe(
+        false
+      );
     });
 
     it('should be case insensitive', () => {
-      expect(orgService.validateEmailDomain('user@COMPANY.COM', 'company.com')).toBe(true);
+      expect(orgService.validateEmailDomain('user@COMPANY.COM', ['company.com'])).toBe(true);
+      expect(orgService.validateEmailDomain('user@company.com', ['COMPANY.COM'])).toBe(true);
     });
   });
 
@@ -366,10 +379,10 @@ describe('Organizations Service', () => {
       expect(result.email).toBe('new@example.com');
     });
 
-    it('should throw if domain not allowed', async () => {
+    it('should throw if domain not allowed (single domain)', async () => {
       mockPrismaOrganization.findUnique.mockResolvedValue({
         ...mockOrganization,
-        allowedDomain: 'company.com',
+        allowedDomains: ['company.com'],
       });
 
       await expect(
@@ -380,6 +393,55 @@ describe('Organizations Service', () => {
           'ADMIN'
         )
       ).rejects.toThrow('DOMAIN_NOT_ALLOWED');
+    });
+
+    it('should throw if domain not allowed (multiple domains)', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({
+        ...mockOrganization,
+        allowedDomains: ['company.com', 'corp.com'],
+      });
+
+      await expect(
+        orgService.createInvite(
+          'org-123',
+          { email: 'user@other.com', role: 'MEMBER' },
+          'user-123',
+          'ADMIN'
+        )
+      ).rejects.toThrow('DOMAIN_NOT_ALLOWED');
+    });
+
+    it('should allow invite if domain matches one of allowed domains', async () => {
+      const mockInvite = {
+        id: 'invite-123',
+        email: 'user@corp.com',
+        token: 'token',
+        organizationId: 'org-123',
+        role: 'MEMBER',
+        invitedById: 'user-123',
+        expiresAt: futureDate,
+        acceptedAt: null,
+        createdAt: now,
+      };
+
+      mockPrismaOrganization.findUnique.mockResolvedValue({
+        ...mockOrganization,
+        allowedDomains: ['company.com', 'corp.com'],
+      });
+      mockPrismaUser.findUnique
+        .mockResolvedValueOnce({ ...mockUser, memberships: [] })
+        .mockResolvedValueOnce(mockUser);
+      mockPrismaInvite.findFirst.mockResolvedValue(null);
+      mockPrismaInvite.create.mockResolvedValue(mockInvite);
+
+      const result = await orgService.createInvite(
+        'org-123',
+        { email: 'user@corp.com', role: 'MEMBER' },
+        'user-123',
+        'ADMIN'
+      );
+
+      expect(result.email).toBe('user@corp.com');
     });
 
     it('should throw if invite already exists', async () => {

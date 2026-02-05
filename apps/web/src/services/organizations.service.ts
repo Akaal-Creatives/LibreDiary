@@ -10,7 +10,7 @@ export interface CreateOrganizationInput {
   slug?: string;
   logoUrl?: string;
   accentColor?: string;
-  allowedDomain?: string;
+  allowedDomains?: string[];
   aiEnabled?: boolean;
 }
 
@@ -19,7 +19,7 @@ export interface UpdateOrganizationInput {
   slug?: string;
   logoUrl?: string | null;
   accentColor?: string | null;
-  allowedDomain?: string | null;
+  allowedDomains?: string[];
   aiEnabled?: boolean;
 }
 

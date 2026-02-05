@@ -64,7 +64,7 @@ export const verifyEmailSchema = z.object({
 export const createOrganizationSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100).trim(),
   slug: slugSchema,
-  allowedDomain: z.string().optional(),
+  allowedDomains: z.array(z.string()).optional(),
 });
 
 export const updateOrganizationSchema = z.object({
@@ -73,7 +73,7 @@ export const updateOrganizationSchema = z.object({
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format')
     .optional(),
-  allowedDomain: z.string().nullable().optional(),
+  allowedDomains: z.array(z.string()).optional(),
   aiEnabled: z.boolean().optional(),
 });
 

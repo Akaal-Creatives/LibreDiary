@@ -18,7 +18,7 @@ const success = ref<string | null>(null);
 const form = ref({
   name: '',
   slug: '',
-  allowedDomain: '',
+  allowedDomains: '', // Comma-separated domains for simple UI
   aiEnabled: true,
 });
 
@@ -34,7 +34,7 @@ async function loadData() {
       form.value = {
         name: currentOrg.value.name,
         slug: currentOrg.value.slug,
-        allowedDomain: currentOrg.value.allowedDomain || '',
+        allowedDomains: currentOrg.value.allowedDomains?.join(', ') || '',
         aiEnabled: currentOrg.value.aiEnabled,
       };
     }
@@ -65,10 +65,18 @@ async function handleSave() {
   success.value = null;
 
   try {
+    // Convert comma-separated domains to array
+    const domainsArray = form.value.allowedDomains
+      ? form.value.allowedDomains
+          .split(',')
+          .map((d) => d.trim().toLowerCase())
+          .filter((d) => d.length > 0)
+      : [];
+
     await orgsStore.updateOrganization({
       name: form.value.name,
       slug: form.value.slug,
-      allowedDomain: form.value.allowedDomain || null,
+      allowedDomains: domainsArray,
       aiEnabled: form.value.aiEnabled,
     });
     success.value = 'Settings saved successfully';
@@ -177,18 +185,18 @@ async function handleDelete() {
           <h2 class="section-title">Security</h2>
 
           <div class="form-group">
-            <label for="allowed-domain" class="form-label">Email domain lockdown</label>
+            <label for="allowed-domains" class="form-label">Email domain lockdown</label>
             <input
-              id="allowed-domain"
-              v-model="form.allowedDomain"
+              id="allowed-domains"
+              v-model="form.allowedDomains"
               type="text"
               class="form-input"
-              placeholder="example.com"
+              placeholder="example.com, corp.com"
               :disabled="saving"
             />
             <p class="form-help">
-              Only allow invites to email addresses from this domain. Leave empty to allow any
-              domain.
+              Only allow invites to email addresses from these domains. Separate multiple domains
+              with commas. Leave empty to allow any domain.
             </p>
           </div>
         </section>

@@ -13,7 +13,7 @@ export interface CreateOrganizationInput {
   slug?: string;
   logoUrl?: string;
   accentColor?: string;
-  allowedDomain?: string;
+  allowedDomains?: string[];
   aiEnabled?: boolean;
 }
 
@@ -22,7 +22,7 @@ export interface UpdateOrganizationInput {
   slug?: string;
   logoUrl?: string | null;
   accentColor?: string | null;
-  allowedDomain?: string | null;
+  allowedDomains?: string[];
   aiEnabled?: boolean;
 }
 
@@ -100,7 +100,7 @@ export async function createOrganization(
         slug,
         logoUrl: input.logoUrl ?? null,
         accentColor: input.accentColor ?? '#6366f1',
-        allowedDomain: input.allowedDomain ?? null,
+        allowedDomains: input.allowedDomains ?? [],
         aiEnabled: input.aiEnabled ?? true,
       },
     });
@@ -168,7 +168,7 @@ export async function updateOrganization(
       ...(slug !== undefined && { slug }),
       ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
       ...(input.accentColor !== undefined && { accentColor: input.accentColor }),
-      ...(input.allowedDomain !== undefined && { allowedDomain: input.allowedDomain }),
+      ...(input.allowedDomains !== undefined && { allowedDomains: input.allowedDomains }),
       ...(input.aiEnabled !== undefined && { aiEnabled: input.aiEnabled }),
     },
   });
@@ -401,15 +401,15 @@ export async function transferOwnership(
 // ===========================================
 
 /**
- * Validate email domain against organization's allowed domain
+ * Validate email domain against organization's allowed domains
  */
-export function validateEmailDomain(email: string, allowedDomain: string | null): boolean {
-  if (!allowedDomain) {
+export function validateEmailDomain(email: string, allowedDomains: string[]): boolean {
+  if (!allowedDomains || allowedDomains.length === 0) {
     return true; // No domain restriction
   }
 
   const emailDomain = email.split('@')[1]?.toLowerCase();
-  return emailDomain === allowedDomain.toLowerCase();
+  return allowedDomains.some((domain) => domain.toLowerCase() === emailDomain);
 }
 
 /**
@@ -433,7 +433,7 @@ export async function createInvite(
   }
 
   // Validate domain lockdown
-  if (!validateEmailDomain(email, organization.allowedDomain)) {
+  if (!validateEmailDomain(email, organization.allowedDomains)) {
     throw new Error('DOMAIN_NOT_ALLOWED');
   }
 
