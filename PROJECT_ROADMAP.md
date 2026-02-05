@@ -140,7 +140,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 - [x] Add session listing endpoint
 - [x] Add session revocation endpoint
-- [ ] Create sessions management UI (frontend)
+- [x] Create sessions management UI (frontend)
 - [x] Track last active time, IP, user agent
 
 ---
