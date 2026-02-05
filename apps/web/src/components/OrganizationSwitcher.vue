@@ -317,21 +317,21 @@ const currentRole = computed(() => authStore.currentUserRole);
   transform: rotate(180deg);
 }
 
-/* Role Badges */
+/* Role Badges - Refined, subtle design */
 .role-badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
-  font-size: 10px;
+  padding: 2px 6px;
+  font-size: 9px;
   font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-radius: var(--radius-full);
+  border-radius: 4px;
 }
 
 .role-badge--sm {
-  padding: 2px 8px;
+  padding: 2px 6px;
   font-size: 9px;
 }
 
@@ -340,35 +340,48 @@ const currentRole = computed(() => authStore.currentUserRole);
   font-size: 8px;
 }
 
+/* Owner - Subtle warm amber with sophistication */
 .role-badge--owner {
-  color: #854d0e;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
+/* Admin - Calm blue-gray */
 .role-badge--admin {
   color: #1e40af;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
+/* Member - Neutral, unobtrusive */
 .role-badge--member {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
 }
 
-/* Dark mode adjustments */
+/* Dark mode - Refined with subtle glow */
 [data-theme='dark'] .role-badge--owner {
-  color: #fcd34d;
-  background: linear-gradient(135deg, rgba(252, 211, 77, 0.15) 0%, rgba(245, 158, 11, 0.2) 100%);
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  box-shadow: none;
 }
 
 [data-theme='dark'] .role-badge--admin {
-  color: #93c5fd;
-  background: linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(59, 130, 246, 0.2) 100%);
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  box-shadow: none;
 }
 
 [data-theme='dark'] .role-badge--member {
   color: var(--color-text-tertiary);
   background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
 }
 
 /* Dropdown */
