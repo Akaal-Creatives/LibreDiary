@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
 
@@ -6,12 +7,31 @@ const router = useRouter();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
 
+const creating = ref(false);
+
 function navigateToPage(pageId: string) {
   router.push({ name: 'page', params: { pageId } });
 }
 
-function createNewPage() {
-  // TODO: Implement page creation
+async function createNewPage() {
+  if (creating.value) return;
+
+  creating.value = true;
+  try {
+    const page = await pagesStore.createPage({
+      title: 'Untitled',
+    });
+    router.push({ name: 'page', params: { pageId: page.id } });
+  } catch (e) {
+    console.error('Failed to create page:', e);
+  } finally {
+    creating.value = false;
+  }
+}
+
+function showComingSoon(feature: string) {
+  // Simple alert for now - could be replaced with a toast notification
+  alert(`${feature} is coming soon!`);
 }
 </script>
 
@@ -73,7 +93,7 @@ function createNewPage() {
           </span>
         </button>
 
-        <button class="action-card">
+        <button class="action-card" @click="showComingSoon('Templates')">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <rect
@@ -93,20 +113,10 @@ function createNewPage() {
             <h3>Templates</h3>
             <p>Start with a pre-built template</p>
           </div>
-          <span class="action-arrow">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M7.5 5L12.5 10L7.5 15"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
+          <span class="action-badge">Soon</span>
         </button>
 
-        <button class="action-card">
+        <button class="action-card" @click="showComingSoon('Import')">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -129,17 +139,7 @@ function createNewPage() {
             <h3>Import</h3>
             <p>Import from Notion or Markdown</p>
           </div>
-          <span class="action-arrow">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M7.5 5L12.5 10L7.5 15"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
+          <span class="action-badge">Soon</span>
         </button>
       </div>
     </section>
@@ -364,6 +364,16 @@ function createNewPage() {
 .action-card:hover .action-arrow {
   color: var(--color-accent);
   transform: translateX(4px);
+}
+
+.action-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-full);
 }
 
 /* Recent Pages */
