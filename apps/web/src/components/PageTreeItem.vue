@@ -105,14 +105,19 @@ async function handleDrop(event: DragEvent) {
       return;
     }
 
-    // Don't drop a parent into its own children
-    if (isDescendant(props.page, draggedPageId)) {
-      toast.error("Can't move a page into its own children");
-      dropPosition.value = null;
-      return;
-    }
-
     const currentDropPosition = dropPosition.value || 'below';
+
+    // Only check for circular reference when dropping 'inside'
+    // (making the dragged page a child of the target)
+    if (currentDropPosition === 'inside') {
+      // Find the dragged page in the tree and check if target is its descendant
+      const draggedPage = findPageInTree(pagesStore.pageTree, draggedPageId);
+      if (draggedPage && isDescendant(draggedPage, props.page.id)) {
+        toast.error("Can't move a page into its own children");
+        dropPosition.value = null;
+        return;
+      }
+    }
     emit('move', draggedPageId, props.page.id, currentDropPosition);
 
     // Determine the move parameters
@@ -144,12 +149,24 @@ async function handleDrop(event: DragEvent) {
   dropPosition.value = null;
 }
 
-// Check if a page is a descendant of another
-function isDescendant(page: PageWithChildren, ancestorId: string): boolean {
+// Find a page in the tree by ID
+function findPageInTree(tree: PageWithChildren[], pageId: string): PageWithChildren | null {
+  for (const page of tree) {
+    if (page.id === pageId) return page;
+    if (page.children) {
+      const found = findPageInTree(page.children, pageId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Check if a page ID is a descendant of another page
+function isDescendant(page: PageWithChildren, targetId: string): boolean {
   if (!page.children) return false;
   for (const child of page.children) {
-    if (child.id === ancestorId) return true;
-    if (isDescendant(child, ancestorId)) return true;
+    if (child.id === targetId) return true;
+    if (isDescendant(child, targetId)) return true;
   }
   return false;
 }
