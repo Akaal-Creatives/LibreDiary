@@ -199,7 +199,7 @@ describe('InviteMemberModal', () => {
 
     // Make the createInvite take time
     orgsStore.createInvite = vi.fn(
-      () =>
+      (): Promise<void> =>
         new Promise((resolve) => {
           setTimeout(resolve, 100);
         })
@@ -235,7 +235,7 @@ describe('InviteMemberModal', () => {
   it('shows loading spinner during submission', async () => {
     const { orgsStore } = setupStores();
     orgsStore.createInvite = vi.fn(
-      () =>
+      (): Promise<void> =>
         new Promise((resolve) => {
           setTimeout(resolve, 100);
         })
