@@ -106,8 +106,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create session management (cookies)
 - [x] Add session table in Prisma
 - [x] Implement auth middleware
-- [ ] Create login page (frontend)
-- [ ] Create registration page (invite-only) (frontend)
+- [x] Create login page (frontend)
+- [x] Create registration page (invite-only) (frontend)
 - [x] Add form validation with Zod schemas
 
 ### 2.2 Email Verification
@@ -116,7 +116,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement email sending service (SMTP)
 - [x] Create verification email template
 - [x] Add verify-email endpoint
-- [ ] Create email verification page (frontend)
+- [x] Create email verification page (frontend)
 
 ### 2.3 Password Reset
 
@@ -124,8 +124,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create reset email template
 - [x] Add forgot-password endpoint
 - [x] Add reset-password endpoint
-- [ ] Create forgot password page (frontend)
-- [ ] Create reset password page (frontend)
+- [x] Create forgot password page (frontend)
+- [x] Create reset password page (frontend)
 
 ### 2.4 OAuth Integration
 
