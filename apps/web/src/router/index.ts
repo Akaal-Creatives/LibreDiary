@@ -130,6 +130,12 @@ async function checkSetup(): Promise<boolean> {
   }
 }
 
+// Reset setup status cache (called after setup completes)
+export function resetSetupStatus(): void {
+  setupRequired = false;
+  setupCheckPromise = null;
+}
+
 // Navigation guards
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();

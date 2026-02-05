@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from '@/composables';
 import { setupService, ApiError } from '@/services';
+import { resetSetupStatus } from '@/router';
 
 const router = useRouter();
 const { theme, toggleTheme } = useTheme();
@@ -125,6 +126,9 @@ async function completeSetup() {
         slug: orgSlug.value,
       },
     });
+
+    // Reset the router's setup status cache so navigation works
+    resetSetupStatus();
 
     setupComplete.value = true;
     currentStep.value = 4;
