@@ -411,6 +411,45 @@ describe('PageTreeItem', () => {
     expect(wrapper.emitted('move')).toBeTruthy();
   });
 
+  it('calls movePage with null parentId when moving child to root level', async () => {
+    const { pagesStore } = setupStores();
+    // mockPage is a root page (parentId: null)
+    const wrapper = mountItem(mockPage);
+    const pageItem = wrapper.find('.page-item');
+    const element = pageItem.element as HTMLElement;
+
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+      top: 0,
+      height: 30,
+      bottom: 30,
+      left: 0,
+      right: 100,
+      width: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    // First trigger dragover to set drop position to 'below'
+    await pageItem.trigger('dragover', {
+      clientY: 25, // Bottom of element
+    });
+
+    // Drop a child page (parentId: 'some-parent') onto a root page
+    await pageItem.trigger('drop', {
+      dataTransfer: {
+        getData: () => JSON.stringify({ pageId: 'child-page', parentId: 'some-parent' }),
+      },
+    });
+    await flushPromises();
+
+    // Should call movePage with null parentId to move to root
+    expect(pagesStore.movePage).toHaveBeenCalledWith('child-page', {
+      parentId: null,
+      position: 1, // mockPage.position (0) + 1 for 'below'
+    });
+  });
+
   // Accessibility
   it('has aria-expanded on expand button', () => {
     const wrapper = mountItem(mockPageWithChildren);

@@ -105,7 +105,7 @@ export const updatePageSchema = z.object({
 });
 
 export const movePageSchema = z.object({
-  parentId: cuidSchema.nullable(),
+  parentId: cuidSchema.nullable().optional(),
   position: z.number().int().min(0).optional(),
 });
 
