@@ -2,11 +2,15 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePagesStore } from '@/stores';
+import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
 const pagesStore = usePagesStore();
+const toast = useToast();
 
 const isExpanded = ref(true);
+const draggingId = ref<string | null>(null);
+const dragOverId = ref<string | null>(null);
 
 onMounted(async () => {
   try {
@@ -23,12 +27,82 @@ function toggleExpanded() {
 function navigateToPage(pageId: string) {
   router.push({ name: 'page', params: { pageId } });
 }
+
+// Drag and Drop handlers
+function handleDragStart(event: DragEvent, favId: string) {
+  draggingId.value = favId;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', favId);
+  }
+}
+
+function handleDragEnd() {
+  draggingId.value = null;
+  dragOverId.value = null;
+}
+
+function handleDragOver(event: DragEvent, favId: string) {
+  event.preventDefault();
+  if (draggingId.value && draggingId.value !== favId) {
+    dragOverId.value = favId;
+  }
+}
+
+function handleDragLeave() {
+  dragOverId.value = null;
+}
+
+async function handleDrop(event: DragEvent, targetFavId: string) {
+  event.preventDefault();
+  const draggedFavId = event.dataTransfer?.getData('text/plain');
+
+  if (!draggedFavId || draggedFavId === targetFavId) {
+    dragOverId.value = null;
+    return;
+  }
+
+  // Find the indices
+  const favorites = pagesStore.favorites;
+  const draggedIndex = favorites.findIndex((f) => f.id === draggedFavId);
+  const targetIndex = favorites.findIndex((f) => f.id === targetFavId);
+
+  if (draggedIndex === -1 || targetIndex === -1) {
+    dragOverId.value = null;
+    return;
+  }
+
+  // Create new order
+  const newOrder = [...favorites];
+  const [draggedItem] = newOrder.splice(draggedIndex, 1);
+  if (draggedItem) {
+    newOrder.splice(targetIndex, 0, draggedItem);
+  }
+
+  // Get the ordered IDs
+  const orderedIds = newOrder.map((f) => f.id);
+
+  try {
+    await pagesStore.reorderFavorites(orderedIds);
+  } catch (e) {
+    console.error('Failed to reorder favorites:', e);
+    toast.error('Failed to reorder favorites');
+  }
+
+  dragOverId.value = null;
+}
 </script>
 
 <template>
   <div v-if="pagesStore.favorites.length > 0" class="favorites-section">
     <div class="section-header">
-      <button class="expand-btn" :class="{ expanded: isExpanded }" @click="toggleExpanded">
+      <button
+        class="expand-btn"
+        :class="{ expanded: isExpanded }"
+        :aria-expanded="isExpanded"
+        :aria-label="isExpanded ? 'Collapse favorites' : 'Expand favorites'"
+        @click="toggleExpanded"
+      >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path
             d="M4.5 3L7.5 6L4.5 9"
@@ -42,14 +116,35 @@ function navigateToPage(pageId: string) {
       <span class="section-title">Favorites</span>
     </div>
 
-    <div v-if="isExpanded" class="favorites-list">
+    <div v-if="isExpanded" class="favorites-list" role="list">
       <button
         v-for="fav in pagesStore.favorites"
         :key="fav.id"
         class="favorite-item"
-        :class="{ active: pagesStore.currentPageId === fav.pageId }"
+        :class="{
+          active: pagesStore.currentPageId === fav.pageId,
+          dragging: draggingId === fav.id,
+          'drag-over': dragOverId === fav.id,
+        }"
+        role="listitem"
+        draggable="true"
         @click="navigateToPage(fav.pageId)"
+        @dragstart="handleDragStart($event, fav.id)"
+        @dragend="handleDragEnd"
+        @dragover="handleDragOver($event, fav.id)"
+        @dragleave="handleDragLeave"
+        @drop="handleDrop($event, fav.id)"
       >
+        <span class="drag-handle">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <circle cx="3" cy="2" r="1" fill="currentColor" />
+            <circle cx="7" cy="2" r="1" fill="currentColor" />
+            <circle cx="3" cy="5" r="1" fill="currentColor" />
+            <circle cx="7" cy="5" r="1" fill="currentColor" />
+            <circle cx="3" cy="8" r="1" fill="currentColor" />
+            <circle cx="7" cy="8" r="1" fill="currentColor" />
+          </svg>
+        </span>
         <span class="favorite-icon">
           <template v-if="fav.page.icon">{{ fav.page.icon }}</template>
           <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -164,5 +259,39 @@ function navigateToPage(pageId: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Drag Handle */
+.drag-handle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.favorite-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.favorite-item.dragging .drag-handle {
+  cursor: grabbing;
+  opacity: 1;
+}
+
+/* Drag States */
+.favorite-item.dragging {
+  background: var(--color-hover);
+  opacity: 0.6;
+}
+
+.favorite-item.drag-over {
+  background: var(--color-accent-subtle);
+  border-top: 2px solid var(--color-accent);
 }
 </style>
