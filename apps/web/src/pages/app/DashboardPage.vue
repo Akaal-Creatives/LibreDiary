@@ -2,10 +2,12 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
+import { useDialog } from '@/composables';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
+const { alert } = useDialog();
 
 const creating = ref(false);
 
@@ -30,8 +32,12 @@ async function createNewPage() {
 }
 
 function showComingSoon(feature: string) {
-  // Simple alert for now - could be replaced with a toast notification
-  alert(`${feature} is coming soon!`);
+  alert({
+    title: 'Coming Soon',
+    message: `${feature} is coming soon! We're working hard to bring you this feature.`,
+    variant: 'info',
+    confirmText: 'Got it',
+  });
 }
 </script>
 

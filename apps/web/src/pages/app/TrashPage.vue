@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { usePagesStore } from '@/stores';
+import { useDialog } from '@/composables';
 import type { Page } from '@librediary/shared';
 
 const pagesStore = usePagesStore();
+const { confirm } = useDialog();
 
 const restoring = ref<Set<string>>(new Set());
 const deleting = ref<Set<string>>(new Set());
@@ -32,11 +34,15 @@ async function handleRestore(page: Page) {
 }
 
 async function handleDelete(page: Page) {
-  if (
-    !confirm(
-      `Are you sure you want to permanently delete "${page.title}"? This action cannot be undone.`
-    )
-  ) {
+  const confirmed = await confirm({
+    title: 'Delete Permanently',
+    message: `Are you sure you want to permanently delete "${page.title}"? This action cannot be undone.`,
+    variant: 'destructive',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+  });
+
+  if (!confirmed) {
     return;
   }
 
