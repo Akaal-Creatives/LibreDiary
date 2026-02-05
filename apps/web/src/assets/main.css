@@ -232,6 +232,41 @@ body {
 }
 
 /* ============================================
+   Diary Grid Pattern - Subtle notebook essence
+   ============================================ */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: center center;
+  opacity: var(--grid-opacity);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* Light theme grid - very subtle sage tint */
+[data-theme='light'] body::before,
+:root body::before {
+  --grid-color: rgba(107, 143, 113, 0.08);
+  --grid-size: 24px;
+  --grid-opacity: 1;
+}
+
+/* Dark theme grid - subtle glow effect */
+[data-theme='dark'] body::before {
+  --grid-color: rgba(136, 176, 142, 0.04);
+  --grid-size: 24px;
+  --grid-opacity: 1;
+}
+
+/* ============================================
    Typography
    ============================================ */
 
