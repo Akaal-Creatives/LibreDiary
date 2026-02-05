@@ -8,6 +8,7 @@
 
 export type OrgRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 export type PermissionLevel = 'VIEW' | 'EDIT' | 'FULL_ACCESS';
+export type PagePermissionLevel = PermissionLevel; // Alias for clarity
 export type StorageType = 'LOCAL' | 'MINIO' | 'S3';
 export type NotificationType =
   | 'MENTION'
@@ -167,7 +168,12 @@ export interface PagePermission {
   userId: string | null;
   level: PermissionLevel;
   shareToken: string | null;
+  expiresAt: string | null;
+  grantedById: string;
   createdAt: string;
+  updatedAt: string;
+  user?: User;
+  grantedBy?: User;
 }
 
 export interface Favorite {

@@ -12,6 +12,8 @@ import { authRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
 import { versionsRoutes } from './modules/collaboration/index.js';
+import { permissionsRoutes } from './modules/permissions/index.js';
+import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 
 export async function buildApp() {
@@ -47,6 +49,9 @@ export async function buildApp() {
   // Setup routes (no auth required, used for initial setup)
   await fastify.register(setupRoutes, { prefix: '/api/v1/setup' });
 
+  // Public routes (no auth required, for public page viewing)
+  await fastify.register(publicRoutes, { prefix: '/api/v1/public/pages' });
+
   // API routes will be registered under /api prefix
   await fastify.register(
     async (api) => {
@@ -70,6 +75,11 @@ export async function buildApp() {
       // Collaboration routes (versions)
       await api.register(versionsRoutes, {
         prefix: '/organizations/:orgId/pages/:pageId/versions',
+      });
+
+      // Permission routes
+      await api.register(permissionsRoutes, {
+        prefix: '/organizations/:orgId/pages/:pageId/permissions',
       });
     },
     { prefix: '/api/v1' }

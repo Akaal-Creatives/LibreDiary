@@ -4,6 +4,7 @@ import { usePagesStore, useSyncStore } from '@/stores';
 import { TiptapEditor } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
+import ShareModal from '@/components/ShareModal.vue';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
@@ -17,6 +18,7 @@ const error = ref<string | null>(null);
 const pageTitle = ref('');
 const pageContent = ref('');
 const showEmojiPicker = ref(false);
+const showShareModal = ref(false);
 
 // Debounce timers for saving
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -205,6 +207,20 @@ function formatDate(dateString: string): string {
             </span>
           </div>
         </div>
+        <button class="share-btn" title="Share page" @click="showShareModal = true">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="14" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="14" cy="14" r="2.5" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="4" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M6.5 7.5L11.5 5M6.5 10.5L11.5 13"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>Share</span>
+        </button>
       </header>
 
       <!-- Page Body -->
@@ -216,6 +232,15 @@ function formatDate(dateString: string): string {
         />
       </div>
     </div>
+
+    <!-- Share Modal -->
+    <ShareModal
+      :page-id="props.pageId"
+      :page-title="pageTitle"
+      :is-open="showShareModal"
+      @close="showShareModal = false"
+      @update="loadPage"
+    />
   </div>
 </template>
 
@@ -310,6 +335,29 @@ function formatDate(dateString: string): string {
   margin-bottom: var(--space-8);
   padding: 0 var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border);
+}
+
+.share-btn {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  align-self: center;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.share-btn:hover {
+  color: var(--color-accent);
+  background: rgba(107, 143, 113, 0.05);
+  border-color: var(--color-accent);
 }
 
 .icon-wrapper {

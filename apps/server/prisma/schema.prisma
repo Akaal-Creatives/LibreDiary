@@ -33,13 +33,15 @@ model User {
   deletedAt DateTime? // Soft delete
 
   // Relations
-  memberships  OrganizationMember[]
-  createdPages Page[]               @relation("PageCreatedBy")
-  updatedPages Page[]               @relation("PageUpdatedBy")
-  sessions     Session[]
-  invitesSent  Invite[]             @relation("InvitesSent")
-  favorites    Favorite[]
-  pageVersions PageVersion[]        @relation("PageVersionCreatedBy")
+  memberships        OrganizationMember[]
+  createdPages       Page[]               @relation("PageCreatedBy")
+  updatedPages       Page[]               @relation("PageUpdatedBy")
+  sessions           Session[]
+  invitesSent        Invite[]             @relation("InvitesSent")
+  favorites          Favorite[]
+  pageVersions       PageVersion[]        @relation("PageVersionCreatedBy")
+  pagePermissions    PagePermission[]     @relation("PagePermissionUser")
+  grantedPermissions PagePermission[]     @relation("PagePermissionGrantedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -191,13 +193,14 @@ model Page {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  parent       Page?        @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children     Page[]       @relation("PageHierarchy")
-  createdBy    User         @relation("PageCreatedBy", fields: [createdById], references: [id])
-  updatedBy    User?        @relation("PageUpdatedBy", fields: [updatedById], references: [id])
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       Page?             @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Page[]            @relation("PageHierarchy")
+  createdBy    User              @relation("PageCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User?             @relation("PageUpdatedBy", fields: [updatedById], references: [id])
   favorites    Favorite[]
   versions     PageVersion[]
+  permissions  PagePermission[]
 
   @@index([organizationId])
   @@index([parentId])
@@ -224,6 +227,44 @@ model PageVersion {
 
   @@unique([pageId, version])
   @@index([pageId])
+}
+
+// ============================================
+// PAGE PERMISSIONS
+// ============================================
+
+model PagePermission {
+  id     String          @id @default(cuid())
+  pageId String
+  userId String? // Nullable for guest/public access
+
+  // Permission level
+  level PermissionLevel @default(VIEW)
+
+  // For guest access links
+  shareToken String?   @unique
+  expiresAt  DateTime? // Optional expiration for share links
+
+  // Audit
+  grantedById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  page      Page  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user      User? @relation("PagePermissionUser", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User  @relation("PagePermissionGrantedBy", fields: [grantedById], references: [id])
+
+  @@unique([pageId, userId]) // One permission per user per page
+  @@index([pageId])
+  @@index([userId])
+  @@index([shareToken])
+}
+
+enum PermissionLevel {
+  VIEW        // Can only view the page
+  EDIT        // Can edit content but not share or delete
+  FULL_ACCESS // Can edit, share, and manage the page
 }
 
 // ============================================

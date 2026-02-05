@@ -99,6 +99,12 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/p/:slug',
+    name: 'public-page',
+    component: () => import('@/pages/PublicPageView.vue'),
+    props: true,
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/pages/NotFoundPage.vue'),
