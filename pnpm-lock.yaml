@@ -30,8 +30,8 @@ importers:
         specifier: ^10.0.0
         version: 10.1.0
       '@fastify/helmet':
-        specifier: ^12.0.0
-        version: 12.0.1
+        specifier: ^13.0.2
+        version: 13.0.2
       '@fastify/sensible':
         specifier: ^6.0.0
         version: 6.0.4
@@ -603,8 +603,8 @@ packages:
   '@fastify/forwarded@3.0.1':
     resolution: {integrity: sha512-JqDochHFqXs3C3Ml3gOY58zM7OqO9ENqPo0UqAjAjH8L01fRZqwX9iLeX34//kiJubF7r2ZQHtBRU36vONbLlw==}
 
-  '@fastify/helmet@12.0.1':
-    resolution: {integrity: sha512-kkjBcedWwdflRThovGuvN9jB2QQLytBqArCFPdMIb7o2Fp0l/H3xxYi/6x/SSRuH/FFt9qpTGIfJz2bfnMrLqA==}
+  '@fastify/helmet@13.0.2':
+    resolution: {integrity: sha512-tO1QMkOfNeCt9l4sG/FiWErH4QMm+RjHzbMTrgew1DYOQ2vb/6M1G2iNABBrD7Xq6dUk+HLzWW8u+rmmhQHifA==}
 
   '@fastify/merge-json-schemas@0.2.1':
     resolution: {integrity: sha512-OA3KGBCy6KtIvLf8DINC5880o5iBlDX4SxzLQS8HorJAbqluzLRn80UXU0bxZn7UOFhFgpRJDasfwn9nG4FG4A==}
@@ -1978,9 +1978,9 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  helmet@7.2.0:
-    resolution: {integrity: sha512-ZRiwvN089JfMXokizgqEPXsl2Guk094yExfoDXR0cBYWxtBbaSww/w+vT4WEJsBW2iTUi1GgZ6swmoug3Oy4Xw==}
-    engines: {node: '>=16.0.0'}
+  helmet@8.1.0:
+    resolution: {integrity: sha512-jOiHyAZsmnr8LqoPGmCjYAaiuWwjAPLgY8ZX2XrmHawt99/u1y6RgrZMTeoPfpUbV96HOalYgz1qzkRbw54Pmg==}
+    engines: {node: '>=18.0.0'}
 
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
@@ -3509,10 +3509,10 @@ snapshots:
 
   '@fastify/forwarded@3.0.1': {}
 
-  '@fastify/helmet@12.0.1':
+  '@fastify/helmet@13.0.2':
     dependencies:
       fastify-plugin: 5.1.0
-      helmet: 7.2.0
+      helmet: 8.1.0
 
   '@fastify/merge-json-schemas@0.2.1':
     dependencies:
@@ -5045,7 +5045,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  helmet@7.2.0: {}
+  helmet@8.1.0: {}
 
   help-me@5.0.0: {}
 
