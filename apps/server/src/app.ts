@@ -8,7 +8,7 @@ import {
   errorHandlerPlugin,
 } from './plugins/index.js';
 import { healthRoutes, devRoutes } from './routes/index.js';
-import { authRoutes } from './modules/auth/index.js';
+import { authRoutes, oauthRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
 import { versionsRoutes } from './modules/collaboration/index.js';
@@ -63,6 +63,9 @@ export async function buildApp() {
 
       // Auth routes
       await api.register(authRoutes, { prefix: '/auth' });
+
+      // OAuth routes
+      await api.register(oauthRoutes, { prefix: '/oauth' });
 
       // Organization routes
       await api.register(organizationRoutes, { prefix: '/organizations' });

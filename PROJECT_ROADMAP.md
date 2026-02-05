@@ -129,12 +129,12 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 2.4 OAuth Integration
 
-- [ ] Install Better Auth + Arctic
-- [ ] Configure GitHub OAuth provider
-- [ ] Configure Google OAuth provider
-- [ ] Create Account model for OAuth links
-- [ ] Handle OAuth callback routing
-- [ ] Link OAuth accounts to existing users
+- [x] Install Better Auth + Arctic
+- [x] Configure GitHub OAuth provider
+- [x] Configure Google OAuth provider
+- [x] Create Account model for OAuth links
+- [x] Handle OAuth callback routing
+- [x] Link OAuth accounts to existing users
 
 ### 2.5 Session Management
 

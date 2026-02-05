@@ -88,6 +88,23 @@ export interface Session {
   createdAt: string;
 }
 
+// OAuth providers
+export type OAuthProvider = 'github' | 'google';
+
+export interface LinkedAccount {
+  id: string;
+  provider: OAuthProvider;
+  providerAccountId: string;
+  createdAt: string;
+}
+
+export interface OAuthProviderConfig {
+  provider: OAuthProvider;
+  name: string;
+  icon: string;
+  configured: boolean;
+}
+
 // ===========================================
 // ORGANIZATION
 // ===========================================
