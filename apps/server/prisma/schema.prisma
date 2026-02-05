@@ -240,3 +240,24 @@ model Favorite {
   @@unique([userId, pageId])
   @@index([userId])
 }
+
+// ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+model SystemSettings {
+  id    String @id @default("system")
+
+  // Setup state
+  setupCompleted   Boolean   @default(false)
+  setupCompletedAt DateTime?
+  setupCompletedBy String?
+
+  // General settings
+  siteName        String @default("LibreDiary")
+  allowSignups    Boolean @default(false) // Invite-only by default
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

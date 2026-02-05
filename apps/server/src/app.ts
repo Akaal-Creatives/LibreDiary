@@ -12,6 +12,7 @@ import { authRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
 import { versionsRoutes } from './modules/collaboration/index.js';
+import { setupRoutes } from './modules/setup/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -42,6 +43,9 @@ export async function buildApp() {
   // Register routes
   await fastify.register(healthRoutes);
   await fastify.register(devRoutes);
+
+  // Setup routes (no auth required, used for initial setup)
+  await fastify.register(setupRoutes, { prefix: '/api/v1/setup' });
 
   // API routes will be registered under /api prefix
   await fastify.register(

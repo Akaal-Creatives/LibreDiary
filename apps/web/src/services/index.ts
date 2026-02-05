@@ -23,3 +23,5 @@ export type {
   MovePageInput,
   FavoriteWithPage,
 } from './pages.service';
+export { setupService } from './setup.service';
+export type { SetupStatus, SetupInput, SetupResult } from './setup.service';

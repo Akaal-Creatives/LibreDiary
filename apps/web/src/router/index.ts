@@ -1,12 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { setupService } from '@/services';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
     component: () => import('@/pages/HomePage.vue'),
+  },
+  {
+    path: '/setup',
+    name: 'setup',
+    component: () => import('@/pages/SetupWizardPage.vue'),
+    meta: { setup: true },
   },
   {
     path: '/login',
@@ -105,10 +112,48 @@ const router = createRouter({
 
 // Track if initialization has been attempted
 let initializationPromise: Promise<void> | null = null;
+let setupCheckPromise: Promise<boolean> | null = null;
+let setupRequired: boolean | null = null;
+
+// Check if setup is required
+async function checkSetup(): Promise<boolean> {
+  if (setupRequired !== null) return setupRequired;
+
+  try {
+    const status = await setupService.getStatus();
+    setupRequired = status.setupRequired;
+    return setupRequired;
+  } catch {
+    // If we can't reach the API, assume setup is not required
+    setupRequired = false;
+    return false;
+  }
+}
 
 // Navigation guards
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
+
+  // Check setup status on first navigation (except for the setup page itself)
+  if (!to.meta.setup && setupCheckPromise === null) {
+    setupCheckPromise = checkSetup();
+  }
+
+  // Wait for setup check to complete
+  if (setupCheckPromise) {
+    const needsSetup = await setupCheckPromise;
+    setupCheckPromise = null;
+
+    // Redirect to setup if required (except if already going there)
+    if (needsSetup && !to.meta.setup) {
+      return next({ name: 'setup' });
+    }
+  }
+
+  // If setup is complete and user tries to access setup page, redirect
+  if (to.meta.setup && setupRequired === false) {
+    return next({ name: 'home' });
+  }
 
   // Initialize auth state on first navigation
   if (!authStore.initialized && !initializationPromise) {

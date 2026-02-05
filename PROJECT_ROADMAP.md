@@ -97,35 +97,35 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 2: Authentication
+## Phase 2: Authentication (Backend ✅)
 
 ### 2.1 Email/Password Auth
 
-- [ ] Create auth routes (register, login, logout)
-- [ ] Implement password hashing (Argon2)
-- [ ] Create session management (cookies)
-- [ ] Add session table in Prisma
-- [ ] Implement auth middleware
-- [ ] Create login page
-- [ ] Create registration page (invite-only)
-- [ ] Add form validation with Zod schemas
+- [x] Create auth routes (register, login, logout)
+- [x] Implement password hashing (Argon2)
+- [x] Create session management (cookies)
+- [x] Add session table in Prisma
+- [x] Implement auth middleware
+- [ ] Create login page (frontend)
+- [ ] Create registration page (invite-only) (frontend)
+- [x] Add form validation with Zod schemas
 
 ### 2.2 Email Verification
 
-- [ ] Create VerificationToken model
-- [ ] Implement email sending service (SMTP)
-- [ ] Create verification email template
-- [ ] Add verify-email endpoint
-- [ ] Create email verification page
+- [x] Create VerificationToken model
+- [x] Implement email sending service (SMTP)
+- [x] Create verification email template
+- [x] Add verify-email endpoint
+- [ ] Create email verification page (frontend)
 
 ### 2.3 Password Reset
 
-- [ ] Create password reset token flow
-- [ ] Create reset email template
-- [ ] Add forgot-password endpoint
-- [ ] Add reset-password endpoint
-- [ ] Create forgot password page
-- [ ] Create reset password page
+- [x] Create password reset token flow
+- [x] Create reset email template
+- [x] Add forgot-password endpoint
+- [x] Add reset-password endpoint
+- [ ] Create forgot password page (frontend)
+- [ ] Create reset password page (frontend)
 
 ### 2.4 OAuth Integration
 
@@ -138,10 +138,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 2.5 Session Management
 
-- [ ] Add session listing endpoint
-- [ ] Add session revocation endpoint
-- [ ] Create sessions management UI
-- [ ] Track last active time, IP, user agent
+- [x] Add session listing endpoint
+- [x] Add session revocation endpoint
+- [ ] Create sessions management UI (frontend)
+- [x] Track last active time, IP, user agent
 
 ---
 
@@ -193,13 +193,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add system-wide user management
 - [ ] Add system-wide organization management
 
-### 3.7 Setup Wizard
+### 3.7 Setup Wizard ✅
 
-- [ ] Detect first-run state (no super admin)
-- [ ] Create setup wizard pages
-- [ ] Collect super admin credentials
-- [ ] Create first organization
-- [ ] Initialize system settings
+- [x] Detect first-run state (no super admin)
+- [x] Create setup wizard pages
+- [x] Collect super admin credentials
+- [x] Create first organization
+- [x] Initialize system settings
 
 ---
 
