@@ -26,7 +26,10 @@ export const useOrganizationsStore = defineStore('organizations', () => {
   const currentOrganization = computed(() => authStore.currentOrganization);
   const currentOrganizationId = computed(() => authStore.currentOrganizationId);
 
-  const userRole = computed<OrgRole | null>(() => currentMembership.value?.role ?? null);
+  // Use auth store membership for role, with fallback to fetched membership
+  const userRole = computed<OrgRole | null>(
+    () => authStore.currentUserRole ?? currentMembership.value?.role ?? null
+  );
   const isOwner = computed(() => userRole.value === 'OWNER');
   const isAdmin = computed(() => userRole.value === 'ADMIN' || userRole.value === 'OWNER');
   const isMember = computed(() => !!userRole.value);
