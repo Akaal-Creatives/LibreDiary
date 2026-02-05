@@ -79,7 +79,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="menuRef" class="context-menu" :style="{ left: `${x}px`, top: `${y}px` }" role="menu">
+  <div
+    ref="menuRef"
+    class="context-menu"
+    :style="{ left: `${x}px`, top: `${y}px` }"
+    role="menu"
+    @click.stop
+  >
     <button class="menu-item" role="menuitem" @click="handleAction('addSubpage')">
       <svg class="menu-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path d="M8 3.5V12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />

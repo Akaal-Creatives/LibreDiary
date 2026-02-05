@@ -82,6 +82,7 @@
   --color-background: #F6F8F6;
   --color-surface: #FFFFFF;
   --color-surface-elevated: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
   --color-surface-sunken: #EFF2EF;
 
   /* Borders */
@@ -142,6 +143,7 @@
   --color-background: #161917;
   --color-surface: #1E2220;
   --color-surface-elevated: #262B28;
+  --color-surface-raised: #2A302C;
   --color-surface-sunken: #121413;
 
   /* Borders - Subtle definition */
