@@ -20,9 +20,41 @@ const pageContent = ref('');
 const showEmojiPicker = ref(false);
 const showShareModal = ref(false);
 
+// Track if page has been modified
+const hasBeenModified = ref(false);
+
 // Debounce timers for saving
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 let contentSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Check if the page is empty (untitled and no content)
+ */
+function isPageEmpty(): boolean {
+  const title = pageTitle.value.trim();
+  const content = pageContent.value.trim();
+
+  // Page is empty if title is "Untitled" (or empty) AND content is empty or just whitespace/empty tags
+  const isUntitled = !title || title === 'Untitled';
+  const hasNoContent = !content || content === '<p></p>' || content === '<p><br></p>';
+
+  return isUntitled && hasNoContent;
+}
+
+/**
+ * Clean up empty page when navigating away
+ */
+async function cleanupEmptyPage(pageId: string) {
+  // Only delete if the page was never meaningfully modified
+  if (!hasBeenModified.value && isPageEmpty()) {
+    try {
+      await pagesStore.trashPage(pageId);
+    } catch (e) {
+      // Silently fail - page might already be deleted
+      console.debug('Failed to cleanup empty page:', e);
+    }
+  }
+}
 
 onMounted(() => {
   loadPage();
@@ -30,12 +62,18 @@ onMounted(() => {
 
 watch(
   () => props.pageId,
-  () => {
+  async (_newId, oldId) => {
+    // Cleanup old page if it was empty
+    if (oldId) {
+      await cleanupEmptyPage(oldId);
+    }
+    // Reset modification tracking for new page
+    hasBeenModified.value = false;
     loadPage();
   }
 );
 
-onUnmounted(() => {
+onUnmounted(async () => {
   // Clear any pending save timeouts
   if (titleSaveTimeout) {
     clearTimeout(titleSaveTimeout);
@@ -43,17 +81,29 @@ onUnmounted(() => {
   if (contentSaveTimeout) {
     clearTimeout(contentSaveTimeout);
   }
+
+  // Cleanup empty page when leaving
+  await cleanupEmptyPage(props.pageId);
 });
 
 async function loadPage() {
   loading.value = true;
   error.value = null;
+  hasBeenModified.value = false;
   pagesStore.setCurrentPage(props.pageId);
 
   try {
     const page = await pagesStore.fetchPage(props.pageId);
     pageTitle.value = page.title;
     pageContent.value = page.htmlContent || '';
+
+    // Mark as modified if it already has content (existing page)
+    if (page.htmlContent && page.htmlContent.trim() && page.htmlContent !== '<p></p>') {
+      hasBeenModified.value = true;
+    }
+    if (page.title && page.title !== 'Untitled') {
+      hasBeenModified.value = true;
+    }
 
     // Expand ancestors in sidebar
     pagesStore.expandToPage(props.pageId);
@@ -69,6 +119,11 @@ function updateTitle(event: Event) {
   const target = event.target as HTMLHeadingElement;
   const newTitle = target.textContent?.trim() || 'Untitled';
   pageTitle.value = newTitle;
+
+  // Mark as modified if title changed to something meaningful
+  if (newTitle && newTitle !== 'Untitled') {
+    hasBeenModified.value = true;
+  }
 
   const opId = `title-${props.pageId}`;
   syncStore.startOperation(opId, 'title');
@@ -92,6 +147,13 @@ function updateTitle(event: Event) {
 
 function onContentUpdate(content: string) {
   pageContent.value = content;
+
+  // Mark as modified if content is meaningful
+  const hasContent =
+    content && content.trim() && content !== '<p></p>' && content !== '<p><br></p>';
+  if (hasContent) {
+    hasBeenModified.value = true;
+  }
 
   const opId = `content-${props.pageId}`;
   syncStore.startOperation(opId, 'content');
