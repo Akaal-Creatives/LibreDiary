@@ -143,7 +143,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
           />
         </svg>
         <input v-model="searchQuery" type="text" placeholder="Search..." class="search-input" />
-        <span class="search-shortcut">K</span>
+        <kbd class="search-shortcut"><span class="shortcut-mod">⌘</span>K</kbd>
       </div>
     </div>
 
@@ -378,55 +378,80 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
 /* Search */
 .sidebar-search {
-  padding: 0 var(--space-4) var(--space-3);
+  padding: 0 var(--space-3) var(--space-3);
 }
 
 .search-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.search-wrapper:hover {
+  border-color: var(--color-border);
+}
+
+.search-wrapper:focus-within {
+  background: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(107, 143, 113, 0.12);
 }
 
 .search-icon {
-  position: absolute;
-  left: var(--space-3);
+  flex-shrink: 0;
+  margin-left: var(--space-3);
   color: var(--color-text-tertiary);
   pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: var(--color-accent);
 }
 
 .search-input {
-  width: 100%;
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-9);
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-2);
   font-family: inherit;
   font-size: var(--text-sm);
   color: var(--color-text-primary);
-  background: var(--color-surface-sunken);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
   outline: none;
-  transition: all var(--transition-fast);
 }
 
 .search-input::placeholder {
   color: var(--color-text-tertiary);
 }
 
-.search-input:focus {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-  box-shadow: 0 0 0 3px var(--color-focus-ring);
+.search-shortcut {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+  padding: 3px 5px;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-text-tertiary);
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-sunken) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.search-shortcut {
-  position: absolute;
-  right: var(--space-3);
-  padding: 2px 6px;
-  font-family: inherit;
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+.shortcut-mod {
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 /* Navigation */
