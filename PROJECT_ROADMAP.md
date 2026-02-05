@@ -264,39 +264,39 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ## Phase 5: Real-Time Collaboration
 
-### 5.1 Hocuspocus Setup
+### 5.1 Hocuspocus Setup ✅
 
-- [ ] Install @hocuspocus/server
-- [ ] Create Hocuspocus server configuration
-- [ ] Implement onAuthenticate hook (verify session)
-- [ ] Implement onLoadDocument hook (load from DB)
-- [ ] Implement onStoreDocument hook (save to DB)
-- [ ] Setup WebSocket route (/collaboration/:pageId)
+- [x] Install @hocuspocus/server
+- [x] Create Hocuspocus server configuration
+- [x] Implement onAuthenticate hook (verify session)
+- [x] Implement onLoadDocument hook (load from DB)
+- [x] Implement onStoreDocument hook (save to DB)
+- [x] Setup WebSocket route (/collaboration/:pageId)
 
-### 5.2 Yjs Integration
+### 5.2 Yjs Integration (Backend ✅)
 
-- [ ] Install y-websocket provider
-- [ ] Create Y.Doc per page
-- [ ] Store yjsState as Bytes in Page model
-- [ ] Connect Tiptap to Yjs document
+- [x] Install y-websocket provider
+- [x] Create Y.Doc per page
+- [x] Store yjsState as Bytes in Page model
+- [ ] Connect Tiptap to Yjs document (frontend)
 - [ ] Test multi-user editing
 
-### 5.3 Presence & Cursors
+### 5.3 Presence & Cursors (Backend ✅)
 
-- [ ] Enable Yjs awareness
-- [ ] Create presence indicator component
-- [ ] Show user avatars viewing page
-- [ ] Install @tiptap/extension-collaboration-cursor
-- [ ] Display remote cursors with user colors
-- [ ] Show user name tooltips on cursors
+- [x] Enable Yjs awareness
+- [ ] Create presence indicator component (frontend)
+- [ ] Show user avatars viewing page (frontend)
+- [ ] Install @tiptap/extension-collaboration-cursor (frontend)
+- [x] Display remote cursors with user colors (backend support)
+- [x] Show user name tooltips on cursors (backend support)
 
-### 5.4 Page Version History
+### 5.4 Page Version History (Backend ✅)
 
-- [ ] Create PageVersion model
-- [ ] Save version on significant changes (debounced)
-- [ ] Create version listing endpoint
-- [ ] Create restore version endpoint
-- [ ] Create version history UI
+- [x] Create PageVersion model
+- [x] Save version on significant changes (via API endpoint)
+- [x] Create version listing endpoint
+- [x] Create restore version endpoint
+- [ ] Create version history UI (frontend)
 - [ ] Implement version diff view (optional)
 
 ---
