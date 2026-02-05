@@ -5,9 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
-    // Exclude pages service tests from default run due to memory issues
-    // Run separately with: pnpm test:pages-service
-    exclude: ['**/node_modules/**', '**/pages/__tests__/*.service.test.ts'],
+    exclude: ['**/node_modules/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

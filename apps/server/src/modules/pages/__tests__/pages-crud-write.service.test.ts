@@ -1,11 +1,69 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
-import { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } from './pages.mocks.js';
 
-// Mock the prisma module
+// Mock setup using vi.hoisted for proper hoisting (avoids importing real Prisma)
+const { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } = vi.hoisted(() => {
+  const mockPrismaPage = {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    aggregate: vi.fn(),
+  };
+
+  const mockPrismaFavorite = {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    aggregate: vi.fn(),
+  };
+
+  const mockPrisma = {
+    page: mockPrismaPage,
+    favorite: mockPrismaFavorite,
+    $transaction: vi.fn(),
+  };
+
+  function resetMocks() {
+    Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaFavorite).forEach((mock) => mock.mockReset());
+    mockPrisma.$transaction.mockReset();
+  }
+
+  const now = new Date();
+
+  const mockPage = {
+    id: 'page-123',
+    organizationId: 'org-123',
+    parentId: null,
+    position: 0,
+    title: 'Test Page',
+    icon: null,
+    coverUrl: null,
+    yjsState: null,
+    isPublic: false,
+    publicSlug: null,
+    trashedAt: null,
+    createdById: 'user-123',
+    updatedById: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  return { mockPrisma, mockPrismaPage, resetMocks, mockPage, now };
+});
+
+// Mock the prisma module BEFORE importing pages.service
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
 
+// Import service AFTER mocking
 import * as pagesService from '../pages.service.js';
 
 describe('Pages Service - Write Operations', () => {
@@ -85,7 +143,8 @@ describe('Pages Service - Write Operations', () => {
 
     it('should trash page with descendants', async () => {
       mockPrismaPage.findFirst.mockResolvedValue(mockPage);
-      mockPrismaPage.findMany.mockResolvedValue([{ id: 'child-1' }]);
+      // First call returns children, second call (for grandchildren) returns empty
+      mockPrismaPage.findMany.mockResolvedValueOnce([{ id: 'child-1' }]).mockResolvedValueOnce([]); // No grandchildren - prevents infinite recursion
       mockPrismaPage.updateMany.mockResolvedValue({ count: 2 });
 
       await pagesService.trashPage('org-123', 'page-123');
