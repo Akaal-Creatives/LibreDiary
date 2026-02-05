@@ -38,7 +38,10 @@ describe('InviteMemberModal', () => {
     setupStores();
   });
 
-  function setupStores(role: 'OWNER' | 'ADMIN' | 'MEMBER' = 'OWNER') {
+  function setupStores(
+    role: 'OWNER' | 'ADMIN' | 'MEMBER' = 'OWNER',
+    allowedDomains: string[] = []
+  ) {
     const authStore = useAuthStore();
     authStore.setUser({
       id: 'user-1',
@@ -59,7 +62,7 @@ describe('InviteMemberModal', () => {
           slug: 'test-org',
           logoUrl: null,
           accentColor: null,
-          allowedDomains: [],
+          allowedDomains,
           aiEnabled: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -259,5 +262,91 @@ describe('InviteMemberModal', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('User already invited');
+  });
+
+  describe('domain lockdown validation', () => {
+    it('does not show domain warning when no domains are configured', async () => {
+      setupStores('OWNER', []);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@example.com');
+
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+    });
+
+    it('does not show domain warning for allowed domain', async () => {
+      setupStores('OWNER', ['example.com', 'company.org']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@example.com');
+
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+    });
+
+    it('shows domain warning for non-allowed domain', async () => {
+      setupStores('OWNER', ['company.org']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@other.com');
+
+      expect(wrapper.find('.domain-warning').exists()).toBe(true);
+      expect(wrapper.text()).toContain('not in the allowed domains');
+    });
+
+    it('domain check is case-insensitive', async () => {
+      setupStores('OWNER', ['Company.ORG']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@company.org');
+
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+    });
+
+    it('shows allowed domains list in warning message', async () => {
+      setupStores('OWNER', ['company.org', 'example.com']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@other.com');
+
+      expect(wrapper.text()).toContain('company.org');
+      expect(wrapper.text()).toContain('example.com');
+    });
+
+    it('still allows submission when domain is not allowed', async () => {
+      const { orgsStore } = setupStores('OWNER', ['company.org']);
+      orgsStore.createInvite = vi.fn().mockResolvedValue({});
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@other.com');
+      await wrapper.find('form').trigger('submit');
+      await flushPromises();
+
+      expect(orgsStore.createInvite).toHaveBeenCalledWith({
+        email: 'test@other.com',
+        role: 'MEMBER',
+      });
+    });
+
+    it('clears domain warning when switching to valid domain', async () => {
+      setupStores('OWNER', ['company.org']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@other.com');
+      expect(wrapper.find('.domain-warning').exists()).toBe(true);
+
+      await wrapper.find('#invite-email').setValue('test@company.org');
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+    });
+
+    it('handles incomplete email gracefully', async () => {
+      setupStores('OWNER', ['company.org']);
+      const wrapper = mountModal();
+
+      await wrapper.find('#invite-email').setValue('test@');
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+
+      await wrapper.find('#invite-email').setValue('test');
+      expect(wrapper.find('.domain-warning').exists()).toBe(false);
+    });
   });
 });

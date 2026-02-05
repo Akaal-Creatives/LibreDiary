@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import type { OrgRole } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
+import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/services';
 import { useToast } from '@/composables/useToast';
 
@@ -15,12 +16,42 @@ const emit = defineEmits<{
 }>();
 
 const orgsStore = useOrganizationsStore();
+const authStore = useAuthStore();
 const toast = useToast();
 
 const email = ref('');
 const role = ref<OrgRole>('MEMBER');
 const error = ref<string | null>(null);
 const submitting = ref(false);
+
+// Domain lockdown validation
+const allowedDomains = computed(() => authStore.currentOrganization?.allowedDomains ?? []);
+
+const emailDomain = computed(() => {
+  const emailValue = email.value.trim();
+  const atIndex = emailValue.indexOf('@');
+  if (atIndex === -1 || atIndex === emailValue.length - 1) {
+    return null;
+  }
+  return emailValue.slice(atIndex + 1).toLowerCase();
+});
+
+const isDomainAllowed = computed(() => {
+  // If no domains configured, all are allowed
+  if (allowedDomains.value.length === 0) {
+    return true;
+  }
+  // If email doesn't have a valid domain yet, don't show warning
+  if (!emailDomain.value) {
+    return true;
+  }
+  // Check if domain matches any allowed domain (case-insensitive)
+  return allowedDomains.value.some((domain) => domain.toLowerCase() === emailDomain.value);
+});
+
+const showDomainWarning = computed(() => {
+  return allowedDomains.value.length > 0 && emailDomain.value && !isDomainAllowed.value;
+});
 
 // Reset form when modal opens
 watch(
@@ -115,6 +146,22 @@ function close() {
                 :disabled="submitting"
                 autocomplete="email"
               />
+              <div v-if="showDomainWarning" class="domain-warning">
+                <svg class="warning-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.25" />
+                  <path
+                    d="M7 4V7.5"
+                    stroke="currentColor"
+                    stroke-width="1.25"
+                    stroke-linecap="round"
+                  />
+                  <circle cx="7" cy="10" r="0.75" fill="currentColor" />
+                </svg>
+                <span class="warning-text">
+                  This email domain is not in the allowed domains list. Allowed:
+                  <strong>{{ allowedDomains.join(', ') }}</strong>
+                </span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -287,6 +334,32 @@ function close() {
   margin-top: var(--space-2);
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+}
+
+.domain-warning {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-warning-text, #92400e);
+  background: var(--color-warning-subtle, #fef3c7);
+  border-radius: var(--radius-md);
+}
+
+.domain-warning .warning-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-warning, #f59e0b);
+}
+
+.domain-warning .warning-text {
+  line-height: 1.5;
+}
+
+.domain-warning strong {
+  font-weight: 600;
 }
 
 .modal-actions {
