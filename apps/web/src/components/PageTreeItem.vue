@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { PageWithChildren } from '@librediary/shared';
 import { usePagesStore } from '@/stores';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
   page: PageWithChildren;
@@ -11,16 +12,22 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   contextmenu: [event: MouseEvent, page: PageWithChildren];
+  move: [pageId: string, targetId: string, position: 'above' | 'below' | 'inside'];
 }>();
 
 const router = useRouter();
 const pagesStore = usePagesStore();
+const toast = useToast();
 
 const depth = computed(() => props.depth ?? 0);
 const hasChildren = computed(() => props.page.children && props.page.children.length > 0);
 const isExpanded = computed(() => pagesStore.expandedPageIds.has(props.page.id));
 const isActive = computed(() => pagesStore.currentPageId === props.page.id);
 const indentStyle = computed(() => ({ paddingLeft: `${depth.value * 12 + 8}px` }));
+
+// Drag and drop state
+const isDragging = ref(false);
+const dropPosition = ref<'above' | 'below' | 'inside' | null>(null);
 
 function toggleExpanded(event: MouseEvent) {
   event.stopPropagation();
@@ -35,17 +42,152 @@ function handleContextMenu(event: MouseEvent) {
   event.preventDefault();
   emit('contextmenu', event, props.page);
 }
+
+// Drag and drop handlers
+function handleDragStart(event: DragEvent) {
+  isDragging.value = true;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData(
+      'text/plain',
+      JSON.stringify({
+        pageId: props.page.id,
+        parentId: props.page.parentId,
+      })
+    );
+  }
+}
+
+function handleDragEnd() {
+  isDragging.value = false;
+  dropPosition.value = null;
+}
+
+function handleDragOver(event: DragEvent) {
+  event.preventDefault();
+  if (!event.currentTarget) return;
+
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const y = event.clientY - rect.top;
+  const height = rect.height;
+
+  // Determine drop position based on mouse Y position
+  if (y < height * 0.25) {
+    dropPosition.value = 'above';
+  } else if (y > height * 0.75) {
+    dropPosition.value = 'below';
+  } else if (hasChildren.value || isExpanded.value) {
+    // Can drop inside if it has children or is expandable
+    dropPosition.value = 'inside';
+  } else {
+    dropPosition.value = 'below';
+  }
+}
+
+function handleDragLeave() {
+  dropPosition.value = null;
+}
+
+async function handleDrop(event: DragEvent) {
+  event.preventDefault();
+  const data = event.dataTransfer?.getData('text/plain');
+  if (!data) {
+    dropPosition.value = null;
+    return;
+  }
+
+  try {
+    const { pageId: draggedPageId, parentId: draggedParentId } = JSON.parse(data);
+
+    // Don't drop on itself
+    if (draggedPageId === props.page.id) {
+      dropPosition.value = null;
+      return;
+    }
+
+    // Don't drop a parent into its own children
+    if (isDescendant(props.page, draggedPageId)) {
+      toast.error("Can't move a page into its own children");
+      dropPosition.value = null;
+      return;
+    }
+
+    const currentDropPosition = dropPosition.value || 'below';
+    emit('move', draggedPageId, props.page.id, currentDropPosition);
+
+    // Determine the move parameters
+    let newParentId: string | null;
+    let position: number | undefined;
+
+    if (currentDropPosition === 'inside') {
+      // Move as child of this page
+      newParentId = props.page.id;
+      position = 0; // First child
+    } else {
+      // Move as sibling
+      newParentId = props.page.parentId;
+      position = props.page.position + (currentDropPosition === 'below' ? 1 : 0);
+    }
+
+    // Only call movePage if something actually changes
+    if (draggedParentId !== newParentId || position !== undefined) {
+      await pagesStore.movePage(draggedPageId, {
+        parentId: newParentId,
+        position,
+      });
+    }
+  } catch (e) {
+    console.error('Failed to move page:', e);
+    toast.error('Failed to move page');
+  }
+
+  dropPosition.value = null;
+}
+
+// Check if a page is a descendant of another
+function isDescendant(page: PageWithChildren, ancestorId: string): boolean {
+  if (!page.children) return false;
+  for (const child of page.children) {
+    if (child.id === ancestorId) return true;
+    if (isDescendant(child, ancestorId)) return true;
+  }
+  return false;
+}
 </script>
 
 <template>
-  <div class="page-tree-item">
+  <div
+    class="page-tree-item"
+    :class="{
+      'drop-above': dropPosition === 'above',
+      'drop-below': dropPosition === 'below',
+      'drop-inside': dropPosition === 'inside',
+    }"
+  >
     <button
       class="page-item"
-      :class="{ active: isActive }"
+      :class="{ active: isActive, dragging: isDragging }"
       :style="indentStyle"
+      draggable="true"
       @click="navigateToPage"
       @contextmenu="handleContextMenu"
+      @dragstart="handleDragStart"
+      @dragend="handleDragEnd"
+      @dragover="handleDragOver"
+      @dragleave="handleDragLeave"
+      @drop="handleDrop"
     >
+      <!-- Drag Handle -->
+      <span class="drag-handle">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <circle cx="3" cy="2" r="1" fill="currentColor" />
+          <circle cx="7" cy="2" r="1" fill="currentColor" />
+          <circle cx="3" cy="5" r="1" fill="currentColor" />
+          <circle cx="7" cy="5" r="1" fill="currentColor" />
+          <circle cx="3" cy="8" r="1" fill="currentColor" />
+          <circle cx="7" cy="8" r="1" fill="currentColor" />
+        </svg>
+      </span>
       <!-- Expand/Collapse Button -->
       <button
         v-if="hasChildren"
@@ -192,5 +334,48 @@ function handleContextMenu(event: MouseEvent) {
 
 .page-children {
   width: 100%;
+}
+
+/* Drag Handle */
+.drag-handle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: -2px;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.page-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.page-item.dragging .drag-handle {
+  cursor: grabbing;
+  opacity: 1;
+}
+
+/* Drag States */
+.page-item.dragging {
+  background: var(--color-hover);
+  opacity: 0.6;
+}
+
+.page-tree-item.drop-above {
+  border-top: 2px solid var(--color-accent);
+}
+
+.page-tree-item.drop-below {
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.page-tree-item.drop-inside > .page-item {
+  background: var(--color-accent-subtle);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 </style>
