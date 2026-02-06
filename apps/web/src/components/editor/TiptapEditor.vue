@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch, computed } from 'vue';
-import { useEditor, EditorContent } from '@tiptap/vue-3';
+import { ref, onBeforeUnmount, watch, shallowRef } from 'vue';
+import { Editor } from '@tiptap/core';
+import { EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -36,8 +37,18 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
 
+// Use shallowRef to avoid reactivity issues with the Editor instance
+const editor = shallowRef<Editor | null>(null);
+
+// Track if we've created a collaborative editor
+const isCollaborativeEditor = ref(false);
+
 // Build extensions based on mode
-const extensions = computed(() => {
+function buildExtensions(
+  forCollaborative: boolean,
+  ydoc?: Y.Doc | null,
+  provider?: HocuspocusProvider | null
+) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseExtensions: any[] = [
     StarterKit.configure({
@@ -52,6 +63,8 @@ const extensions = computed(() => {
         keepMarks: true,
         keepAttributes: false,
       },
+      // Disable history in collaborative mode - Yjs handles undo/redo
+      history: forCollaborative ? false : undefined,
     }),
     Placeholder.configure({
       placeholder: props.placeholder,
@@ -60,19 +73,19 @@ const extensions = computed(() => {
     }),
   ];
 
-  // Add collaboration extensions when in collaborative mode
-  if (props.collaborative && props.ydoc) {
+  // Add collaboration extensions when in collaborative mode with ydoc
+  if (forCollaborative && ydoc) {
     baseExtensions.push(
       Collaboration.configure({
-        document: props.ydoc,
+        document: ydoc,
       })
     );
 
     // Add cursor extension if provider is available
-    if (props.provider) {
+    if (provider) {
       baseExtensions.push(
         CollaborationCursor.configure({
-          provider: props.provider,
+          provider: provider,
           user: {
             name: props.userName,
             color: props.userColor,
@@ -83,18 +96,55 @@ const extensions = computed(() => {
   }
 
   return baseExtensions;
-});
+}
 
-const editor = useEditor({
-  content: props.collaborative ? undefined : props.modelValue,
-  editable: props.editable,
-  extensions: extensions.value,
-  onUpdate: ({ editor }) => {
-    // In collaborative mode, content syncs via Yjs
-    // Still emit for local state updates (e.g., to track if content changed)
-    emit('update:modelValue', editor.getHTML());
+// Create the editor
+function createEditor(
+  forCollaborative: boolean,
+  ydoc?: Y.Doc | null,
+  provider?: HocuspocusProvider | null
+) {
+  // Destroy existing editor
+  if (editor.value) {
+    editor.value.destroy();
+    editor.value = null;
+  }
+
+  editor.value = new Editor({
+    content: forCollaborative ? undefined : props.modelValue,
+    editable: props.editable,
+    extensions: buildExtensions(forCollaborative, ydoc, provider),
+    onUpdate: ({ editor: e }) => {
+      emit('update:modelValue', e.getHTML());
+    },
+  });
+
+  isCollaborativeEditor.value = forCollaborative && !!ydoc;
+}
+
+// Initialize editor based on mode
+if (props.collaborative) {
+  // In collaborative mode, wait for ydoc to be available
+  if (props.ydoc) {
+    createEditor(true, props.ydoc, props.provider);
+  }
+  // Otherwise, we'll create it when ydoc becomes available (via watch)
+} else {
+  // Non-collaborative mode - create immediately
+  createEditor(false);
+}
+
+// Watch for ydoc changes in collaborative mode
+watch(
+  [() => props.ydoc, () => props.provider],
+  ([newYdoc, newProvider]) => {
+    if (props.collaborative && newYdoc) {
+      // Create or recreate editor with collaboration
+      createEditor(true, newYdoc, newProvider);
+    }
   },
-});
+  { immediate: false }
+);
 
 // Watch for content changes (non-collaborative mode only)
 watch(
@@ -135,7 +185,10 @@ defineExpose({
 
 <template>
   <div class="tiptap-editor">
-    <EditorContent :editor="editor" class="editor-content" />
+    <EditorContent v-if="editor" :editor="editor" class="editor-content" />
+    <div v-else class="editor-loading">
+      <span>Loading editor...</span>
+    </div>
   </div>
 </template>
 
@@ -144,6 +197,15 @@ defineExpose({
 .tiptap-editor {
   width: 100%;
   font-family: var(--font-sans);
+}
+
+.editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
 }
 
 .editor-content {
