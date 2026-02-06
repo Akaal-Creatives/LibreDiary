@@ -1,7 +1,13 @@
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from 'argon2';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Seeding database...');
@@ -32,18 +38,18 @@ async function main() {
 
   console.log(`Created super admin: ${superAdmin.email}`);
 
-  // Create default organization
+  // Create default organisation
   const organization = await prisma.organization.create({
     data: {
-      name: 'Default Organization',
+      name: 'Default Organisation',
       slug: 'default',
       accentColor: '#6366f1',
     },
   });
 
-  console.log(`Created organization: ${organization.name}`);
+  console.log(`Created organisation: ${organization.name}`);
 
-  // Add super admin as owner of default organization
+  // Add super admin as owner of default organisation
   await prisma.organizationMember.create({
     data: {
       organizationId: organization.id,
@@ -52,7 +58,7 @@ async function main() {
     },
   });
 
-  console.log('Added super admin as organization owner');
+  console.log('Added super admin as organisation owner');
 
   // Create a welcome page
   await prisma.page.create({
