@@ -338,21 +338,21 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ## Phase 7: Comments & Mentions
 
-### 7.1 Comments System
+### 7.1 Comments System ✅
 
-- [ ] Create Comment model with threading
-- [ ] Create comment CRUD endpoints
-- [ ] Implement blockId reference for inline comments
-- [ ] Create comments sidebar component
-- [ ] Create inline comment markers in editor
+- [x] Create Comment model with threading
+- [x] Create comment CRUD endpoints
+- [x] Implement blockId reference for inline comments
+- [x] Create comments sidebar component
+- [x] Create inline comment markers in editor
 
-### 7.2 Comment UI
+### 7.2 Comment UI ✅
 
-- [ ] Display comment threads
-- [ ] Add reply functionality
-- [ ] Implement resolve/unresolve
-- [ ] Add comment editing
-- [ ] Add comment deletion
+- [x] Display comment threads
+- [x] Add reply functionality
+- [x] Implement resolve/unresolve
+- [x] Add comment editing
+- [x] Add comment deletion
 
 ### 7.3 Mentions
 

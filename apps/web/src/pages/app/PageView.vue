@@ -8,6 +8,7 @@ import EmojiPicker from '@/components/EmojiPicker.vue';
 import ShareModal from '@/components/ShareModal.vue';
 import VersionHistoryModal from '@/components/VersionHistoryModal.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
+import CommentsPanel from '@/components/CommentsPanel.vue';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
@@ -24,6 +25,8 @@ const pageContent = ref('');
 const showEmojiPicker = ref(false);
 const showShareModal = ref(false);
 const showVersionHistory = ref(false);
+const showCommentsPanel = ref(false);
+const commentCount = ref(0);
 
 // Track if page has been modified
 const hasBeenModified = ref(false);
@@ -326,6 +329,23 @@ function formatDate(dateString: string): string {
           </div>
         </div>
         <div class="header-actions">
+          <button
+            class="action-btn comments-btn"
+            :class="{ 'has-comments': commentCount > 0 }"
+            title="Comments"
+            @click="showCommentsPanel = true"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M15.75 9C15.75 12.7279 12.7279 15.75 9 15.75C7.83594 15.75 6.74219 15.4688 5.78125 14.9609L2.25 15.75L3.03906 12.2188C2.53125 11.2578 2.25 10.1641 2.25 9C2.25 5.27208 5.27208 2.25 9 2.25C12.7279 2.25 15.75 5.27208 15.75 9Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span v-if="commentCount > 0" class="comment-badge">{{ commentCount }}</span>
+          </button>
           <button class="action-btn" title="Version history" @click="showVersionHistory = true">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5" />
@@ -386,6 +406,14 @@ function formatDate(dateString: string): string {
       :is-open="showVersionHistory"
       @close="showVersionHistory = false"
       @restored="loadPage"
+    />
+
+    <!-- Comments Panel -->
+    <CommentsPanel
+      :page-id="props.pageId"
+      :is-open="showCommentsPanel"
+      @close="showCommentsPanel = false"
+      @comment-count-change="(count) => (commentCount = count)"
     />
   </div>
 </template>
@@ -525,6 +553,31 @@ function formatDate(dateString: string): string {
 
 .action-btn.share-btn {
   padding: var(--space-2) var(--space-3);
+}
+
+.action-btn.comments-btn {
+  position: relative;
+}
+
+.action-btn.comments-btn.has-comments {
+  color: var(--color-accent);
+}
+
+.comment-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-accent);
+  border-radius: 8px;
 }
 
 .icon-wrapper {

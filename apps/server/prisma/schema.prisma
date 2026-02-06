@@ -43,6 +43,8 @@ model User {
   pageVersions       PageVersion[]        @relation("PageVersionCreatedBy")
   pagePermissions    PagePermission[]     @relation("PagePermissionUser")
   grantedPermissions PagePermission[]     @relation("PagePermissionGrantedBy")
+  comments           Comment[]            @relation("CommentCreatedBy")
+  resolvedComments   Comment[]            @relation("CommentResolvedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -225,6 +227,7 @@ model Page {
   favorites    Favorite[]
   versions     PageVersion[]
   permissions  PagePermission[]
+  comments     Comment[]
 
   @@index([organizationId])
   @@index([parentId])
@@ -328,4 +331,46 @@ model SystemSettings {
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// COMMENTS
+// ============================================
+
+model Comment {
+  id     String @id @default(cuid())
+  pageId String
+
+  // Threading - parentId for replies
+  parentId String?
+
+  // Inline comments - reference to specific block in editor
+  blockId String?
+
+  // Content
+  content String
+
+  // Resolution status
+  isResolved Boolean @default(false)
+  resolvedAt DateTime?
+  resolvedById String?
+
+  // Audit
+  createdById String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  page       Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parent     Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("CommentThread")
+  createdBy  User      @relation("CommentCreatedBy", fields: [createdById], references: [id])
+  resolvedBy User?     @relation("CommentResolvedBy", fields: [resolvedById], references: [id])
+
+  @@index([pageId])
+  @@index([parentId])
+  @@index([blockId])
+  @@index([createdById])
 }

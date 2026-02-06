@@ -14,6 +14,7 @@ import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
 import { versionsRoutes, collaborationRoutes } from './modules/collaboration/index.js';
 import { permissionsRoutes } from './modules/permissions/index.js';
+import { commentsRoutes } from './modules/comments/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
@@ -89,6 +90,11 @@ export async function buildApp() {
       // Permission routes
       await api.register(permissionsRoutes, {
         prefix: '/organizations/:orgId/pages/:pageId/permissions',
+      });
+
+      // Comment routes
+      await api.register(commentsRoutes, {
+        prefix: '/organizations/:orgId/pages/:pageId/comments',
       });
 
       // Admin routes (super admin only)

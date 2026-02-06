@@ -38,3 +38,10 @@ export type {
 } from './admin.service';
 export { versionsService } from './versions.service';
 export type { PageVersion } from './versions.service';
+export { commentsService } from './comments.service';
+export type {
+  Comment,
+  CommentAuthor,
+  CreateCommentInput,
+  UpdateCommentInput,
+} from './comments.service';
