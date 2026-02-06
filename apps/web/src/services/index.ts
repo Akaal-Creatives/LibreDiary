@@ -36,3 +36,5 @@ export type {
   AdminOrgDetail,
   Pagination,
 } from './admin.service';
+export { versionsService } from './versions.service';
+export type { PageVersion } from './versions.service';

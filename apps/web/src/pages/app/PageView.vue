@@ -6,6 +6,7 @@ import { TiptapEditor } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import ShareModal from '@/components/ShareModal.vue';
+import VersionHistoryModal from '@/components/VersionHistoryModal.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
 
 const pagesStore = usePagesStore();
@@ -22,6 +23,7 @@ const pageTitle = ref('');
 const pageContent = ref('');
 const showEmojiPicker = ref(false);
 const showShareModal = ref(false);
+const showVersionHistory = ref(false);
 
 // Track if page has been modified
 const hasBeenModified = ref(false);
@@ -323,20 +325,34 @@ function formatDate(dateString: string): string {
             </span>
           </div>
         </div>
-        <button class="share-btn" title="Share page" @click="showShareModal = true">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle cx="14" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5" />
-            <circle cx="14" cy="14" r="2.5" stroke="currentColor" stroke-width="1.5" />
-            <circle cx="4" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M6.5 7.5L11.5 5M6.5 10.5L11.5 13"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-          <span>Share</span>
-        </button>
+        <div class="header-actions">
+          <button class="action-btn" title="Version history" @click="showVersionHistory = true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M9 5V9L11.5 10.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button class="action-btn share-btn" title="Share page" @click="showShareModal = true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="14" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="14" cy="14" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="4" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M6.5 7.5L11.5 5M6.5 10.5L11.5 13"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Share</span>
+          </button>
+        </div>
       </header>
 
       <!-- Page Body -->
@@ -361,6 +377,15 @@ function formatDate(dateString: string): string {
       :is-open="showShareModal"
       @close="showShareModal = false"
       @update="loadPage"
+    />
+
+    <!-- Version History Modal -->
+    <VersionHistoryModal
+      :page-id="props.pageId"
+      :page-title="pageTitle"
+      :is-open="showVersionHistory"
+      @close="showVersionHistory = false"
+      @restored="loadPage"
     />
   </div>
 </template>
@@ -468,12 +493,19 @@ function formatDate(dateString: string): string {
   border-bottom: 1px solid var(--color-border);
 }
 
-.share-btn {
+.header-actions {
   display: flex;
   gap: var(--space-2);
   align-items: center;
   align-self: center;
-  padding: var(--space-2) var(--space-3);
+}
+
+.action-btn {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
   font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
@@ -485,10 +517,14 @@ function formatDate(dateString: string): string {
   transition: all var(--transition-fast);
 }
 
-.share-btn:hover {
+.action-btn:hover {
   color: var(--color-accent);
   background: rgba(107, 143, 113, 0.05);
   border-color: var(--color-accent);
+}
+
+.action-btn.share-btn {
+  padding: var(--space-2) var(--space-3);
 }
 
 .icon-wrapper {
