@@ -15,6 +15,7 @@ import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index
 import { versionsRoutes, collaborationRoutes } from './modules/collaboration/index.js';
 import { permissionsRoutes } from './modules/permissions/index.js';
 import { commentsRoutes } from './modules/comments/index.js';
+import { mentionsRoutes } from './modules/mentions/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
@@ -95,6 +96,11 @@ export async function buildApp() {
       // Comment routes
       await api.register(commentsRoutes, {
         prefix: '/organizations/:orgId/pages/:pageId/comments',
+      });
+
+      // Mentions routes
+      await api.register(mentionsRoutes, {
+        prefix: '/organizations/:orgId/mentions',
       });
 
       // Admin routes (super admin only)

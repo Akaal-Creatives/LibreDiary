@@ -45,6 +45,7 @@ model User {
   grantedPermissions PagePermission[]     @relation("PagePermissionGrantedBy")
   comments           Comment[]            @relation("CommentCreatedBy")
   resolvedComments   Comment[]            @relation("CommentResolvedBy")
+  mentions           Mention[]            @relation("MentionedUser")
 
   @@index([email])
   @@index([deletedAt])
@@ -368,9 +369,31 @@ model Comment {
   replies    Comment[] @relation("CommentThread")
   createdBy  User      @relation("CommentCreatedBy", fields: [createdById], references: [id])
   resolvedBy User?     @relation("CommentResolvedBy", fields: [resolvedById], references: [id])
+  mentions   Mention[]
 
   @@index([pageId])
   @@index([parentId])
   @@index([blockId])
   @@index([createdById])
+}
+
+// ============================================
+// MENTIONS
+// ============================================
+
+model Mention {
+  id        String @id @default(cuid())
+  commentId String
+  userId    String // The mentioned user
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation("MentionedUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId]) // One mention per user per comment
+  @@index([commentId])
+  @@index([userId])
 }

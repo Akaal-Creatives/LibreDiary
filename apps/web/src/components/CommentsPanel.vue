@@ -3,6 +3,7 @@ import { ref, watch, computed, nextTick } from 'vue';
 import { commentsService, type Comment } from '@/services';
 import { useOrganizationsStore, useAuthStore } from '@/stores';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import MentionAutocomplete from '@/components/MentionAutocomplete.vue';
 
 const props = defineProps<{
   pageId: string;
@@ -278,6 +279,11 @@ function getInitials(name: string | null): string {
     .slice(0, 2);
 }
 
+function formatContentWithMentions(content: string): string {
+  // Replace @mentions with styled spans
+  return content.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+}
+
 function close() {
   emit('close');
 }
@@ -327,18 +333,16 @@ function close() {
           <!-- New Comment Input -->
           <div class="new-comment-section">
             <div class="comment-input-wrapper">
-              <textarea
-                ref="newCommentInput"
+              <MentionAutocomplete
                 v-model="newCommentContent"
-                class="comment-input"
-                placeholder="Add a comment..."
-                rows="2"
+                :organization-id="orgId || ''"
+                placeholder="Add a comment... Use @ to mention"
+                :rows="2"
                 :disabled="submitting"
-                @keydown.meta.enter="submitComment"
-                @keydown.ctrl.enter="submitComment"
+                @submit="submitComment"
               />
               <div class="input-actions">
-                <span class="input-hint">Press Cmd+Enter to send</span>
+                <span class="input-hint">Use @ to mention · Cmd+Enter to send</span>
                 <button
                   class="submit-btn"
                   :disabled="!newCommentContent.trim() || submitting"
@@ -508,7 +512,12 @@ function close() {
                     </div>
 
                     <!-- Content -->
-                    <p v-else class="comment-content">{{ comment.content }}</p>
+                    <!-- eslint-disable-next-line vue/no-v-html -->
+                    <p
+                      v-else
+                      class="comment-content"
+                      v-html="formatContentWithMentions(comment.content)"
+                    ></p>
 
                     <!-- Actions -->
                     <div v-if="editingComment !== comment.id" class="comment-actions">
@@ -571,7 +580,12 @@ function close() {
                         </div>
                       </div>
 
-                      <p v-else class="comment-content">{{ reply.content }}</p>
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <p
+                        v-else
+                        class="comment-content"
+                        v-html="formatContentWithMentions(reply.content)"
+                      ></p>
 
                       <div
                         v-if="editingComment !== reply.id && reply.createdById === currentUserId"
@@ -588,15 +602,13 @@ function close() {
 
                 <!-- Reply Input -->
                 <div v-if="replyingTo === comment.id" class="reply-input-wrapper">
-                  <textarea
-                    ref="replyInput"
+                  <MentionAutocomplete
                     v-model="replyContent"
-                    class="reply-input"
-                    placeholder="Write a reply..."
-                    rows="2"
+                    :organization-id="orgId || ''"
+                    placeholder="Write a reply... Use @ to mention"
+                    :rows="2"
                     :disabled="submitting"
-                    @keydown.meta.enter="submitReply(comment.id)"
-                    @keydown.ctrl.enter="submitReply(comment.id)"
+                    @submit="submitReply(comment.id)"
                   />
                   <div class="reply-actions">
                     <button class="cancel-btn" :disabled="submitting" @click="cancelReply">
@@ -1044,6 +1056,14 @@ function close() {
   line-height: 1.5;
   color: var(--color-text-primary);
   word-break: break-word;
+}
+
+.comment-content :deep(.mention) {
+  padding: 1px 4px;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: rgba(124, 154, 140, 0.1);
+  border-radius: var(--radius-xs);
 }
 
 .comment-actions {

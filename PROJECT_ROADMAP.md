@@ -354,13 +354,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add comment editing
 - [x] Add comment deletion
 
-### 7.3 Mentions
+### 7.3 Mentions ✅
 
-- [ ] Create Mention model
-- [ ] Implement @mention detection in comment input
-- [ ] Create user autocomplete dropdown
-- [ ] Store mentions when comment saved
-- [ ] Link mentions to notifications
+- [x] Create Mention model
+- [x] Implement @mention detection in comment input
+- [x] Create user autocomplete dropdown
+- [x] Store mentions when comment saved
+- [ ] Link mentions to notifications (Phase 8)
 
 ---
 

@@ -45,3 +45,5 @@ export type {
   CreateCommentInput,
   UpdateCommentInput,
 } from './comments.service';
+export { mentionsService } from './mentions.service';
+export type { Mention, MentionUser } from './mentions.service';
