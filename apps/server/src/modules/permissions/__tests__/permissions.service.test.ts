@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted for proper hoisting
-const { mockPrisma, resetMocks, mockPage, _mockUser, mockPermission, _now } = vi.hoisted(() => {
+const {
+  mockPrisma,
+  resetMocks,
+  mockPage,
+  _mockUser,
+  mockPermission,
+  _now,
+  mockCreatePageSharedNotification,
+} = vi.hoisted(() => {
   const mockPrismaPagePermission = {
     create: vi.fn(),
     findUnique: vi.fn(),
@@ -20,16 +28,25 @@ const { mockPrisma, resetMocks, mockPage, _mockUser, mockPermission, _now } = vi
     findUnique: vi.fn(),
   };
 
+  const mockPrismaUser = {
+    findUnique: vi.fn(),
+  };
+
   const mockPrisma = {
     pagePermission: mockPrismaPagePermission,
     page: mockPrismaPage,
     organizationMember: mockPrismaOrgMember,
+    user: mockPrismaUser,
   };
+
+  const mockCreatePageSharedNotification = vi.fn().mockResolvedValue({});
 
   function resetMocks() {
     Object.values(mockPrismaPagePermission).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaOrgMember).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaUser).forEach((mock) => mock.mockReset());
+    mockCreatePageSharedNotification.mockReset().mockResolvedValue({});
   }
 
   const now = new Date();
@@ -61,12 +78,25 @@ const { mockPrisma, resetMocks, mockPage, _mockUser, mockPermission, _now } = vi
     updatedAt: now,
   };
 
-  return { mockPrisma, resetMocks, mockPage, _mockUser: mockUser, mockPermission, _now: now };
+  return {
+    mockPrisma,
+    resetMocks,
+    mockPage,
+    _mockUser: mockUser,
+    mockPermission,
+    _now: now,
+    mockCreatePageSharedNotification,
+  };
 });
 
 // Mock the prisma module BEFORE importing permissions.service
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
+}));
+
+// Mock the notification service
+vi.mock('../../notifications/notifications.service.js', () => ({
+  createPageSharedNotification: mockCreatePageSharedNotification,
 }));
 
 // Import service AFTER mocking
@@ -172,6 +202,7 @@ describe('Permissions Service', () => {
         userId: 'user-456',
         level: 'EDIT',
       });
+      mockPrisma.user.findUnique.mockResolvedValue({ name: 'Granting User' });
 
       const result = await permissionsService.grantPermission(
         'page-123',
@@ -191,6 +222,42 @@ describe('Permissions Service', () => {
         },
         include: { user: true },
       });
+    });
+
+    it('should send notification when granting permission to another user', async () => {
+      mockPrisma.page.findFirst.mockResolvedValue(mockPage);
+      mockPrisma.pagePermission.findFirst.mockResolvedValue(null);
+      mockPrisma.pagePermission.create.mockResolvedValue({
+        ...mockPermission,
+        userId: 'user-456',
+        level: 'EDIT',
+      });
+      mockPrisma.user.findUnique.mockResolvedValue({ name: 'Granting User' });
+
+      await permissionsService.grantPermission('page-123', 'user-456', 'EDIT', 'user-123');
+
+      expect(mockCreatePageSharedNotification).toHaveBeenCalledWith({
+        recipientId: 'user-456',
+        actorId: 'user-123',
+        actorName: 'Granting User',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        permissionLevel: 'EDIT',
+      });
+    });
+
+    it('should not send notification when granting permission to self', async () => {
+      mockPrisma.page.findFirst.mockResolvedValue(mockPage);
+      mockPrisma.pagePermission.findFirst.mockResolvedValue(null);
+      mockPrisma.pagePermission.create.mockResolvedValue({
+        ...mockPermission,
+        userId: 'user-123',
+        level: 'EDIT',
+      });
+
+      await permissionsService.grantPermission('page-123', 'user-123', 'EDIT', 'user-123');
+
+      expect(mockCreatePageSharedNotification).not.toHaveBeenCalled();
     });
 
     it('should throw if permission already exists', async () => {

@@ -1,94 +1,131 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted for proper hoisting
-const { mockPrisma, resetMocks, mockUser, mockComment, mockMention, mockOrgMember } = vi.hoisted(
-  () => {
-    const mockPrismaMention = {
-      create: vi.fn(),
-      createMany: vi.fn(),
-      findMany: vi.fn(),
-      delete: vi.fn(),
-      deleteMany: vi.fn(),
-    };
+const {
+  mockPrisma,
+  resetMocks,
+  mockUser,
+  mockComment,
+  mockCommentWithRelations,
+  mockMention,
+  mockOrgMember,
+  mockCreateMentionNotification,
+} = vi.hoisted(() => {
+  const mockPrismaMention = {
+    create: vi.fn(),
+    createMany: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+  };
 
-    const mockPrismaComment = {
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-    };
+  const mockPrismaComment = {
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+  };
 
-    const mockPrismaUser = {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-    };
+  const mockPrismaUser = {
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+  };
 
-    const mockPrismaOrganizationMember = {
-      findMany: vi.fn(),
-    };
+  const mockPrismaOrganizationMember = {
+    findMany: vi.fn(),
+  };
 
-    const mockPrisma = {
-      mention: mockPrismaMention,
-      comment: mockPrismaComment,
-      user: mockPrismaUser,
-      organizationMember: mockPrismaOrganizationMember,
-    };
+  const mockPrisma = {
+    mention: mockPrismaMention,
+    comment: mockPrismaComment,
+    user: mockPrismaUser,
+    organizationMember: mockPrismaOrganizationMember,
+  };
 
-    function resetMocks() {
-      Object.values(mockPrismaMention).forEach((mock) => mock.mockReset());
-      Object.values(mockPrismaComment).forEach((mock) => mock.mockReset());
-      Object.values(mockPrismaUser).forEach((mock) => mock.mockReset());
-      Object.values(mockPrismaOrganizationMember).forEach((mock) => mock.mockReset());
-    }
+  const mockCreateMentionNotification = vi.fn().mockResolvedValue({});
 
-    const now = new Date();
+  function resetMocks() {
+    Object.values(mockPrismaMention).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaComment).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaUser).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaOrganizationMember).forEach((mock) => mock.mockReset());
+    mockCreateMentionNotification.mockReset().mockResolvedValue({});
+  }
 
-    const mockUser = {
+  const now = new Date();
+
+  const mockUser = {
+    id: 'user-123',
+    name: 'Test User',
+    email: 'test@example.com',
+    avatarUrl: null,
+  };
+
+  const mockComment = {
+    id: 'comment-123',
+    pageId: 'page-123',
+    content: 'Hello @john and @jane!',
+    createdById: 'user-123',
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  // Comment with relations for createMentions
+  const mockCommentWithRelations = {
+    ...mockComment,
+    page: {
+      id: 'page-123',
+      title: 'Test Page',
+    },
+    createdBy: {
       id: 'user-123',
       name: 'Test User',
-      email: 'test@example.com',
+    },
+  };
+
+  const mockMention = {
+    id: 'mention-123',
+    commentId: 'comment-123',
+    userId: 'user-456',
+    createdAt: now,
+    user: {
+      id: 'user-456',
+      name: 'John Doe',
+      email: 'john@example.com',
       avatarUrl: null,
-    };
+    },
+  };
 
-    const mockComment = {
-      id: 'comment-123',
-      pageId: 'page-123',
-      content: 'Hello @john and @jane!',
-      createdById: 'user-123',
-      createdAt: now,
-      updatedAt: now,
-    };
+  const mockOrgMember = {
+    id: 'member-123',
+    organizationId: 'org-123',
+    userId: 'user-456',
+    user: {
+      id: 'user-456',
+      name: 'John Doe',
+      email: 'john@example.com',
+      avatarUrl: null,
+    },
+  };
 
-    const mockMention = {
-      id: 'mention-123',
-      commentId: 'comment-123',
-      userId: 'user-456',
-      createdAt: now,
-      user: {
-        id: 'user-456',
-        name: 'John Doe',
-        email: 'john@example.com',
-        avatarUrl: null,
-      },
-    };
-
-    const mockOrgMember = {
-      id: 'member-123',
-      organizationId: 'org-123',
-      userId: 'user-456',
-      user: {
-        id: 'user-456',
-        name: 'John Doe',
-        email: 'john@example.com',
-        avatarUrl: null,
-      },
-    };
-
-    return { mockPrisma, resetMocks, mockUser, mockComment, mockMention, mockOrgMember };
-  }
-);
+  return {
+    mockPrisma,
+    resetMocks,
+    mockUser,
+    mockComment,
+    mockCommentWithRelations,
+    mockMention,
+    mockOrgMember,
+    mockCreateMentionNotification,
+  };
+});
 
 // Mock the prisma module BEFORE importing mentions.service
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
+}));
+
+// Mock the notification service
+vi.mock('../../notifications/notifications.service.js', () => ({
+  createMentionNotification: mockCreateMentionNotification,
 }));
 
 // Import service AFTER mocking
@@ -154,7 +191,7 @@ describe('Mentions Service', () => {
 
   describe('createMentions', () => {
     it('should create mentions for a comment', async () => {
-      mockPrisma.comment.findFirst.mockResolvedValue(mockComment);
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithRelations);
       mockPrisma.mention.createMany.mockResolvedValue({ count: 2 });
       mockPrisma.mention.findMany.mockResolvedValue([mockMention]);
 
@@ -170,6 +207,35 @@ describe('Mentions Service', () => {
       expect(result).toBeDefined();
     });
 
+    it('should create notifications for mentioned users excluding self', async () => {
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithRelations);
+      mockPrisma.mention.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.mention.findMany.mockResolvedValue([mockMention]);
+
+      await mentionsService.createMentions('comment-123', ['user-456']);
+
+      // Should notify user-456 since they're not the comment author (user-123)
+      expect(mockCreateMentionNotification).toHaveBeenCalledWith({
+        recipientId: 'user-456',
+        actorId: 'user-123',
+        actorName: 'Test User',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-123',
+      });
+    });
+
+    it('should not create notification for self-mentions', async () => {
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithRelations);
+      mockPrisma.mention.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.mention.findMany.mockResolvedValue([]);
+
+      // Mentioning the comment author themselves
+      await mentionsService.createMentions('comment-123', ['user-123']);
+
+      expect(mockCreateMentionNotification).not.toHaveBeenCalled();
+    });
+
     it('should throw COMMENT_NOT_FOUND for non-existent comment', async () => {
       mockPrisma.comment.findFirst.mockResolvedValue(null);
 
@@ -179,7 +245,7 @@ describe('Mentions Service', () => {
     });
 
     it('should return empty array when no user IDs provided', async () => {
-      mockPrisma.comment.findFirst.mockResolvedValue(mockComment);
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithRelations);
       mockPrisma.mention.findMany.mockResolvedValue([]);
 
       const result = await mentionsService.createMentions('comment-123', []);

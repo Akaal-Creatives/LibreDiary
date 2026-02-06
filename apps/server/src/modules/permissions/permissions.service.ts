@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { PagePermission, PermissionLevel } from '@prisma/client';
 import crypto from 'crypto';
+import { createPageSharedNotification } from '../notifications/notifications.service.js';
 
 // ===========================================
 // TYPES
@@ -137,9 +138,13 @@ export async function grantPermission(
   level: PermissionLevel,
   grantedById: string
 ): Promise<PagePermissionWithUser> {
-  // Verify page exists
+  // Verify page exists and get title for notification
   const page = await prisma.page.findFirst({
     where: { id: pageId },
+    select: {
+      id: true,
+      title: true,
+    },
   });
 
   if (!page) {
@@ -158,7 +163,7 @@ export async function grantPermission(
     throw new Error('PERMISSION_EXISTS');
   }
 
-  return prisma.pagePermission.create({
+  const permission = await prisma.pagePermission.create({
     data: {
       pageId,
       userId,
@@ -167,6 +172,31 @@ export async function grantPermission(
     },
     include: { user: true },
   });
+
+  // Send notification to the user who was granted access (unless granting to self)
+  if (userId !== grantedById) {
+    try {
+      const grantor = await prisma.user.findUnique({
+        where: { id: grantedById },
+        select: { name: true },
+      });
+      const actorName = grantor?.name || 'Someone';
+
+      await createPageSharedNotification({
+        recipientId: userId,
+        actorId: grantedById,
+        actorName,
+        pageId,
+        pageTitle: page.title,
+        permissionLevel: level,
+      });
+    } catch (error) {
+      // Log but don't fail permission grant if notification fails
+      console.error('Failed to create page shared notification:', error);
+    }
+  }
+
+  return permission;
 }
 
 /**

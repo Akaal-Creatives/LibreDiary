@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted for proper hoisting
-const { mockPrisma, resetMocks, mockComment, mockPage, _mockUser } = vi.hoisted(() => {
+const {
+  mockPrisma,
+  resetMocks,
+  mockComment,
+  mockCommentWithPage,
+  mockPage,
+  _mockUser,
+  mockCreateCommentReplyNotification,
+  mockCreateCommentResolvedNotification,
+} = vi.hoisted(() => {
   const mockPrismaComment = {
     findFirst: vi.fn(),
     findUnique: vi.fn(),
@@ -16,14 +25,25 @@ const { mockPrisma, resetMocks, mockComment, mockPage, _mockUser } = vi.hoisted(
     findFirst: vi.fn(),
   };
 
+  const mockPrismaUser = {
+    findUnique: vi.fn(),
+  };
+
   const mockPrisma = {
     comment: mockPrismaComment,
     page: mockPrismaPage,
+    user: mockPrismaUser,
   };
+
+  const mockCreateCommentReplyNotification = vi.fn().mockResolvedValue({});
+  const mockCreateCommentResolvedNotification = vi.fn().mockResolvedValue({});
 
   function resetMocks() {
     Object.values(mockPrismaComment).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaUser).forEach((mock) => mock.mockReset());
+    mockCreateCommentReplyNotification.mockReset().mockResolvedValue({});
+    mockCreateCommentResolvedNotification.mockReset().mockResolvedValue({});
   }
 
   const now = new Date();
@@ -58,12 +78,36 @@ const { mockPrisma, resetMocks, mockComment, mockPage, _mockUser } = vi.hoisted(
     resolvedBy: null,
   };
 
-  return { mockPrisma, resetMocks, mockComment, mockPage, _mockUser: mockUser };
+  // Comment with page relation for resolveComment
+  const mockCommentWithPage = {
+    ...mockComment,
+    page: {
+      id: 'page-123',
+      title: 'Test Page',
+    },
+  };
+
+  return {
+    mockPrisma,
+    resetMocks,
+    mockComment,
+    mockCommentWithPage,
+    mockPage,
+    _mockUser: mockUser,
+    mockCreateCommentReplyNotification,
+    mockCreateCommentResolvedNotification,
+  };
 });
 
 // Mock the prisma module BEFORE importing comments.service
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
+}));
+
+// Mock the notification service
+vi.mock('../../notifications/notifications.service.js', () => ({
+  createCommentReplyNotification: mockCreateCommentReplyNotification,
+  createCommentResolvedNotification: mockCreateCommentResolvedNotification,
 }));
 
 // Import service AFTER mocking
@@ -112,7 +156,10 @@ describe('Comments Service', () => {
 
     it('should create a reply to an existing comment', async () => {
       mockPrisma.page.findFirst.mockResolvedValue(mockPage);
-      mockPrisma.comment.findFirst.mockResolvedValue(mockComment);
+      mockPrisma.comment.findFirst.mockResolvedValue({
+        id: 'comment-123',
+        createdById: 'user-123',
+      });
       mockPrisma.comment.create.mockResolvedValue({
         ...mockComment,
         id: 'comment-456',
@@ -128,6 +175,52 @@ describe('Comments Service', () => {
       );
 
       expect(result.parentId).toBe('comment-123');
+    });
+
+    it('should send notification when replying to another users comment', async () => {
+      mockPrisma.page.findFirst.mockResolvedValue(mockPage);
+      mockPrisma.comment.findFirst.mockResolvedValue({
+        id: 'comment-123',
+        createdById: 'other-user-456', // Different user
+      });
+      mockPrisma.comment.create.mockResolvedValue({
+        ...mockComment,
+        id: 'comment-456',
+        parentId: 'comment-123',
+        createdBy: { id: 'user-123', name: 'Reply Author' },
+      });
+
+      await commentsService.createComment('org-123', 'page-123', 'user-123', 'Reply content', {
+        parentId: 'comment-123',
+      });
+
+      expect(mockCreateCommentReplyNotification).toHaveBeenCalledWith({
+        recipientId: 'other-user-456',
+        actorId: 'user-123',
+        actorName: 'Reply Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+    });
+
+    it('should not send notification when replying to own comment', async () => {
+      mockPrisma.page.findFirst.mockResolvedValue(mockPage);
+      mockPrisma.comment.findFirst.mockResolvedValue({
+        id: 'comment-123',
+        createdById: 'user-123', // Same user
+      });
+      mockPrisma.comment.create.mockResolvedValue({
+        ...mockComment,
+        id: 'comment-456',
+        parentId: 'comment-123',
+      });
+
+      await commentsService.createComment('org-123', 'page-123', 'user-123', 'Reply content', {
+        parentId: 'comment-123',
+      });
+
+      expect(mockCreateCommentReplyNotification).not.toHaveBeenCalled();
     });
 
     it('should create an inline comment with blockId', async () => {
@@ -306,7 +399,7 @@ describe('Comments Service', () => {
 
   describe('resolveComment', () => {
     it('should resolve a comment', async () => {
-      mockPrisma.comment.findFirst.mockResolvedValue(mockComment);
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithPage);
       mockPrisma.comment.update.mockResolvedValue({
         ...mockComment,
         isResolved: true,
@@ -320,9 +413,49 @@ describe('Comments Service', () => {
       expect(result.resolvedById).toBe('user-123');
     });
 
+    it('should send notification when resolving another users comment', async () => {
+      const commentByOtherUser = {
+        ...mockCommentWithPage,
+        createdById: 'other-user-456',
+      };
+      mockPrisma.comment.findFirst.mockResolvedValue(commentByOtherUser);
+      mockPrisma.comment.update.mockResolvedValue({
+        ...mockComment,
+        isResolved: true,
+        resolvedAt: new Date(),
+        resolvedById: 'user-123',
+      });
+      mockPrisma.user.findUnique.mockResolvedValue({ name: 'Resolver User' });
+
+      await commentsService.resolveComment('comment-123', 'user-123', true);
+
+      expect(mockCreateCommentResolvedNotification).toHaveBeenCalledWith({
+        recipientId: 'other-user-456',
+        actorId: 'user-123',
+        actorName: 'Resolver User',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-123',
+      });
+    });
+
+    it('should not send notification when resolving own comment', async () => {
+      mockPrisma.comment.findFirst.mockResolvedValue(mockCommentWithPage);
+      mockPrisma.comment.update.mockResolvedValue({
+        ...mockComment,
+        isResolved: true,
+        resolvedAt: new Date(),
+        resolvedById: 'user-123',
+      });
+
+      await commentsService.resolveComment('comment-123', 'user-123', true);
+
+      expect(mockCreateCommentResolvedNotification).not.toHaveBeenCalled();
+    });
+
     it('should unresolve a comment', async () => {
       mockPrisma.comment.findFirst.mockResolvedValue({
-        ...mockComment,
+        ...mockCommentWithPage,
         isResolved: true,
         resolvedAt: new Date(),
         resolvedById: 'user-123',
@@ -350,7 +483,7 @@ describe('Comments Service', () => {
 
     it('should throw CANNOT_RESOLVE_REPLY for reply comments', async () => {
       mockPrisma.comment.findFirst.mockResolvedValue({
-        ...mockComment,
+        ...mockCommentWithPage,
         parentId: 'parent-comment',
       });
 
