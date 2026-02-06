@@ -301,38 +301,38 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 6: Page Sharing & Permissions
+## Phase 6: Page Sharing & Permissions ✅
 
-### 6.1 Page-Level Permissions
+### 6.1 Page-Level Permissions ✅
 
-- [ ] Create PagePermission model
-- [ ] Define permission levels (View, Edit, Full Access)
-- [ ] Create permission check middleware
-- [ ] Integrate permissions into Hocuspocus auth hook
+- [x] Create PagePermission model
+- [x] Define permission levels (View, Edit, Full Access)
+- [x] Create permission check middleware
+- [x] Integrate permissions into Hocuspocus auth hook
 
-### 6.2 Share UI
+### 6.2 Share UI ✅
 
-- [ ] Create share modal component
-- [ ] List current permissions
-- [ ] Add user to page with permission level
-- [ ] Remove user permission
-- [ ] Update permission level
+- [x] Create share modal component
+- [x] List current permissions
+- [x] Add user to page with permission level
+- [x] Remove user permission
+- [x] Update permission level
 
-### 6.3 Public Pages
+### 6.3 Public Pages ✅
 
-- [ ] Add isPublic and publicSlug fields
-- [ ] Generate unique public slug
-- [ ] Create public page route (/public/:slug)
-- [ ] Create public page viewer (read-only)
-- [ ] Add share to web toggle in share modal
+- [x] Add isPublic and publicSlug fields
+- [x] Generate unique public slug
+- [x] Create public page route (/public/:slug)
+- [x] Create public page viewer (read-only)
+- [x] Add share to web toggle in share modal
 
-### 6.4 Guest Access
+### 6.4 Guest Access ✅
 
-- [ ] Create GuestAccess model
-- [ ] Generate guest access tokens
-- [ ] Create guest login page
-- [ ] Track guest last access
-- [ ] Add expiration for guest links
+- [x] Create share token system (via PagePermission model)
+- [x] Generate guest access tokens
+- [x] Create share link page (/share/:token)
+- [x] Add expiration for guest links
+- [ ] Track guest last access (optional enhancement)
 
 ---
 
