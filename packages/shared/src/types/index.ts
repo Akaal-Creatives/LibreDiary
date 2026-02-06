@@ -12,11 +12,10 @@ export type PagePermissionLevel = PermissionLevel; // Alias for clarity
 export type StorageType = 'LOCAL' | 'MINIO' | 'S3';
 export type NotificationType =
   | 'MENTION'
-  | 'COMMENT'
   | 'COMMENT_REPLY'
   | 'PAGE_SHARED'
-  | 'INVITATION'
-  | 'SYSTEM';
+  | 'COMMENT_RESOLVED'
+  | 'INVITATION';
 
 export type PropertyType =
   | 'TEXT'
@@ -287,15 +286,25 @@ export interface FileInfo {
 // NOTIFICATIONS
 // ===========================================
 
+export interface NotificationData {
+  pageId?: string;
+  pageTitle?: string;
+  commentId?: string;
+  organizationId?: string;
+  organizationName?: string;
+  actorId?: string;
+  actorName?: string;
+  [key: string]: unknown;
+}
+
 export interface Notification {
   id: string;
   userId: string;
   type: NotificationType;
   title: string;
-  body: string | null;
-  entityType: string | null;
-  entityId: string | null;
-  read: boolean;
+  message: string | null;
+  data: NotificationData | null;
+  isRead: boolean;
   readAt: string | null;
   createdAt: string;
 }

@@ -46,6 +46,7 @@ model User {
   comments           Comment[]            @relation("CommentCreatedBy")
   resolvedComments   Comment[]            @relation("CommentResolvedBy")
   mentions           Mention[]            @relation("MentionedUser")
+  notifications      Notification[]
 
   @@index([email])
   @@index([deletedAt])
@@ -396,4 +397,43 @@ model Mention {
   @@unique([commentId, userId]) // One mention per user per comment
   @@index([commentId])
   @@index([userId])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id     String           @id @default(cuid())
+  userId String           // Recipient
+  type   NotificationType
+
+  // Content
+  title   String
+  message String?
+
+  // Context data (JSON) - pageId, commentId, etc.
+  data Json?
+
+  // Status
+  isRead Boolean @default(false)
+  readAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  MENTION           // Someone mentioned you in a comment
+  COMMENT_REPLY     // Someone replied to your comment
+  PAGE_SHARED       // A page was shared with you
+  COMMENT_RESOLVED  // Your comment was resolved
+  INVITATION        // You were invited to an organization
 }

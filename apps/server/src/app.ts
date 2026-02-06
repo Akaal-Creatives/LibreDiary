@@ -16,6 +16,7 @@ import { versionsRoutes, collaborationRoutes } from './modules/collaboration/ind
 import { permissionsRoutes } from './modules/permissions/index.js';
 import { commentsRoutes } from './modules/comments/index.js';
 import { mentionsRoutes } from './modules/mentions/index.js';
+import { notificationsRoutes } from './modules/notifications/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
@@ -102,6 +103,9 @@ export async function buildApp() {
       await api.register(mentionsRoutes, {
         prefix: '/organizations/:orgId/mentions',
       });
+
+      // Notifications routes (user-specific, no org context needed)
+      await api.register(notificationsRoutes, { prefix: '/notifications' });
 
       // Admin routes (super admin only)
       await api.register(adminRoutes, { prefix: '/admin' });
