@@ -8,6 +8,7 @@ import OrganizationSwitcher from './OrganizationSwitcher.vue';
 import PageTreeItem from './PageTreeItem.vue';
 import PageContextMenu from './PageContextMenu.vue';
 import FavoritesSection from './FavoritesSection.vue';
+import NotificationBell from './NotificationBell.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -319,45 +320,53 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
           <span class="user-email">{{ authStore.user?.email ?? '' }}</span>
         </div>
       </div>
-      <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
-        <span v-if="theme === 'light'">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle cx="9" cy="9" r="3.75" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M9 2.25V3.75M9 14.25V15.75M2.25 9H3.75M14.25 9H15.75M4.22 4.22L5.28 5.28M12.72 12.72L13.78 13.78M4.22 13.78L5.28 12.72M12.72 5.28L13.78 4.22"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-        </span>
-        <span v-else-if="theme === 'dark'">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M15.75 10.5C14.9177 11.3323 13.8066 11.8033 12.6376 11.8219C11.4686 11.8405 10.3434 11.4054 9.48398 10.5977C8.62457 9.79007 8.1 8.67504 8.02109 7.50718C7.94219 6.33932 8.31431 5.19788 9.06 4.305C8.08574 4.58581 7.20454 5.12154 6.50739 6.85749C5.81024 7.59343 5.3252 8.50045 5.10251 9.48675C4.87982 10.473 4.92807 11.5017 5.24204 12.4636C5.55601 13.4255 6.12385 14.2846 6.88457 14.9526C7.64529 15.6205 8.57062 16.0721 9.56612 16.258C10.5616 16.4439 11.5894 16.357 12.5395 16.0065C13.4895 15.656 14.3263 15.0552 14.9651 14.2682C15.6038 13.4813 16.0205 12.5372 16.1715 11.534"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </span>
-        <span v-else>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect
-              x="2.25"
-              y="3.75"
-              width="13.5"
-              height="9.75"
-              rx="1.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path d="M6 15.75H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            <path d="M9 13.5V15.75" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-        </span>
-      </button>
+      <div class="footer-actions">
+        <NotificationBell />
+        <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+          <span v-if="theme === 'light'">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="3.75" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M9 2.25V3.75M9 14.25V15.75M2.25 9H3.75M14.25 9H15.75M4.22 4.22L5.28 5.28M12.72 12.72L13.78 13.78M4.22 13.78L5.28 12.72M12.72 5.28L13.78 4.22"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <span v-else-if="theme === 'dark'">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M15.75 10.5C14.9177 11.3323 13.8066 11.8033 12.6376 11.8219C11.4686 11.8405 10.3434 11.4054 9.48398 10.5977C8.62457 9.79007 8.1 8.67504 8.02109 7.50718C7.94219 6.33932 8.31431 5.19788 9.06 4.305C8.08574 4.58581 7.20454 5.12154 6.50739 6.85749C5.81024 7.59343 5.3252 8.50045 5.10251 9.48675C4.87982 10.473 4.92807 11.5017 5.24204 12.4636C5.55601 13.4255 6.12385 14.2846 6.88457 14.9526C7.64529 15.6205 8.57062 16.0721 9.56612 16.258C10.5616 16.4439 11.5894 16.357 12.5395 16.0065C13.4895 15.656 14.3263 15.0552 14.9651 14.2682C15.6038 13.4813 16.0205 12.5372 16.1715 11.534"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span v-else>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect
+                x="2.25"
+                y="3.75"
+                width="13.5"
+                height="9.75"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M6 15.75H12"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path d="M9 13.5V15.75" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </span>
+        </button>
+      </div>
     </div>
 
     <!-- Context Menu -->
@@ -672,6 +681,12 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.footer-actions {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
 }
 
 .theme-toggle {

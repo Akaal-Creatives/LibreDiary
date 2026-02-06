@@ -47,3 +47,9 @@ export type {
 } from './comments.service';
 export { mentionsService } from './mentions.service';
 export type { Mention, MentionUser } from './mentions.service';
+export { notificationsService } from './notifications.service';
+export type {
+  NotificationResponse,
+  UnreadCountResponse,
+  GetNotificationsOptions,
+} from './notifications.service';
