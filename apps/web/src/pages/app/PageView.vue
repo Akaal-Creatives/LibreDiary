@@ -53,7 +53,7 @@ const userColor = computed(() => {
   return `hsl(${hue}, 70%, 50%)`;
 });
 
-// Setup collaboration
+// Setup collaboration - pass reactive getters so connection updates when auth/pageId change
 const {
   isConnected,
   isSynced,
@@ -64,8 +64,8 @@ const {
   provider,
   disconnect: disconnectCollaboration,
 } = useCollaboration({
-  documentName: documentName.value || '',
-  enabled: !!documentName.value,
+  documentName: () => documentName.value,
+  enabled: () => !!documentName.value,
   onSynced: () => {
     // Once synced, we can hide the loading state
     if (loading.value) {

@@ -1,4 +1,4 @@
-import { ref, shallowRef, onUnmounted, watch } from 'vue';
+import { ref, shallowRef, onUnmounted, watch, toValue, type MaybeRefOrGetter } from 'vue';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import * as Y from 'yjs';
 
@@ -9,8 +9,10 @@ export interface CollaborationUser {
 }
 
 export interface UseCollaborationOptions {
-  documentName: string;
-  enabled?: boolean;
+  /** Document name - can be a string, ref, or getter for reactivity */
+  documentName: MaybeRefOrGetter<string | null>;
+  /** Enable/disable collaboration - can be a boolean, ref, or getter */
+  enabled?: MaybeRefOrGetter<boolean>;
   onConnect?: () => void;
   onDisconnect?: () => void;
   onSynced?: () => void;
@@ -18,7 +20,8 @@ export interface UseCollaborationOptions {
 }
 
 export function useCollaboration(options: UseCollaborationOptions) {
-  const { documentName, enabled = true } = options;
+  // Track current document name for reconnection detection
+  let currentDocumentName: string | null = null;
 
   // State
   const isConnected = ref(false);
@@ -32,17 +35,22 @@ export function useCollaboration(options: UseCollaborationOptions) {
   const provider = shallowRef<HocuspocusProvider | null>(null);
 
   // Get WebSocket URL based on current location
-  function getWebSocketUrl(): string {
+  function getWebSocketUrl(docName: string): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // In development, the API is on port 3000
     const host = import.meta.env.DEV ? `${window.location.hostname}:3000` : window.location.host;
-    return `${protocol}//${host}/collaboration/${documentName}`;
+    return `${protocol}//${host}/collaboration/${docName}`;
   }
 
   // Initialize collaboration
   function connect() {
-    if (!enabled || provider.value) return;
+    const docName = toValue(options.documentName);
+    const isEnabled = toValue(options.enabled) ?? true;
 
+    // Don't connect if disabled or no document name
+    if (!isEnabled || !docName || provider.value) return;
+
+    currentDocumentName = docName;
     isConnecting.value = true;
     connectionError.value = null;
 
@@ -52,8 +60,8 @@ export function useCollaboration(options: UseCollaborationOptions) {
     // Create Hocuspocus provider
     // Token is passed via cookies (httpOnly), so we don't need to pass it explicitly
     provider.value = new HocuspocusProvider({
-      url: getWebSocketUrl(),
-      name: documentName,
+      url: getWebSocketUrl(docName),
+      name: docName,
       document: ydoc.value,
       // Connection handlers
       onConnect: () => {
@@ -108,16 +116,29 @@ export function useCollaboration(options: UseCollaborationOptions) {
     isSynced.value = false;
     isConnecting.value = false;
     connectedUsers.value = [];
+    currentDocumentName = null;
   }
 
-  // Auto-connect when enabled changes
+  // Auto-connect when enabled or documentName changes
   watch(
-    () => enabled,
-    (newEnabled) => {
-      if (newEnabled) {
-        connect();
-      } else {
+    () => ({
+      enabled: toValue(options.enabled) ?? true,
+      documentName: toValue(options.documentName),
+    }),
+    ({ enabled: isEnabled, documentName: docName }) => {
+      // If disabled, disconnect
+      if (!isEnabled || !docName) {
         disconnect();
+        return;
+      }
+
+      // If document name changed, reconnect
+      if (docName !== currentDocumentName) {
+        disconnect();
+        connect();
+      } else if (!provider.value) {
+        // Not connected yet, connect now
+        connect();
       }
     },
     { immediate: true }
