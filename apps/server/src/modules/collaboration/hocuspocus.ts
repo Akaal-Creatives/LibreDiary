@@ -2,6 +2,8 @@ import { Hocuspocus } from '@hocuspocus/server';
 import * as Y from 'yjs';
 import * as collaborationService from './collaboration.service.js';
 import { getSessionByToken } from '../../services/session.service.js';
+import { validateWsToken } from '../../utils/tokens.js';
+import { env } from '../../config/index.js';
 
 const SESSION_COOKIE_NAME = 'session_token';
 
@@ -73,16 +75,8 @@ export function createHocuspocusServer(): Hocuspocus {
       const cookies = parseCookies(requestHeaders?.cookie);
       const cookieToken = cookies[SESSION_COOKIE_NAME];
 
-      // Also check for token passed directly from client (for non-browser clients)
+      // Also check for token passed directly from client (WS token or session token)
       const clientToken = data.token;
-
-      // Use cookie token first, fall back to client token
-      const token = cookieToken || clientToken;
-
-      // Require authentication token
-      if (!token) {
-        throw new Error('Authentication required');
-      }
 
       // Parse document name to get org and page IDs
       const parsed = parseDocumentName(documentName);
@@ -90,14 +84,41 @@ export function createHocuspocusServer(): Hocuspocus {
         throw new Error('Invalid document name format');
       }
 
-      // Validate session token
-      const session = await getSessionByToken(token);
-      if (!session) {
-        throw new Error('Invalid or expired session');
+      // Try different authentication methods
+      let userId: string | null = null;
+      let userName: string | undefined;
+
+      // 1. Try WS token first (passed by client)
+      if (clientToken) {
+        const secret = env.SESSION_SECRET ?? env.APP_SECRET;
+        userId = validateWsToken(clientToken, secret);
+      }
+
+      // 2. Fall back to session cookie
+      if (!userId && cookieToken) {
+        const session = await getSessionByToken(cookieToken);
+        if (session) {
+          userId = session.userId;
+          userName = session.user.name || session.user.email;
+        }
+      }
+
+      // 3. Try client token as session token (for API clients)
+      if (!userId && clientToken) {
+        const session = await getSessionByToken(clientToken);
+        if (session) {
+          userId = session.userId;
+          userName = session.user.name || session.user.email;
+        }
+      }
+
+      // Require authentication
+      if (!userId) {
+        throw new Error('Authentication required');
       }
 
       // Check if user has access to this page
-      const access = await collaborationService.validatePageAccess(parsed.pageId, session.userId);
+      const access = await collaborationService.validatePageAccess(parsed.pageId, userId);
 
       if (!access.hasAccess) {
         throw new Error('Access denied to this document');
@@ -105,9 +126,9 @@ export function createHocuspocusServer(): Hocuspocus {
 
       // Return context for subsequent hooks
       return {
-        userId: session.userId,
+        userId,
         organizationId: parsed.organizationId,
-        userName: session.user.name || session.user.email,
+        userName,
       };
     },
 

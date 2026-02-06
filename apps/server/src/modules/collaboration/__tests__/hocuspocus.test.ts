@@ -182,7 +182,8 @@ describe('Hocuspocus Server', () => {
         token: 'invalid-token',
       };
 
-      await expect(config.onAuthenticate(data)).rejects.toThrow('Invalid or expired session');
+      // Now tries WS token, cookie, and session token before failing with "Authentication required"
+      await expect(config.onAuthenticate(data)).rejects.toThrow('Authentication required');
     });
 
     it('should reject if user has no page access', async () => {

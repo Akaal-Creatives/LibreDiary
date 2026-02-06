@@ -27,6 +27,20 @@ vi.mock('yjs', () => ({
   }),
 }));
 
+// Mock fetch for WS token endpoint
+const mockFetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: () =>
+    Promise.resolve({
+      success: true,
+      data: {
+        token: 'mock-ws-token',
+        expiresIn: 300000,
+      },
+    }),
+});
+vi.stubGlobal('fetch', mockFetch);
+
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { useCollaboration } from '../useCollaboration';
 

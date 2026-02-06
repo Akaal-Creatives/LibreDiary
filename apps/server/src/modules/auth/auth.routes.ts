@@ -7,7 +7,8 @@ import {
   clearSessionCookie,
   getClientIp,
 } from './auth.middleware.js';
-import { EXPIRATION } from '../../utils/tokens.js';
+import { EXPIRATION, generateWsToken } from '../../utils/tokens.js';
+import { env } from '../../config/index.js';
 
 // Request schemas
 const registerSchema = z.object({
@@ -354,6 +355,28 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
       }
+    }
+  );
+
+  /**
+   * GET /auth/ws-token
+   * Get a short-lived token for WebSocket authentication
+   * Used by the collaboration system since httpOnly cookies can't be accessed by JS
+   */
+  fastify.get(
+    '/ws-token',
+    { preHandler: [requireAuth] },
+    async (request: FastifyRequest, _reply: FastifyReply) => {
+      const secret = env.SESSION_SECRET ?? env.APP_SECRET;
+      const wsToken = generateWsToken(request.user!.id, secret);
+
+      return {
+        success: true,
+        data: {
+          token: wsToken,
+          expiresIn: EXPIRATION.WS_TOKEN,
+        },
+      };
     }
   );
 
