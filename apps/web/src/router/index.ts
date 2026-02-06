@@ -110,6 +110,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/pages/PublicPageView.vue'),
     props: true,
   },
+  {
+    path: '/share/:token',
+    name: 'share-link',
+    component: () => import('@/pages/ShareLinkPage.vue'),
+    props: true,
+  },
   // Admin Routes (Super Admin only)
   {
     path: '/admin',

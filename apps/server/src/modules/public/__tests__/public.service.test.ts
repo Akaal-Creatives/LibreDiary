@@ -8,12 +8,18 @@ const { mockPrisma, resetMocks, mockPage, _now } = vi.hoisted(() => {
     update: vi.fn(),
   };
 
+  const mockPrismaPagePermission = {
+    findFirst: vi.fn(),
+  };
+
   const mockPrisma = {
     page: mockPrismaPage,
+    pagePermission: mockPrismaPagePermission,
   };
 
   function resetMocks() {
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaPagePermission).forEach((mock) => mock.mockReset());
   }
 
   const now = new Date();
@@ -181,6 +187,102 @@ describe('Public Service', () => {
 
       expect(slug).toMatch(/^test-page-[a-z0-9]+$/);
       expect(mockPrisma.page.findFirst).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('getPageByShareToken', () => {
+    const mockSharedPage = {
+      id: 'page-456',
+      title: 'Shared Test Page',
+      htmlContent: '<p>Shared content</p>',
+      icon: '📝',
+      trashedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: {
+        id: 'user-123',
+        name: 'Test Author',
+      },
+    };
+
+    it('should return page for valid share token', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'valid-token',
+        level: 'VIEW',
+        expiresAt: null,
+        page: mockSharedPage,
+      });
+
+      const result = await publicService.getPageByShareToken('valid-token');
+
+      expect(result.id).toBe('page-456');
+      expect(result.title).toBe('Shared Test Page');
+      expect(result.permission.level).toBe('VIEW');
+    });
+
+    it('should return page with EDIT permission', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'edit-token',
+        level: 'EDIT',
+        expiresAt: null,
+        page: mockSharedPage,
+      });
+
+      const result = await publicService.getPageByShareToken('edit-token');
+
+      expect(result.permission.level).toBe('EDIT');
+    });
+
+    it('should throw INVALID_SHARE_TOKEN for non-existent token', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue(null);
+
+      await expect(publicService.getPageByShareToken('invalid')).rejects.toThrow(
+        'INVALID_SHARE_TOKEN'
+      );
+    });
+
+    it('should throw SHARE_TOKEN_EXPIRED for expired token', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'expired-token',
+        level: 'VIEW',
+        expiresAt: new Date(Date.now() - 1000000), // Past date
+        page: mockSharedPage,
+      });
+
+      await expect(publicService.getPageByShareToken('expired-token')).rejects.toThrow(
+        'SHARE_TOKEN_EXPIRED'
+      );
+    });
+
+    it('should throw PAGE_NOT_FOUND for trashed page', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'valid-token',
+        level: 'VIEW',
+        expiresAt: null,
+        page: { ...mockSharedPage, trashedAt: new Date() },
+      });
+
+      await expect(publicService.getPageByShareToken('valid-token')).rejects.toThrow(
+        'PAGE_NOT_FOUND'
+      );
+    });
+
+    it('should throw PAGE_NOT_FOUND if page is null', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'valid-token',
+        level: 'VIEW',
+        expiresAt: null,
+        page: null,
+      });
+
+      await expect(publicService.getPageByShareToken('valid-token')).rejects.toThrow(
+        'PAGE_NOT_FOUND'
+      );
     });
   });
 });

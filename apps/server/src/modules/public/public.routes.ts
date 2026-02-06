@@ -9,6 +9,10 @@ interface SlugParams {
   slug: string;
 }
 
+interface TokenParams {
+  token: string;
+}
+
 // ===========================================
 // ERROR RESPONSE HELPER
 // ===========================================
@@ -26,6 +30,16 @@ function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
       status: 403,
       code: 'PAGE_NOT_PUBLIC',
       message: 'This page is not publicly accessible',
+    },
+    INVALID_SHARE_TOKEN: {
+      status: 404,
+      code: 'INVALID_SHARE_TOKEN',
+      message: 'Share link is invalid or does not exist',
+    },
+    SHARE_TOKEN_EXPIRED: {
+      status: 410,
+      code: 'SHARE_TOKEN_EXPIRED',
+      message: 'This share link has expired',
     },
   };
 
@@ -58,6 +72,26 @@ export default async function publicRoutes(fastify: FastifyInstance): Promise<vo
     async (request: FastifyRequest<{ Params: SlugParams }>, reply: FastifyReply) => {
       try {
         const page = await publicService.getPublicPage(request.params.slug);
+
+        return {
+          success: true,
+          data: { page },
+        };
+      } catch (error) {
+        return mapServiceError(error, reply);
+      }
+    }
+  );
+
+  /**
+   * GET /public/pages/share/:token
+   * Get a page by its share token (no auth required)
+   */
+  fastify.get<{ Params: TokenParams }>(
+    '/share/:token',
+    async (request: FastifyRequest<{ Params: TokenParams }>, reply: FastifyReply) => {
+      try {
+        const page = await publicService.getPageByShareToken(request.params.token);
 
         return {
           success: true,

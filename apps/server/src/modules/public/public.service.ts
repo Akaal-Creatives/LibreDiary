@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import type { PermissionLevel } from '@prisma/client';
 import crypto from 'crypto';
 
 // ===========================================
@@ -17,6 +18,23 @@ export interface PublicPage {
     id: string;
     name: string | null;
   } | null;
+}
+
+export interface SharedPage {
+  id: string;
+  title: string;
+  htmlContent: string | null;
+  icon: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: {
+    id: string;
+    name: string | null;
+  } | null;
+  permission: {
+    level: PermissionLevel;
+    expiresAt: Date | null;
+  };
 }
 
 // ===========================================
@@ -130,4 +148,67 @@ export async function generatePublicSlug(title: string): Promise<string> {
 
   // Fallback: use timestamp + random for guaranteed uniqueness
   return `${baseSlug}-${Date.now().toString(36)}`;
+}
+
+// ===========================================
+// SHARE TOKEN ACCESS
+// ===========================================
+
+/**
+ * Get a page by its share token
+ */
+export async function getPageByShareToken(token: string): Promise<SharedPage> {
+  // Find the permission with this share token
+  const permission = await prisma.pagePermission.findFirst({
+    where: {
+      shareToken: token,
+    },
+    include: {
+      page: {
+        select: {
+          id: true,
+          title: true,
+          htmlContent: true,
+          icon: true,
+          trashedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!permission) {
+    throw new Error('INVALID_SHARE_TOKEN');
+  }
+
+  // Check if token is expired
+  if (permission.expiresAt && permission.expiresAt < new Date()) {
+    throw new Error('SHARE_TOKEN_EXPIRED');
+  }
+
+  // Check if page is trashed
+  if (!permission.page || permission.page.trashedAt) {
+    throw new Error('PAGE_NOT_FOUND');
+  }
+
+  return {
+    id: permission.page.id,
+    title: permission.page.title,
+    htmlContent: permission.page.htmlContent,
+    icon: permission.page.icon,
+    createdAt: permission.page.createdAt,
+    updatedAt: permission.page.updatedAt,
+    createdBy: permission.page.createdBy,
+    permission: {
+      level: permission.level,
+      expiresAt: permission.expiresAt,
+    },
+  };
 }

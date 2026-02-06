@@ -1,37 +1,69 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock services using vi.hoisted
-const { mockPublicService, mockPublicPage, resetMocks } = vi.hoisted(() => {
-  const mockPublicService = {
-    getPublicPage: vi.fn(),
-    togglePublicAccess: vi.fn(),
-    generatePublicSlug: vi.fn(),
-  };
+const { mockPublicService, mockPermissionsService, mockPublicPage, mockSharedPage, resetMocks } =
+  vi.hoisted(() => {
+    const mockPublicService = {
+      getPublicPage: vi.fn(),
+      togglePublicAccess: vi.fn(),
+      generatePublicSlug: vi.fn(),
+      getPageByShareToken: vi.fn(),
+    };
 
-  const mockPublicPage = {
-    id: 'page-123',
-    organizationId: 'org-123',
-    title: 'Public Test Page',
-    htmlContent: '<p>Hello World</p>',
-    isPublic: true,
-    publicSlug: 'public-test-page-abc123',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: {
-      id: 'user-123',
-      name: 'Test Author',
-    },
-  };
+    const mockPermissionsService = {
+      validateShareToken: vi.fn(),
+    };
 
-  function resetMocks() {
-    Object.values(mockPublicService).forEach((mock) => mock.mockReset());
-  }
+    const mockPublicPage = {
+      id: 'page-123',
+      organizationId: 'org-123',
+      title: 'Public Test Page',
+      htmlContent: '<p>Hello World</p>',
+      isPublic: true,
+      publicSlug: 'public-test-page-abc123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: {
+        id: 'user-123',
+        name: 'Test Author',
+      },
+    };
 
-  return { mockPublicService, mockPublicPage, resetMocks };
-});
+    const mockSharedPage = {
+      id: 'page-456',
+      organizationId: 'org-123',
+      title: 'Shared Page',
+      htmlContent: '<p>Shared content</p>',
+      icon: '📝',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: {
+        id: 'user-123',
+        name: 'Test Author',
+      },
+      permission: {
+        level: 'VIEW',
+        expiresAt: null,
+      },
+    };
+
+    function resetMocks() {
+      Object.values(mockPublicService).forEach((mock) => mock.mockReset());
+      Object.values(mockPermissionsService).forEach((mock) => mock.mockReset());
+    }
+
+    return {
+      mockPublicService,
+      mockPermissionsService,
+      mockPublicPage,
+      mockSharedPage,
+      resetMocks,
+    };
+  });
 
 // Mock the services
 vi.mock('../public.service.js', () => mockPublicService);
+vi.mock('../../permissions/permissions.service.js', () => mockPermissionsService);
 
 // Import after mocking
 import Fastify from 'fastify';
@@ -98,6 +130,82 @@ describe('Public Routes', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe('PAGE_NOT_PUBLIC');
+    });
+  });
+
+  describe('GET /public/share/:token', () => {
+    it('should return shared page for valid token', async () => {
+      mockPublicService.getPageByShareToken.mockResolvedValue(mockSharedPage);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/public/pages/share/valid-token-abc123',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.page.title).toBe('Shared Page');
+      expect(body.data.page.permission.level).toBe('VIEW');
+    });
+
+    it('should return page with EDIT permission level', async () => {
+      mockPublicService.getPageByShareToken.mockResolvedValue({
+        ...mockSharedPage,
+        permission: { level: 'EDIT', expiresAt: null },
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/public/pages/share/edit-token-abc123',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.page.permission.level).toBe('EDIT');
+    });
+
+    it('should return 404 for invalid token', async () => {
+      mockPublicService.getPageByShareToken.mockRejectedValue(new Error('INVALID_SHARE_TOKEN'));
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/public/pages/share/invalid-token',
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('INVALID_SHARE_TOKEN');
+    });
+
+    it('should return 410 for expired token', async () => {
+      mockPublicService.getPageByShareToken.mockRejectedValue(new Error('SHARE_TOKEN_EXPIRED'));
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/public/pages/share/expired-token',
+      });
+
+      expect(response.statusCode).toBe(410);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('SHARE_TOKEN_EXPIRED');
+    });
+
+    it('should return 404 for trashed page', async () => {
+      mockPublicService.getPageByShareToken.mockRejectedValue(new Error('PAGE_NOT_FOUND'));
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/public/pages/share/trashed-page-token',
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('PAGE_NOT_FOUND');
     });
   });
 });
