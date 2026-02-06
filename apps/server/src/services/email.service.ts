@@ -249,3 +249,138 @@ export async function sendInviteEmail(
     `),
   });
 }
+
+// ===========================================
+// NOTIFICATION EMAIL TEMPLATES
+// ===========================================
+
+export interface MentionNotificationEmailInput {
+  to: string;
+  recipientName: string;
+  actorName: string;
+  pageTitle: string;
+  pageUrl: string;
+}
+
+/**
+ * Send email when someone mentions a user in a comment
+ */
+export async function sendMentionNotificationEmail(
+  input: MentionNotificationEmailInput
+): Promise<void> {
+  const greeting = input.recipientName ? `Hi ${input.recipientName},` : 'Hi,';
+
+  await sendEmail({
+    to: input.to,
+    subject: `${input.actorName} mentioned you in "${input.pageTitle}"`,
+    html: emailTemplate(`
+      <h1>You were mentioned</h1>
+      <p>${greeting}</p>
+      <p><strong>${input.actorName}</strong> mentioned you in a comment on <strong>"${input.pageTitle}"</strong>.</p>
+      <p style="text-align: center;">
+        <a href="${input.pageUrl}" class="button">View Page</a>
+      </p>
+      <p class="muted">Or copy and paste this link into your browser:</p>
+      <div class="code">${input.pageUrl}</div>
+    `),
+  });
+}
+
+export interface CommentReplyNotificationEmailInput {
+  to: string;
+  recipientName: string;
+  actorName: string;
+  pageTitle: string;
+  pageUrl: string;
+}
+
+/**
+ * Send email when someone replies to a user's comment
+ */
+export async function sendCommentReplyNotificationEmail(
+  input: CommentReplyNotificationEmailInput
+): Promise<void> {
+  const greeting = input.recipientName ? `Hi ${input.recipientName},` : 'Hi,';
+
+  await sendEmail({
+    to: input.to,
+    subject: `${input.actorName} replied to your comment`,
+    html: emailTemplate(`
+      <h1>New reply to your comment</h1>
+      <p>${greeting}</p>
+      <p><strong>${input.actorName}</strong> replied to your comment on <strong>"${input.pageTitle}"</strong>.</p>
+      <p style="text-align: center;">
+        <a href="${input.pageUrl}" class="button">View Comment</a>
+      </p>
+      <p class="muted">Or copy and paste this link into your browser:</p>
+      <div class="code">${input.pageUrl}</div>
+    `),
+  });
+}
+
+export interface PageSharedNotificationEmailInput {
+  to: string;
+  recipientName: string;
+  actorName: string;
+  pageTitle: string;
+  pageUrl: string;
+  permissionLevel: string;
+}
+
+/**
+ * Send email when someone shares a page with a user
+ */
+export async function sendPageSharedNotificationEmail(
+  input: PageSharedNotificationEmailInput
+): Promise<void> {
+  const greeting = input.recipientName ? `Hi ${input.recipientName},` : 'Hi,';
+  const permissionText = input.permissionLevel.toLowerCase().replace('_', ' ');
+
+  await sendEmail({
+    to: input.to,
+    subject: `${input.actorName} shared "${input.pageTitle}" with you`,
+    html: emailTemplate(`
+      <h1>A page was shared with you</h1>
+      <p>${greeting}</p>
+      <p><strong>${input.actorName}</strong> shared a page with you: <strong>"${input.pageTitle}"</strong>.</p>
+      <p>You have <strong>${permissionText}</strong> access to this page.</p>
+      <p style="text-align: center;">
+        <a href="${input.pageUrl}" class="button">View Page</a>
+      </p>
+      <p class="muted">Or copy and paste this link into your browser:</p>
+      <div class="code">${input.pageUrl}</div>
+    `),
+  });
+}
+
+export interface CommentResolvedNotificationEmailInput {
+  to: string;
+  recipientName: string;
+  actorName: string;
+  pageTitle: string;
+  pageUrl: string;
+}
+
+/**
+ * Send email when someone resolves a user's comment
+ */
+export async function sendCommentResolvedNotificationEmail(
+  input: CommentResolvedNotificationEmailInput
+): Promise<void> {
+  const greeting = input.recipientName ? `Hi ${input.recipientName},` : 'Hi,';
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Your comment was resolved',
+    html: emailTemplate(`
+      <h1>Your comment was resolved</h1>
+      <p>${greeting}</p>
+      <p><strong>${input.actorName}</strong> resolved your comment on <strong>"${input.pageTitle}"</strong>.</p>
+      <p style="text-align: center;">
+        <a href="${input.pageUrl}" class="button">View Page</a>
+      </p>
+      <p class="muted">Or copy and paste this link into your browser:</p>
+      <div class="code">${input.pageUrl}</div>
+    `),
+  });
+}

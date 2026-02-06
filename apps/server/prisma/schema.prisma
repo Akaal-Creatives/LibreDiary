@@ -419,6 +419,10 @@ model Notification {
   isRead Boolean @default(false)
   readAt DateTime?
 
+  // Email tracking
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
+
   // Timestamps
   createdAt DateTime @default(now())
 
