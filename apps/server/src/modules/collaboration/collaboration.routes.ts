@@ -30,14 +30,15 @@ const collaborationRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * WebSocket endpoint for collaboration
-   * Document name format: orgId/pageId
+   * URL format: /collaboration/:orgId/:pageId
+   * Document name is constructed as: orgId/pageId
    *
    * Authentication is handled via:
    * 1. Session cookie (primary - for browser connections)
    * 2. Authorization: Bearer token (for API clients)
    * 3. Query string token (fallback)
    */
-  fastify.get('/:documentName', { websocket: true }, async (socket, request) => {
+  fastify.get('/:orgId/:pageId', { websocket: true }, async (socket, request) => {
     // Extract token from cookie, Authorization header, or query string
     const cookies = parseCookies(request.headers.cookie);
     const sessionToken = cookies[SESSION_COOKIE_NAME];
@@ -50,8 +51,9 @@ const collaborationRoutes: FastifyPluginAsync = async (fastify) => {
     // Prefer cookie > bearer token > query token
     const token = sessionToken || bearerToken || queryToken || '';
 
-    // Get document name from URL params
-    const documentName = (request.params as { documentName: string }).documentName;
+    // Construct document name from URL params
+    const { orgId, pageId } = request.params as { orgId: string; pageId: string };
+    const documentName = `${orgId}/${pageId}`;
 
     // Handle the WebSocket connection with Hocuspocus
     hocuspocus.handleConnection(socket, request.raw, {
