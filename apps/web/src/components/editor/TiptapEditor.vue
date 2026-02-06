@@ -123,14 +123,26 @@ function createEditor(
 }
 
 // Initialize editor based on mode
-if (props.collaborative) {
-  // In collaborative mode, wait for ydoc to be available
-  if (props.ydoc) {
-    createEditor(true, props.ydoc, props.provider);
+// Use try-catch to handle any errors during initialization
+try {
+  if (props.collaborative) {
+    // In collaborative mode, wait for ydoc to be available
+    // Check that ydoc is a valid Y.Doc instance (not just truthy)
+    if (props.ydoc && typeof props.ydoc.get === 'function') {
+      createEditor(true, props.ydoc, props.provider);
+    }
+    // Otherwise, we'll create it when ydoc becomes available (via watch)
+    // OR fall back to non-collaborative mode after a timeout
+    else {
+      // Start in non-collaborative mode immediately to show something
+      createEditor(false);
+    }
+  } else {
+    // Non-collaborative mode - create immediately
+    createEditor(false);
   }
-  // Otherwise, we'll create it when ydoc becomes available (via watch)
-} else {
-  // Non-collaborative mode - create immediately
+} catch (e) {
+  console.error('Error initializing editor, falling back to non-collaborative mode:', e);
   createEditor(false);
 }
 
@@ -138,9 +150,14 @@ if (props.collaborative) {
 watch(
   [() => props.ydoc, () => props.provider],
   ([newYdoc, newProvider]) => {
-    if (props.collaborative && newYdoc) {
-      // Create or recreate editor with collaboration
-      createEditor(true, newYdoc, newProvider);
+    try {
+      // Check that ydoc is a valid Y.Doc instance
+      if (props.collaborative && newYdoc && typeof newYdoc.get === 'function') {
+        // Create or recreate editor with collaboration
+        createEditor(true, newYdoc, newProvider);
+      }
+    } catch (e) {
+      console.error('Error creating collaborative editor:', e);
     }
   },
   { immediate: false }

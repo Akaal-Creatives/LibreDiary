@@ -158,11 +158,18 @@ async function loadPage() {
     // Expand ancestors in sidebar
     pagesStore.expandToPage(props.pageId);
 
-    // If collaboration is not synced yet, wait for it
-    if (!isSynced.value) {
-      // Keep loading until synced (the onSynced callback will hide loading)
-    } else {
+    // If collaboration is synced, show content immediately
+    if (isSynced.value) {
       loading.value = false;
+    } else {
+      // Set a timeout to show content even if sync takes too long
+      // This prevents infinite loading state if WebSocket has issues
+      setTimeout(() => {
+        if (loading.value) {
+          console.warn('Collaboration sync timeout - showing editor anyway');
+          loading.value = false;
+        }
+      }, 5000);
     }
   } catch (e) {
     error.value = 'Failed to load page';

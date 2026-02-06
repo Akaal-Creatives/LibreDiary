@@ -34,11 +34,9 @@ async function getWsToken(): Promise<string | null> {
   }
 
   try {
-    const apiBase = import.meta.env.DEV
-      ? `http://${window.location.hostname}:3000`
-      : window.location.origin;
-
-    const response = await fetch(`${apiBase}/api/v1/auth/ws-token`, {
+    // Use same origin to leverage Vite's proxy in development
+    // This ensures cookies are sent properly (same-origin requests)
+    const response = await fetch('/api/v1/auth/ws-token', {
       method: 'GET',
       credentials: 'include', // Include cookies for authentication
     });

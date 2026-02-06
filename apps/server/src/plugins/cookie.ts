@@ -9,7 +9,9 @@ async function cookiePluginImpl(fastify: FastifyInstance) {
     parseOptions: {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      // Use 'lax' in development to allow cross-port requests (5173 -> 3000)
+      // Use 'strict' in production where same-origin is expected
+      sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
       path: '/',
     },
   });

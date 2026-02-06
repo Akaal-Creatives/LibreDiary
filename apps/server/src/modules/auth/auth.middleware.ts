@@ -1,6 +1,20 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { getSessionByToken, touchSession } from '../../services/session.service.js';
+import { env } from '../../config/index.js';
 import type { User } from '@prisma/client';
+
+// Helper to add CORS headers to error responses
+function addCorsHeaders(request: FastifyRequest, reply: FastifyReply): void {
+  const origin = request.headers.origin;
+  // Guard against undefined CORS_ORIGIN (e.g., in test environment)
+  if (!env.CORS_ORIGIN || !origin) return;
+  const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+  if (allowedOrigins.includes(origin)) {
+    reply.header('access-control-allow-origin', origin);
+    reply.header('access-control-allow-credentials', 'true');
+    reply.header('vary', 'Origin');
+  }
+}
 
 // Extend FastifyRequest type
 declare module 'fastify' {
@@ -21,6 +35,7 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply):
   const token = request.cookies?.[SESSION_COOKIE_NAME];
 
   if (!token) {
+    addCorsHeaders(request, reply);
     return reply.status(401).send({
       success: false,
       error: {
@@ -35,6 +50,7 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply):
   if (!session) {
     // Clear invalid cookie
     reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+    addCorsHeaders(request, reply);
     return reply.status(401).send({
       success: false,
       error: {
@@ -47,6 +63,7 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply):
   // Check if user is soft-deleted
   if (session.user.deletedAt) {
     reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+    addCorsHeaders(request, reply);
     return reply.status(401).send({
       success: false,
       error: {
@@ -133,7 +150,9 @@ export function setSessionCookie(
     path: '/',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    // Use 'lax' in development to allow cross-port requests (5173 -> 3000)
+    // Use 'strict' in production where same-origin is expected
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     maxAge: maxAge / 1000, // Convert to seconds
   });
 }
