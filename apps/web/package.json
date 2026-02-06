@@ -22,7 +22,7 @@
     "@tiptap/pm": "^2.11.0",
     "@tiptap/starter-kit": "^2.11.0",
     "@tiptap/vue-3": "^2.11.0",
-    "pinia": "^2.3.0",
+    "pinia": "^3.0.4",
     "vue": "^3.5.0",
     "vue-router": "^4.5.0",
     "vuestic-ui": "^1.10.0"
