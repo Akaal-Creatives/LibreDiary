@@ -1,4 +1,4 @@
-import { Server } from '@hocuspocus/server';
+import { Hocuspocus } from '@hocuspocus/server';
 import * as Y from 'yjs';
 import * as collaborationService from './collaboration.service.js';
 import { getSessionByToken } from '../../services/session.service.js';
@@ -38,10 +38,10 @@ export function parseDocumentName(
 }
 
 /**
- * Create and configure the Hocuspocus WebSocket server
+ * Create and configure the Hocuspocus instance for Fastify integration
  */
-export function createHocuspocusServer(): Server {
-  const server = new Server({
+export function createHocuspocusServer(): Hocuspocus {
+  const server = new Hocuspocus({
     name: 'librediary-collab',
 
     /**
@@ -182,9 +182,9 @@ function generateUserColor(userId: string): string {
 }
 
 // Export singleton server instance
-let serverInstance: Server | null = null;
+let serverInstance: Hocuspocus | null = null;
 
-export function getHocuspocusServer(): Server {
+export function getHocuspocusServer(): Hocuspocus {
   if (!serverInstance) {
     serverInstance = createHocuspocusServer();
   }
