@@ -1,5 +1,12 @@
 import { prisma } from '../../lib/prisma.js';
 import type { Notification, NotificationType } from '../../generated/prisma/client.js';
+import { env } from '../../config/index.js';
+import {
+  sendMentionNotificationEmail,
+  sendCommentReplyNotificationEmail,
+  sendPageSharedNotificationEmail,
+  sendCommentResolvedNotificationEmail,
+} from '../../services/email.service.js';
 
 // ===========================================
 // TYPES
@@ -171,6 +178,40 @@ export async function getUnreadCount(userId: string): Promise<number> {
 }
 
 // ===========================================
+// EMAIL NOTIFICATION HELPERS
+// ===========================================
+
+/**
+ * Get page URL for email links
+ */
+function getPageUrl(pageId: string): string {
+  return `${env.APP_URL}/app/pages/${pageId}`;
+}
+
+/**
+ * Mark notification as email sent
+ */
+async function markEmailSent(notificationId: string): Promise<void> {
+  await prisma.notification.update({
+    where: { id: notificationId },
+    data: { emailSent: true, emailSentAt: new Date() },
+  });
+}
+
+/**
+ * Get user details for email notifications
+ */
+async function getUserForEmail(
+  userId: string
+): Promise<{ email: string; name: string | null } | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true },
+  });
+  return user;
+}
+
+// ===========================================
 // SPECIALIZED NOTIFICATION CREATORS
 // ===========================================
 
@@ -180,7 +221,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
 export async function createMentionNotification(
   input: MentionNotificationInput
 ): Promise<Notification> {
-  return createNotification({
+  const notification = await createNotification({
     userId: input.recipientId,
     type: 'MENTION',
     title: `${input.actorName} mentioned you`,
@@ -193,6 +234,25 @@ export async function createMentionNotification(
       actorName: input.actorName,
     },
   });
+
+  // Send email notification (async, don't block)
+  try {
+    const user = await getUserForEmail(input.recipientId);
+    if (user) {
+      await sendMentionNotificationEmail({
+        to: user.email,
+        recipientName: user.name || '',
+        actorName: input.actorName,
+        pageTitle: input.pageTitle,
+        pageUrl: getPageUrl(input.pageId),
+      });
+      await markEmailSent(notification.id);
+    }
+  } catch (error) {
+    console.error('Failed to send mention notification email:', error);
+  }
+
+  return notification;
 }
 
 /**
@@ -201,7 +261,7 @@ export async function createMentionNotification(
 export async function createCommentReplyNotification(
   input: CommentReplyNotificationInput
 ): Promise<Notification> {
-  return createNotification({
+  const notification = await createNotification({
     userId: input.recipientId,
     type: 'COMMENT_REPLY',
     title: `${input.actorName} replied to your comment`,
@@ -214,6 +274,25 @@ export async function createCommentReplyNotification(
       actorName: input.actorName,
     },
   });
+
+  // Send email notification
+  try {
+    const user = await getUserForEmail(input.recipientId);
+    if (user) {
+      await sendCommentReplyNotificationEmail({
+        to: user.email,
+        recipientName: user.name || '',
+        actorName: input.actorName,
+        pageTitle: input.pageTitle,
+        pageUrl: getPageUrl(input.pageId),
+      });
+      await markEmailSent(notification.id);
+    }
+  } catch (error) {
+    console.error('Failed to send comment reply notification email:', error);
+  }
+
+  return notification;
 }
 
 /**
@@ -222,7 +301,7 @@ export async function createCommentReplyNotification(
 export async function createPageSharedNotification(
   input: PageSharedNotificationInput
 ): Promise<Notification> {
-  return createNotification({
+  const notification = await createNotification({
     userId: input.recipientId,
     type: 'PAGE_SHARED',
     title: `${input.actorName} shared a page with you`,
@@ -235,6 +314,26 @@ export async function createPageSharedNotification(
       actorName: input.actorName,
     },
   });
+
+  // Send email notification
+  try {
+    const user = await getUserForEmail(input.recipientId);
+    if (user) {
+      await sendPageSharedNotificationEmail({
+        to: user.email,
+        recipientName: user.name || '',
+        actorName: input.actorName,
+        pageTitle: input.pageTitle,
+        pageUrl: getPageUrl(input.pageId),
+        permissionLevel: input.permissionLevel,
+      });
+      await markEmailSent(notification.id);
+    }
+  } catch (error) {
+    console.error('Failed to send page shared notification email:', error);
+  }
+
+  return notification;
 }
 
 /**
@@ -243,7 +342,7 @@ export async function createPageSharedNotification(
 export async function createCommentResolvedNotification(
   input: CommentResolvedNotificationInput
 ): Promise<Notification> {
-  return createNotification({
+  const notification = await createNotification({
     userId: input.recipientId,
     type: 'COMMENT_RESOLVED',
     title: `${input.actorName} resolved your comment`,
@@ -256,6 +355,25 @@ export async function createCommentResolvedNotification(
       actorName: input.actorName,
     },
   });
+
+  // Send email notification
+  try {
+    const user = await getUserForEmail(input.recipientId);
+    if (user) {
+      await sendCommentResolvedNotificationEmail({
+        to: user.email,
+        recipientName: user.name || '',
+        actorName: input.actorName,
+        pageTitle: input.pageTitle,
+        pageUrl: getPageUrl(input.pageId),
+      });
+      await markEmailSent(notification.id);
+    }
+  } catch (error) {
+    console.error('Failed to send comment resolved notification email:', error);
+  }
+
+  return notification;
 }
 
 /**

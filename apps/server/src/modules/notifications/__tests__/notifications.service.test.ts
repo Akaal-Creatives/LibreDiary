@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted for proper hoisting
-const { mockPrisma, resetMocks, mockNotification, _mockUser } = vi.hoisted(() => {
+const {
+  mockPrisma,
+  resetMocks,
+  mockNotification,
+  mockUser,
+  mockSendMentionNotificationEmail,
+  mockSendCommentReplyNotificationEmail,
+  mockSendPageSharedNotificationEmail,
+  mockSendCommentResolvedNotificationEmail,
+} = vi.hoisted(() => {
   const mockPrismaNotification = {
     findFirst: vi.fn(),
     findUnique: vi.fn(),
@@ -22,9 +31,18 @@ const { mockPrisma, resetMocks, mockNotification, _mockUser } = vi.hoisted(() =>
     user: mockPrismaUser,
   };
 
+  const mockSendMentionNotificationEmail = vi.fn().mockResolvedValue(undefined);
+  const mockSendCommentReplyNotificationEmail = vi.fn().mockResolvedValue(undefined);
+  const mockSendPageSharedNotificationEmail = vi.fn().mockResolvedValue(undefined);
+  const mockSendCommentResolvedNotificationEmail = vi.fn().mockResolvedValue(undefined);
+
   function resetMocks() {
     Object.values(mockPrismaNotification).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaUser).forEach((mock) => mock.mockReset());
+    mockSendMentionNotificationEmail.mockReset().mockResolvedValue(undefined);
+    mockSendCommentReplyNotificationEmail.mockReset().mockResolvedValue(undefined);
+    mockSendPageSharedNotificationEmail.mockReset().mockResolvedValue(undefined);
+    mockSendCommentResolvedNotificationEmail.mockReset().mockResolvedValue(undefined);
   }
 
   const now = new Date();
@@ -45,15 +63,41 @@ const { mockPrisma, resetMocks, mockNotification, _mockUser } = vi.hoisted(() =>
     data: { pageId: 'page-123', commentId: 'comment-456' },
     isRead: false,
     readAt: null,
+    emailSent: false,
+    emailSentAt: null,
     createdAt: now,
   };
 
-  return { mockPrisma, resetMocks, mockNotification, _mockUser: mockUser };
+  return {
+    mockPrisma,
+    resetMocks,
+    mockNotification,
+    mockUser,
+    mockSendMentionNotificationEmail,
+    mockSendCommentReplyNotificationEmail,
+    mockSendPageSharedNotificationEmail,
+    mockSendCommentResolvedNotificationEmail,
+  };
 });
 
 // Mock the prisma module BEFORE importing notifications.service
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
+}));
+
+// Mock email service
+vi.mock('../../../services/email.service.js', () => ({
+  sendMentionNotificationEmail: mockSendMentionNotificationEmail,
+  sendCommentReplyNotificationEmail: mockSendCommentReplyNotificationEmail,
+  sendPageSharedNotificationEmail: mockSendPageSharedNotificationEmail,
+  sendCommentResolvedNotificationEmail: mockSendCommentResolvedNotificationEmail,
+}));
+
+// Mock env config
+vi.mock('../../../config/index.js', () => ({
+  env: {
+    APP_URL: 'http://localhost:5173',
+  },
 }));
 
 // Import service AFTER mocking
@@ -283,6 +327,7 @@ describe('Notifications Service', () => {
 
   describe('createMentionNotification', () => {
     it('should create a mention notification with proper context', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.notification.create.mockResolvedValue({
         ...mockNotification,
         type: 'MENTION',
@@ -295,6 +340,11 @@ describe('Notifications Service', () => {
           actorId: 'actor-123',
           actorName: 'Test Author',
         },
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
+        emailSentAt: new Date(),
       });
 
       const result = await notificationsService.createMentionNotification({
@@ -310,14 +360,74 @@ describe('Notifications Service', () => {
       expect(result.title).toBe('Test Author mentioned you');
       expect(mockPrisma.notification.create).toHaveBeenCalled();
     });
+
+    it('should send email notification for mentions', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-456',
+        type: 'MENTION',
+        title: 'Test Author mentioned you',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
+        emailSentAt: new Date(),
+      });
+
+      await notificationsService.createMentionNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockSendMentionNotificationEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        recipientName: 'Test User',
+        actorName: 'Test Author',
+        pageTitle: 'Test Page',
+        pageUrl: expect.stringContaining('page-123'),
+      });
+      expect(mockPrisma.notification.update).toHaveBeenCalledWith({
+        where: { id: 'notif-456' },
+        data: { emailSent: true, emailSentAt: expect.any(Date) },
+      });
+    });
+
+    it('should not send email if user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        type: 'MENTION',
+      });
+
+      await notificationsService.createMentionNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockSendMentionNotificationEmail).not.toHaveBeenCalled();
+    });
   });
 
   describe('createCommentReplyNotification', () => {
     it('should create a comment reply notification', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.notification.create.mockResolvedValue({
         ...mockNotification,
         type: 'COMMENT_REPLY',
         title: 'Test Author replied to your comment',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
       });
 
       const result = await notificationsService.createCommentReplyNotification({
@@ -332,14 +442,49 @@ describe('Notifications Service', () => {
       expect(result.type).toBe('COMMENT_REPLY');
       expect(result.title).toBe('Test Author replied to your comment');
     });
+
+    it('should send email notification for comment replies', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-789',
+        type: 'COMMENT_REPLY',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
+      });
+
+      await notificationsService.createCommentReplyNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockSendCommentReplyNotificationEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        recipientName: 'Test User',
+        actorName: 'Test Author',
+        pageTitle: 'Test Page',
+        pageUrl: expect.stringContaining('page-123'),
+      });
+    });
   });
 
   describe('createPageSharedNotification', () => {
     it('should create a page shared notification', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.notification.create.mockResolvedValue({
         ...mockNotification,
         type: 'PAGE_SHARED',
         title: 'Test Author shared a page with you',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
       });
 
       const result = await notificationsService.createPageSharedNotification({
@@ -354,14 +499,50 @@ describe('Notifications Service', () => {
       expect(result.type).toBe('PAGE_SHARED');
       expect(result.title).toBe('Test Author shared a page with you');
     });
+
+    it('should send email notification for page sharing', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-shared',
+        type: 'PAGE_SHARED',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
+      });
+
+      await notificationsService.createPageSharedNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        permissionLevel: 'EDIT',
+      });
+
+      expect(mockSendPageSharedNotificationEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        recipientName: 'Test User',
+        actorName: 'Test Author',
+        pageTitle: 'Test Page',
+        pageUrl: expect.stringContaining('page-123'),
+        permissionLevel: 'EDIT',
+      });
+    });
   });
 
   describe('createCommentResolvedNotification', () => {
     it('should create a comment resolved notification', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.notification.create.mockResolvedValue({
         ...mockNotification,
         type: 'COMMENT_RESOLVED',
         title: 'Test Author resolved your comment',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
       });
 
       const result = await notificationsService.createCommentResolvedNotification({
@@ -375,6 +556,36 @@ describe('Notifications Service', () => {
 
       expect(result.type).toBe('COMMENT_RESOLVED');
       expect(result.title).toBe('Test Author resolved your comment');
+    });
+
+    it('should send email notification for comment resolution', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-resolved',
+        type: 'COMMENT_RESOLVED',
+      });
+      mockPrisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        emailSent: true,
+      });
+
+      await notificationsService.createCommentResolvedNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockSendCommentResolvedNotificationEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        recipientName: 'Test User',
+        actorName: 'Test Author',
+        pageTitle: 'Test Page',
+        pageUrl: expect.stringContaining('page-123'),
+      });
     });
   });
 
