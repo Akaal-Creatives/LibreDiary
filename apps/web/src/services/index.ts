@@ -27,3 +27,12 @@ export type {
 export { setupService } from './setup.service';
 export type { SetupStatus, SetupInput, SetupResult } from './setup.service';
 export * as oauthService from './oauth.service';
+export * as adminService from './admin.service';
+export type {
+  AdminStats,
+  AdminUser,
+  AdminUserDetail,
+  AdminOrganization,
+  AdminOrgDetail,
+  Pagination,
+} from './admin.service';

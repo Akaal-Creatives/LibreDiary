@@ -15,6 +15,7 @@ import { versionsRoutes } from './modules/collaboration/index.js';
 import { permissionsRoutes } from './modules/permissions/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
+import { adminRoutes } from './modules/admin/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -84,6 +85,9 @@ export async function buildApp() {
       await api.register(permissionsRoutes, {
         prefix: '/organizations/:orgId/pages/:pageId/permissions',
       });
+
+      // Admin routes (super admin only)
+      await api.register(adminRoutes, { prefix: '/admin' });
     },
     { prefix: '/api/v1' }
   );

@@ -110,6 +110,39 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/pages/PublicPageView.vue'),
     props: true,
   },
+  // Admin Routes (Super Admin only)
+  {
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresSuperAdmin: true },
+    children: [
+      {
+        path: '',
+        name: 'admin-home',
+        redirect: { name: 'admin-dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'admin-dashboard',
+        component: () => import('@/pages/admin/AdminDashboardPage.vue'),
+      },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('@/pages/admin/AdminUsersPage.vue'),
+      },
+      {
+        path: 'organizations',
+        name: 'admin-organizations',
+        component: () => import('@/pages/admin/AdminOrganizationsPage.vue'),
+      },
+      {
+        path: 'settings',
+        name: 'admin-settings',
+        component: () => import('@/pages/admin/AdminSettingsPage.vue'),
+      },
+    ],
+  },
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
@@ -192,6 +225,11 @@ router.beforeEach(async (to, _from, next) => {
   // Redirect authenticated users away from guest-only pages
   if (to.meta.guest && authStore.isAuthenticated) {
     return next({ name: 'app-home' });
+  }
+
+  // Check if route requires super admin access
+  if (to.meta.requiresSuperAdmin && !authStore.user?.isSuperAdmin) {
+    return next({ name: 'dashboard' });
   }
 
   next();
