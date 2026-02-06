@@ -390,6 +390,7 @@ function formatDate(dateString: string): string {
           :collaborative="!!documentName"
           :ydoc="ydoc"
           :provider="provider"
+          :provider-synced="isSynced"
           :user-name="userName"
           :user-color="userColor"
           @update:model-value="onContentUpdate"

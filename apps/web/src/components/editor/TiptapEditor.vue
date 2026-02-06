@@ -18,6 +18,7 @@ const props = withDefaults(
     collaborative?: boolean;
     ydoc?: Y.Doc | null;
     provider?: HocuspocusProvider | null;
+    providerSynced?: boolean;
     userName?: string;
     userColor?: string;
   }>(),
@@ -28,6 +29,7 @@ const props = withDefaults(
     collaborative: false,
     ydoc: null,
     provider: null,
+    providerSynced: false,
     userName: 'Anonymous',
     userColor: '#6B8F71',
   }
@@ -44,11 +46,13 @@ const editor = shallowRef<Editor | null>(null);
 const isCollaborativeEditor = ref(false);
 
 // Build extensions based on mode
-function buildExtensions(
-  forCollaborative: boolean,
-  ydoc?: Y.Doc | null,
-  provider?: HocuspocusProvider | null
-) {
+// Note: CollaborationCursor is temporarily disabled due to initialization issues
+// with the ySyncPlugin state not being accessible. This can be re-enabled once
+// the timing issue between Collaboration and CollaborationCursor is resolved.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _CollaborationCursor = CollaborationCursor; // Keep import for future use
+
+function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseExtensions: any[] = [
     StarterKit.configure({
@@ -73,37 +77,20 @@ function buildExtensions(
     }),
   ];
 
-  // Add collaboration extensions when in collaborative mode with ydoc
+  // Add Collaboration extension when in collaborative mode with ydoc
   if (forCollaborative && ydoc) {
     baseExtensions.push(
       Collaboration.configure({
         document: ydoc,
       })
     );
-
-    // Add cursor extension if provider is available
-    if (provider) {
-      baseExtensions.push(
-        CollaborationCursor.configure({
-          provider: provider,
-          user: {
-            name: props.userName,
-            color: props.userColor,
-          },
-        })
-      );
-    }
   }
 
   return baseExtensions;
 }
 
 // Create the editor
-function createEditor(
-  forCollaborative: boolean,
-  ydoc?: Y.Doc | null,
-  provider?: HocuspocusProvider | null
-) {
+function createEditor(forCollaborative: boolean, ydoc?: Y.Doc | null) {
   // Destroy existing editor
   if (editor.value) {
     editor.value.destroy();
@@ -113,7 +100,7 @@ function createEditor(
   editor.value = new Editor({
     content: forCollaborative ? undefined : props.modelValue,
     editable: props.editable,
-    extensions: buildExtensions(forCollaborative, ydoc, provider),
+    extensions: buildExtensions(forCollaborative, ydoc),
     onUpdate: ({ editor: e }) => {
       emit('update:modelValue', e.getHTML());
     },
@@ -129,10 +116,9 @@ try {
     // In collaborative mode, wait for ydoc to be available
     // Check that ydoc is a valid Y.Doc instance (not just truthy)
     if (props.ydoc && typeof props.ydoc.get === 'function') {
-      createEditor(true, props.ydoc, props.provider);
+      createEditor(true, props.ydoc);
     }
     // Otherwise, we'll create it when ydoc becomes available (via watch)
-    // OR fall back to non-collaborative mode after a timeout
     else {
       // Start in non-collaborative mode immediately to show something
       createEditor(false);
@@ -147,14 +133,18 @@ try {
 }
 
 // Watch for ydoc changes in collaborative mode
+// Note: CollaborationCursor is temporarily disabled due to initialization issues
+// TODO: Fix CollaborationCursor "Cannot read properties of undefined (reading 'doc')" error
 watch(
-  [() => props.ydoc, () => props.provider],
-  ([newYdoc, newProvider]) => {
+  () => props.ydoc,
+  (newYdoc, oldYdoc) => {
     try {
       // Check that ydoc is a valid Y.Doc instance
       if (props.collaborative && newYdoc && typeof newYdoc.get === 'function') {
-        // Create or recreate editor with collaboration
-        createEditor(true, newYdoc, newProvider);
+        // Only recreate if ydoc actually changed
+        if (newYdoc !== oldYdoc) {
+          createEditor(true, newYdoc);
+        }
       }
     } catch (e) {
       console.error('Error creating collaborative editor:', e);
