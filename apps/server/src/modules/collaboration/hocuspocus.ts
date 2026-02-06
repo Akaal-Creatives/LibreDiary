@@ -3,6 +3,25 @@ import * as Y from 'yjs';
 import * as collaborationService from './collaboration.service.js';
 import { getSessionByToken } from '../../services/session.service.js';
 
+const SESSION_COOKIE_NAME = 'session_token';
+
+/**
+ * Parse cookies from a cookie header string
+ */
+function parseCookies(cookieHeader: string | undefined): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+
+  cookieHeader.split(';').forEach((cookie) => {
+    const [name, ...rest] = cookie.split('=');
+    if (name && rest.length > 0) {
+      cookies[name.trim()] = rest.join('=').trim();
+    }
+  });
+
+  return cookies;
+}
+
 /**
  * Context passed through Hocuspocus hooks
  */
@@ -48,7 +67,17 @@ export function createHocuspocusServer(): Hocuspocus {
      * Authentication hook - validates session and page access
      */
     async onAuthenticate(data) {
-      const { documentName, token } = data;
+      const { documentName, requestHeaders } = data;
+
+      // Extract token from cookie header (browser sends cookies with WebSocket upgrade)
+      const cookies = parseCookies(requestHeaders?.cookie);
+      const cookieToken = cookies[SESSION_COOKIE_NAME];
+
+      // Also check for token passed directly from client (for non-browser clients)
+      const clientToken = data.token;
+
+      // Use cookie token first, fall back to client token
+      const token = cookieToken || clientToken;
 
       // Require authentication token
       if (!token) {
