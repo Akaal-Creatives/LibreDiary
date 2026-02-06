@@ -5,6 +5,7 @@ import { TiptapEditor } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import ShareModal from '@/components/ShareModal.vue';
+import PageCoverImage from '@/components/PageCoverImage.vue';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
@@ -245,6 +246,13 @@ function formatDate(dateString: string): string {
 
     <!-- Page Content -->
     <div v-else class="page-content">
+      <!-- Cover Image -->
+      <PageCoverImage
+        :cover-url="pagesStore.currentPage?.coverUrl ?? null"
+        :page-id="props.pageId"
+        @update="loadPage"
+      />
+
       <!-- Page Header -->
       <header class="page-header">
         <div class="icon-wrapper">

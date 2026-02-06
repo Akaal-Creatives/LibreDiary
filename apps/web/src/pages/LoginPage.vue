@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
-import { ApiError } from '@/services';
+import { ApiError, oauthService } from '@/services';
+import OAuthButtons from '@/components/OAuthButtons.vue';
+import AuthDivider from '@/components/AuthDivider.vue';
+import type { OAuthProvider } from '@librediary/shared';
 
 const router = useRouter();
 const route = useRoute();
@@ -14,6 +17,26 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref('');
+const oauthLoading = ref<OAuthProvider | null>(null);
+const configuredProviders = ref<OAuthProvider[]>([]);
+
+// Check for OAuth error from callback
+onMounted(async () => {
+  const oauthError = route.query.error as string;
+  if (oauthError) {
+    error.value = oauthError;
+    // Clean up URL
+    router.replace({ query: {} });
+  }
+
+  // Fetch configured OAuth providers
+  try {
+    configuredProviders.value = await oauthService.getConfiguredProviders();
+  } catch {
+    // OAuth providers not available - continue with email/password only
+    configuredProviders.value = [];
+  }
+});
 
 async function handleSubmit() {
   loading.value = true;
@@ -53,6 +76,22 @@ function goHome() {
 
 function goToForgotPassword() {
   router.push('/forgot-password');
+}
+
+async function handleOAuthClick(provider: OAuthProvider) {
+  oauthLoading.value = provider;
+  error.value = '';
+
+  try {
+    await oauthService.initiateOAuth(provider);
+  } catch (err) {
+    oauthLoading.value = null;
+    if (err instanceof ApiError) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to initiate OAuth login';
+    }
+  }
 }
 </script>
 
@@ -128,6 +167,17 @@ function goToForgotPassword() {
           <h1>Welcome back</h1>
           <p>Sign in to continue to your workspace</p>
         </div>
+
+        <!-- OAuth Buttons -->
+        <OAuthButtons
+          v-if="configuredProviders.length > 0"
+          mode="login"
+          :available-providers="configuredProviders"
+          :loading-provider="oauthLoading"
+          @click="handleOAuthClick"
+        />
+
+        <AuthDivider v-if="configuredProviders.length > 0" text="or continue with email" />
 
         <form class="login-form" @submit.prevent="handleSubmit">
           <div v-if="error" class="error-message">

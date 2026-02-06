@@ -66,6 +66,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         data: {
           user: sanitizeUser(result.user),
           organizations: result.organizations,
+          memberships: result.memberships,
         },
       };
     } catch (error) {
@@ -110,6 +111,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         data: {
           user: sanitizeUser(result.user),
           organizations: result.organizations,
+          memberships: result.memberships,
         },
       };
     } catch (error) {
@@ -160,6 +162,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           data: {
             user: sanitizeUser(result.user),
             organizations: result.organizations,
+            memberships: result.memberships,
           },
         };
       } catch {

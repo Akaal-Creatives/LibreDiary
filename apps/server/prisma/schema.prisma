@@ -37,6 +37,7 @@ model User {
   createdPages       Page[]               @relation("PageCreatedBy")
   updatedPages       Page[]               @relation("PageUpdatedBy")
   sessions           Session[]
+  accounts           Account[]            // OAuth linked accounts
   invitesSent        Invite[]             @relation("InvitesSent")
   favorites          Favorite[]
   pageVersions       PageVersion[]        @relation("PageVersionCreatedBy")
@@ -61,6 +62,29 @@ model Session {
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
+}
+
+// OAuth linked accounts (GitHub, Google, etc.)
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String // "github", "google"
+  providerAccountId String // The user's ID from the OAuth provider
+
+  // OAuth tokens (optional, stored if needed for API calls)
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId]) // One account per provider per user
+  @@unique([userId, provider])            // User can only link one account per provider
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -112,7 +136,7 @@ model Organization {
   accentColor String? @default("#6366f1") // Indigo
 
   // Settings
-  allowedDomain String? // Domain lockdown (e.g., "company.com")
+  allowedDomains String[] @default([]) // Domain lockdown (e.g., ["company.com", "corp.com"])
 
   // AI Settings
   aiEnabled Boolean @default(true)

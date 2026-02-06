@@ -20,13 +20,19 @@ const selectedMemberAction = ref<'role' | 'remove' | null>(null);
 const newRole = ref<OrgRole>('MEMBER');
 const actionLoading = ref(false);
 
-// Load members
-async function loadMembers() {
+// Invite actions
+const inviteActionLoading = ref<string | null>(null);
+
+// Load members and invites
+async function loadData() {
   loading.value = true;
   error.value = null;
   try {
     await orgsStore.fetchOrganization();
-    await orgsStore.fetchMembers();
+    await Promise.all([
+      orgsStore.fetchMembers(),
+      orgsStore.canManageInvites ? orgsStore.fetchInvites() : Promise.resolve(),
+    ]);
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.message;
@@ -42,11 +48,11 @@ async function loadMembers() {
 watch(
   () => authStore.currentOrganizationId,
   () => {
-    loadMembers();
+    loadData();
   }
 );
 
-onMounted(loadMembers);
+onMounted(loadData);
 
 // Check if current user can modify a member
 function canModifyMember(memberRole: OrgRole, memberUserId: string): boolean {
@@ -119,6 +125,42 @@ async function handleRemoveMember() {
   }
 }
 
+// Handle cancel invite
+async function handleCancelInvite(inviteId: string) {
+  inviteActionLoading.value = inviteId;
+  error.value = null;
+
+  try {
+    await orgsStore.cancelInvite(inviteId);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to cancel invite';
+    }
+  } finally {
+    inviteActionLoading.value = null;
+  }
+}
+
+// Handle resend invite
+async function handleResendInvite(inviteId: string) {
+  inviteActionLoading.value = inviteId;
+  error.value = null;
+
+  try {
+    await orgsStore.resendInvite(inviteId);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to resend invite';
+    }
+  } finally {
+    inviteActionLoading.value = null;
+  }
+}
+
 // Get selected member info
 const selectedMemberInfo = computed(() => {
   if (!selectedMember.value) return null;
@@ -136,6 +178,34 @@ const availableRoles = computed<{ value: OrgRole; label: string }[]>(() => {
   }
   return [{ value: 'MEMBER', label: 'Member' }];
 });
+
+// Filter pending invites
+const pendingInvites = computed(() => {
+  return orgsStore.invites.filter((invite) => invite.status === 'PENDING');
+});
+
+// Format relative time
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return date.toLocaleDateString();
+}
+
+// Check if invite is expiring soon (within 2 days)
+function isExpiringSoon(expiresAt: string): boolean {
+  const expiry = new Date(expiresAt);
+  const now = new Date();
+  const diffMs = expiry.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays <= 2 && diffDays > 0;
+}
 </script>
 
 <template>
@@ -173,65 +243,210 @@ const availableRoles = computed<{ value: OrgRole; label: string }[]>(() => {
       <p>Loading members...</p>
     </div>
 
-    <div v-else class="members-list">
-      <div v-for="member in orgsStore.members" :key="member.id" class="member-card">
-        <div class="member-avatar">
-          {{
-            member.user.name?.charAt(0).toUpperCase() || member.user.email.charAt(0).toUpperCase()
-          }}
-        </div>
-        <div class="member-info">
-          <div class="member-name">
-            {{ member.user.name || member.user.email }}
-            <span v-if="member.userId === authStore.user?.id" class="you-badge">(You)</span>
+    <template v-else>
+      <!-- Pending Invites Section -->
+      <section
+        v-if="orgsStore.canManageInvites && pendingInvites.length > 0"
+        class="invites-section"
+      >
+        <div class="section-header">
+          <div class="section-title-row">
+            <svg class="section-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M15 6L9 10.5L3 6"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <rect
+                x="2"
+                y="3"
+                width="14"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+            <h2 class="section-title">Pending Invitations</h2>
+            <span class="invite-count">{{ pendingInvites.length }}</span>
           </div>
-          <div class="member-email">{{ member.user.email }}</div>
         </div>
-        <MemberRoleBadge :role="member.role" />
-        <div v-if="canModifyMember(member.role, member.userId)" class="member-actions">
-          <button
-            class="action-btn"
-            title="Change role"
-            @click="openRoleChange(member.id, member.role)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 12.5L6 9L2.5 5.5M9 3H13.5M9 8H11.5M9 13H13.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            class="action-btn action-danger"
-            title="Remove member"
-            @click="openRemoveConfirm(member.id)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 4.5H13.5M6 4.5V3C6 2.44772 6.44772 2 7 2H9C9.55228 2 10 2.44772 10 3V4.5M12 4.5V13C12 13.5523 11.5523 14 11 14H5C4.44772 14 4 13.5523 4 13V4.5H12Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      <div v-if="orgsStore.members.length === 0" class="empty-state">
-        <p>No members found</p>
-      </div>
-    </div>
+        <div class="invites-list">
+          <div v-for="invite in pendingInvites" :key="invite.id" class="invite-card">
+            <div class="invite-avatar">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="6" r="3" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M3 16C3 12.6863 5.68629 10 9 10C12.3137 10 15 12.6863 15 16"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div class="invite-info">
+              <div class="invite-email">{{ invite.email }}</div>
+              <div class="invite-meta">
+                <MemberRoleBadge :role="invite.role" />
+                <span class="invite-separator">·</span>
+                <span class="invite-date">Invited {{ formatRelativeTime(invite.createdAt) }}</span>
+                <template v-if="isExpiringSoon(invite.expiresAt)">
+                  <span class="invite-separator">·</span>
+                  <span class="invite-expiring">Expires soon</span>
+                </template>
+              </div>
+            </div>
+            <div class="invite-actions">
+              <button
+                class="action-btn"
+                title="Resend invitation"
+                :disabled="inviteActionLoading === invite.id"
+                @click="handleResendInvite(invite.id)"
+              >
+                <svg
+                  v-if="inviteActionLoading === invite.id"
+                  class="spinner"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-dasharray="28"
+                    stroke-dashoffset="7"
+                  />
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M8 1V5M8 1L5 3.5M8 1L11 3.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                class="action-btn action-danger"
+                title="Cancel invitation"
+                :disabled="inviteActionLoading === invite.id"
+                @click="handleCancelInvite(invite.id)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M4 4L12 12M12 4L4 12"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Members Section -->
+      <section class="members-section">
+        <div class="section-header">
+          <div class="section-title-row">
+            <svg class="section-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="7" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M2 15C2 11.6863 4.23858 9 7 9C9.76142 9 12 11.6863 12 15"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M16 15C16 12.7909 14.433 11 12.5 11"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <h2 class="section-title">Members</h2>
+            <span class="member-count">{{ orgsStore.members.length }}</span>
+          </div>
+        </div>
+
+        <div class="members-list">
+          <div v-for="member in orgsStore.members" :key="member.id" class="member-card">
+            <div class="member-avatar">
+              {{
+                member.user.name?.charAt(0).toUpperCase() ||
+                member.user.email.charAt(0).toUpperCase()
+              }}
+            </div>
+            <div class="member-info">
+              <div class="member-name">
+                {{ member.user.name || member.user.email }}
+                <span v-if="member.userId === authStore.user?.id" class="you-badge">(You)</span>
+              </div>
+              <div class="member-email">{{ member.user.email }}</div>
+            </div>
+            <MemberRoleBadge :role="member.role" />
+            <div v-if="canModifyMember(member.role, member.userId)" class="member-actions">
+              <button
+                class="action-btn"
+                title="Change role"
+                @click="openRoleChange(member.id, member.role)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2.5 12.5L6 9L2.5 5.5M9 3H13.5M9 8H11.5M9 13H13.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                class="action-btn action-danger"
+                title="Remove member"
+                @click="openRemoveConfirm(member.id)"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2.5 4.5H13.5M6 4.5V3C6 2.44772 6.44772 2 7 2H9C9.55228 2 10 2.44772 10 3V4.5M12 4.5V13C12 13.5523 11.5523 14 11 14H5C4.44772 14 4 13.5523 4 13V4.5H12Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="orgsStore.members.length === 0" class="empty-state">
+            <p>No members found</p>
+          </div>
+        </div>
+      </section>
+    </template>
 
     <!-- Invite Modal -->
     <InviteMemberModal
       :open="showInviteModal"
       @close="showInviteModal = false"
-      @invited="loadMembers()"
+      @invited="loadData()"
     />
 
     <!-- Role Change Modal -->
@@ -320,7 +535,7 @@ const availableRoles = computed<{ value: OrgRole; label: string }[]>(() => {
 .members-page {
   max-width: 720px;
   margin: 0 auto;
-  padding: var(--space-6) 0;
+  padding: var(--space-6) var(--space-4);
 }
 
 .page-header {
@@ -424,6 +639,119 @@ const availableRoles = computed<{ value: OrgRole; label: string }[]>(() => {
   }
 }
 
+/* Section Styles */
+.invites-section,
+.members-section {
+  margin-bottom: var(--space-6);
+}
+
+.section-header {
+  margin-bottom: var(--space-3);
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.section-icon {
+  color: var(--color-text-tertiary);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.invite-count,
+.member-count {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-full);
+}
+
+/* Invites List */
+.invites-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.invite-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.invite-card:hover {
+  border-color: var(--color-border-strong);
+  border-style: solid;
+}
+
+.invite-avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-full);
+}
+
+.invite-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-email {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.invite-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.invite-separator {
+  color: var(--color-border-strong);
+}
+
+.invite-date {
+  color: var(--color-text-tertiary);
+}
+
+.invite-expiring {
+  color: var(--color-warning);
+  font-weight: 500;
+}
+
+.invite-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* Members List */
 .members-list {
   display: flex;
   flex-direction: column;
@@ -503,14 +831,23 @@ const availableRoles = computed<{ value: OrgRole; label: string }[]>(() => {
   transition: all var(--transition-fast);
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
   background: var(--color-hover);
 }
 
-.action-btn.action-danger:hover {
+.action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.action-btn.action-danger:hover:not(:disabled) {
   color: var(--color-error);
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
 }
 
 .empty-state {

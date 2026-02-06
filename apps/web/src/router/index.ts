@@ -90,6 +90,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/app/settings/InvitesPage.vue'),
         meta: { minRole: 'ADMIN' },
       },
+      // User Settings
+      {
+        path: 'settings/sessions',
+        name: 'user-sessions',
+        component: () => import('@/pages/app/settings/SessionsPage.vue'),
+      },
       // Create Organization
       {
         path: 'create-organization',

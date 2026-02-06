@@ -106,8 +106,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create session management (cookies)
 - [x] Add session table in Prisma
 - [x] Implement auth middleware
-- [ ] Create login page (frontend)
-- [ ] Create registration page (invite-only) (frontend)
+- [x] Create login page (frontend)
+- [x] Create registration page (invite-only) (frontend)
 - [x] Add form validation with Zod schemas
 
 ### 2.2 Email Verification
@@ -116,7 +116,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement email sending service (SMTP)
 - [x] Create verification email template
 - [x] Add verify-email endpoint
-- [ ] Create email verification page (frontend)
+- [x] Create email verification page (frontend)
 
 ### 2.3 Password Reset
 
@@ -124,23 +124,23 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create reset email template
 - [x] Add forgot-password endpoint
 - [x] Add reset-password endpoint
-- [ ] Create forgot password page (frontend)
-- [ ] Create reset password page (frontend)
+- [x] Create forgot password page (frontend)
+- [x] Create reset password page (frontend)
 
 ### 2.4 OAuth Integration
 
-- [ ] Install Better Auth + Arctic
-- [ ] Configure GitHub OAuth provider
-- [ ] Configure Google OAuth provider
-- [ ] Create Account model for OAuth links
-- [ ] Handle OAuth callback routing
-- [ ] Link OAuth accounts to existing users
+- [x] Install Better Auth + Arctic
+- [x] Configure GitHub OAuth provider
+- [x] Configure Google OAuth provider
+- [x] Create Account model for OAuth links
+- [x] Handle OAuth callback routing
+- [x] Link OAuth accounts to existing users
 
 ### 2.5 Session Management
 
 - [x] Add session listing endpoint
 - [x] Add session revocation endpoint
-- [ ] Create sessions management UI (frontend)
+- [x] Create sessions management UI (frontend)
 - [x] Track last active time, IP, user agent
 
 ---

@@ -18,7 +18,7 @@ const success = ref<string | null>(null);
 const form = ref({
   name: '',
   slug: '',
-  allowedDomain: '',
+  allowedDomains: '', // Comma-separated domains for simple UI
   aiEnabled: true,
 });
 
@@ -34,7 +34,7 @@ async function loadData() {
       form.value = {
         name: currentOrg.value.name,
         slug: currentOrg.value.slug,
-        allowedDomain: currentOrg.value.allowedDomain || '',
+        allowedDomains: currentOrg.value.allowedDomains?.join(', ') || '',
         aiEnabled: currentOrg.value.aiEnabled,
       };
     }
@@ -65,13 +65,25 @@ async function handleSave() {
   success.value = null;
 
   try {
+    // Convert comma-separated domains to array
+    const domainsArray = form.value.allowedDomains
+      ? form.value.allowedDomains
+          .split(',')
+          .map((d) => d.trim().toLowerCase())
+          .filter((d) => d.length > 0)
+      : [];
+
     await orgsStore.updateOrganization({
       name: form.value.name,
       slug: form.value.slug,
-      allowedDomain: form.value.allowedDomain || null,
+      allowedDomains: domainsArray,
       aiEnabled: form.value.aiEnabled,
     });
     success.value = 'Settings saved successfully';
+    // Auto-hide success after 3s
+    setTimeout(() => {
+      success.value = null;
+    }, 3000);
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.message;
@@ -121,120 +133,283 @@ async function handleDelete() {
 
 <template>
   <div class="settings-page">
-    <div class="settings-header">
-      <h1 class="settings-title">Organization Settings</h1>
-      <p class="settings-subtitle">Manage your organization's profile and settings</p>
-    </div>
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-description">Manage your organization's profile, security, and features</p>
+      </div>
+      <div v-if="currentOrg" class="org-badge">
+        <span
+          class="org-avatar"
+          :style="{ backgroundColor: currentOrg.accentColor || 'var(--color-accent)' }"
+        >
+          {{ currentOrg.name.charAt(0).toUpperCase() }}
+        </span>
+        <span class="org-name">{{ currentOrg.name }}</span>
+      </div>
+    </header>
 
+    <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="loading-spinner"></div>
       <p>Loading settings...</p>
     </div>
 
     <template v-else>
-      <div v-if="error" class="alert alert-error">
-        {{ error }}
-      </div>
+      <!-- Notifications -->
+      <Transition name="slide-fade">
+        <div v-if="error" class="notification notification--error">
+          <svg class="notification-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M9 5V10M9 12.5V13"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>{{ error }}</span>
+          <button class="notification-close" @click="error = null">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M3 3L11 11M11 3L3 11"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </Transition>
 
-      <div v-if="success" class="alert alert-success">
-        {{ success }}
-      </div>
+      <Transition name="slide-fade">
+        <div v-if="success" class="notification notification--success">
+          <svg class="notification-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M5.5 9L8 11.5L12.5 6.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>{{ success }}</span>
+        </div>
+      </Transition>
 
       <form class="settings-form" @submit.prevent="handleSave">
         <!-- General Settings -->
         <section class="settings-section">
-          <h2 class="section-title">General</h2>
-
-          <div class="form-group">
-            <label for="org-name" class="form-label">Organization name</label>
-            <input
-              id="org-name"
-              v-model="form.name"
-              type="text"
-              class="form-input"
-              :disabled="saving || !orgsStore.canManageSettings"
-            />
+          <div class="section-header">
+            <div class="section-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect
+                  x="3"
+                  y="3"
+                  width="14"
+                  height="14"
+                  rx="3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M7 10H13M7 7H10"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div class="section-header-text">
+              <h2 class="section-title">General</h2>
+              <p class="section-description">Basic organization information</p>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="org-slug" class="form-label">URL slug</label>
-            <div class="input-prefix-wrapper">
-              <span class="input-prefix">librediary.app/</span>
+          <div class="section-content">
+            <div class="field">
+              <label for="org-name" class="field-label">Organization name</label>
               <input
-                id="org-slug"
-                v-model="form.slug"
+                id="org-name"
+                v-model="form.name"
                 type="text"
-                class="form-input slug-input"
+                class="field-input"
+                placeholder="Acme Inc."
                 :disabled="saving || !orgsStore.canManageSettings"
               />
             </div>
-            <p class="form-help">Used in URLs to identify your organization</p>
+
+            <div class="field">
+              <label for="org-slug" class="field-label">URL slug</label>
+              <div class="field-input-group">
+                <span class="field-prefix">librediary.app/</span>
+                <input
+                  id="org-slug"
+                  v-model="form.slug"
+                  type="text"
+                  class="field-input field-input--grouped"
+                  placeholder="acme"
+                  :disabled="saving || !orgsStore.canManageSettings"
+                />
+              </div>
+              <p class="field-hint">Used in URLs to identify your organization</p>
+            </div>
           </div>
         </section>
 
         <!-- Security Settings (Owner only) -->
         <section v-if="orgsStore.isOwner" class="settings-section">
-          <h2 class="section-title">Security</h2>
-
-          <div class="form-group">
-            <label for="allowed-domain" class="form-label">Email domain lockdown</label>
-            <input
-              id="allowed-domain"
-              v-model="form.allowedDomain"
-              type="text"
-              class="form-input"
-              placeholder="example.com"
-              :disabled="saving"
-            />
-            <p class="form-help">
-              Only allow invites to email addresses from this domain. Leave empty to allow any
-              domain.
-            </p>
-          </div>
-        </section>
-
-        <!-- AI Settings -->
-        <section class="settings-section">
-          <h2 class="section-title">Features</h2>
-
-          <div class="form-group toggle-group">
-            <div class="toggle-content">
-              <label for="ai-enabled" class="form-label">AI Features</label>
-              <p class="form-help">Enable AI-powered writing assistance and suggestions</p>
+          <div class="section-header">
+            <div class="section-icon section-icon--security">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 2L3 5V9.5C3 13.64 5.95 17.52 10 18.5C14.05 17.52 17 13.64 17 9.5V5L10 2Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M7 10L9 12L13 8"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </div>
-            <label class="toggle">
+            <div class="section-header-text">
+              <h2 class="section-title">Security</h2>
+              <p class="section-description">Control who can join your organization</p>
+            </div>
+          </div>
+
+          <div class="section-content">
+            <div class="field">
+              <label for="allowed-domains" class="field-label">
+                Email domain restriction
+                <span class="field-label-badge">Owner only</span>
+              </label>
               <input
-                id="ai-enabled"
-                v-model="form.aiEnabled"
-                type="checkbox"
-                :disabled="saving || !orgsStore.canManageSettings"
+                id="allowed-domains"
+                v-model="form.allowedDomains"
+                type="text"
+                class="field-input"
+                placeholder="example.com, company.org"
+                :disabled="saving"
               />
-              <span class="toggle-slider"></span>
-            </label>
+              <p class="field-hint">
+                Only allow invites to email addresses from these domains. Separate multiple domains
+                with commas. Leave empty to allow any domain.
+              </p>
+            </div>
           </div>
         </section>
 
-        <!-- Save Button -->
+        <!-- Features Settings -->
+        <section class="settings-section">
+          <div class="section-header">
+            <div class="section-icon section-icon--features">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 2L12.09 7.26L18 8.27L14 12.14L14.82 18.02L10 15.27L5.18 18.02L6 12.14L2 8.27L7.91 7.26L10 2Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="section-header-text">
+              <h2 class="section-title">Features</h2>
+              <p class="section-description">Enable or disable capabilities</p>
+            </div>
+          </div>
+
+          <div class="section-content">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">AI-powered writing</div>
+                <p class="toggle-description">
+                  Enable intelligent writing assistance, suggestions, and content generation
+                </p>
+              </div>
+              <label class="toggle">
+                <input
+                  id="ai-enabled"
+                  v-model="form.aiEnabled"
+                  type="checkbox"
+                  :disabled="saving || !orgsStore.canManageSettings"
+                />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Save Actions -->
         <div v-if="orgsStore.canManageSettings" class="form-actions">
-          <button type="submit" class="btn btn-primary" :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save Changes' }}
+          <button type="submit" class="btn btn--primary" :disabled="saving">
+            <svg
+              v-if="saving"
+              class="btn-spinner"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-dasharray="28"
+                stroke-dashoffset="7"
+              />
+            </svg>
+            <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
           </button>
         </div>
       </form>
 
       <!-- Danger Zone (Owner only) -->
-      <section v-if="orgsStore.isOwner" class="settings-section danger-zone">
-        <h2 class="section-title">Danger Zone</h2>
+      <section v-if="orgsStore.isOwner" class="danger-zone">
+        <div class="danger-header">
+          <svg class="danger-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 2L18 17H2L10 2Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10 8V11M10 14V14.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <h2 class="danger-title">Danger Zone</h2>
+        </div>
 
         <div class="danger-card">
           <div class="danger-content">
-            <h3>Delete organization</h3>
-            <p>
-              Permanently delete this organization and all its data. This action cannot be undone.
+            <h3 class="danger-action-title">Delete this organization</h3>
+            <p class="danger-action-description">
+              Once deleted, all pages, members, and settings will be permanently removed. This
+              action cannot be undone.
             </p>
           </div>
-          <button class="btn btn-danger" :disabled="saving" @click="openDeleteConfirm">
-            Delete Organization
+          <button
+            type="button"
+            class="btn btn--danger"
+            :disabled="saving"
+            @click="openDeleteConfirm"
+          >
+            Delete organization
           </button>
         </div>
       </section>
@@ -243,36 +418,69 @@ async function handleDelete() {
     <!-- Delete Confirmation Modal -->
     <Teleport to="body">
       <Transition name="modal">
-        <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="closeDeleteConfirm">
-          <div class="modal danger-modal">
+        <div v-if="showDeleteConfirm" class="modal-backdrop" @click.self="closeDeleteConfirm">
+          <div class="modal modal--danger">
             <div class="modal-header">
+              <div class="modal-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3L21 20H3L12 3Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M12 10V13M12 16V16.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
               <h2 class="modal-title">Delete Organization</h2>
             </div>
+
             <div class="modal-body">
-              <p class="danger-warning">
+              <p class="modal-text">
                 This will permanently delete <strong>{{ currentOrg?.name }}</strong> and all
-                associated data including pages, members, and settings.
+                associated data including:
               </p>
-              <div class="form-group">
-                <label class="form-label">
-                  Type <strong>{{ currentOrg?.name }}</strong> to confirm:
+              <ul class="modal-list">
+                <li>All pages and their content</li>
+                <li>Member access and invitations</li>
+                <li>Organization settings</li>
+              </ul>
+
+              <div class="field">
+                <label class="field-label">
+                  Type <code class="confirm-code">{{ currentOrg?.name }}</code> to confirm
                 </label>
                 <input
                   v-model="deleteConfirmText"
                   type="text"
-                  class="form-input"
+                  class="field-input"
                   :placeholder="currentOrg?.name"
+                  autocomplete="off"
                 />
               </div>
             </div>
-            <div class="modal-actions">
-              <button class="btn btn-secondary" @click="closeDeleteConfirm">Cancel</button>
+
+            <div class="modal-footer">
               <button
-                class="btn btn-danger"
+                type="button"
+                class="btn btn--ghost"
+                :disabled="saving"
+                @click="closeDeleteConfirm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn--danger"
                 :disabled="deleteConfirmText !== currentOrg?.name || saving"
                 @click="handleDelete"
               >
-                {{ saving ? 'Deleting...' : 'Delete Organization' }}
+                {{ saving ? 'Deleting...' : 'I understand, delete this organization' }}
               </button>
             </div>
           </div>
@@ -284,43 +492,84 @@ async function handleDelete() {
 
 <style scoped>
 .settings-page {
-  max-width: 640px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: var(--space-6) 0;
+  padding: var(--space-8) var(--space-4);
 }
 
-.settings-header {
+/* Page Header */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.settings-title {
-  margin: 0 0 var(--space-2);
+.header-content {
+  flex: 1;
+}
+
+.page-title {
+  margin: 0 0 var(--space-1);
   font-size: var(--text-2xl);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
+  letter-spacing: -0.02em;
 }
 
-.settings-subtitle {
+.page-description {
   margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.org-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-full);
+}
+
+.org-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+.org-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--color-text-secondary);
 }
 
+/* Loading State */
 .loading-state {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
   align-items: center;
+  gap: var(--space-4);
   padding: var(--space-16) 0;
   color: var(--color-text-tertiary);
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--color-border);
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-border);
   border-top-color: var(--color-accent);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -329,56 +578,180 @@ async function handleDelete() {
   }
 }
 
-.alert {
+/* Notifications */
+.notification {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-lg);
+  animation: slideIn 0.2s ease-out;
 }
 
-.alert-error {
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.notification--error {
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-error) 8%, transparent),
+    color-mix(in srgb, var(--color-error) 4%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
 }
 
-.alert-success {
+.notification--success {
   color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-success) 8%, transparent),
+    color-mix(in srgb, var(--color-success) 4%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
 }
 
+.notification-icon {
+  flex-shrink: 0;
+}
+
+.notification-close {
+  margin-left: auto;
+  padding: var(--space-1);
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* Slide-fade transition */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Settings Sections */
 .settings-section {
-  padding: var(--space-6);
   margin-bottom: var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.settings-section:hover {
+  border-color: var(--color-border-strong);
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 3%, var(--color-surface)) 0%,
+    var(--color-surface) 100%
+  );
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-md);
+}
+
+.section-icon--security {
+  color: #5a9a6b;
+  background: rgba(90, 154, 107, 0.1);
+}
+
+.section-icon--features {
+  color: #c4973b;
+  background: rgba(196, 151, 59, 0.1);
+}
+
+.section-header-text {
+  flex: 1;
+  padding-top: 2px;
 }
 
 .section-title {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-lg);
+  margin: 0 0 2px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.form-group {
-  margin-bottom: var(--space-4);
+.section-description {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
 }
 
-.form-group:last-child {
+.section-content {
+  padding: var(--space-5);
+}
+
+/* Form Fields */
+.field {
+  margin-bottom: var(--space-5);
+}
+
+.field:last-child {
   margin-bottom: 0;
 }
 
-.form-label {
-  display: block;
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin-bottom: var(--space-2);
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.form-input {
+.field-label-badge {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.field-input {
   width: 100%;
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   font-family: inherit;
   font-size: var(--text-sm);
   color: var(--color-text-primary);
@@ -386,135 +759,172 @@ async function handleDelete() {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all var(--transition-fast);
 }
 
-.form-input:focus {
+.field-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.field-input:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+}
+
+.field-input:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-focus-ring);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--color-focus-ring);
 }
 
-.form-input:disabled {
+.field-input:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-.input-prefix-wrapper {
+.field-input-group {
   display: flex;
-  align-items: stretch;
-  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all var(--transition-fast);
 }
 
-.input-prefix-wrapper:focus-within {
+.field-input-group:hover {
+  border-color: var(--color-border-strong);
+}
+
+.field-input-group:focus-within {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
-.input-prefix {
+.field-prefix {
   display: flex;
   align-items: center;
   padding: 0 var(--space-3);
-  font-size: var(--text-sm);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+  white-space: nowrap;
   background: var(--color-surface-sunken);
   border-right: 1px solid var(--color-border);
 }
 
-.slug-input {
+.field-input--grouped {
   border: none;
   border-radius: 0;
   box-shadow: none;
 }
 
-.slug-input:focus {
+.field-input--grouped:focus {
   box-shadow: none;
 }
 
-.form-help {
-  margin-top: var(--space-2);
+.field-hint {
+  margin: var(--space-2) 0 0;
   font-size: var(--text-xs);
+  line-height: 1.5;
   color: var(--color-text-tertiary);
 }
 
-.toggle-group {
+/* Toggle Row */
+.toggle-row {
   display: flex;
-  gap: var(--space-4);
   align-items: flex-start;
   justify-content: space-between;
+  gap: var(--space-4);
 }
 
-.toggle-content {
+.toggle-info {
   flex: 1;
 }
 
-.toggle-content .form-label {
+.toggle-label {
   margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
-.toggle-content .form-help {
-  margin-top: 0;
+.toggle-description {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
 }
 
+/* Custom Toggle */
 .toggle {
   position: relative;
-  display: inline-block;
   flex-shrink: 0;
-  width: 44px;
-  height: 24px;
+  cursor: pointer;
 }
 
 .toggle input {
-  width: 0;
-  height: 0;
-  opacity: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.toggle-slider {
-  position: absolute;
-  inset: 0;
-  cursor: pointer;
+.toggle-track {
+  display: flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  padding: 2px;
   background: var(--color-border-strong);
-  border-radius: 24px;
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
 }
 
-.toggle-slider::before {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  content: '';
-  background: white;
-  border-radius: 50%;
-  transition: all var(--transition-fast);
-}
-
-.toggle input:checked + .toggle-slider {
+.toggle input:checked + .toggle-track {
   background: var(--color-accent);
 }
 
-.toggle input:checked + .toggle-slider::before {
+.toggle input:disabled + .toggle-track {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.toggle-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform var(--transition-fast);
+}
+
+.toggle input:checked + .toggle-track .toggle-thumb {
   transform: translateX(20px);
 }
 
-.toggle input:disabled + .toggle-slider {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
+/* Form Actions */
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  margin-bottom: var(--space-8);
 }
 
+/* Buttons */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-5);
   font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   border: none;
   border-radius: var(--radius-md);
@@ -523,67 +933,125 @@ async function handleDelete() {
 
 .btn:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-.btn-primary {
+.btn--primary {
   color: white;
   background: var(--color-accent);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary:hover:not(:disabled) {
+.btn--primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.btn-secondary {
+.btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn--ghost {
   color: var(--color-text-secondary);
-  background: var(--color-surface-sunken);
+  background: transparent;
 }
 
-.btn-secondary:hover:not(:disabled) {
+.btn--ghost:hover:not(:disabled) {
+  color: var(--color-text-primary);
   background: var(--color-hover);
 }
 
-.btn-danger {
+.btn--danger {
   color: white;
   background: var(--color-error);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.btn-danger:hover:not(:disabled) {
-  filter: brightness(0.9);
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn--danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-spinner {
+  animation: spin 0.8s linear infinite;
 }
 
 /* Danger Zone */
 .danger-zone {
-  border-color: var(--color-error);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px dashed var(--color-border);
 }
 
-.danger-zone .section-title {
+.danger-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.danger-icon {
   color: var(--color-error);
+}
+
+.danger-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-error);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .danger-card {
   display: flex;
-  gap: var(--space-4);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-error) 4%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-error) 2%, var(--color-surface)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  border-radius: var(--radius-lg);
 }
 
-.danger-content h3 {
+.danger-content {
+  flex: 1;
+}
+
+.danger-action-title {
   margin: 0 0 var(--space-1);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.danger-content p {
+.danger-action-description {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
 /* Modal */
-.modal-overlay {
+.modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -591,54 +1059,97 @@ async function handleDelete() {
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
 .modal {
   width: 100%;
   max-width: 440px;
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
+  overflow: hidden;
 }
 
-.danger-modal {
-  border: 2px solid var(--color-error);
+.modal--danger {
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .modal-header {
-  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-error) 6%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-error) 3%, var(--color-surface)) 100%
+  );
   border-bottom: 1px solid var(--color-border);
+}
+
+.modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-radius: var(--radius-md);
 }
 
 .modal-title {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--color-error);
+  color: var(--color-text-primary);
 }
 
 .modal-body {
-  padding: var(--space-6);
+  padding: var(--space-5);
 }
 
-.danger-warning {
-  margin: 0 0 var(--space-4);
+.modal-text {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 
-.modal-actions {
+.modal-list {
+  margin: 0 0 var(--space-5);
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.modal-list li {
+  margin-bottom: var(--space-1);
+}
+
+.confirm-code {
+  padding: 2px 6px;
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.modal-footer {
   display: flex;
   gap: var(--space-3);
   justify-content: flex-end;
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface-sunken);
   border-top: 1px solid var(--color-border);
 }
 
-/* Transitions */
+/* Modal Transitions */
 .modal-enter-active,
 .modal-leave-active {
-  transition: all var(--transition-normal);
+  transition: all 0.2s ease;
 }
 
 .modal-enter-from,
@@ -649,5 +1160,10 @@ async function handleDelete() {
 .modal-enter-from .modal,
 .modal-leave-to .modal {
   transform: scale(0.95) translateY(10px);
+}
+
+.modal-enter-active .modal,
+.modal-leave-active .modal {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>

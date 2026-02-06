@@ -43,6 +43,7 @@ export interface AuthResult {
   user: User;
   session: Session;
   organizations: Organization[];
+  memberships: Array<{ organizationId: string; role: string }>;
 }
 
 export interface InviteInput {
@@ -147,7 +148,7 @@ export async function register(
   await sendVerificationEmail(email, verificationToken, result.name);
 
   // Get organizations
-  const memberships = await prisma.organizationMember.findMany({
+  const membershipRecords = await prisma.organizationMember.findMany({
     where: { userId: result.id },
     include: { organization: true },
   });
@@ -155,7 +156,11 @@ export async function register(
   return {
     user: result,
     session,
-    organizations: memberships.map((m) => m.organization),
+    organizations: membershipRecords.map((m) => m.organization),
+    memberships: membershipRecords.map((m) => ({
+      organizationId: m.organizationId,
+      role: m.role,
+    })),
   };
 }
 
@@ -195,7 +200,7 @@ export async function login(
   });
 
   // Get organizations
-  const memberships = await prisma.organizationMember.findMany({
+  const membershipRecords = await prisma.organizationMember.findMany({
     where: { userId: user.id },
     include: { organization: true },
   });
@@ -203,7 +208,11 @@ export async function login(
   return {
     user,
     session,
-    organizations: memberships.map((m) => m.organization),
+    organizations: membershipRecords.map((m) => m.organization),
+    memberships: membershipRecords.map((m) => ({
+      organizationId: m.organizationId,
+      role: m.role,
+    })),
   };
 }
 
@@ -220,6 +229,7 @@ export async function logout(sessionToken: string): Promise<void> {
 export async function getCurrentUser(userId: string): Promise<{
   user: User;
   organizations: Organization[];
+  memberships: Array<{ organizationId: string; role: string }>;
 }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -229,14 +239,18 @@ export async function getCurrentUser(userId: string): Promise<{
     throw new Error('User not found');
   }
 
-  const memberships = await prisma.organizationMember.findMany({
+  const membershipRecords = await prisma.organizationMember.findMany({
     where: { userId },
     include: { organization: true },
   });
 
   return {
     user,
-    organizations: memberships.map((m) => m.organization),
+    organizations: membershipRecords.map((m) => m.organization),
+    memberships: membershipRecords.map((m) => ({
+      organizationId: m.organizationId,
+      role: m.role,
+    })),
   };
 }
 

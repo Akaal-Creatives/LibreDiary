@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores';
 import { useOrganizationsStore } from '@/stores/organizations';
+import type { OrgRole } from '@librediary/shared';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -25,7 +26,7 @@ function selectOrganization(orgId: string) {
   if (orgId !== authStore.currentOrganizationId) {
     authStore.setCurrentOrganization(orgId);
     orgsStore.reset();
-    // Optionally navigate to dashboard
+    // Navigate to dashboard
     router.push({ name: 'dashboard' });
   }
   closeDropdown();
@@ -45,37 +46,58 @@ function createNewOrganization() {
   closeDropdown();
   router.push({ name: 'create-organization' });
 }
+
+function getRoleBadgeClass(role: OrgRole): string {
+  const classes: Record<OrgRole, string> = {
+    OWNER: 'role-badge--owner',
+    ADMIN: 'role-badge--admin',
+    MEMBER: 'role-badge--member',
+  };
+  return classes[role] || 'role-badge--member';
+}
+
+function getRoleLabel(role: OrgRole): string {
+  const labels: Record<OrgRole, string> = {
+    OWNER: 'Owner',
+    ADMIN: 'Admin',
+    MEMBER: 'Member',
+  };
+  return labels[role] || 'Member';
+}
+
+const currentRole = computed(() => authStore.currentUserRole);
 </script>
 
 <template>
   <div class="org-switcher">
-    <button class="switcher-button" @click="toggleDropdown">
-      <span class="org-icon">
-        <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-          <rect
-            x="4"
-            y="3"
-            width="16"
-            height="22"
-            rx="2"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M8 8H16M8 12H16M8 16H12"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <path
-            d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </svg>
+    <button
+      class="switcher-button"
+      aria-haspopup="listbox"
+      :aria-expanded="isOpen"
+      aria-label="Switch organization"
+      @click="toggleDropdown"
+    >
+      <!-- Org Logo or Avatar -->
+      <span
+        v-if="currentOrg?.logoUrl"
+        class="org-logo"
+        :style="{ backgroundImage: `url(${currentOrg.logoUrl})` }"
+      ></span>
+      <span
+        v-else
+        class="org-avatar"
+        :style="{ backgroundColor: currentOrg?.accentColor || 'var(--color-accent)' }"
+      >
+        {{ currentOrg?.name?.charAt(0).toUpperCase() || '?' }}
       </span>
-      <span class="org-name">{{ currentOrg?.name ?? 'Select Organization' }}</span>
+
+      <span class="org-info">
+        <span class="org-name">{{ currentOrg?.name ?? 'Select Organization' }}</span>
+        <span v-if="currentRole" class="role-badge" :class="getRoleBadgeClass(currentRole)">
+          {{ getRoleLabel(currentRole) }}
+        </span>
+      </span>
+
       <span class="org-chevron" :class="{ open: isOpen }">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path
@@ -98,65 +120,69 @@ function createNewOrganization() {
         <div class="dropdown-content">
           <!-- Current Organization Actions -->
           <div v-if="currentOrg" class="dropdown-section">
-            <div class="section-label">{{ currentOrg.name }}</div>
-            <button class="dropdown-item" @click="navigateToSettings">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M12.93 9.86C12.8542 10.108 12.8567 10.373 12.9374 10.6195C13.018 10.866 13.1731 11.0824 13.382 11.24L13.438 11.284C13.6055 11.4081 13.7434 11.5677 13.8422 11.7518C13.941 11.9358 13.9985 12.1396 14.0108 12.3484C14.0231 12.5572 13.9899 12.7661 13.9134 12.9601C13.8369 13.1541 13.719 13.3281 13.5678 13.4705C13.4166 13.6129 13.2356 13.7204 13.0375 13.7857C12.8394 13.851 12.629 13.8724 12.4215 13.8481C12.214 13.8239 12.0145 13.7546 11.8373 13.6451C11.6601 13.5357 11.5095 13.389 11.396 13.216L11.352 13.154C11.1906 12.9484 10.9697 12.7971 10.7192 12.7209C10.4687 12.6447 10.2007 12.647 9.952 12.728C9.70839 12.8037 9.49616 12.9537 9.34556 13.1568C9.19495 13.3598 9.11346 13.6054 9.112 13.858V14C9.112 14.4243 8.94358 14.8313 8.64352 15.1314C8.34346 15.4314 7.9365 15.6 7.512 15.6C7.0875 15.6 6.68054 15.4314 6.38048 15.1314C6.08042 14.8313 5.912 14.4243 5.912 14V13.924C5.90365 13.6628 5.81078 13.4114 5.6475 13.2078C5.48422 13.0041 5.25952 12.8594 5.006 12.794C4.75731 12.713 4.48933 12.7107 4.23886 12.7869C3.98839 12.8631 3.76752 13.0144 3.606 13.22L3.562 13.276C3.44851 13.449 3.29787 13.5957 3.12068 13.7051C2.94348 13.8146 2.74399 13.8839 2.53651 13.9081C2.32903 13.9324 2.11858 13.911 1.92052 13.8457C1.72246 13.7804 1.54143 13.6729 1.39022 13.5305C1.23901 13.3881 1.12108 13.2141 1.04459 13.0201C0.968106 12.8261 0.934853 12.6172 0.947168 12.4084C0.959484 12.1996 1.01696 11.9958 1.11576 11.8118C1.21456 11.6277 1.35245 11.4681 1.52 11.344L1.576 11.3C1.78493 11.1424 1.94005 10.926 2.02069 10.6795C2.10133 10.433 2.10386 10.168 2.028 9.92C1.95231 9.67639 1.80227 9.46416 1.59922 9.31356C1.39618 9.16296 1.15064 9.08146 0.898 9.08H0.75C0.325507 9.08 -0.0814271 8.91158 -0.381485 8.61152C-0.681543 8.31146 -0.85 7.9045 -0.85 7.48C-0.85 7.0555 -0.681543 6.64854 -0.381485 6.34848C-0.0814271 6.04842 0.325507 5.88 0.75 5.88H0.826C1.08717 5.87165 1.33857 5.77878 1.54222 5.6155C1.74588 5.45222 1.89064 5.22752 1.956 4.974C2.03699 4.72531 2.03933 4.45733 1.96313 4.20686C1.88693 3.95639 1.73562 3.73552 1.53 3.574L1.474 3.53C1.30092 3.40595 1.15592 3.24781 1.04865 3.06549C0.941386 2.88318 0.874256 2.68078 0.851399 2.47121C0.828542 2.26164 0.850566 2.04952 0.916045 1.84926C0.981524 1.64899 1.08911 1.46513 1.23147 1.31004C1.37383 1.15495 1.54774 1.03215 1.74099 0.949691C1.93425 0.867237 2.14261 0.826919 2.35297 0.831408C2.56333 0.835897 2.76981 0.885095 2.95941 0.975847C3.14902 1.0666 3.31749 1.19699 3.454 1.358L3.51 1.414C3.66745 1.62293 3.88386 1.77805 4.13035 1.85869C4.37685 1.93933 4.64192 1.94186 4.89 1.866L4.974 1.838C5.21761 1.76231 5.42984 1.61227 5.58044 1.40922C5.73104 1.20618 5.81254 0.960644 5.814 0.708V0.56C5.814 0.135507 5.98242 -0.271428 6.28248 -0.571485C6.58254 -0.871543 6.9895 -1.04 7.414 -1.04C7.8385 -1.04 8.24546 -0.871543 8.54552 -0.571485C8.84558 -0.271428 9.014 0.135507 9.014 0.56V0.636C9.02246 0.897172 9.11532 1.14857 9.2786 1.35222C9.44188 1.55588 9.66658 1.70064 9.92 1.766C10.1687 1.84699 10.4367 1.84933 10.6871 1.77313C10.9376 1.69693 11.1585 1.54562 11.32 1.34L11.364 1.284C11.4881 1.11092 11.6462 0.965923 11.8285 0.858662C12.0108 0.751401 12.2132 0.684269 12.4228 0.661413C12.6324 0.638556 12.8445 0.660581 13.0448 0.72606C13.245 0.791539 13.4289 0.899122 13.584 1.04148C13.7391 1.18384 13.8619 1.35774 13.9443 1.55099C14.0268 1.74425 14.0671 1.95261 14.0626 2.16297C14.0581 2.37333 14.0089 2.57981 13.9182 2.76941C13.8274 2.95902 13.697 3.12749 13.536 3.264L13.48 3.32C13.2711 3.47745 13.116 3.69386 13.0353 3.94035C12.9547 4.18685 12.9522 4.45192 13.028 4.7L13.056 4.784C13.1317 5.02761 13.2817 5.23984 13.4848 5.39044C13.6878 5.54104 13.9334 5.62254 14.186 5.624H14.334C14.7585 5.624 15.1655 5.79242 15.4655 6.09248C15.7656 6.39254 15.934 6.7995 15.934 7.224C15.934 7.6485 15.7656 8.05546 15.4655 8.35552C15.1655 8.65558 14.7585 8.824 14.334 8.824H14.258C14.0059 8.82554 13.7604 8.90704 13.5574 9.05764C13.3543 9.20824 13.2043 9.42047 13.128 9.664"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  transform="translate(0.5, 0.5) scale(0.9)"
-                />
-              </svg>
-              <span>Settings</span>
-            </button>
-            <button class="dropdown-item" @click="navigateToMembers">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M11 14V13C11 11.8954 10.1046 11 9 11H5C3.89543 11 3 11.8954 3 13V14"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <circle
-                  cx="7"
-                  cy="6"
-                  r="2.5"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M13 14V13C13 12.0681 12.4016 11.2677 11.5613 11.0291"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M10.5 3.0291C11.3414 3.26689 11.9407 4.06687 11.9407 5C11.9407 5.93313 11.3414 6.73311 10.5 6.9709"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <span>Members</span>
-            </button>
+            <div class="section-header">
+              <span
+                v-if="currentOrg.logoUrl"
+                class="section-logo"
+                :style="{ backgroundImage: `url(${currentOrg.logoUrl})` }"
+              ></span>
+              <span
+                v-else
+                class="section-avatar"
+                :style="{ backgroundColor: currentOrg.accentColor || 'var(--color-accent)' }"
+              >
+                {{ currentOrg.name.charAt(0).toUpperCase() }}
+              </span>
+              <div class="section-info">
+                <span class="section-name">{{ currentOrg.name }}</span>
+                <span
+                  v-if="currentRole"
+                  class="role-badge role-badge--sm"
+                  :class="getRoleBadgeClass(currentRole)"
+                >
+                  {{ getRoleLabel(currentRole) }}
+                </span>
+              </div>
+            </div>
+            <div class="section-actions">
+              <button class="dropdown-item" @click="navigateToSettings">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6.5 2.5L7.5 1.5H8.5L9.5 2.5L10.5 2V3L11.5 3.5V4.5L12 5.5H13L13.5 6.5V7.5L12.5 8.5L13 9.5V10.5L12 11L11.5 12V13L10.5 13.5H9.5L8.5 14.5H7.5L6.5 13.5H5.5L5 12.5L4 12V11L3 10.5V9.5L3.5 8.5L3 7.5V6.5L4 6L4.5 5V4L5.5 3.5V2.5H6.5Z"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.2" />
+                </svg>
+                <span>Settings</span>
+              </button>
+              <button class="dropdown-item" @click="navigateToMembers">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="6" cy="5" r="2" stroke="currentColor" stroke-width="1.2" />
+                  <path
+                    d="M2 13C2 10.7909 3.79086 9 6 9C8.20914 9 10 10.7909 10 13"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                  />
+                  <circle cx="11" cy="5" r="1.5" stroke="currentColor" stroke-width="1.2" />
+                  <path
+                    d="M14 13C14 11.3431 12.6569 10 11 10"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <span>Members</span>
+              </button>
+            </div>
           </div>
 
           <!-- Organizations List -->
-          <div class="dropdown-section">
-            <div class="section-label">Organizations</div>
+          <div v-if="organizations.length > 1" class="dropdown-section">
+            <div class="section-label">Switch Organization</div>
             <button
               v-for="org in organizations"
               :key="org.id"
@@ -164,10 +190,28 @@ function createNewOrganization() {
               :class="{ active: org.id === authStore.currentOrganizationId }"
               @click="selectOrganization(org.id)"
             >
-              <span class="org-avatar" :style="{ backgroundColor: org.accentColor || '#6366f1' }">
+              <span
+                v-if="org.logoUrl"
+                class="org-item-logo"
+                :style="{ backgroundImage: `url(${org.logoUrl})` }"
+              ></span>
+              <span
+                v-else
+                class="org-item-avatar"
+                :style="{ backgroundColor: org.accentColor || 'var(--color-accent)' }"
+              >
                 {{ org.name.charAt(0).toUpperCase() }}
               </span>
-              <span class="org-item-name">{{ org.name }}</span>
+              <span class="org-item-info">
+                <span class="org-item-name">{{ org.name }}</span>
+                <span
+                  v-if="authStore.getRoleForOrg(org.id)"
+                  class="role-badge role-badge--xs"
+                  :class="getRoleBadgeClass(authStore.getRoleForOrg(org.id)!)"
+                >
+                  {{ getRoleLabel(authStore.getRoleForOrg(org.id)!) }}
+                </span>
+              </span>
               <svg
                 v-if="org.id === authStore.currentOrganizationId"
                 class="check-icon"
@@ -188,7 +232,7 @@ function createNewOrganization() {
           </div>
 
           <!-- Create New -->
-          <div class="dropdown-section">
+          <div class="dropdown-section dropdown-section--footer">
             <button class="dropdown-item create-item" @click="createNewOrganization">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
@@ -220,7 +264,7 @@ function createNewOrganization() {
   padding: var(--space-2) var(--space-3);
   font-family: inherit;
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-primary);
   text-align: left;
   cursor: pointer;
@@ -234,16 +278,36 @@ function createNewOrganization() {
   background: var(--color-hover);
 }
 
-.org-icon {
+.org-logo,
+.org-avatar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  color: var(--color-accent);
+  width: 28px;
+  height: 28px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+.org-logo {
+  background-size: cover;
+  background-position: center;
+}
+
+.org-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .org-name {
-  flex: 1;
   overflow: hidden;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -257,6 +321,73 @@ function createNewOrganization() {
 
 .org-chevron.open {
   transform: rotate(180deg);
+}
+
+/* Role Badges - Refined, subtle design */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.role-badge--sm {
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+.role-badge--xs {
+  padding: 1px 5px;
+  font-size: 8px;
+}
+
+/* Owner - Subtle warm amber with sophistication */
+.role-badge--owner {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Admin - Calm blue-gray */
+.role-badge--admin {
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Member - Neutral, unobtrusive */
+.role-badge--member {
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+}
+
+/* Dark mode - Refined with subtle glow */
+[data-theme='dark'] .role-badge--owner {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .role-badge--admin {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .role-badge--member {
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
 }
 
 /* Dropdown */
@@ -280,6 +411,7 @@ function createNewOrganization() {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .dropdown-section {
@@ -288,6 +420,56 @@ function createNewOrganization() {
 
 .dropdown-section:not(:last-child) {
   border-bottom: 1px solid var(--color-border);
+}
+
+.dropdown-section--footer {
+  background: var(--color-surface-sunken);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.section-logo,
+.section-avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: white;
+  border-radius: var(--radius-md);
+}
+
+.section-logo {
+  background-size: cover;
+  background-position: center;
+}
+
+.section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.section-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.section-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .section-label {
@@ -327,10 +509,11 @@ function createNewOrganization() {
 }
 
 .org-item {
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-2);
 }
 
-.org-avatar {
+.org-item-logo,
+.org-item-avatar {
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -343,8 +526,20 @@ function createNewOrganization() {
   border-radius: var(--radius-sm);
 }
 
-.org-item-name {
+.org-item-logo {
+  background-size: cover;
+  background-position: center;
+}
+
+.org-item-info {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.org-item-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

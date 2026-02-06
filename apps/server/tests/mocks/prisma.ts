@@ -43,6 +43,16 @@ export const mockPrismaOrganizationMember = {
   findMany: vi.fn(),
 };
 
+export const mockPrismaAccount = {
+  create: vi.fn(),
+  findUnique: vi.fn(),
+  findFirst: vi.fn(),
+  findMany: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+  upsert: vi.fn(),
+};
+
 export const mockPrisma = {
   session: mockPrismaSession,
   user: mockPrismaUser,
@@ -50,6 +60,7 @@ export const mockPrisma = {
   invite: mockPrismaInvite,
   organization: mockPrismaOrganization,
   organizationMember: mockPrismaOrganizationMember,
+  account: mockPrismaAccount,
   $transaction: vi.fn(),
 };
 
@@ -60,5 +71,6 @@ export function resetPrismaMocks() {
   Object.values(mockPrismaInvite).forEach((mock) => mock.mockReset());
   Object.values(mockPrismaOrganization).forEach((mock) => mock.mockReset());
   Object.values(mockPrismaOrganizationMember).forEach((mock) => mock.mockReset());
+  Object.values(mockPrismaAccount).forEach((mock) => mock.mockReset());
   mockPrisma.$transaction.mockReset();
 }

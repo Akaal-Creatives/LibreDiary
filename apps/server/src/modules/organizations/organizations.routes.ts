@@ -9,6 +9,11 @@ import type { OrgRole } from '@prisma/client';
 // REQUEST SCHEMAS
 // ===========================================
 
+const domainSchema = z
+  .string()
+  .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i, 'Must be a valid domain')
+  .transform((d) => d.toLowerCase());
+
 const createOrganizationSchema = z.object({
   name: z.string().min(1).max(100),
   slug: z
@@ -22,10 +27,7 @@ const createOrganizationSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
     .optional(),
-  allowedDomain: z
-    .string()
-    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, 'Must be a valid domain')
-    .optional(),
+  allowedDomains: z.array(domainSchema).optional(),
   aiEnabled: z.boolean().optional(),
 });
 
@@ -43,11 +45,7 @@ const updateOrganizationSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
     .nullable()
     .optional(),
-  allowedDomain: z
-    .string()
-    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, 'Must be a valid domain')
-    .nullable()
-    .optional(),
+  allowedDomains: z.array(domainSchema).optional(),
   aiEnabled: z.boolean().optional(),
 });
 
@@ -198,7 +196,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         slug: body.data.slug,
         logoUrl: body.data.logoUrl,
         accentColor: body.data.accentColor,
-        allowedDomain: body.data.allowedDomain,
+        allowedDomains: body.data.allowedDomains,
         aiEnabled: body.data.aiEnabled,
       });
 
@@ -266,7 +264,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
       }
 
       // Domain lockdown can only be changed by OWNER
-      if (body.data.allowedDomain !== undefined && request.membership!.role !== 'OWNER') {
+      if (body.data.allowedDomains !== undefined && request.membership!.role !== 'OWNER') {
         return reply.status(403).send({
           success: false,
           error: {

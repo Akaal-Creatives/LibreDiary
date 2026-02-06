@@ -2,7 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import type { OrgRole } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
+import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/services';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
   open: boolean;
@@ -14,11 +16,42 @@ const emit = defineEmits<{
 }>();
 
 const orgsStore = useOrganizationsStore();
+const authStore = useAuthStore();
+const toast = useToast();
 
 const email = ref('');
 const role = ref<OrgRole>('MEMBER');
 const error = ref<string | null>(null);
 const submitting = ref(false);
+
+// Domain lockdown validation
+const allowedDomains = computed(() => authStore.currentOrganization?.allowedDomains ?? []);
+
+const emailDomain = computed(() => {
+  const emailValue = email.value.trim();
+  const atIndex = emailValue.indexOf('@');
+  if (atIndex === -1 || atIndex === emailValue.length - 1) {
+    return null;
+  }
+  return emailValue.slice(atIndex + 1).toLowerCase();
+});
+
+const isDomainAllowed = computed(() => {
+  // If no domains configured, all are allowed
+  if (allowedDomains.value.length === 0) {
+    return true;
+  }
+  // If email doesn't have a valid domain yet, don't show warning
+  if (!emailDomain.value) {
+    return true;
+  }
+  // Check if domain matches any allowed domain (case-insensitive)
+  return allowedDomains.value.some((domain) => domain.toLowerCase() === emailDomain.value);
+});
+
+const showDomainWarning = computed(() => {
+  return allowedDomains.value.length > 0 && emailDomain.value && !isDomainAllowed.value;
+});
 
 // Reset form when modal opens
 watch(
@@ -57,6 +90,7 @@ async function handleSubmit() {
       email: email.value.trim(),
       role: role.value,
     });
+    toast.success(`Invitation sent to ${email.value.trim()}`);
     emit('invited');
     emit('close');
   } catch (err) {
@@ -81,10 +115,10 @@ function close() {
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="open" class="modal-overlay" @click.self="close">
-        <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
           <div class="modal-header">
-            <h2 class="modal-title">Invite Member</h2>
-            <button class="close-button" :disabled="submitting" @click="close">
+            <h2 id="invite-modal-title" class="modal-title">Invite Member</h2>
+            <button class="close-button" aria-label="Close" :disabled="submitting" @click="close">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M4.5 4.5L13.5 13.5M4.5 13.5L13.5 4.5"
@@ -112,6 +146,22 @@ function close() {
                 :disabled="submitting"
                 autocomplete="email"
               />
+              <div v-if="showDomainWarning" class="domain-warning">
+                <svg class="warning-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.25" />
+                  <path
+                    d="M7 4V7.5"
+                    stroke="currentColor"
+                    stroke-width="1.25"
+                    stroke-linecap="round"
+                  />
+                  <circle cx="7" cy="10" r="0.75" fill="currentColor" />
+                </svg>
+                <span class="warning-text">
+                  This email domain is not in the allowed domains list. Allowed:
+                  <strong>{{ allowedDomains.join(', ') }}</strong>
+                </span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -139,6 +189,24 @@ function close() {
                 Cancel
               </button>
               <button type="submit" class="btn btn-primary" :disabled="submitting">
+                <svg
+                  v-if="submitting"
+                  class="btn-spinner"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-dasharray="28"
+                    stroke-dashoffset="7"
+                  />
+                </svg>
                 {{ submitting ? 'Sending...' : 'Send Invite' }}
               </button>
             </div>
@@ -268,6 +336,32 @@ function close() {
   color: var(--color-text-tertiary);
 }
 
+.domain-warning {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-warning-text, #92400e);
+  background: var(--color-warning-subtle, #fef3c7);
+  border-radius: var(--radius-md);
+}
+
+.domain-warning .warning-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-warning, #f59e0b);
+}
+
+.domain-warning .warning-text {
+  line-height: 1.5;
+}
+
+.domain-warning strong {
+  font-weight: 600;
+}
+
 .modal-actions {
   display: flex;
   gap: var(--space-3);
@@ -308,6 +402,16 @@ function close() {
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
+}
+
+.btn-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Transitions */

@@ -1,9 +1,15 @@
 import { api, ApiError } from './api';
-import type { User, Organization } from '@librediary/shared';
+import type { User, Organization, OrgRole } from '@librediary/shared';
+
+export interface OrgMembership {
+  organizationId: string;
+  role: OrgRole;
+}
 
 export interface AuthResponse {
   user: User;
   organizations: Organization[];
+  memberships: OrgMembership[];
 }
 
 export interface LoginInput {

@@ -2,6 +2,7 @@ export { api, ApiError } from './api';
 export { authService } from './auth.service';
 export type {
   AuthResponse,
+  OrgMembership,
   LoginInput,
   RegisterInput,
   SessionInfo,
@@ -25,3 +26,4 @@ export type {
 } from './pages.service';
 export { setupService } from './setup.service';
 export type { SetupStatus, SetupInput, SetupResult } from './setup.service';
+export * as oauthService from './oauth.service';

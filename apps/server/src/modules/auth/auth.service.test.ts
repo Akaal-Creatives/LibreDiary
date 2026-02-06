@@ -184,17 +184,30 @@ describe('Auth Service', () => {
   });
 
   describe('getCurrentUser', () => {
-    it('should return user with organizations', async () => {
+    it('should return user with organizations and memberships', async () => {
       const mockUser = { id: 'user-123', email: 'test@example.com' };
       const mockOrg = { id: 'org-123', name: 'Test Org' };
+      const mockMembership = {
+        id: 'member-123',
+        organizationId: 'org-123',
+        userId: 'user-123',
+        role: 'OWNER',
+        organization: mockOrg,
+      };
 
       mockPrismaUser.findUnique.mockResolvedValue(mockUser);
-      mockPrismaOrganizationMember.findMany.mockResolvedValue([{ organization: mockOrg }]);
+      mockPrismaOrganizationMember.findMany.mockResolvedValue([mockMembership]);
 
       const result = await getCurrentUser('user-123');
 
       expect(result.user).toEqual(mockUser);
       expect(result.organizations).toEqual([mockOrg]);
+      expect(result.memberships).toEqual([
+        {
+          organizationId: 'org-123',
+          role: 'OWNER',
+        },
+      ]);
     });
 
     it('should throw error if user not found', async () => {

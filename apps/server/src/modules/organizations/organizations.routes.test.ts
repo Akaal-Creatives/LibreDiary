@@ -130,7 +130,7 @@ describe('Organization Routes', () => {
     slug: 'test-org',
     logoUrl: null,
     accentColor: '#6366f1',
-    allowedDomain: null,
+    allowedDomains: [],
     aiEnabled: true,
     createdAt: now,
     updatedAt: now,
@@ -344,7 +344,7 @@ describe('Organization Routes', () => {
       expect(body.error.code).toBe('INSUFFICIENT_ROLE');
     });
 
-    it('should return 403 for ADMIN trying to update allowedDomain', async () => {
+    it('should return 403 for ADMIN trying to update allowedDomains', async () => {
       const adminMembership = { ...mockMembership, role: 'ADMIN' };
       mockPrismaOrganization.findFirst.mockResolvedValue(mockOrganization);
       mockPrismaOrganizationMember.findUnique.mockResolvedValue(adminMembership);
@@ -353,25 +353,25 @@ describe('Organization Routes', () => {
         method: 'PATCH',
         url: '/api/v1/organizations/org-123',
         headers: { cookie: 'session_token=valid-token' },
-        payload: { allowedDomain: 'example.com' },
+        payload: { allowedDomains: ['example.com'] },
       });
 
       expect(response.statusCode).toBe(403);
     });
 
-    it('should allow OWNER to update allowedDomain', async () => {
+    it('should allow OWNER to update allowedDomains', async () => {
       mockPrismaOrganization.findFirst.mockResolvedValue(mockOrganization);
       mockPrismaOrganizationMember.findUnique.mockResolvedValue(mockMembership); // OWNER
       mockPrismaOrganization.update.mockResolvedValue({
         ...mockOrganization,
-        allowedDomain: 'example.com',
+        allowedDomains: ['example.com'],
       });
 
       const response = await app.inject({
         method: 'PATCH',
         url: '/api/v1/organizations/org-123',
         headers: { cookie: 'session_token=valid-token' },
-        payload: { allowedDomain: 'example.com' },
+        payload: { allowedDomains: ['example.com'] },
       });
 
       expect(response.statusCode).toBe(200);
@@ -619,7 +619,7 @@ describe('Organization Routes', () => {
     });
 
     it('should return 400 for domain lockdown violation', async () => {
-      const orgWithDomain = { ...mockOrganization, allowedDomain: 'company.com' };
+      const orgWithDomain = { ...mockOrganization, allowedDomains: ['company.com'] };
       mockPrismaOrganization.findFirst.mockResolvedValue(orgWithDomain);
       mockPrismaOrganizationMember.findUnique.mockResolvedValue(mockMembership);
       mockPrismaOrganization.findUnique.mockResolvedValue(orgWithDomain);

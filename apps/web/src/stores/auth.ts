@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { User, Organization } from '@librediary/shared';
-import { authService } from '@/services';
+import type { User, Organization, OrgRole } from '@librediary/shared';
+import { authService, type OrgMembership } from '@/services';
 
 export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref<User | null>(null);
   const organizations = ref<Organization[]>([]);
+  const memberships = ref<OrgMembership[]>([]);
   const currentOrganizationId = ref<string | null>(localStorage.getItem('currentOrganizationId'));
   const loading = ref(false);
   const initialized = ref(false);
@@ -16,16 +17,28 @@ export const useAuthStore = defineStore('auth', () => {
   const currentOrganization = computed(() =>
     organizations.value.find((org) => org.id === currentOrganizationId.value)
   );
+  const currentMembership = computed(() =>
+    memberships.value.find((m) => m.organizationId === currentOrganizationId.value)
+  );
+  const currentUserRole = computed<OrgRole | null>(() => currentMembership.value?.role ?? null);
   const isSuperAdmin = computed(() => user.value?.isSuperAdmin ?? false);
   const isEmailVerified = computed(() => user.value?.emailVerified ?? false);
+
+  // Helper to get role for any organization
+  function getRoleForOrg(orgId: string): OrgRole | null {
+    return memberships.value.find((m) => m.organizationId === orgId)?.role ?? null;
+  }
 
   // Actions
   function setUser(newUser: User | null) {
     user.value = newUser;
   }
 
-  function setOrganizations(orgs: Organization[]) {
+  function setOrganizations(orgs: Organization[], membershipList?: OrgMembership[]) {
     organizations.value = orgs;
+    if (membershipList) {
+      memberships.value = membershipList;
+    }
     // Auto-select first org if none selected or current org no longer exists
     if (orgs.length > 0) {
       const currentExists = orgs.some((org) => org.id === currentOrganizationId.value);
@@ -50,11 +63,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.getCurrentUser();
       user.value = data.user;
-      setOrganizations(data.organizations);
+      setOrganizations(data.organizations, data.memberships);
     } catch {
       // Not authenticated or session expired
       user.value = null;
       organizations.value = [];
+      memberships.value = [];
     } finally {
       loading.value = false;
       initialized.value = true;
@@ -69,7 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.login({ email, password });
       user.value = data.user;
-      setOrganizations(data.organizations);
+      setOrganizations(data.organizations, data.memberships);
     } finally {
       loading.value = false;
     }
@@ -88,7 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.register({ email, password, inviteToken, name });
       user.value = data.user;
-      setOrganizations(data.organizations);
+      setOrganizations(data.organizations, data.memberships);
     } finally {
       loading.value = false;
     }
@@ -106,6 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       user.value = null;
       organizations.value = [];
+      memberships.value = [];
       currentOrganizationId.value = null;
       localStorage.removeItem('currentOrganizationId');
       loading.value = false;
@@ -136,11 +151,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.getCurrentUser();
       user.value = data.user;
-      setOrganizations(data.organizations);
+      setOrganizations(data.organizations, data.memberships);
     } catch {
       // Session may have expired
       user.value = null;
       organizations.value = [];
+      memberships.value = [];
     }
   }
 
@@ -148,18 +164,22 @@ export const useAuthStore = defineStore('auth', () => {
     // State
     user,
     organizations,
+    memberships,
     currentOrganizationId,
     loading,
     initialized,
     // Getters
     isAuthenticated,
     currentOrganization,
+    currentMembership,
+    currentUserRole,
     isSuperAdmin,
     isEmailVerified,
     // Actions
     setUser,
     setOrganizations,
     setCurrentOrganization,
+    getRoleForOrg,
     initialize,
     login,
     register,
