@@ -185,13 +185,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Persist selected workspace in localStorage
 - [x] Update API calls with organization context
 
-### 3.6 Super Admin
+### 3.6 Super Admin ✅
 
 - [x] Create isSuperAdmin flag on User
-- [ ] Create super admin middleware
-- [ ] Create admin dashboard layout
-- [ ] Add system-wide user management
-- [ ] Add system-wide organization management
+- [x] Create super admin middleware
+- [x] Create admin dashboard layout
+- [x] Add system-wide user management
+- [x] Add system-wide organization management
 
 ### 3.7 Setup Wizard ✅
 
