@@ -19,7 +19,7 @@
   "dependencies": {
     "@librediary/shared": "workspace:*",
     "@tiptap/extension-placeholder": "^2.11.0",
-    "@tiptap/pm": "^2.11.0",
+    "@tiptap/pm": "^3.19.0",
     "@tiptap/starter-kit": "^2.11.0",
     "@tiptap/vue-3": "^2.11.0",
     "pinia": "^3.0.4",
