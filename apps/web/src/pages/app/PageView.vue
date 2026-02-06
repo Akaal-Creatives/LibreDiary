@@ -28,8 +28,18 @@ const showVersionHistory = ref(false);
 const showCommentsPanel = ref(false);
 const commentCount = ref(0);
 
+// Ref to the TiptapEditor component
+const editorRef = ref<InstanceType<typeof TiptapEditor> | null>(null);
+
 // Track if page has been modified
 const hasBeenModified = ref(false);
+
+// Track if we've already inserted initial content (to avoid re-inserting on every sync)
+const initialContentInserted = ref(false);
+
+// Store the original htmlContent from the API for initial content insertion
+// This is separate from pageContent which tracks live editor content
+const originalHtmlContent = ref('');
 
 // Debounce timers for saving title
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -53,6 +63,35 @@ const userColor = computed(() => {
   return `hsl(${hue}, 70%, 50%)`;
 });
 
+/**
+ * Insert initial content into an empty editor after sync.
+ * This is needed because when yjsState is null, the Yjs document starts empty,
+ * but we have htmlContent saved in the database that should be displayed.
+ */
+function insertInitialContentIfEmpty() {
+  if (initialContentInserted.value) return;
+
+  // Get the editor instance from the ref
+  const editorInstance = editorRef.value?.editor;
+  if (!editorInstance) return;
+
+  // Check if editor content is empty
+  const currentContent = editorInstance.getHTML();
+  const isEmpty =
+    !currentContent ||
+    currentContent === '<p></p>' ||
+    currentContent === '<p><br></p>' ||
+    currentContent.trim() === '';
+
+  // If editor is empty and we have original htmlContent, insert it
+  // We use originalHtmlContent (not pageContent) because pageContent gets overwritten
+  // by the editor's onUpdate callback when it initializes with an empty Yjs document
+  if (isEmpty && originalHtmlContent.value && originalHtmlContent.value.trim()) {
+    editorInstance.commands.setContent(originalHtmlContent.value, false);
+    initialContentInserted.value = true;
+  }
+}
+
 // Setup collaboration - pass reactive getters so connection updates when auth/pageId change
 const {
   isConnected,
@@ -71,6 +110,9 @@ const {
     if (loading.value) {
       loading.value = false;
     }
+    // Try to insert initial content after sync completes
+    // Use a small delay to ensure the editor has processed the sync
+    setTimeout(insertInitialContentIfEmpty, 150);
   },
   onAuthenticationFailed: (reason) => {
     error.value = `Collaboration failed: ${reason}`;
@@ -140,12 +182,15 @@ async function loadPage() {
   loading.value = true;
   error.value = null;
   hasBeenModified.value = false;
+  initialContentInserted.value = false; // Reset for new page
   pagesStore.setCurrentPage(props.pageId);
 
   try {
     const page = await pagesStore.fetchPage(props.pageId);
     pageTitle.value = page.title;
     pageContent.value = page.htmlContent || '';
+    // Store original htmlContent separately - this won't be overwritten by editor updates
+    originalHtmlContent.value = page.htmlContent || '';
 
     // Mark as modified if it already has content (existing page)
     if (page.htmlContent && page.htmlContent.trim() && page.htmlContent !== '<p></p>') {
@@ -385,6 +430,7 @@ function formatDate(dateString: string): string {
       <!-- Page Body -->
       <div class="page-body">
         <TiptapEditor
+          ref="editorRef"
           v-model="pageContent"
           placeholder="Start writing, or press '/' for commands..."
           :collaborative="!!documentName"

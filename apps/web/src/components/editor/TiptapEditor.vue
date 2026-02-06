@@ -97,8 +97,11 @@ function createEditor(forCollaborative: boolean, ydoc?: Y.Doc | null) {
     editor.value = null;
   }
 
+  // In collaborative mode, we still pass modelValue as fallback content.
+  // The Collaboration extension will use this as initial content if the
+  // Yjs document is empty (e.g., first time loading a page with htmlContent).
   editor.value = new Editor({
-    content: forCollaborative ? undefined : props.modelValue,
+    content: props.modelValue || undefined,
     editable: props.editable,
     extensions: buildExtensions(forCollaborative, ydoc),
     onUpdate: ({ editor: e }) => {
@@ -185,8 +188,11 @@ onBeforeUnmount(() => {
   editor.value?.destroy();
 });
 
+// Expose editor instance directly (not the ref) for parent components
 defineExpose({
-  editor,
+  get editor() {
+    return editor.value;
+  },
 });
 </script>
 
