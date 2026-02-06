@@ -1,19 +1,34 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue';
+import { onBeforeUnmount, watch, computed } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import type * as Y from 'yjs';
+import type { HocuspocusProvider } from '@hocuspocus/provider';
 
 const props = withDefaults(
   defineProps<{
     modelValue?: string;
     placeholder?: string;
     editable?: boolean;
+    // Collaboration props
+    collaborative?: boolean;
+    ydoc?: Y.Doc | null;
+    provider?: HocuspocusProvider | null;
+    userName?: string;
+    userColor?: string;
   }>(),
   {
     modelValue: '',
     placeholder: "Start writing, or press '/' for commands...",
     editable: true,
+    collaborative: false,
+    ydoc: null,
+    provider: null,
+    userName: 'Anonymous',
+    userColor: '#6B8F71',
   }
 );
 
@@ -21,10 +36,10 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
 
-const editor = useEditor({
-  content: props.modelValue,
-  editable: props.editable,
-  extensions: [
+// Build extensions based on mode
+const extensions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseExtensions: any[] = [
     StarterKit.configure({
       heading: {
         levels: [1, 2, 3],
@@ -43,27 +58,71 @@ const editor = useEditor({
       emptyEditorClass: 'is-editor-empty',
       emptyNodeClass: 'is-node-empty',
     }),
-  ],
+  ];
+
+  // Add collaboration extensions when in collaborative mode
+  if (props.collaborative && props.ydoc) {
+    baseExtensions.push(
+      Collaboration.configure({
+        document: props.ydoc,
+      })
+    );
+
+    // Add cursor extension if provider is available
+    if (props.provider) {
+      baseExtensions.push(
+        CollaborationCursor.configure({
+          provider: props.provider,
+          user: {
+            name: props.userName,
+            color: props.userColor,
+          },
+        })
+      );
+    }
+  }
+
+  return baseExtensions;
+});
+
+const editor = useEditor({
+  content: props.collaborative ? undefined : props.modelValue,
+  editable: props.editable,
+  extensions: extensions.value,
   onUpdate: ({ editor }) => {
+    // In collaborative mode, content syncs via Yjs
+    // Still emit for local state updates (e.g., to track if content changed)
     emit('update:modelValue', editor.getHTML());
   },
 });
 
+// Watch for content changes (non-collaborative mode only)
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (editor.value && newValue !== editor.value.getHTML()) {
+    if (!props.collaborative && editor.value && newValue !== editor.value.getHTML()) {
       editor.value.commands.setContent(newValue, { emitUpdate: false });
     }
   }
 );
 
+// Watch for editable changes
 watch(
   () => props.editable,
   (editable) => {
     editor.value?.setEditable(editable);
   }
 );
+
+// Watch for user name/color changes (for cursors)
+watch([() => props.userName, () => props.userColor], ([name, color]) => {
+  if (props.provider) {
+    props.provider.setAwarenessField('user', {
+      name,
+      color,
+    });
+  }
+});
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
@@ -309,5 +368,31 @@ defineExpose({
 .editor-content .ProseMirror s {
   text-decoration: line-through;
   opacity: 0.7;
+}
+
+/* Collaboration cursor styles */
+.collaboration-cursor__caret {
+  position: relative;
+  margin-right: -1px;
+  margin-left: -1px;
+  pointer-events: none;
+  word-break: normal;
+  border-right: 1px solid;
+  border-left: 1px solid;
+}
+
+.collaboration-cursor__label {
+  position: absolute;
+  top: -1.4em;
+  left: -1px;
+  padding: 0.1rem 0.3rem;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  color: white;
+  white-space: nowrap;
+  border-radius: 3px 3px 3px 0;
+  user-select: none;
 }
 </style>

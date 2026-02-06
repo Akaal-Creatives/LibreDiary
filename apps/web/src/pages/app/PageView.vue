@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue';
-import { usePagesStore, useSyncStore } from '@/stores';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { usePagesStore, useSyncStore, useAuthStore } from '@/stores';
+import { useCollaboration } from '@/composables';
 import { TiptapEditor } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
@@ -9,6 +10,7 @@ import PageCoverImage from '@/components/PageCoverImage.vue';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
+const authStore = useAuthStore();
 
 const props = defineProps<{
   pageId: string;
@@ -24,9 +26,52 @@ const showShareModal = ref(false);
 // Track if page has been modified
 const hasBeenModified = ref(false);
 
-// Debounce timers for saving
+// Debounce timers for saving title
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
-let contentSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Collaboration document name (orgId/pageId)
+const documentName = computed(() => {
+  const orgId = authStore.currentOrganizationId;
+  return orgId ? `${orgId}/${props.pageId}` : null;
+});
+
+// User info for collaboration cursors
+const userName = computed(() => authStore.user?.name || authStore.user?.email || 'Anonymous');
+const userColor = computed(() => {
+  // Generate a consistent color from user ID
+  if (!authStore.user?.id) return '#6B8F71';
+  let hash = 0;
+  for (let i = 0; i < authStore.user.id.length; i++) {
+    hash = authStore.user.id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 50%)`;
+});
+
+// Setup collaboration
+const {
+  isConnected,
+  isSynced,
+  isConnecting,
+  connectionError,
+  connectedUsers,
+  ydoc,
+  provider,
+  disconnect: disconnectCollaboration,
+} = useCollaboration({
+  documentName: documentName.value || '',
+  enabled: !!documentName.value,
+  onSynced: () => {
+    // Once synced, we can hide the loading state
+    if (loading.value) {
+      loading.value = false;
+    }
+  },
+  onAuthenticationFailed: (reason) => {
+    error.value = `Collaboration failed: ${reason}`;
+    loading.value = false;
+  },
+});
 
 /**
  * Check if the page is empty (untitled and no content)
@@ -68,6 +113,8 @@ watch(
     if (oldId) {
       await cleanupEmptyPage(oldId);
     }
+    // Disconnect from old collaboration
+    disconnectCollaboration();
     // Reset modification tracking for new page
     hasBeenModified.value = false;
     loadPage();
@@ -78,9 +125,6 @@ onUnmounted(async () => {
   // Clear any pending save timeouts
   if (titleSaveTimeout) {
     clearTimeout(titleSaveTimeout);
-  }
-  if (contentSaveTimeout) {
-    clearTimeout(contentSaveTimeout);
   }
 
   // Cleanup empty page when leaving
@@ -108,10 +152,16 @@ async function loadPage() {
 
     // Expand ancestors in sidebar
     pagesStore.expandToPage(props.pageId);
+
+    // If collaboration is not synced yet, wait for it
+    if (!isSynced.value) {
+      // Keep loading until synced (the onSynced callback will hide loading)
+    } else {
+      loading.value = false;
+    }
   } catch (e) {
     error.value = 'Failed to load page';
     console.error(e);
-  } finally {
     loading.value = false;
   }
 }
@@ -156,24 +206,8 @@ function onContentUpdate(content: string) {
     hasBeenModified.value = true;
   }
 
-  const opId = `content-${props.pageId}`;
-  syncStore.startOperation(opId, 'content');
-
-  // Debounce content save
-  if (contentSaveTimeout) {
-    clearTimeout(contentSaveTimeout);
-  }
-
-  contentSaveTimeout = setTimeout(async () => {
-    syncStore.markSaving(opId);
-    try {
-      await pagesStore.updatePageData(props.pageId, { htmlContent: content });
-      syncStore.markSaved(opId);
-    } catch (e) {
-      console.error('Failed to save content:', e);
-      syncStore.markError(opId, 'Failed to save content');
-    }
-  }, 1000); // 1 second debounce for content (longer than title)
+  // In collaborative mode, content is synced via Yjs/Hocuspocus
+  // No need to save manually - Hocuspocus handles persistence
 }
 
 async function selectIcon(icon: string | null) {
@@ -230,7 +264,9 @@ function formatDate(dateString: string): string {
     <!-- Loading State -->
     <div v-if="loading" class="page-loading">
       <div class="loading-spinner"></div>
-      <span class="loading-text">Loading...</span>
+      <span class="loading-text">
+        {{ isConnecting ? 'Connecting...' : 'Loading...' }}
+      </span>
     </div>
 
     <!-- Error State -->
@@ -246,6 +282,11 @@ function formatDate(dateString: string): string {
 
     <!-- Page Content -->
     <div v-else class="page-content">
+      <!-- Connection Status -->
+      <div v-if="connectionError" class="connection-error">
+        <span>Connection error: {{ connectionError }}</span>
+      </div>
+
       <!-- Cover Image -->
       <PageCoverImage
         :cover-url="pagesStore.currentPage?.coverUrl ?? null"
@@ -275,6 +316,11 @@ function formatDate(dateString: string): string {
             <span v-if="pagesStore.currentPage?.updatedAt" class="info-item">
               Edited {{ formatDate(pagesStore.currentPage.updatedAt) }}
             </span>
+            <!-- Collaboration status -->
+            <span v-if="isConnected" class="info-item collab-status">
+              <span class="collab-dot"></span>
+              {{ connectedUsers.length }} editing
+            </span>
           </div>
         </div>
         <button class="share-btn" title="Share page" @click="showShareModal = true">
@@ -298,6 +344,11 @@ function formatDate(dateString: string): string {
         <TiptapEditor
           v-model="pageContent"
           placeholder="Start writing, or press '/' for commands..."
+          :collaborative="!!documentName"
+          :ydoc="ydoc"
+          :provider="provider"
+          :user-name="userName"
+          :user-color="userColor"
           @update:model-value="onContentUpdate"
         />
       </div>
@@ -395,6 +446,16 @@ function formatDate(dateString: string): string {
 
 .error-retry:hover {
   background: var(--color-accent-hover);
+}
+
+/* Connection Error */
+.connection-error {
+  padding: var(--space-3) var(--space-4);
+  margin: 0 var(--space-4) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+  border-radius: var(--radius-md);
 }
 
 /* Page Header */
@@ -497,6 +558,30 @@ function formatDate(dateString: string): string {
 .info-item {
   font-size: var(--text-sm);
   color: var(--color-text-tertiary);
+}
+
+.collab-status {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.collab-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-success);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Page Body */

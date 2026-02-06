@@ -17,7 +17,10 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@hocuspocus/provider": "^3.4.4",
     "@librediary/shared": "workspace:*",
+    "@tiptap/extension-collaboration": "^3.19.0",
+    "@tiptap/extension-collaboration-cursor": "^3.0.0",
     "@tiptap/extension-placeholder": "^3.19.0",
     "@tiptap/pm": "^3.19.0",
     "@tiptap/starter-kit": "^3.19.0",
@@ -25,7 +28,8 @@
     "pinia": "^3.0.4",
     "vue": "^3.5.0",
     "vue-router": "^5.0.2",
-    "vuestic-ui": "^1.10.0"
+    "vuestic-ui": "^1.10.0",
+    "yjs": "^13.6.29"
   },
   "devDependencies": {
     "@librediary/eslint-config": "workspace:*",

@@ -6,12 +6,13 @@ import {
   cookiePlugin,
   sensiblePlugin,
   errorHandlerPlugin,
+  websocketPlugin,
 } from './plugins/index.js';
 import { healthRoutes, devRoutes } from './routes/index.js';
 import { authRoutes, oauthRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
-import { versionsRoutes } from './modules/collaboration/index.js';
+import { versionsRoutes, collaborationRoutes } from './modules/collaboration/index.js';
 import { permissionsRoutes } from './modules/permissions/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
@@ -42,6 +43,7 @@ export async function buildApp() {
   await fastify.register(cookiePlugin);
   await fastify.register(sensiblePlugin);
   await fastify.register(errorHandlerPlugin);
+  await fastify.register(websocketPlugin);
 
   // Register routes
   await fastify.register(healthRoutes);
@@ -52,6 +54,9 @@ export async function buildApp() {
 
   // Public routes (no auth required, for public page viewing)
   await fastify.register(publicRoutes, { prefix: '/api/v1/public/pages' });
+
+  // WebSocket routes for real-time collaboration
+  await fastify.register(collaborationRoutes, { prefix: '/collaboration' });
 
   // API routes will be registered under /api prefix
   await fastify.register(
