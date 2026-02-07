@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import multipart from '@fastify/multipart';
 import { env } from './config/index.js';
 import {
   corsPlugin,
@@ -50,6 +51,11 @@ export async function buildApp() {
   await fastify.register(sensiblePlugin);
   await fastify.register(errorHandlerPlugin);
   await fastify.register(websocketPlugin);
+  await fastify.register(multipart, {
+    limits: {
+      fileSize: env.STORAGE_MAX_FILE_SIZE,
+    },
+  });
 
   // Register routes
   await fastify.register(healthRoutes);
