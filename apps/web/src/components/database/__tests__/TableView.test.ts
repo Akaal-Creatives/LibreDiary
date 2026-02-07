@@ -271,6 +271,193 @@ describe('TableView', () => {
     expect(mockDatabasesService.bulkDeleteRows).toHaveBeenCalledWith('org-1', 'db-1', ['row-1']);
   });
 
+  // ========================================
+  // Column Resizing
+  // ========================================
+
+  describe('column resizing', () => {
+    it('renders resize handles on column headers', () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const handles = wrapper.findAll('.col-resize-handle');
+      // One handle per property column
+      expect(handles).toHaveLength(2);
+    });
+
+    it('applies default column width when no config exists', () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const headers = wrapper.findAll('.col-header');
+      // Default width should be applied as inline style
+      expect(headers[0]!.attributes('style')).toContain('width');
+    });
+
+    it('applies saved column widths from view config', () => {
+      const store = setupStore();
+      store.views = [
+        {
+          id: 'view-1',
+          databaseId: 'db-1',
+          name: 'Table view',
+          type: 'TABLE',
+          position: 0,
+          config: { columnWidths: { 'prop-1': 250, 'prop-2': 180 } },
+        },
+      ];
+      const wrapper = mount(TableView);
+      const headers = wrapper.findAll('.col-header');
+      expect(headers[0]!.attributes('style')).toContain('250px');
+      expect(headers[1]!.attributes('style')).toContain('180px');
+    });
+
+    it('starts resizing on mousedown on resize handle', async () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const handle = wrapper.find('.col-resize-handle');
+      await handle.trigger('mousedown', { clientX: 200 });
+      // The resizing class should be applied to the table or a parent
+      expect(wrapper.find('.table-view--resizing').exists()).toBe(true);
+    });
+
+    it('updates column width during mousemove while resizing', async () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const handle = wrapper.findAll('.col-resize-handle')[0]!;
+
+      // Start resize at x=200
+      await handle.trigger('mousedown', { clientX: 200 });
+
+      // Simulate mousemove on document (move 50px right)
+      const moveEvent = new MouseEvent('mousemove', { clientX: 250 });
+      document.dispatchEvent(moveEvent);
+      await wrapper.vm.$nextTick();
+
+      // Column width should have increased by 50px from default
+      const headers = wrapper.findAll('.col-header');
+      const style = headers[0]!.attributes('style') ?? '';
+      // Extract width value - should be default (200) + 50 = 250
+      expect(style).toMatch(/width:\s*250px/);
+    });
+
+    it('persists column width on mouseup after resize', async () => {
+      setupStore();
+      mockDatabasesService.updateView.mockResolvedValue({
+        view: {
+          id: 'view-1',
+          databaseId: 'db-1',
+          name: 'Table view',
+          type: 'TABLE',
+          position: 0,
+          config: { columnWidths: { 'prop-1': 250 } },
+        },
+      });
+
+      const wrapper = mount(TableView);
+      const handle = wrapper.findAll('.col-resize-handle')[0]!;
+
+      // Start resize
+      await handle.trigger('mousedown', { clientX: 200 });
+
+      // Move mouse
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 250 }));
+      await wrapper.vm.$nextTick();
+
+      // End resize
+      document.dispatchEvent(new MouseEvent('mouseup'));
+      await flushPromises();
+
+      // Should persist widths via updateView
+      expect(mockDatabasesService.updateView).toHaveBeenCalledWith(
+        'org-1',
+        'db-1',
+        'view-1',
+        expect.objectContaining({
+          config: expect.objectContaining({
+            columnWidths: expect.objectContaining({ 'prop-1': 250 }),
+          }),
+        })
+      );
+    });
+
+    it('enforces minimum column width of 80px', async () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const handle = wrapper.findAll('.col-resize-handle')[0]!;
+
+      // Start resize at x=200
+      await handle.trigger('mousedown', { clientX: 200 });
+
+      // Move mouse far left to try to make column very small
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 10 }));
+      await wrapper.vm.$nextTick();
+
+      const headers = wrapper.findAll('.col-header');
+      const style = headers[0]!.attributes('style') ?? '';
+      // Should not go below 80px
+      expect(style).toMatch(/width:\s*80px/);
+    });
+
+    it('resets column width to default on double-click', async () => {
+      const store = setupStore();
+      store.views = [
+        {
+          id: 'view-1',
+          databaseId: 'db-1',
+          name: 'Table view',
+          type: 'TABLE',
+          position: 0,
+          config: { columnWidths: { 'prop-1': 300, 'prop-2': 180 } },
+        },
+      ];
+      mockDatabasesService.updateView.mockResolvedValue({
+        view: { ...store.views[0]!, config: { columnWidths: { 'prop-2': 180 } } },
+      });
+
+      const wrapper = mount(TableView);
+      const handle = wrapper.findAll('.col-resize-handle')[0]!;
+      await handle.trigger('dblclick');
+      await flushPromises();
+
+      // Should reset prop-1 width (remove from config) and persist
+      expect(mockDatabasesService.updateView).toHaveBeenCalledWith(
+        'org-1',
+        'db-1',
+        'view-1',
+        expect.objectContaining({
+          config: expect.objectContaining({
+            columnWidths: expect.not.objectContaining({ 'prop-1': expect.anything() }),
+          }),
+        })
+      );
+    });
+
+    it('stops resizing and removes event listeners on mouseup', async () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const handle = wrapper.findAll('.col-resize-handle')[0]!;
+
+      // Start resize
+      await handle.trigger('mousedown', { clientX: 200 });
+      expect(wrapper.find('.table-view--resizing').exists()).toBe(true);
+
+      // End resize
+      document.dispatchEvent(new MouseEvent('mouseup'));
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.find('.table-view--resizing').exists()).toBe(false);
+    });
+
+    it('does not interfere with column drag when clicking header content', async () => {
+      setupStore();
+      const wrapper = mount(TableView);
+      const header = wrapper.find('.col-header');
+
+      // Clicking on the header content area should not trigger resize
+      await header.trigger('mousedown', { clientX: 100 });
+      expect(wrapper.find('.table-view--resizing').exists()).toBe(false);
+    });
+  });
+
   it('does not enter edit mode for system column types', async () => {
     const store = setupStore();
     store.properties.push({
