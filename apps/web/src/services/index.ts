@@ -53,3 +53,11 @@ export type {
   UnreadCountResponse,
   GetNotificationsOptions,
 } from './notifications.service';
+export {
+  searchService,
+  getRecentSearches,
+  saveRecentSearch,
+  removeRecentSearch,
+  clearRecentSearches,
+} from './search.service';
+export type { SearchServiceResponse } from './search.service';
