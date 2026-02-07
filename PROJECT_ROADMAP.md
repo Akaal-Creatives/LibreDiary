@@ -513,25 +513,25 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 12.1 Storage Service
 
-- [ ] Create storage service interface
-- [ ] Implement local disk storage
-- [ ] Implement MinIO storage
-- [ ] Implement S3 storage
-- [ ] Create file upload endpoint
-- [ ] Create file download endpoint
+- [x] Create storage service interface
+- [x] Implement local disk storage
+- [x] Implement MinIO storage (skeleton)
+- [x] Implement S3 storage (skeleton)
+- [x] Create file upload endpoint
+- [x] Create file download endpoint
 
 ### 12.2 File Management
 
-- [ ] Create File model
-- [ ] Track file metadata (size, type)
-- [ ] Implement file type validation
-- [ ] Implement file size limits
-- [ ] Create file deletion
+- [x] Create File model
+- [x] Track file metadata (size, type)
+- [x] Implement file type validation
+- [x] Implement file size limits
+- [x] Create file deletion
 
 ### 12.3 Admin Storage Config
 
-- [ ] Create storage settings UI
-- [ ] Validate storage credentials
+- [x] Create storage settings UI
+- [x] Validate storage credentials
 - [ ] Migrate between storage providers (optional)
 
 ---
