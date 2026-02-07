@@ -464,10 +464,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.6 Calendar View
 
-- [ ] Create calendar component
-- [ ] Display rows by date property
-- [ ] Implement month/week/day views
-- [ ] Add drag to reschedule
+- [x] Create calendar component
+- [x] Display rows by date property
+- [x] Implement month/week/day views
+- [x] Add drag to reschedule
 
 ### 10.7 Gallery View
 
