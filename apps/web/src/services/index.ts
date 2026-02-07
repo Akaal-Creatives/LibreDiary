@@ -62,6 +62,14 @@ export {
 } from './search.service';
 export type { SearchServiceResponse } from './search.service';
 export { databasesService } from './databases.service';
+export { templatesService } from './templates.service';
+export type {
+  CreateTemplateInput,
+  CreateTemplateFromPageInput,
+  UpdateTemplateInput,
+  GetTemplatesOptions,
+  UseTemplateInput,
+} from './templates.service';
 export type {
   CreateDatabaseInput as CreateDatabaseServiceInput,
   UpdateDatabaseInput as UpdateDatabaseServiceInput,
