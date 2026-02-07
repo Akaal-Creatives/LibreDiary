@@ -480,8 +480,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ### 10.8 Advanced Features
 
 - [x] Implement Relations between databases
-- [ ] Implement Rollup calculations
-- [ ] Implement Formula properties
+- [x] Implement Rollup calculations
+- [x] Implement Formula properties
 - [ ] Add database templates
 
 ---
@@ -553,10 +553,6 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create manual backup trigger
 - [ ] Implement backup restoration
 - [ ] Create backup settings UI
-
-### 13.2 Take Your Data (Per Organisation Backups)
-
-- [ ] Plan and implement Per Organisation Backups
 
 ---
 
