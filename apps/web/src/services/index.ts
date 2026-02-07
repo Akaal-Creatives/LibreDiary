@@ -61,3 +61,14 @@ export {
   clearRecentSearches,
 } from './search.service';
 export type { SearchServiceResponse } from './search.service';
+export { databasesService } from './databases.service';
+export type {
+  CreateDatabaseInput as CreateDatabaseServiceInput,
+  UpdateDatabaseInput as UpdateDatabaseServiceInput,
+  CreatePropertyInput as CreatePropertyServiceInput,
+  UpdatePropertyInput as UpdatePropertyServiceInput,
+  CreateRowInput as CreateRowServiceInput,
+  UpdateRowInput as UpdateRowServiceInput,
+  CreateViewInput as CreateViewServiceInput,
+  UpdateViewInput as UpdateViewServiceInput,
+} from './databases.service';
