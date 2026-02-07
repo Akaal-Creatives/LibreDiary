@@ -262,23 +262,43 @@ watch(isOpen, (open) => {
             <h3 class="panel-title">Notifications</h3>
             <span v-if="hasUnread" class="unread-indicator">{{ unreadCount }} new</span>
           </div>
-          <button
-            v-if="hasUnread"
-            class="mark-all-btn"
-            title="Mark all as read"
-            @click="markAllAsRead"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M13.5 4.5L6 12L2.5 8.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <span>Mark all read</span>
-          </button>
+          <div class="header-actions">
+            <button
+              v-if="hasUnread"
+              class="mark-all-btn"
+              title="Mark all as read"
+              @click="markAllAsRead"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M13.5 4.5L6 12L2.5 8.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Mark all read</span>
+            </button>
+            <button
+              class="settings-btn"
+              title="Notification settings"
+              @click="
+                isOpen = false;
+                router.push({ name: 'notification-settings' });
+              "
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M8 1.5V3M8 13V14.5M1.5 8H3M13 8H14.5M3.05 3.05L4.11 4.11M11.89 11.89L12.95 12.95M3.05 12.95L4.11 11.89M11.89 4.11L12.95 3.05"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
         </header>
 
         <!-- Panel Body -->
@@ -660,6 +680,12 @@ watch(isOpen, (open) => {
   border-radius: var(--radius-full);
 }
 
+.header-actions {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
 .mark-all-btn {
   display: flex;
   gap: var(--space-1);
@@ -677,6 +703,24 @@ watch(isOpen, (open) => {
 }
 
 .mark-all-btn:hover {
+  color: var(--color-accent);
+  background: rgba(124, 154, 140, 0.1);
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.settings-btn:hover {
   color: var(--color-accent);
   background: rgba(124, 154, 140, 0.1);
 }

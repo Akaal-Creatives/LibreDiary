@@ -17,6 +17,18 @@ export interface MarkAllReadResponse {
   count: number;
 }
 
+export interface NotificationPreferences {
+  emailMention: boolean;
+  emailCommentReply: boolean;
+  emailPageShared: boolean;
+  emailCommentResolved: boolean;
+  emailInvitation: boolean;
+}
+
+export interface PreferencesResponse {
+  preferences: NotificationPreferences;
+}
+
 export interface GetNotificationsOptions {
   limit?: number;
   offset?: number;
@@ -79,6 +91,24 @@ export const notificationsService = {
    */
   async deleteNotification(notificationId: string): Promise<void> {
     await api.delete(`/notifications/${notificationId}`);
+  },
+
+  /**
+   * Get notification preferences for the current user
+   */
+  async getPreferences(): Promise<NotificationPreferences> {
+    const response = await api.get<PreferencesResponse>('/notifications/preferences');
+    return response.preferences;
+  },
+
+  /**
+   * Update notification preferences
+   */
+  async updatePreferences(
+    updates: Partial<NotificationPreferences>
+  ): Promise<NotificationPreferences> {
+    const response = await api.patch<PreferencesResponse>('/notifications/preferences', updates);
+    return response.preferences;
   },
 };
 

@@ -96,6 +96,11 @@ const routes: RouteRecordRaw[] = [
         name: 'user-sessions',
         component: () => import('@/pages/app/settings/SessionsPage.vue'),
       },
+      {
+        path: 'settings/notifications',
+        name: 'notification-settings',
+        component: () => import('@/pages/app/settings/NotificationSettingsPage.vue'),
+      },
       // Create Organization
       {
         path: 'create-organization',
