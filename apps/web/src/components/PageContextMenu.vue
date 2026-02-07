@@ -14,12 +14,20 @@ const emit = defineEmits<{
   duplicate: [page: Page | PageWithChildren];
   rename: [page: Page | PageWithChildren];
   toggleFavorite: [page: Page | PageWithChildren];
+  saveAsTemplate: [page: Page | PageWithChildren];
   moveToTrash: [page: Page | PageWithChildren];
 }>();
 
 const menuRef = ref<HTMLElement>();
 const focusedIndex = ref(0);
-const menuActions = ['addSubpage', 'duplicate', 'rename', 'toggleFavorite', 'moveToTrash'];
+const menuActions = [
+  'addSubpage',
+  'duplicate',
+  'rename',
+  'toggleFavorite',
+  'saveAsTemplate',
+  'moveToTrash',
+];
 
 function handleClickOutside(event: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
@@ -72,6 +80,9 @@ function handleAction(action: string) {
       break;
     case 'toggleFavorite':
       emit('toggleFavorite', props.page);
+      break;
+    case 'saveAsTemplate':
+      emit('saveAsTemplate', props.page);
       break;
     case 'moveToTrash':
       emit('moveToTrash', props.page);
@@ -171,6 +182,23 @@ onUnmounted(() => {
         />
       </svg>
       <span>Add to favorites</span>
+    </button>
+
+    <button class="menu-item" role="menuitem" @click="handleAction('saveAsTemplate')">
+      <svg class="menu-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect
+          x="2.5"
+          y="2.5"
+          width="11"
+          height="11"
+          rx="1.5"
+          stroke="currentColor"
+          stroke-width="1.25"
+        />
+        <path d="M2.5 6.5H13.5" stroke="currentColor" stroke-width="1.25" />
+        <path d="M6.5 6.5V13.5" stroke="currentColor" stroke-width="1.25" />
+      </svg>
+      <span>Save as template</span>
     </button>
 
     <div class="menu-separator" />
