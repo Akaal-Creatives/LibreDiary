@@ -21,6 +21,7 @@ import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
 import { searchRoutes } from './modules/search/index.js';
+import { databasesRoutes } from './modules/databases/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -108,6 +109,11 @@ export async function buildApp() {
       // Search routes
       await api.register(searchRoutes, {
         prefix: '/organizations/:orgId/search',
+      });
+
+      // Database routes
+      await api.register(databasesRoutes, {
+        prefix: '/organizations/:orgId/databases',
       });
 
       // Notifications routes (user-specific, no org context needed)
