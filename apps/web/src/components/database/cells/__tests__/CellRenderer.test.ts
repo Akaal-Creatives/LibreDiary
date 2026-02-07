@@ -32,6 +32,32 @@ vi.mock('@/stores/organizations', () => ({
 
 vi.mock('@/stores/databases', () => ({
   useDatabasesStore: () => ({
+    properties: [
+      {
+        id: 'rel-prop',
+        databaseId: 'db-1',
+        name: 'Related Projects',
+        type: 'RELATION',
+        position: 2,
+        config: { targetDatabaseId: 'target-db-1' },
+      },
+      {
+        id: 'price-prop',
+        databaseId: 'db-1',
+        name: 'Price',
+        type: 'NUMBER',
+        position: 3,
+        config: null,
+      },
+      {
+        id: 'qty-prop',
+        databaseId: 'db-1',
+        name: 'Quantity',
+        type: 'NUMBER',
+        position: 4,
+        config: null,
+      },
+    ],
     relatedDatabases: new Map([
       [
         'target-db-1',
@@ -47,13 +73,21 @@ vi.mock('@/stores/databases', () => ({
               position: 0,
               config: null,
             },
+            {
+              id: 'tp-2',
+              databaseId: 'target-db-1',
+              name: 'Budget',
+              type: 'NUMBER',
+              position: 1,
+              config: null,
+            },
           ],
           rows: [
             {
               id: 'trow-1',
               databaseId: 'target-db-1',
               position: 0,
-              cells: { 'tp-1': 'Alpha Project' },
+              cells: { 'tp-1': 'Alpha Project', 'tp-2': 100 },
               createdById: 'user-1',
               createdAt: '2024-01-01',
               updatedAt: '2024-01-01',
@@ -62,7 +96,7 @@ vi.mock('@/stores/databases', () => ({
               id: 'trow-2',
               databaseId: 'target-db-1',
               position: 1,
-              cells: { 'tp-1': 'Beta Project' },
+              cells: { 'tp-1': 'Beta Project', 'tp-2': 250 },
               createdById: 'user-1',
               createdAt: '2024-01-01',
               updatedAt: '2024-01-01',
@@ -357,6 +391,172 @@ describe('CellRenderer', () => {
       const pills = wrapper.findAll('.relation-pill');
       expect(pills).toHaveLength(1);
       expect(pills[0]!.text()).toBe('Alpha Project');
+    });
+  });
+
+  // Rollup property type
+  describe('ROLLUP type', () => {
+    it('renders COUNT aggregation of related rows', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: {
+            relationPropertyId: 'rel-prop',
+            targetPropertyId: 'tp-2',
+            aggregation: 'COUNT',
+          },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('2');
+    });
+
+    it('renders SUM aggregation of related row values', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('350');
+    });
+
+    it('renders AVG aggregation of related row values', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'AVG' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('175');
+    });
+
+    it('renders MIN aggregation', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'MIN' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('100');
+    });
+
+    it('renders MAX aggregation', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'MAX' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('250');
+    });
+
+    it('renders empty when no related rows', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: { 'rel-prop': [] },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty when relation property not in rowCells', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: {},
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+  });
+
+  // Formula property type
+  describe('FORMULA type', () => {
+    it('renders result of simple addition', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") + prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 5 },
+        },
+      });
+      expect(wrapper.text()).toBe('15');
+    });
+
+    it('renders result of multiplication', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") * prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 5 },
+        },
+      });
+      expect(wrapper.text()).toBe('50');
+    });
+
+    it('renders empty when expression is missing', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: {},
+          rowCells: { 'price-prop': 10 },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty when referenced property has no value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") + prop("Quantity")' },
+          rowCells: { 'price-prop': 10 },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders result of subtraction', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") - prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 3 },
+        },
+      });
+      expect(wrapper.text()).toBe('7');
+    });
+
+    it('renders result of division', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") / prop("Quantity")' },
+          rowCells: { 'price-prop': 100, 'qty-prop': 4 },
+        },
+      });
+      expect(wrapper.text()).toBe('25');
     });
   });
 });
