@@ -24,6 +24,11 @@ model User {
   avatarUrl       String?
   locale          String    @default("en")
 
+  // Notification preferences (JSON)
+  // Controls which notification types send emails
+  // Default: all enabled (empty object means all enabled)
+  notificationPrefs Json @default("{}")
+
   // Super Admin flag (platform-wide)
   isSuperAdmin Boolean @default(false)
 

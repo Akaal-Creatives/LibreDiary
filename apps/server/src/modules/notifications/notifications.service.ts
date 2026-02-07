@@ -7,6 +7,7 @@ import {
   sendPageSharedNotificationEmail,
   sendCommentResolvedNotificationEmail,
 } from '../../services/email.service.js';
+import { shouldSendEmail } from './notifications.prefs.service.js';
 
 // ===========================================
 // TYPES
@@ -235,18 +236,21 @@ export async function createMentionNotification(
     },
   });
 
-  // Send email notification (async, don't block)
+  // Send email notification if enabled (async, don't block)
   try {
-    const user = await getUserForEmail(input.recipientId);
-    if (user) {
-      await sendMentionNotificationEmail({
-        to: user.email,
-        recipientName: user.name || '',
-        actorName: input.actorName,
-        pageTitle: input.pageTitle,
-        pageUrl: getPageUrl(input.pageId),
-      });
-      await markEmailSent(notification.id);
+    const shouldEmail = await shouldSendEmail(input.recipientId, 'MENTION');
+    if (shouldEmail) {
+      const user = await getUserForEmail(input.recipientId);
+      if (user) {
+        await sendMentionNotificationEmail({
+          to: user.email,
+          recipientName: user.name || '',
+          actorName: input.actorName,
+          pageTitle: input.pageTitle,
+          pageUrl: getPageUrl(input.pageId),
+        });
+        await markEmailSent(notification.id);
+      }
     }
   } catch (error) {
     console.error('Failed to send mention notification email:', error);
