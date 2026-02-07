@@ -8,6 +8,7 @@ import type {
   DatabaseWithRelations,
 } from '@librediary/shared';
 import { databasesService } from '@/services';
+import { getTemplate } from '@/components/database/databaseTemplates';
 import type {
   CreateDatabaseServiceInput,
   UpdateDatabaseServiceInput,
@@ -224,6 +225,26 @@ export const useDatabasesStore = defineStore('databases', () => {
     } finally {
       loading.value = false;
     }
+  }
+
+  async function createDatabaseFromTemplate(templateId: string): Promise<DatabaseWithRelations> {
+    const template = getTemplate(templateId);
+    const name = template && templateId !== 'blank' ? template.name : 'Untitled Database';
+    const db = await createDatabase({ name });
+
+    if (template && template.properties.length > 0) {
+      const orgId = getOrgId();
+      for (const prop of template.properties) {
+        const data = await databasesService.createProperty(orgId, db.id, {
+          name: prop.name,
+          type: prop.type,
+          config: prop.config,
+        });
+        properties.value.push(data.property);
+      }
+    }
+
+    return db;
   }
 
   async function updateDatabase(
@@ -446,6 +467,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     fetchDatabases,
     fetchDatabase,
     fetchRelatedDatabase,
+    createDatabaseFromTemplate,
     createDatabase,
     updateDatabase,
     deleteDatabase,
