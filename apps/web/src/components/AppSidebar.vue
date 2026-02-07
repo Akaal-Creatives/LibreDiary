@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore, usePagesStore } from '@/stores';
+import { useAuthStore, usePagesStore, useDatabasesStore } from '@/stores';
 import { useTheme, useToast } from '@/composables';
 import type { PageWithChildren, Page } from '@librediary/shared';
 import OrganizationSwitcher from './OrganizationSwitcher.vue';
@@ -14,6 +14,7 @@ import SearchModal from './SearchModal.vue';
 const router = useRouter();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
+const databasesStore = useDatabasesStore();
 const { theme, toggleTheme } = useTheme();
 const toast = useToast();
 
@@ -64,8 +65,11 @@ watch(
   async (orgId) => {
     if (orgId) {
       try {
-        await pagesStore.fetchPageTree();
-        await pagesStore.fetchFavorites();
+        await Promise.all([
+          pagesStore.fetchPageTree(),
+          pagesStore.fetchFavorites(),
+          databasesStore.fetchDatabases(),
+        ]);
       } catch (e) {
         console.error('Failed to fetch pages:', e);
         toast.error('Failed to load pages');
@@ -139,6 +143,20 @@ async function handleToggleFavorite(page: Page | PageWithChildren) {
     console.error('Failed to toggle favorite:', e);
     toast.error('Failed to update favorites');
   }
+}
+
+async function createNewDatabase() {
+  try {
+    const db = await databasesStore.createDatabase({ name: 'Untitled Database' });
+    router.push({ name: 'database', params: { databaseId: db.id } });
+  } catch (e) {
+    console.error('Failed to create database:', e);
+    toast.error('Failed to create database');
+  }
+}
+
+function navigateToDatabase(databaseId: string) {
+  router.push({ name: 'database', params: { databaseId } });
 }
 
 async function handleMoveToTrash(page: Page | PageWithChildren) {
@@ -307,6 +325,78 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
             :page="page"
             @contextmenu="showContextMenu"
           />
+        </div>
+      </div>
+
+      <!-- Databases Section -->
+      <div class="nav-section">
+        <div class="nav-section-header">
+          <span class="nav-section-title">Databases</span>
+          <button
+            class="section-action"
+            title="Add database"
+            aria-label="Add new database"
+            @click="createNewDatabase"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 2.5V11.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M2.5 7H11.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="databasesStore.databaseList.length === 0" class="empty-state">
+          <span class="empty-text">No databases yet</span>
+        </div>
+
+        <div v-else class="database-list">
+          <button
+            v-for="db in databasesStore.databaseList"
+            :key="db.id"
+            class="nav-item database-item"
+            @click="navigateToDatabase(db.id)"
+          >
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <rect
+                  x="2.25"
+                  y="2.25"
+                  width="13.5"
+                  height="13.5"
+                  rx="2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <line
+                  x1="2.25"
+                  y1="6.75"
+                  x2="15.75"
+                  y2="6.75"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <line
+                  x1="7.5"
+                  y1="6.75"
+                  x2="7.5"
+                  y2="15.75"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+            </span>
+            <span class="database-name">{{ db.name }}</span>
+          </button>
         </div>
       </div>
 
@@ -610,6 +700,21 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 .page-tree {
   display: flex;
   flex-direction: column;
+}
+
+.database-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.database-item {
+  color: var(--color-text-secondary);
+}
+
+.database-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .loading-state {

@@ -169,7 +169,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     views.value = db.views;
     rows.value = db.rows;
     if (!activeViewId.value && db.views.length > 0) {
-      activeViewId.value = db.views[0].id;
+      activeViewId.value = db.views[0]!.id;
     }
   }
 

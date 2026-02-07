@@ -69,6 +69,12 @@ const routes: RouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'database/:databaseId',
+        name: 'database',
+        component: () => import('@/pages/app/DatabaseView.vue'),
+        props: true,
+      },
+      {
         path: 'trash',
         name: 'trash',
         component: () => import('@/pages/app/TrashPage.vue'),
