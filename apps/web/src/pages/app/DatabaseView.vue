@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import DatabaseHeader from '@/components/database/DatabaseHeader.vue';
+import DatabaseToolbar from '@/components/database/DatabaseToolbar.vue';
 import TableView from '@/components/database/TableView.vue';
 
 const databasesStore = useDatabasesStore();
@@ -60,6 +61,7 @@ async function loadDatabase() {
     <!-- Database Content -->
     <div v-else-if="databasesStore.currentDatabase" class="database-content">
       <DatabaseHeader />
+      <DatabaseToolbar />
       <TableView v-if="databasesStore.activeView?.type === 'TABLE'" />
       <div v-else class="view-placeholder">
         <span class="placeholder-text">

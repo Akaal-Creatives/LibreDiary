@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import { CellRenderer, CellEditor } from './cells';
 import ColumnHeaderMenu from './ColumnHeaderMenu.vue';
+import PropertyConfigPanel from './PropertyConfigPanel.vue';
 import type { PropertyType } from '@librediary/shared';
 
 const databasesStore = useDatabasesStore();
@@ -13,6 +14,7 @@ const showAddPropertyPopover = ref(false);
 const newPropertyName = ref('');
 const newPropertyType = ref<PropertyType>('TEXT');
 const columnMenuTarget = ref<string | null>(null);
+const configureTarget = ref<string | null>(null);
 
 // Drag state for row reorder
 const dragRowId = ref<string | null>(null);
@@ -99,6 +101,15 @@ function toggleColumnMenu(propertyId: string) {
 
 function closeColumnMenu() {
   columnMenuTarget.value = null;
+}
+
+function openConfigure(propertyId: string) {
+  columnMenuTarget.value = null;
+  configureTarget.value = propertyId;
+}
+
+function closeConfigure() {
+  configureTarget.value = null;
 }
 
 // Row drag-and-drop
@@ -270,6 +281,12 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 v-if="columnMenuTarget === prop.id"
                 :property="prop"
                 @close="closeColumnMenu"
+                @configure="openConfigure(prop.id)"
+              />
+              <PropertyConfigPanel
+                v-if="configureTarget === prop.id"
+                :property="prop"
+                @close="closeConfigure"
               />
             </th>
             <!-- Add property column -->

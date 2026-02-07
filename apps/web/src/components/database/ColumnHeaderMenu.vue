@@ -9,6 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
+  configure: [];
 }>();
 
 const databasesStore = useDatabasesStore();
@@ -134,6 +135,16 @@ const isFirstProperty = props.property.position === 0;
           />
         </svg>
         Rename
+      </button>
+      <button class="menu-item menu-item-configure" @click="emit('configure')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2" />
+          <path d="M7 1.5V3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M7 11V12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M1.5 7H3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M11 7H12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+        </svg>
+        Configure
       </button>
       <button class="menu-item danger" :disabled="isFirstProperty" @click="deleteProperty">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
