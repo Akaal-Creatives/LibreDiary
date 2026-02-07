@@ -457,10 +457,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.5 Kanban View
 
-- [ ] Create kanban board component
-- [ ] Group rows by select property
-- [ ] Implement drag-drop between columns
-- [ ] Add column management
+- [x] Create kanban board component
+- [x] Group rows by select property
+- [x] Implement drag-drop between columns
+- [x] Add column management
 
 ### 10.6 Calendar View
 
