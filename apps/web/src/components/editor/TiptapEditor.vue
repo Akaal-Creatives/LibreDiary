@@ -4,6 +4,7 @@ import { Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import type * as Y from 'yjs';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 
@@ -44,7 +45,11 @@ const editor = shallowRef<Editor | null>(null);
 const isCollaborativeEditor = ref(false);
 
 // Build extensions based on mode
-function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
+function buildExtensions(
+  forCollaborative: boolean,
+  ydoc?: Y.Doc | null,
+  collabProvider?: HocuspocusProvider | null
+) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseExtensions: any[] = [
     StarterKit.configure({
@@ -59,8 +64,8 @@ function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
         keepMarks: true,
         keepAttributes: false,
       },
-      // Disable undo/redo in collaborative mode - Yjs handles it
-      undoRedo: forCollaborative ? false : undefined,
+      // Disable history in collaborative mode - Yjs handles undo/redo
+      history: forCollaborative ? false : undefined,
     }),
     Placeholder.configure({
       placeholder: props.placeholder,
@@ -76,13 +81,31 @@ function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
         document: ydoc,
       })
     );
+
+    // Add CollaborationCursor for real-time cursor positions
+    // Guard: only add when provider and its awareness are ready
+    if (collabProvider && collabProvider.awareness) {
+      baseExtensions.push(
+        CollaborationCursor.configure({
+          provider: collabProvider,
+          user: {
+            name: props.userName,
+            color: props.userColor,
+          },
+        })
+      );
+    }
   }
 
   return baseExtensions;
 }
 
 // Create the editor
-function createEditor(forCollaborative: boolean, ydoc?: Y.Doc | null) {
+function createEditor(
+  forCollaborative: boolean,
+  ydoc?: Y.Doc | null,
+  collabProvider?: HocuspocusProvider | null
+) {
   // Destroy existing editor
   if (editor.value) {
     editor.value.destroy();
@@ -95,7 +118,7 @@ function createEditor(forCollaborative: boolean, ydoc?: Y.Doc | null) {
   editor.value = new Editor({
     content: props.modelValue || undefined,
     editable: props.editable,
-    extensions: buildExtensions(forCollaborative, ydoc),
+    extensions: buildExtensions(forCollaborative, ydoc, collabProvider),
     onUpdate: ({ editor: e }) => {
       emit('update:modelValue', e.getHTML());
     },
@@ -111,7 +134,7 @@ try {
     // In collaborative mode, wait for ydoc to be available
     // Check that ydoc is a valid Y.Doc instance (not just truthy)
     if (props.ydoc && typeof props.ydoc.get === 'function') {
-      createEditor(true, props.ydoc);
+      createEditor(true, props.ydoc, props.provider);
     }
     // Otherwise, we'll create it when ydoc becomes available (via watch)
     else {
@@ -128,8 +151,7 @@ try {
 }
 
 // Watch for ydoc changes in collaborative mode
-// Note: CollaborationCursor is temporarily disabled due to initialization issues
-// TODO: Fix CollaborationCursor "Cannot read properties of undefined (reading 'doc')" error
+// When ydoc changes, provider changes too (both created together in useCollaboration)
 watch(
   () => props.ydoc,
   (newYdoc, oldYdoc) => {
@@ -138,7 +160,7 @@ watch(
       if (props.collaborative && newYdoc && typeof newYdoc.get === 'function') {
         // Only recreate if ydoc actually changed
         if (newYdoc !== oldYdoc) {
-          createEditor(true, newYdoc);
+          createEditor(true, newYdoc, props.provider);
         }
       }
     } catch (e) {
@@ -166,13 +188,19 @@ watch(
   }
 );
 
-// Watch for user name/color changes (for cursors)
+// Watch for user name/colour changes (for cursors)
 watch([() => props.userName, () => props.userColor], ([name, color]) => {
+  // Update cursor user via Tiptap command if CollaborationCursor is active
+  if (editor.value && isCollaborativeEditor.value) {
+    try {
+      editor.value.chain().updateUser({ name, color }).run();
+    } catch {
+      // CollaborationCursor may not be loaded — fall through to provider update
+    }
+  }
+  // Also update awareness on the provider directly
   if (props.provider) {
-    props.provider.setAwarenessField('user', {
-      name,
-      color,
-    });
+    props.provider.setAwarenessField('user', { name, color });
   }
 });
 
