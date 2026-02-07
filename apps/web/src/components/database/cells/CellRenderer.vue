@@ -1,11 +1,33 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { PropertyType } from '@librediary/shared';
+import { useOrganizationsStore } from '@/stores/organizations';
 
 const props = defineProps<{
   value: unknown;
   type: PropertyType;
   config?: Record<string, unknown> | null;
 }>();
+
+const organizationsStore = useOrganizationsStore();
+
+const personUser = computed(() => {
+  if (props.type !== 'PERSON' || !props.value) return null;
+  const userId = String(props.value);
+  const member = organizationsStore.members.find((m) => m.user.id === userId);
+  return member?.user ?? null;
+});
+
+const personInitials = computed(() => {
+  const user = personUser.value;
+  if (!user?.name) return '?';
+  return user.name
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0]!.toUpperCase())
+    .slice(0, 2)
+    .join('');
+});
 
 function formatValue(): string {
   if (props.value == null) return '';
@@ -16,6 +38,11 @@ function formatValue(): string {
     case 'EMAIL':
     case 'PHONE':
       return String(props.value);
+
+    case 'PERSON': {
+      if (personUser.value) return personUser.value.name ?? String(props.value);
+      return String(props.value);
+    }
 
     case 'NUMBER': {
       const num = Number(props.value);
@@ -120,6 +147,20 @@ function getSelectColour(val: string): string {
       </a>
     </template>
 
+    <!-- Person -->
+    <template v-else-if="type === 'PERSON' && value">
+      <span class="person-badge">
+        <img
+          v-if="personUser?.avatarUrl"
+          class="person-avatar"
+          :src="personUser.avatarUrl"
+          :alt="personUser.name ?? ''"
+        />
+        <span v-else class="person-initials">{{ personInitials }}</span>
+        <span class="person-name">{{ personUser?.name ?? String(value) }}</span>
+      </span>
+    </template>
+
     <!-- Default text display -->
     <template v-else>
       {{ formatValue() }}
@@ -171,6 +212,43 @@ function getSelectColour(val: string): string {
   background: color-mix(in srgb, var(--tag-colour, var(--color-accent)) 12%, transparent);
   border-radius: var(--radius-sm);
   white-space: nowrap;
+}
+
+/* Person */
+.person-badge {
+  display: inline-flex;
+  gap: var(--space-1-5);
+  align-items: center;
+}
+
+.person-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.person-name {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .url-link,

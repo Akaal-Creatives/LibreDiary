@@ -303,6 +303,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'URL', label: 'URL' },
   { value: 'EMAIL', label: 'Email' },
   { value: 'PHONE', label: 'Phone' },
+  { value: 'PERSON', label: 'Person' },
 ];
 </script>
 
