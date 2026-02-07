@@ -51,6 +51,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   return data.data as T;
 }
 
+export type UploadProgressCallback = (loaded: number, total: number) => void;
+
 export const api = {
   get<T>(endpoint: string): Promise<T> {
     return request<T>(endpoint, { method: 'GET' });
@@ -70,5 +72,50 @@ export const api = {
 
   delete<T>(endpoint: string): Promise<T> {
     return request<T>(endpoint, { method: 'DELETE' });
+  },
+
+  upload<T>(endpoint: string, formData: FormData, onProgress?: UploadProgressCallback): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}${endpoint}`);
+      xhr.withCredentials = true;
+
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            onProgress(event.loaded, event.total);
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        try {
+          const data = JSON.parse(xhr.responseText) as ApiResponse<T>;
+          if (!data.success) {
+            reject(
+              new ApiError(
+                data.error?.code ?? 'UNKNOWN_ERROR',
+                data.error?.message ?? 'An unexpected error occurred',
+                data.error?.details
+              )
+            );
+            return;
+          }
+          resolve(data.data as T);
+        } catch {
+          reject(new ApiError('PARSE_ERROR', 'Failed to parse server response'));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new ApiError('NETWORK_ERROR', 'Network error during upload'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new ApiError('UPLOAD_ABORTED', 'Upload was aborted'));
+      });
+
+      xhr.send(formData);
+    });
   },
 };
