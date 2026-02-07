@@ -472,8 +472,8 @@ export async function duplicatePage(orgId: string, pageId: string, userId: strin
       title: `${page.title} (copy)`,
       icon: page.icon,
       coverUrl: page.coverUrl,
+      yjsState: page.yjsState,
       position,
-      // Note: yjsState is NOT copied - content is deferred to Phase 5
     },
   });
 }
