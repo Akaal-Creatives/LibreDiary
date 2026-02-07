@@ -51,6 +51,9 @@ vi.mock('@/components/database/KanbanView.vue', () => ({
 vi.mock('@/components/database/CalendarView.vue', () => ({
   default: { template: '<div class="stub-calendar-view" />' },
 }));
+vi.mock('@/components/database/GalleryView.vue', () => ({
+  default: { template: '<div class="stub-gallery-view" />' },
+}));
 
 import DatabaseView from '../../app/DatabaseView.vue';
 import { useDatabasesStore } from '@/stores/databases';
@@ -157,13 +160,15 @@ describe('DatabaseView', () => {
     expect(wrapper.find('.stub-kanban-view').exists()).toBe(false);
   });
 
-  it('renders placeholder for unsupported view types', async () => {
+  it('renders GalleryView when active view type is GALLERY', async () => {
     mockDatabasesService.getDatabase.mockResolvedValue(makeDatabaseResponse('GALLERY'));
     const wrapper = mount(DatabaseView, { props: { databaseId: 'db-1' } });
     await flushPromises();
 
-    expect(wrapper.find('.view-placeholder').exists()).toBe(true);
-    expect(wrapper.text()).toContain('GALLERY view is not yet supported');
+    expect(wrapper.find('.stub-gallery-view').exists()).toBe(true);
+    expect(wrapper.find('.stub-table-view').exists()).toBe(false);
+    expect(wrapper.find('.stub-kanban-view').exists()).toBe(false);
+    expect(wrapper.find('.stub-calendar-view').exists()).toBe(false);
   });
 
   it('renders DatabaseHeader and DatabaseToolbar', async () => {
