@@ -439,7 +439,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 ### 10.3 Table View
 
 - [x] Create data table component
-- [ ] Implement column resizing
+- [x] Implement column resizing
 - [x] Add cell editing by type
 - [x] Implement sorting
 - [x] Implement filtering
