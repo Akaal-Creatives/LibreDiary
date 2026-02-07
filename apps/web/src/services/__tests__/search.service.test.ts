@@ -186,4 +186,101 @@ describe('Search Service', () => {
       expect(getRecentSearches()).toEqual([]);
     });
   });
+
+  // ===========================================
+  // Error handling & edge cases
+  // ===========================================
+
+  describe('searchService.search - error handling', () => {
+    it('should propagate API errors', async () => {
+      mockApi.get.mockRejectedValue(new Error('Network error'));
+
+      await expect(searchService.search('org-123', { q: 'test' })).rejects.toThrow('Network error');
+    });
+
+    it('should not save to recent searches when API call fails', async () => {
+      mockApi.get.mockRejectedValue(new Error('Server error'));
+
+      try {
+        await searchService.search('org-123', { q: 'failed query' });
+      } catch {
+        // expected
+      }
+
+      expect(getRecentSearches()).toEqual([]);
+    });
+
+    it('should not include undefined optional params in URL', async () => {
+      mockApi.get.mockResolvedValue({ results: [], total: 0, query: 'test' });
+
+      await searchService.search('org-123', { q: 'test' });
+
+      const url = mockApi.get.mock.calls[0]![0] as string;
+      expect(url).not.toContain('limit=');
+      expect(url).not.toContain('offset=');
+      expect(url).not.toContain('dateFrom=');
+      expect(url).not.toContain('dateTo=');
+      expect(url).not.toContain('createdById=');
+    });
+
+    it('should handle special characters in query', async () => {
+      mockApi.get.mockResolvedValue({ results: [], total: 0, query: 'test & foo' });
+
+      await searchService.search('org-123', { q: 'test & foo' });
+
+      const url = mockApi.get.mock.calls[0]![0] as string;
+      // URLSearchParams encodes & as %26
+      expect(url).toContain('q=test');
+    });
+
+    it('should handle special characters in orgId', async () => {
+      mockApi.get.mockResolvedValue({ results: [], total: 0, query: 'test' });
+
+      await searchService.search('org-with-special', { q: 'test' });
+
+      const url = mockApi.get.mock.calls[0]![0] as string;
+      expect(url).toContain('/organizations/org-with-special/search');
+    });
+  });
+
+  describe('saveRecentSearch - edge cases', () => {
+    it('should handle unicode and emoji queries', () => {
+      saveRecentSearch('日本語テスト');
+      saveRecentSearch('🔍 search');
+      expect(getRecentSearches()).toEqual(['🔍 search', '日本語テスト']);
+    });
+
+    it('should preserve order when deduplicating with different case', () => {
+      saveRecentSearch('Hello');
+      saveRecentSearch('hello');
+      // Different case = different entries
+      expect(getRecentSearches()).toEqual(['hello', 'Hello']);
+    });
+
+    it('should evict oldest entry when exceeding limit', () => {
+      for (let i = 0; i < 10; i++) {
+        saveRecentSearch(`query-${i}`);
+      }
+      saveRecentSearch('newest');
+      const recent = getRecentSearches();
+      expect(recent).toHaveLength(10);
+      expect(recent[0]).toBe('newest');
+      expect(recent).not.toContain('query-0');
+    });
+  });
+
+  describe('removeRecentSearch - edge cases', () => {
+    it('should handle empty localStorage gracefully', () => {
+      // No prior saves
+      expect(() => removeRecentSearch('nonexistent')).not.toThrow();
+      expect(getRecentSearches()).toEqual([]);
+    });
+
+    it('should remove only the exact match', () => {
+      saveRecentSearch('hello world');
+      saveRecentSearch('hello');
+      removeRecentSearch('hello');
+      expect(getRecentSearches()).toEqual(['hello world']);
+    });
+  });
 });

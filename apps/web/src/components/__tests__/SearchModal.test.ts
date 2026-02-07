@@ -391,5 +391,331 @@ describe('SearchModal', () => {
       await wrapper.find('.search-result-item').trigger('click');
       expect(wrapper.emitted('navigate')![0]).toEqual(['page-99']);
     });
+
+    it('should show default document icon when page has no icon', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ icon: null })],
+        total: 1,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(wrapper.find('.result-page-icon').text()).toBe('📄');
+    });
+
+    it('should use singular "result" for count of 1', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult()],
+        total: 1,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(wrapper.find('.search-section-title').text()).toBe('1 result');
+    });
+
+    it('should use plural "results" for count greater than 1', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'p1' }), createMockResult({ id: 'p2' })],
+        total: 2,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(wrapper.find('.search-section-title').text()).toBe('2 results');
+    });
+  });
+
+  // ===========================================
+  // Keyboard navigation - extended
+  // ===========================================
+
+  describe('keyboard navigation - extended', () => {
+    it('should navigate up with ArrowUp', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'page-1' }), createMockResult({ id: 'page-2' })],
+        total: 2,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      const overlay = wrapper.find('.search-modal-overlay');
+      // Move down first, then back up
+      await overlay.trigger('keydown', { key: 'ArrowDown' });
+      await overlay.trigger('keydown', { key: 'ArrowUp' });
+      await flushPromises();
+
+      const items = wrapper.findAll('.search-result-item');
+      expect(items[0]!.classes()).toContain('selected');
+    });
+
+    it('should not go below last item with ArrowDown', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'page-1' }), createMockResult({ id: 'page-2' })],
+        total: 2,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      const overlay = wrapper.find('.search-modal-overlay');
+      // Press ArrowDown 5 times (more than items)
+      for (let i = 0; i < 5; i++) {
+        await overlay.trigger('keydown', { key: 'ArrowDown' });
+      }
+      await flushPromises();
+
+      const items = wrapper.findAll('.search-result-item');
+      expect(items[1]!.classes()).toContain('selected'); // stays at last (index 1)
+    });
+
+    it('should not go above first item with ArrowUp', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'page-1' }), createMockResult({ id: 'page-2' })],
+        total: 2,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      const overlay = wrapper.find('.search-modal-overlay');
+      // Press ArrowUp at start
+      await overlay.trigger('keydown', { key: 'ArrowUp' });
+      await flushPromises();
+
+      const items = wrapper.findAll('.search-result-item');
+      expect(items[0]!.classes()).toContain('selected'); // stays at first
+    });
+
+    it('should select recent search with Enter key', async () => {
+      mockGetRecentSearches.mockReturnValue(['previous search']);
+      const wrapper = mountModal();
+      await flushPromises();
+
+      await wrapper.find('.search-modal-overlay').trigger('keydown', { key: 'Enter' });
+
+      const input = wrapper.find('.search-modal-input');
+      expect((input.element as HTMLInputElement).value).toBe('previous search');
+    });
+
+    it('should do nothing on Enter when no results and no recent searches', async () => {
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      await wrapper.find('.search-modal-overlay').trigger('keydown', { key: 'Enter' });
+      expect(wrapper.emitted('navigate')).toBeFalsy();
+    });
+  });
+
+  // ===========================================
+  // Search error handling
+  // ===========================================
+
+  describe('search error handling', () => {
+    it('should clear results and stop loading on API error', async () => {
+      mockSearchService.search.mockRejectedValue(new Error('Network error'));
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(wrapper.find('.search-loading').exists()).toBe(false);
+      expect(wrapper.find('.search-results').exists()).toBe(false);
+    });
+
+    it('should show empty state after error (not loading state)', async () => {
+      mockSearchService.search.mockRejectedValue(new Error('Server error'));
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      // Should show empty state since results are [] and loading is false
+      expect(wrapper.find('.search-empty').exists()).toBe(true);
+    });
+  });
+
+  // ===========================================
+  // Debounce behaviour
+  // ===========================================
+
+  describe('debounce behaviour', () => {
+    it('should cancel previous debounce when typing rapidly', async () => {
+      const wrapper = mountModal();
+      const input = wrapper.find('.search-modal-input');
+
+      await input.setValue('t');
+      vi.advanceTimersByTime(100);
+      await input.setValue('te');
+      vi.advanceTimersByTime(100);
+      await input.setValue('tes');
+      vi.advanceTimersByTime(100);
+      await input.setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      // Should only have searched once with final value
+      expect(mockSearchService.search).toHaveBeenCalledTimes(1);
+      expect(mockSearchService.search).toHaveBeenCalledWith(
+        'org-123',
+        expect.objectContaining({ q: 'test' })
+      );
+    });
+
+    it('should cancel debounce when query is cleared', async () => {
+      const wrapper = mountModal();
+      const input = wrapper.find('.search-modal-input');
+
+      await input.setValue('test');
+      vi.advanceTimersByTime(100); // mid-debounce
+      await input.setValue(''); // clear
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(mockSearchService.search).not.toHaveBeenCalled();
+    });
+
+    it('should reset selected index when results change', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'p1' }), createMockResult({ id: 'p2' })],
+        total: 2,
+        query: 'first',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('first');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      // Navigate to second item
+      await wrapper.find('.search-modal-overlay').trigger('keydown', { key: 'ArrowDown' });
+
+      // New search
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult({ id: 'p3' })],
+        total: 1,
+        query: 'second',
+      });
+
+      await wrapper.find('.search-modal-input').setValue('second');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      // First item should be selected again
+      const items = wrapper.findAll('.search-result-item');
+      expect(items[0]!.classes()).toContain('selected');
+    });
+  });
+
+  // ===========================================
+  // State reset on close
+  // ===========================================
+
+  describe('state management', () => {
+    it('should reset all state when modal becomes hidden', async () => {
+      mockSearchService.search.mockResolvedValue({
+        results: [createMockResult()],
+        total: 1,
+        query: 'test',
+      });
+
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      // Toggle filters
+      await wrapper.find('.search-filter-toggle').trigger('click');
+
+      // Now hide
+      await wrapper.setProps({ visible: false });
+      await flushPromises();
+
+      // Re-show
+      mockGetRecentSearches.mockReturnValue([]);
+      await wrapper.setProps({ visible: true });
+      await flushPromises();
+
+      // Everything should be reset
+      const input = wrapper.find('.search-modal-input');
+      expect((input.element as HTMLInputElement).value).toBe('');
+      expect(wrapper.find('.search-results').exists()).toBe(false);
+      expect(wrapper.find('.search-filters').exists()).toBe(false);
+    });
+
+    it('should show initial state text when no query and no recent searches', () => {
+      mockGetRecentSearches.mockReturnValue([]);
+      const wrapper = mountModal();
+
+      expect(wrapper.find('.search-initial').exists()).toBe(true);
+      expect(wrapper.find('.search-initial-text').text()).toContain('Type to search');
+    });
+  });
+
+  // ===========================================
+  // Accessibility
+  // ===========================================
+
+  describe('accessibility', () => {
+    it('should have role="dialog" on overlay', () => {
+      const wrapper = mountModal();
+      const overlay = wrapper.find('.search-modal-overlay');
+      expect(overlay.attributes('role')).toBe('dialog');
+    });
+
+    it('should have aria-modal="true"', () => {
+      const wrapper = mountModal();
+      const overlay = wrapper.find('.search-modal-overlay');
+      expect(overlay.attributes('aria-modal')).toBe('true');
+    });
+
+    it('should have aria-label for search', () => {
+      const wrapper = mountModal();
+      const overlay = wrapper.find('.search-modal-overlay');
+      expect(overlay.attributes('aria-label')).toBe('Search pages');
+    });
+
+    it('should have aria-label on clear button', async () => {
+      const wrapper = mountModal();
+      await wrapper.find('.search-modal-input').setValue('test');
+
+      expect(wrapper.find('.search-clear-btn').attributes('aria-label')).toBe('Clear search');
+    });
+
+    it('should have aria-label on filter toggle', () => {
+      const wrapper = mountModal();
+      expect(wrapper.find('.search-filter-toggle').attributes('aria-label')).toBe('Toggle filters');
+    });
+
+    it('should have autocomplete="off" on input', () => {
+      const wrapper = mountModal();
+      expect(wrapper.find('.search-modal-input').attributes('autocomplete')).toBe('off');
+    });
   });
 });
