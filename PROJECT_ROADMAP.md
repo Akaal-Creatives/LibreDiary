@@ -391,22 +391,22 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 9: Search
+## Phase 9: Search ✅
 
-### 9.1 PostgreSQL Full-Text Search
+### 9.1 PostgreSQL Full-Text Search ✅
 
-- [ ] Add tsvector column to Page
-- [ ] Create search index trigger
-- [ ] Create search endpoint
-- [ ] Implement search query parsing
-- [ ] Create search UI with results
+- [x] Add tsvector column to Page
+- [x] Create search index trigger
+- [x] Create search endpoint
+- [x] Implement search query parsing
+- [x] Create search UI with results
 
-### 9.2 Search Enhancements
+### 9.2 Search Enhancements ✅
 
-- [ ] Add search filters (type, date, author)
-- [ ] Implement search highlighting
-- [ ] Add recent searches
-- [ ] Create global search shortcut (Cmd+K)
+- [x] Add search filters (type, date, author)
+- [x] Implement search highlighting
+- [x] Add recent searches
+- [x] Create global search shortcut (Cmd+K)
 
 ### 9.3 Meilisearch Integration (Future)
 
