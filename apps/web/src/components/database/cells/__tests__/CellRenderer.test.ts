@@ -1,8 +1,42 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { setActivePinia, createPinia } from 'pinia';
+
+vi.mock('@/stores/organizations', () => ({
+  useOrganizationsStore: () => ({
+    members: [
+      {
+        id: 'member-1',
+        userId: 'user-1',
+        organizationId: 'org-1',
+        role: 'MEMBER',
+        createdAt: '2024-01-01',
+        user: { id: 'user-1', email: 'alice@example.com', name: 'Alice Smith', avatarUrl: null },
+      },
+      {
+        id: 'member-2',
+        userId: 'user-2',
+        organizationId: 'org-1',
+        role: 'ADMIN',
+        createdAt: '2024-01-01',
+        user: {
+          id: 'user-2',
+          email: 'bob@example.com',
+          name: 'Bob Jones',
+          avatarUrl: 'https://example.com/bob.jpg',
+        },
+      },
+    ],
+  }),
+}));
+
 import CellRenderer from '../CellRenderer.vue';
 
 describe('CellRenderer', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
   it('renders text value', () => {
     const wrapper = mount(CellRenderer, {
       props: { value: 'Hello world', type: 'TEXT' },
@@ -170,5 +204,48 @@ describe('CellRenderer', () => {
       props: { value: 'not-a-date', type: 'DATE' },
     });
     expect(wrapper.text()).toBe('not-a-date');
+  });
+
+  // Person property type
+  describe('PERSON type', () => {
+    it('renders user name for a valid user ID', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-1', type: 'PERSON' },
+      });
+      expect(wrapper.text()).toContain('Alice Smith');
+    });
+
+    it('renders person badge with initials when no avatar', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-1', type: 'PERSON' },
+      });
+      const badge = wrapper.find('.person-badge');
+      expect(badge.exists()).toBe(true);
+      expect(badge.find('.person-initials').text()).toBe('AS');
+    });
+
+    it('renders person avatar when avatarUrl exists', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-2', type: 'PERSON' },
+      });
+      const img = wrapper.find('.person-avatar');
+      expect(img.exists()).toBe(true);
+      expect(img.attributes('src')).toBe('https://example.com/bob.jpg');
+    });
+
+    it('renders empty for null person value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: null, type: 'PERSON' },
+      });
+      expect(wrapper.find('.person-badge').exists()).toBe(false);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders user ID when member not found', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'unknown-user-id', type: 'PERSON' },
+      });
+      expect(wrapper.text()).toContain('unknown-user-id');
+    });
   });
 });
