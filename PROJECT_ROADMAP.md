@@ -423,35 +423,35 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.1 Database Models
 
-- [ ] Create Database model
-- [ ] Create DatabaseProperty model with types
-- [ ] Create DatabaseRow model
-- [ ] Create DatabaseCell model (JSON value)
-- [ ] Create DatabaseView model
+- [x] Create Database model
+- [x] Create DatabaseProperty model with types
+- [x] Create DatabaseRow model
+- [x] Create DatabaseCell model (JSON value)
+- [x] Create DatabaseView model
 
 ### 10.2 Database CRUD
 
-- [ ] Create database endpoints
-- [ ] Create property management endpoints
-- [ ] Create row CRUD endpoints
-- [ ] Create view management endpoints
+- [x] Create database endpoints
+- [x] Create property management endpoints
+- [x] Create row CRUD endpoints
+- [x] Create view management endpoints
 
 ### 10.3 Table View
 
-- [ ] Create data table component
+- [x] Create data table component
 - [ ] Implement column resizing
-- [ ] Add cell editing by type
-- [ ] Implement sorting
-- [ ] Implement filtering
+- [x] Add cell editing by type
+- [x] Implement sorting
+- [x] Implement filtering
 
 ### 10.4 Property Types
 
-- [ ] Implement Text property
-- [ ] Implement Number property
-- [ ] Implement Select/Multi-select properties
-- [ ] Implement Date property
-- [ ] Implement Checkbox property
-- [ ] Implement URL/Email/Phone properties
+- [x] Implement Text property
+- [x] Implement Number property
+- [x] Implement Select/Multi-select properties
+- [x] Implement Date property
+- [x] Implement Checkbox property
+- [x] Implement URL/Email/Phone properties
 - [ ] Implement Person property (user reference)
 - [ ] Implement Files property
 
@@ -466,8 +466,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 - [x] Create calendar component
 - [x] Display rows by date property
-- [x] Implement month/week/day views
+- [x] Implement month view
 - [x] Add drag to reschedule
+- [ ] Implement week view
+- [ ] Implement day view
 
 ### 10.7 Gallery View
 
