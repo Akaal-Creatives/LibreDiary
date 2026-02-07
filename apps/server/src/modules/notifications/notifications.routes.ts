@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import * as notificationsService from './notifications.service.js';
+import * as notificationPrefsService from './notifications.prefs.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 
 // ===========================================
@@ -15,6 +16,19 @@ const getNotificationsQuerySchema = z.object({
     .optional()
     .transform((val) => val === 'true'),
 });
+
+const updatePreferencesSchema = z
+  .object({
+    emailMention: z.boolean().optional(),
+    emailCommentReply: z.boolean().optional(),
+    emailPageShared: z.boolean().optional(),
+    emailCommentResolved: z.boolean().optional(),
+    emailInvitation: z.boolean().optional(),
+  })
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one preference must be provided',
+  });
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -36,6 +50,11 @@ function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
       status: 404,
       code: 'NOTIFICATION_NOT_FOUND',
       message: 'Notification not found',
+    },
+    USER_NOT_FOUND: {
+      status: 404,
+      code: 'USER_NOT_FOUND',
+      message: 'User not found',
     },
   };
 
@@ -104,6 +123,57 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
       success: true,
       data: { count },
     };
+  });
+
+  /**
+   * GET /notifications/preferences
+   * Get notification preferences for the authenticated user
+   */
+  fastify.get('/preferences', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const preferences = await notificationPrefsService.getNotificationPreferences(
+        request.user!.id
+      );
+
+      return {
+        success: true,
+        data: { preferences },
+      };
+    } catch (error) {
+      return mapServiceError(error, reply);
+    }
+  });
+
+  /**
+   * PATCH /notifications/preferences
+   * Update notification preferences
+   */
+  fastify.patch('/preferences', async (request: FastifyRequest, reply: FastifyReply) => {
+    const bodyResult = updatePreferencesSchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid preferences',
+          details: bodyResult.error.flatten().fieldErrors,
+        },
+      });
+    }
+
+    try {
+      const preferences = await notificationPrefsService.updateNotificationPreferences(
+        request.user!.id,
+        bodyResult.data
+      );
+
+      return {
+        success: true,
+        data: { preferences },
+      };
+    } catch (error) {
+      return mapServiceError(error, reply);
+    }
   });
 
   /**
