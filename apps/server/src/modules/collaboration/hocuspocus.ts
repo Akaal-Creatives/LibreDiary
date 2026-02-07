@@ -217,18 +217,28 @@ export function createHocuspocusServer(): Hocuspocus {
 }
 
 /**
- * Generate a consistent color for a user based on their ID
+ * Generate a consistent hex colour for a user based on their ID.
+ * Uses 6-digit hex (#RRGGBB) as required by y-prosemirror.
  */
 function generateUserColor(userId: string): string {
-  // Simple hash to generate consistent color
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  // Convert to hex color
+  // Convert HSL (hue, 70% saturation, 50% lightness) to hex
   const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 70%, 50%)`;
+  const s = 0.7,
+    l = 0.5;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    const colour = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * colour)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
 }
 
 // Export singleton server instance

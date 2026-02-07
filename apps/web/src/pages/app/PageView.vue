@@ -53,14 +53,26 @@ const documentName = computed(() => {
 // User info for collaboration cursors
 const userName = computed(() => authStore.user?.name || authStore.user?.email || 'Anonymous');
 const userColor = computed(() => {
-  // Generate a consistent color from user ID
+  // Generate a consistent hex colour from user ID
+  // y-prosemirror only supports 6-digit hex colours (#RRGGBB)
   if (!authStore.user?.id) return '#6B8F71';
   let hash = 0;
   for (let i = 0; i < authStore.user.id.length; i++) {
     hash = authStore.user.id.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 70%, 50%)`;
+  // Convert HSL (hue, 70% saturation, 50% lightness) to hex
+  const s = 0.7,
+    l = 0.5;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    const colour = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * colour)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
 });
 
 /**

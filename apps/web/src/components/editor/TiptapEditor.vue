@@ -1,12 +1,77 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount, watch, shallowRef } from 'vue';
-import { Editor, EditorContent } from '@tiptap/vue-3';
+import { Extension, Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+// Use yCursorPlugin from @tiptap/y-tiptap (same package as Collaboration) to ensure
+// the ySyncPluginKey matches. The standalone @tiptap/extension-collaboration-cursor
+// imports from y-prosemirror which creates a different PluginKey instance, causing a
+// "Cannot read properties of undefined (reading 'doc')" crash.
+import { yCursorPlugin, defaultSelectionBuilder } from '@tiptap/y-tiptap';
 import type * as Y from 'yjs';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
+
+// Custom CollaborationCursor extension using yCursorPlugin from @tiptap/y-tiptap
+// so the ySyncPluginKey is shared with the Collaboration extension.
+const CollaborationCursor = Extension.create({
+  name: 'collaborationCursor',
+
+  addOptions() {
+    return {
+      provider: null as HocuspocusProvider | null,
+      user: { name: 'Anonymous', color: '#6B8F71' },
+    };
+  },
+
+  addStorage() {
+    return { users: [] as Array<{ clientId: number; name?: string; color?: string }> };
+  },
+
+  addCommands() {
+    return {
+      updateUser: (attributes: { name?: string; color?: string }) => () => {
+        this.options.user = attributes;
+        this.options.provider?.awareness?.setLocalStateField('user', this.options.user);
+        return true;
+      },
+    };
+  },
+
+  addProseMirrorPlugins() {
+    const provider = this.options.provider as HocuspocusProvider;
+    if (!provider?.awareness) return [];
+
+    const awareness = provider.awareness;
+    awareness.setLocalStateField('user', this.options.user);
+
+    const updateUsers = () => {
+      this.storage.users = Array.from(awareness.getStates().entries()).map(([clientId, state]) => ({
+        clientId,
+        ...(state as { user?: Record<string, unknown> }).user,
+      }));
+    };
+    updateUsers();
+    awareness.on('update', updateUsers);
+
+    return [
+      yCursorPlugin(awareness, {
+        cursorBuilder: (user: { name?: string; color?: string }) => {
+          const cursor = document.createElement('span');
+          cursor.classList.add('collaboration-cursor__caret');
+          cursor.setAttribute('style', `border-color: ${user.color}`);
+          const label = document.createElement('div');
+          label.classList.add('collaboration-cursor__label');
+          label.setAttribute('style', `background-color: ${user.color}`);
+          label.insertBefore(document.createTextNode(user.name || 'Anonymous'), null);
+          cursor.insertBefore(label, null);
+          return cursor;
+        },
+        selectionBuilder: defaultSelectionBuilder,
+      }),
+    ];
+  },
+});
 
 const props = withDefaults(
   defineProps<{
@@ -100,7 +165,10 @@ function buildExtensions(
   return baseExtensions;
 }
 
-// Create the editor
+// Create the editor with graceful fallback:
+// 1. Try collaborative + cursors
+// 2. If that fails, try collaborative without cursors (document sync still works)
+// 3. If that also fails, fall back to non-collaborative mode
 function createEditor(
   forCollaborative: boolean,
   ydoc?: Y.Doc | null,
@@ -112,41 +180,67 @@ function createEditor(
     editor.value = null;
   }
 
-  // In collaborative mode, we still pass modelValue as fallback content.
-  // The Collaboration extension will use this as initial content if the
-  // Yjs document is empty (e.g., first time loading a page with htmlContent).
-  editor.value = new Editor({
+  const editorOptions = {
     content: props.modelValue || undefined,
     editable: props.editable,
-    extensions: buildExtensions(forCollaborative, ydoc, collabProvider),
-    onUpdate: ({ editor: e }) => {
+    onUpdate: ({ editor: e }: { editor: Editor }) => {
       emit('update:modelValue', e.getHTML());
     },
-  });
+  };
 
-  isCollaborativeEditor.value = forCollaborative && !!ydoc;
+  if (forCollaborative && ydoc) {
+    // Try with cursors first
+    try {
+      editor.value = new Editor({
+        ...editorOptions,
+        extensions: buildExtensions(true, ydoc, collabProvider),
+      });
+      isCollaborativeEditor.value = true;
+      return;
+    } catch (e) {
+      console.warn('CollaborationCursor failed, retrying without cursors:', e);
+      // Destroy the partially-created editor if any
+      editor.value?.destroy();
+      editor.value = null;
+    }
+
+    // Try collaborative without cursors (pass null for provider to skip cursor)
+    try {
+      editor.value = new Editor({
+        ...editorOptions,
+        extensions: buildExtensions(true, ydoc, null),
+      });
+      isCollaborativeEditor.value = true;
+      return;
+    } catch (e) {
+      console.warn('Collaboration failed, falling back to non-collaborative mode:', e);
+      editor.value?.destroy();
+      editor.value = null;
+    }
+  }
+
+  // Non-collaborative fallback
+  editor.value = new Editor({
+    ...editorOptions,
+    extensions: buildExtensions(false),
+  });
+  isCollaborativeEditor.value = false;
 }
 
 // Initialize editor based on mode
-// Use try-catch to handle any errors during initialization
-try {
-  if (props.collaborative) {
-    // In collaborative mode, wait for ydoc to be available
-    // Check that ydoc is a valid Y.Doc instance (not just truthy)
-    if (props.ydoc && typeof props.ydoc.get === 'function') {
-      createEditor(true, props.ydoc, props.provider);
-    }
-    // Otherwise, we'll create it when ydoc becomes available (via watch)
-    else {
-      // Start in non-collaborative mode immediately to show something
-      createEditor(false);
-    }
-  } else {
-    // Non-collaborative mode - create immediately
+if (props.collaborative) {
+  // In collaborative mode, wait for ydoc to be available
+  // Check that ydoc is a valid Y.Doc instance (not just truthy)
+  if (props.ydoc && typeof props.ydoc.get === 'function') {
+    createEditor(true, props.ydoc, props.provider);
+  }
+  // Otherwise, we'll create it when ydoc becomes available (via watch)
+  else {
+    // Start in non-collaborative mode immediately to show something
     createEditor(false);
   }
-} catch (e) {
-  console.error('Error initializing editor, falling back to non-collaborative mode:', e);
+} else {
+  // Non-collaborative mode - create immediately
   createEditor(false);
 }
 
@@ -155,16 +249,12 @@ try {
 watch(
   () => props.ydoc,
   (newYdoc, oldYdoc) => {
-    try {
-      // Check that ydoc is a valid Y.Doc instance
-      if (props.collaborative && newYdoc && typeof newYdoc.get === 'function') {
-        // Only recreate if ydoc actually changed
-        if (newYdoc !== oldYdoc) {
-          createEditor(true, newYdoc, props.provider);
-        }
+    // Check that ydoc is a valid Y.Doc instance
+    if (props.collaborative && newYdoc && typeof newYdoc.get === 'function') {
+      // Only recreate if ydoc actually changed
+      if (newYdoc !== oldYdoc) {
+        createEditor(true, newYdoc, props.provider);
       }
-    } catch (e) {
-      console.error('Error creating collaborative editor:', e);
     }
   },
   { immediate: false }
