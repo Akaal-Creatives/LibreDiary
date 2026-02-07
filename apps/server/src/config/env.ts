@@ -44,6 +44,28 @@ const envSchema = z.object({
   // OAuth - Google
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  // Storage
+  STORAGE_TYPE: z.enum(['LOCAL', 'MINIO', 'S3']).default('LOCAL'),
+  STORAGE_LOCAL_PATH: z.string().default('./uploads'),
+  STORAGE_MAX_FILE_SIZE: z.coerce.number().default(10485760), // 10MB
+
+  // MinIO
+  MINIO_ENDPOINT: z.string().optional(),
+  MINIO_PORT: z.coerce.number().optional(),
+  MINIO_ACCESS_KEY: z.string().optional(),
+  MINIO_SECRET_KEY: z.string().optional(),
+  MINIO_BUCKET: z.string().optional(),
+  MINIO_USE_SSL: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
+
+  // S3
+  S3_REGION: z.string().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
