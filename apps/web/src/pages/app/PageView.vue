@@ -87,7 +87,7 @@ function insertInitialContentIfEmpty() {
   // We use originalHtmlContent (not pageContent) because pageContent gets overwritten
   // by the editor's onUpdate callback when it initializes with an empty Yjs document
   if (isEmpty && originalHtmlContent.value && originalHtmlContent.value.trim()) {
-    editorInstance.commands.setContent(originalHtmlContent.value, false);
+    editorInstance.commands.setContent(originalHtmlContent.value, { emitUpdate: false });
     initialContentInserted.value = true;
   }
 }

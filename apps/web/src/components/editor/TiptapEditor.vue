@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount, watch, shallowRef } from 'vue';
-import { Editor } from '@tiptap/core';
-import { EditorContent } from '@tiptap/vue-3';
+import { Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import type * as Y from 'yjs';
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 
@@ -46,12 +44,6 @@ const editor = shallowRef<Editor | null>(null);
 const isCollaborativeEditor = ref(false);
 
 // Build extensions based on mode
-// Note: CollaborationCursor is temporarily disabled due to initialization issues
-// with the ySyncPlugin state not being accessible. This can be re-enabled once
-// the timing issue between Collaboration and CollaborationCursor is resolved.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _CollaborationCursor = CollaborationCursor; // Keep import for future use
-
 function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseExtensions: any[] = [
@@ -67,8 +59,8 @@ function buildExtensions(forCollaborative: boolean, ydoc?: Y.Doc | null) {
         keepMarks: true,
         keepAttributes: false,
       },
-      // Disable history in collaborative mode - Yjs handles undo/redo
-      history: forCollaborative ? false : undefined,
+      // Disable undo/redo in collaborative mode - Yjs handles it
+      undoRedo: forCollaborative ? false : undefined,
     }),
     Placeholder.configure({
       placeholder: props.placeholder,
