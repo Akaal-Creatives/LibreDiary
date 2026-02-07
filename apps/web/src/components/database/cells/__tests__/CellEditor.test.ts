@@ -31,6 +31,54 @@ vi.mock('@/stores/organizations', () => ({
   }),
 }));
 
+const mockFetchRelatedDatabase = vi.fn();
+
+vi.mock('@/stores/databases', () => ({
+  useDatabasesStore: () => ({
+    relatedDatabases: new Map([
+      [
+        'target-db-1',
+        {
+          id: 'target-db-1',
+          name: 'Projects',
+          properties: [
+            {
+              id: 'tp-1',
+              databaseId: 'target-db-1',
+              name: 'Name',
+              type: 'TEXT',
+              position: 0,
+              config: null,
+            },
+          ],
+          rows: [
+            {
+              id: 'trow-1',
+              databaseId: 'target-db-1',
+              position: 0,
+              cells: { 'tp-1': 'Alpha Project' },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+            {
+              id: 'trow-2',
+              databaseId: 'target-db-1',
+              position: 1,
+              cells: { 'tp-1': 'Beta Project' },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+          ],
+          views: [],
+        },
+      ],
+    ]),
+    fetchRelatedDatabase: mockFetchRelatedDatabase,
+  }),
+}));
+
 import CellEditor from '../CellEditor.vue';
 
 describe('CellEditor', () => {
@@ -245,6 +293,109 @@ describe('CellEditor', () => {
       await clearBtn.trigger('mousedown');
       expect(wrapper.emitted('save')).toBeTruthy();
       expect(wrapper.emitted('save')![0]).toEqual([null]);
+    });
+  });
+
+  // Relation property type
+  describe('RELATION type', () => {
+    it('shows relation dropdown with target database rows', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      const dropdown = wrapper.find('.relation-dropdown');
+      expect(dropdown.exists()).toBe(true);
+      const options = wrapper.findAll('.relation-option');
+      expect(options).toHaveLength(2);
+    });
+
+    it('displays row titles in relation dropdown', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      expect(wrapper.text()).toContain('Alpha Project');
+      expect(wrapper.text()).toContain('Beta Project');
+    });
+
+    it('emits save with toggled row ID array on selection', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: ['trow-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      const options = wrapper.findAll('.relation-option');
+      // Click trow-2 to add it
+      await options[1]!.trigger('mousedown');
+      expect(wrapper.emitted('save')).toBeTruthy();
+      expect(wrapper.emitted('save')![0]).toEqual([['trow-1', 'trow-2']]);
+    });
+
+    it('highlights currently linked rows', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: ['trow-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      const options = wrapper.findAll('.relation-option');
+      expect(options[0]!.classes()).toContain('selected');
+      expect(options[1]!.classes()).not.toContain('selected');
+    });
+
+    it('removes relation on clicking selected row', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: ['trow-1', 'trow-2'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      const options = wrapper.findAll('.relation-option');
+      // Click trow-1 to remove it
+      await options[0]!.trigger('mousedown');
+      expect(wrapper.emitted('save')).toBeTruthy();
+      expect(wrapper.emitted('save')![0]).toEqual([['trow-2']]);
+    });
+
+    it('shows done button to close dropdown', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      await flushPromises();
+      const doneBtn = wrapper.find('.relation-done');
+      expect(doneBtn.exists()).toBe(true);
+    });
+
+    it('shows empty state when target database has no rows', async () => {
+      // Override mock to return empty rows for a different db
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'nonexistent-db' },
+        },
+      });
+      await flushPromises();
+      expect(wrapper.text()).toContain('No rows');
     });
   });
 });

@@ -30,6 +30,51 @@ vi.mock('@/stores/organizations', () => ({
   }),
 }));
 
+vi.mock('@/stores/databases', () => ({
+  useDatabasesStore: () => ({
+    relatedDatabases: new Map([
+      [
+        'target-db-1',
+        {
+          id: 'target-db-1',
+          name: 'Projects',
+          properties: [
+            {
+              id: 'tp-1',
+              databaseId: 'target-db-1',
+              name: 'Name',
+              type: 'TEXT',
+              position: 0,
+              config: null,
+            },
+          ],
+          rows: [
+            {
+              id: 'trow-1',
+              databaseId: 'target-db-1',
+              position: 0,
+              cells: { 'tp-1': 'Alpha Project' },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+            {
+              id: 'trow-2',
+              databaseId: 'target-db-1',
+              position: 1,
+              cells: { 'tp-1': 'Beta Project' },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+          ],
+          views: [],
+        },
+      ],
+    ]),
+  }),
+}));
+
 import CellRenderer from '../CellRenderer.vue';
 
 describe('CellRenderer', () => {
@@ -246,6 +291,72 @@ describe('CellRenderer', () => {
         props: { value: 'unknown-user-id', type: 'PERSON' },
       });
       expect(wrapper.text()).toContain('unknown-user-id');
+    });
+  });
+
+  // Relation property type
+  describe('RELATION type', () => {
+    it('renders related row titles as pills', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['trow-1', 'trow-2'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(2);
+      expect(pills[0]!.text()).toBe('Alpha Project');
+      expect(pills[1]!.text()).toBe('Beta Project');
+    });
+
+    it('renders empty for null relation value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      expect(wrapper.find('.relation-pill').exists()).toBe(false);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty for empty array', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      expect(wrapper.findAll('.relation-pill')).toHaveLength(0);
+    });
+
+    it('renders row IDs when related database not loaded', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['unknown-row-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'nonexistent-db' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(1);
+      expect(pills[0]!.text()).toContain('unknown-row-1');
+    });
+
+    it('renders single relation row title', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['trow-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(1);
+      expect(pills[0]!.text()).toBe('Alpha Project');
     });
   });
 });
