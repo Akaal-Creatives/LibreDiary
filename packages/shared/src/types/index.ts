@@ -310,6 +310,38 @@ export interface Notification {
 }
 
 // ===========================================
+// SEARCH
+// ===========================================
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  titleHighlight: string;
+  contentHighlight: string;
+  icon: string | null;
+  createdById: string;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  rank: number;
+}
+
+export interface SearchFilters {
+  q: string;
+  limit?: number;
+  offset?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  createdById?: string;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  total: number;
+  query: string;
+}
+
+// ===========================================
 // WEBHOOKS & API
 // ===========================================
 
