@@ -32,6 +32,7 @@ export const useDatabasesStore = defineStore('databases', () => {
   const rows = ref<DatabaseRow[]>([]);
   const activeViewId = ref<string | null>(null);
   const loading = ref(false);
+  const relatedDatabases = ref<Map<string, DatabaseWithRelations>>(new Map());
 
   // ===========================================
   // GETTERS
@@ -201,6 +202,16 @@ export const useDatabasesStore = defineStore('databases', () => {
     } finally {
       loading.value = false;
     }
+  }
+
+  async function fetchRelatedDatabase(databaseId: string): Promise<DatabaseWithRelations> {
+    if (relatedDatabases.value.has(databaseId)) {
+      return relatedDatabases.value.get(databaseId)!;
+    }
+    const orgId = getOrgId();
+    const data = await databasesService.getDatabase(orgId, databaseId);
+    relatedDatabases.value.set(databaseId, data.database);
+    return data.database;
   }
 
   async function createDatabase(input: CreateDatabaseServiceInput): Promise<DatabaseWithRelations> {
@@ -411,6 +422,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     views.value = [];
     rows.value = [];
     activeViewId.value = null;
+    relatedDatabases.value.clear();
   }
 
   return {
@@ -422,6 +434,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     rows,
     activeViewId,
     loading,
+    relatedDatabases,
     // Getters
     currentDatabase,
     databaseList,
@@ -432,6 +445,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     // API Actions - Database
     fetchDatabases,
     fetchDatabase,
+    fetchRelatedDatabase,
     createDatabase,
     updateDatabase,
     deleteDatabase,

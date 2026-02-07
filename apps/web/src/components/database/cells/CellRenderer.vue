@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { PropertyType } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
+import { useDatabasesStore } from '@/stores/databases';
 
 const props = defineProps<{
   value: unknown;
@@ -10,6 +11,7 @@ const props = defineProps<{
 }>();
 
 const organizationsStore = useOrganizationsStore();
+const databasesStore = useDatabasesStore();
 
 const personUser = computed(() => {
   if (props.type !== 'PERSON' || !props.value) return null;
@@ -27,6 +29,22 @@ const personInitials = computed(() => {
     .map((w) => w[0]!.toUpperCase())
     .slice(0, 2)
     .join('');
+});
+
+const relationItems = computed(() => {
+  if (props.type !== 'RELATION' || !Array.isArray(props.value) || props.value.length === 0)
+    return [];
+  const targetDbId = props.config?.targetDatabaseId as string | undefined;
+  const targetDb = targetDbId ? databasesStore.relatedDatabases.get(targetDbId) : undefined;
+  const firstPropId = targetDb?.properties?.sort((a, b) => a.position - b.position)[0]?.id;
+
+  return (props.value as string[]).map((rowId) => {
+    if (!targetDb || !firstPropId) return { id: rowId, title: rowId };
+    const row = targetDb.rows.find((r) => r.id === rowId);
+    if (!row) return { id: rowId, title: rowId };
+    const cells = row.cells as Record<string, unknown>;
+    return { id: rowId, title: String(cells[firstPropId] ?? rowId) };
+  });
 });
 
 function formatValue(): string {
@@ -161,6 +179,13 @@ function getSelectColour(val: string): string {
       </span>
     </template>
 
+    <!-- Relation pills -->
+    <template v-else-if="type === 'RELATION' && relationItems.length > 0">
+      <span v-for="item in relationItems" :key="item.id" class="relation-pill">
+        {{ item.title }}
+      </span>
+    </template>
+
     <!-- Default text display -->
     <template v-else>
       {{ formatValue() }}
@@ -249,6 +274,18 @@ function getSelectColour(val: string): string {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Relation */
+.relation-pill {
+  display: inline-flex;
+  padding: 1px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 .url-link,

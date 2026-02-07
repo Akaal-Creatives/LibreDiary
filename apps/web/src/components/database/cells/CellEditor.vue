@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 import type { PropertyType } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
+import { useDatabasesStore } from '@/stores/databases';
 
 const props = defineProps<{
   value: unknown;
@@ -18,8 +19,10 @@ const editValue = ref<string>('');
 const inputRef = ref<HTMLInputElement | null>(null);
 const showSelectDropdown = ref(false);
 const showPersonDropdown = ref(false);
+const showRelationDropdown = ref(false);
 
 const organizationsStore = useOrganizationsStore();
+const databasesStore = useDatabasesStore();
 
 const personMembers = computed(() => {
   return organizationsStore.members.map((m) => ({
@@ -47,6 +50,34 @@ function clearPerson() {
   emit('save', null);
 }
 
+const relationRows = computed(() => {
+  const targetDbId = props.config?.targetDatabaseId as string | undefined;
+  if (!targetDbId) return [];
+  const targetDb = databasesStore.relatedDatabases.get(targetDbId);
+  if (!targetDb) return [];
+  const firstPropId = targetDb.properties?.sort((a, b) => a.position - b.position)[0]?.id;
+  if (!firstPropId) return [];
+  return targetDb.rows.map((row) => {
+    const cells = row.cells as Record<string, unknown>;
+    return { id: row.id, title: String(cells[firstPropId] ?? row.id) };
+  });
+});
+
+function isRelationSelected(rowId: string): boolean {
+  return Array.isArray(props.value) && (props.value as string[]).includes(rowId);
+}
+
+function toggleRelation(rowId: string) {
+  const current = Array.isArray(props.value) ? [...(props.value as string[])] : [];
+  const idx = current.indexOf(rowId);
+  if (idx >= 0) {
+    current.splice(idx, 1);
+  } else {
+    current.push(rowId);
+  }
+  emit('save', current);
+}
+
 onMounted(async () => {
   if (props.type === 'CHECKBOX') {
     emit('save', props.value !== true);
@@ -55,6 +86,15 @@ onMounted(async () => {
 
   if (props.type === 'PERSON') {
     showPersonDropdown.value = true;
+    return;
+  }
+
+  if (props.type === 'RELATION') {
+    showRelationDropdown.value = true;
+    const targetDbId = props.config?.targetDatabaseId as string | undefined;
+    if (targetDbId) {
+      databasesStore.fetchRelatedDatabase(targetDbId);
+    }
     return;
   }
 
@@ -164,6 +204,38 @@ function getInputType(): string {
         <span class="person-option-name">{{ member.name }}</span>
       </button>
       <div v-if="personMembers.length === 0" class="select-empty">No members found</div>
+    </div>
+
+    <!-- Relation dropdown -->
+    <div v-if="type === 'RELATION' && showRelationDropdown" class="relation-dropdown">
+      <button
+        v-for="row in relationRows"
+        :key="row.id"
+        class="relation-option"
+        :class="{ selected: isRelationSelected(row.id) }"
+        @mousedown.prevent="toggleRelation(row.id)"
+      >
+        <span class="option-check">
+          <svg
+            v-if="isRelationSelected(row.id)"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+          >
+            <path
+              d="M2.5 6L5 8.5L9.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        {{ row.title }}
+      </button>
+      <div v-if="relationRows.length === 0" class="select-empty">No rows found</div>
+      <button class="relation-done" @mousedown.prevent="emit('save', value)">Done</button>
     </div>
 
     <!-- Select / Multi-select dropdown -->
@@ -401,6 +473,69 @@ function getInputType(): string {
 }
 
 .person-clear:hover {
+  background: var(--color-hover);
+}
+
+/* Relation Dropdown */
+.relation-dropdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.relation-option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.relation-option:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.relation-option.selected {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.relation-done {
+  padding: var(--space-2);
+  margin-top: var(--space-1);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.relation-done:hover {
   background: var(--color-hover);
 }
 </style>
