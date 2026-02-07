@@ -215,5 +215,101 @@ describe('Search Routes', () => {
       expect(body.data.results).toHaveLength(0);
       expect(body.data.total).toBe(0);
     });
+
+    it('should accept query string at exactly 200 characters', async () => {
+      mockSearchService.searchPages.mockResolvedValue({ results: [], total: 0 });
+      const query200 = 'a'.repeat(200);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/organizations/org-123/search?q=${query200}`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+    });
+
+    it('should return 400 when query string exceeds 200 characters', async () => {
+      const query201 = 'a'.repeat(201);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/organizations/org-123/search?q=${query201}`,
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 400 for negative offset value', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&offset=-1',
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should handle float/decimal limit value by coercing to integer or failing', async () => {
+      // z.coerce.number().int() should reject non-integer values
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&limit=10.5',
+      });
+
+      // Zod's .int() validator rejects non-integer numbers after coercion
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 400 when service throws INVALID_QUERY error', async () => {
+      mockSearchService.searchPages.mockRejectedValue(new Error('INVALID_QUERY'));
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test',
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('INVALID_QUERY');
+      expect(body.error.message).toBe('Search query is invalid');
+    });
+
+    it('should pass orgId from URL params to the service', async () => {
+      mockSearchService.searchPages.mockResolvedValue({ results: [], total: 0 });
+
+      await app.inject({
+        method: 'GET',
+        url: '/organizations/org-custom-456/search?q=test',
+      });
+
+      expect(mockSearchService.searchPages).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: 'org-custom-456',
+        })
+      );
+    });
+
+    it('should return 400 for zero limit value', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&limit=0',
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
   });
 });

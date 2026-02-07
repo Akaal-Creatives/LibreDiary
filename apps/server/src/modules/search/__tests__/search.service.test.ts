@@ -65,6 +65,27 @@ describe('Search Service', () => {
     it('should handle colons and asterisks', () => {
       expect(parseSearchQuery('test:* foo')).toBe('test & foo:*');
     });
+
+    it('should handle unicode and emoji input', () => {
+      const result = parseSearchQuery('日本語 テスト');
+      expect(result).toBe('日本語 & テスト:*');
+    });
+
+    it('should handle backslash characters', () => {
+      // Backslashes are replaced with spaces by the regex, splitting the words
+      expect(parseSearchQuery('hello\\world')).toBe('hello & world:*');
+    });
+
+    it('should handle tab and newline characters in input', () => {
+      const result = parseSearchQuery('hello\tworld\nfoo');
+      // Tabs and newlines become whitespace, collapsed into single spaces
+      expect(result).toBe('hello & world & foo:*');
+    });
+
+    it('should handle mixed special characters and valid words', () => {
+      const result = parseSearchQuery('&&hello||world!!');
+      expect(result).toBe('hello & world:*');
+    });
   });
 
   // ===========================================
@@ -231,6 +252,116 @@ describe('Search Service', () => {
       const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
       const sql = countCall[0] as string;
       expect(sql).toContain('"trashedAt" IS NULL');
+    });
+
+    it('should throw when the database count query fails', async () => {
+      mockPrisma.$queryRawUnsafe.mockRejectedValueOnce(new Error('connection refused'));
+
+      await expect(searchPages(baseOptions)).rejects.toThrow('connection refused');
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw when count query succeeds but search query fails', async () => {
+      mockPrisma.$queryRawUnsafe
+        .mockResolvedValueOnce([{ total: 5 }]) // count query succeeds
+        .mockRejectedValueOnce(new Error('query timeout')); // search query fails
+
+      await expect(searchPages(baseOptions)).rejects.toThrow('query timeout');
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(2);
+    });
+
+    it('should use COALESCE for plainContent to handle null values', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 1 }]).mockResolvedValueOnce([
+        {
+          id: 'page-null-content',
+          title: 'Untitled',
+          icon: null,
+          createdById: 'user-1',
+          createdByName: 'Test User',
+          createdAt: new Date('2024-06-01'),
+          updatedAt: new Date('2024-06-02'),
+          titleHighlight: 'Untitled',
+          contentHighlight: '',
+          rank: 0.1,
+        },
+      ]);
+
+      const result = await searchPages(baseOptions);
+
+      // Verify the search SQL contains the COALESCE wrapper for plainContent
+      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
+      const sql = searchCall[0] as string;
+      expect(sql).toContain('COALESCE(p."plainContent"');
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].contentHighlight).toBe('');
+    });
+
+    it('should handle LEFT JOIN returning null user (createdByName is null)', async () => {
+      const mockResults = [
+        {
+          id: 'page-orphan',
+          title: 'Orphan Page',
+          icon: null,
+          createdById: 'deleted-user',
+          createdByName: null,
+          createdAt: new Date('2024-03-01'),
+          updatedAt: new Date('2024-03-02'),
+          titleHighlight: '<mark>Orphan</mark> Page',
+          contentHighlight: 'Some content...',
+          rank: 0.3,
+        },
+      ];
+
+      mockPrisma.$queryRawUnsafe
+        .mockResolvedValueOnce([{ total: 1 }])
+        .mockResolvedValueOnce(mockResults);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].createdByName).toBeNull();
+      // Verify the query uses LEFT JOIN so missing users do not exclude pages
+      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
+      const sql = searchCall[0] as string;
+      expect(sql).toContain('LEFT JOIN');
+    });
+
+    it('should return empty results array for large offset beyond total', async () => {
+      mockPrisma.$queryRawUnsafe
+        .mockResolvedValueOnce([{ total: 5 }]) // only 5 results exist
+        .mockResolvedValueOnce([]); // offset past all results returns nothing
+
+      const result = await searchPages({
+        ...baseOptions,
+        limit: 20,
+        offset: 1000,
+      });
+
+      expect(result.total).toBe(5);
+      expect(result.results).toHaveLength(0);
+
+      // Verify the large offset was passed through
+      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
+      const params = searchCall.slice(1);
+      expect(params).toContain(1000);
+    });
+
+    it('should apply dateFrom and dateTo at exact boundary (same date)', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+
+      await searchPages({
+        ...baseOptions,
+        dateFrom: '2024-06-15',
+        dateTo: '2024-06-15',
+      });
+
+      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = countCall[0] as string;
+      expect(sql).toContain('"createdAt" >=');
+      expect(sql).toContain('"createdAt" <=');
+      // Both date params should be the same value
+      expect(countCall[3]).toBe('2024-06-15');
+      expect(countCall[4]).toBe('2024-06-15');
     });
   });
 });
