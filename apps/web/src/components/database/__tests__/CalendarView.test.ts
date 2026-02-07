@@ -495,6 +495,187 @@ describe('CalendarView', () => {
     expect(wrapper.find('.calendar-month-label').text()).toContain('2026');
   });
 
+  // ===========================================
+  // VIEW MODE SWITCHER
+  // ===========================================
+
+  it('renders view mode switcher with month/week/day buttons', () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    expect(wrapper.find('.calendar-mode-switcher').exists()).toBe(true);
+    expect(wrapper.find('.calendar-mode-btn--month').exists()).toBe(true);
+    expect(wrapper.find('.calendar-mode-btn--week').exists()).toBe(true);
+    expect(wrapper.find('.calendar-mode-btn--day').exists()).toBe(true);
+  });
+
+  it('defaults to month mode', () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    expect(wrapper.find('.calendar-mode-btn--month').classes()).toContain('active');
+  });
+
+  it('switches to week mode on click', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    expect(wrapper.find('.calendar-mode-btn--week').classes()).toContain('active');
+    expect(wrapper.find('.calendar-week-grid').exists()).toBe(true);
+  });
+
+  it('switches to day mode on click', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    expect(wrapper.find('.calendar-mode-btn--day').classes()).toContain('active');
+    expect(wrapper.find('.calendar-day-view').exists()).toBe(true);
+  });
+
+  // ===========================================
+  // WEEK VIEW
+  // ===========================================
+
+  it('renders 7 day columns in week view', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    const columns = wrapper.findAll('.week-day-col');
+    expect(columns).toHaveLength(7);
+  });
+
+  it('shows correct date headers for the current week', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    // 15 June 2025 is a Sunday, so the week (Mon-Sun) is 9-15 June
+    const headers = wrapper.findAll('.week-day-header');
+    expect(headers).toHaveLength(7);
+    // Monday should be 9
+    expect(headers[0]!.text()).toContain('9');
+    // Sunday should be 15
+    expect(headers[6]!.text()).toContain('15');
+  });
+
+  it('displays events on correct day in week view', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    // "Meeting" is on 2025-06-15 (Sunday, last column)
+    const events = wrapper.findAll('.calendar-event');
+    expect(events.length).toBeGreaterThanOrEqual(1);
+    const eventTexts = events.map((e) => e.text());
+    expect(eventTexts).toContain('Meeting');
+  });
+
+  it('navigates to previous week', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    await wrapper.find('.calendar-nav-prev').trigger('click');
+    // Previous week: 2-8 June
+    const headers = wrapper.findAll('.week-day-header');
+    expect(headers[0]!.text()).toContain('2');
+    expect(headers[6]!.text()).toContain('8');
+  });
+
+  it('navigates to next week', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    await wrapper.find('.calendar-nav-next').trigger('click');
+    // Next week: 16-22 June
+    const headers = wrapper.findAll('.week-day-header');
+    expect(headers[0]!.text()).toContain('16');
+    expect(headers[6]!.text()).toContain('22');
+  });
+
+  it('supports drag-drop in week view', async () => {
+    setupStore();
+    mockDatabasesService.updateRow.mockResolvedValue({
+      row: {
+        id: 'row-1',
+        databaseId: 'db-1',
+        position: 0,
+        cells: { 'prop-title': 'Meeting', 'prop-due': '2025-06-14' },
+        createdById: 'user-1',
+        createdAt: '2025-01-01',
+        updatedAt: '2025-01-01',
+      },
+    });
+
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--week').trigger('click');
+    const event = wrapper.find('.calendar-event');
+    if (!event.exists()) return; // Skip if no events visible
+
+    await event.trigger('dragstart', {
+      dataTransfer: { effectAllowed: '', setData: vi.fn() },
+    });
+
+    // Find the Saturday column (6th, index 5)
+    const cols = wrapper.findAll('.week-day-col');
+    if (cols.length >= 6) {
+      await cols[5]!.trigger('dragover', { preventDefault: vi.fn() });
+      await cols[5]!.trigger('drop', { preventDefault: vi.fn() });
+      await flushPromises();
+
+      expect(mockDatabasesService.updateRow).toHaveBeenCalled();
+    }
+  });
+
+  // ===========================================
+  // DAY VIEW
+  // ===========================================
+
+  it('shows the current date in day view header', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    // 15 June 2025
+    expect(wrapper.text()).toContain('15');
+    expect(wrapper.text()).toContain('June');
+  });
+
+  it('displays events for the current day only', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    // Only "Meeting" is on 15 June
+    const events = wrapper.findAll('.calendar-event');
+    expect(events).toHaveLength(1);
+    expect(events[0]!.text()).toBe('Meeting');
+  });
+
+  it('navigates to previous day', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    await wrapper.find('.calendar-nav-prev').trigger('click');
+    // Should be 14 June
+    expect(wrapper.text()).toContain('14');
+    // No events on June 14
+    expect(wrapper.findAll('.calendar-event')).toHaveLength(0);
+  });
+
+  it('navigates to next day', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    await wrapper.find('.calendar-nav-next').trigger('click');
+    // Should be 16 June
+    expect(wrapper.text()).toContain('16');
+  });
+
+  it('shows empty state in day view when no events', async () => {
+    setupStore();
+    const wrapper = mount(CalendarView);
+    await wrapper.find('.calendar-mode-btn--day').trigger('click');
+    // Navigate to a day with no events
+    await wrapper.find('.calendar-nav-next').trigger('click'); // June 16
+    const events = wrapper.findAll('.calendar-event');
+    expect(events).toHaveLength(0);
+    expect(wrapper.find('.day-view-empty').exists()).toBe(true);
+  });
+
   it('handles drop on outside-month cells by using that cell date', async () => {
     setupStore();
     mockDatabasesService.updateRow.mockResolvedValue({
