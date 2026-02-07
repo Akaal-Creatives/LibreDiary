@@ -55,6 +55,7 @@ model User {
   createdDatabases   Database[]           @relation("DatabaseCreatedBy")
   createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
   createdTemplates   Template[]           @relation("TemplateCreatedBy")
+  uploadedFiles      File[]               @relation("FileUploadedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -164,6 +165,7 @@ model Organization {
   invites   Invite[]
   databases Database[]
   templates Template[]
+  files     File[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -241,6 +243,7 @@ model Page {
   permissions  PagePermission[]
   comments     Comment[]
   databases    Database[]
+  files        File[]
 
   @@index([organizationId])
   @@index([parentId])
@@ -557,6 +560,42 @@ model DatabaseRow {
   @@index([databaseId])
   @@index([databaseId, position])
   @@index([createdById])
+}
+
+// ============================================
+// FILES & STORAGE
+// ============================================
+
+enum StorageType {
+  LOCAL
+  MINIO
+  S3
+}
+
+model File {
+  id             String      @id @default(cuid())
+  organizationId String
+  pageId         String?
+  name           String
+  originalName   String
+  mimeType       String
+  size           Int
+  storageType    StorageType
+  storagePath    String
+  url            String?
+  uploadedById   String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  page         Page?        @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  uploadedBy   User         @relation("FileUploadedBy", fields: [uploadedById], references: [id])
+
+  @@index([organizationId])
+  @@index([pageId])
+  @@index([uploadedById])
 }
 
 // ============================================
