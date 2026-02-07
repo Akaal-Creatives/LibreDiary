@@ -490,22 +490,22 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 11.1 Template System
 
-- [ ] Create Template model
-- [ ] Create template CRUD endpoints
-- [ ] Store template content as Yjs state
+- [x] Create Template model
+- [x] Create template CRUD endpoints
+- [x] Store template content as Yjs state
 
 ### 11.2 Template Management
 
-- [ ] Create template library page
-- [ ] Create template from page
-- [ ] Implement template categories
-- [ ] Add template search
+- [x] Create template library page
+- [x] Create template from page
+- [x] Implement template categories
+- [x] Add template search
 
 ### 11.3 Template Usage
 
-- [ ] Create page from template endpoint
-- [ ] Add "Use template" in new page flow
-- [ ] Create quick-start templates
+- [x] Create page from template endpoint
+- [x] Add "Use template" in new page flow
+- [x] Create quick-start templates
 
 ---
 
