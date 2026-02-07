@@ -282,11 +282,25 @@ export interface FileInfo {
   organizationId: string;
   pageId: string | null;
   name: string;
+  originalName: string;
   mimeType: string;
   size: number;
   storageType: StorageType;
-  url: string;
+  storagePath: string;
+  url: string | null;
+  uploadedById: string;
   createdAt: string;
+}
+
+export interface StorageInfo {
+  type: StorageType;
+  totalFiles: number;
+  totalSize: number;
+}
+
+export interface StorageConnectionResult {
+  success: boolean;
+  message: string;
 }
 
 // ===========================================

@@ -242,6 +242,19 @@ export const createTemplateFromPageSchema = z.object({
 });
 
 // ===========================================
+// FILE SCHEMAS
+// ===========================================
+
+export const fileUploadSchema = z.object({
+  name: z.string().min(1, 'File name is required').max(255),
+  pageId: cuidSchema.optional(),
+});
+
+export const fileListQuerySchema = z.object({
+  pageId: cuidSchema.optional(),
+});
+
+// ===========================================
 // WEBHOOK SCHEMAS
 // ===========================================
 
@@ -312,3 +325,5 @@ export type UpdateWebhookInput = z.infer<typeof updateWebhookSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;
 export type TranslateInput = z.infer<typeof translateSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
+export type FileUploadInput = z.infer<typeof fileUploadSchema>;
+export type FileListQueryInput = z.infer<typeof fileListQuerySchema>;
