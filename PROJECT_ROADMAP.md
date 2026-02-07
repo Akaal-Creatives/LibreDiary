@@ -468,8 +468,8 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Display rows by date property
 - [x] Implement month view
 - [x] Add drag to reschedule
-- [ ] Implement week view
-- [ ] Implement day view
+- [x] Implement week view
+- [x] Implement day view
 
 ### 10.7 Gallery View
 
