@@ -360,34 +360,34 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement @mention detection in comment input
 - [x] Create user autocomplete dropdown
 - [x] Store mentions when comment saved
-- [ ] Link mentions to notifications (Phase 8)
+- [x] Link mentions to notifications (Phase 8)
 
 ---
 
-## Phase 8: Notifications
+## Phase 8: Notifications ✅
 
-### 8.1 Notification System
+### 8.1 Notification System ✅
 
-- [ ] Create Notification model
-- [ ] Define notification types (mention, comment, share, etc.)
-- [ ] Create notification service
-- [ ] Trigger notifications on relevant events
+- [x] Create Notification model
+- [x] Define notification types (mention, comment, share, etc.)
+- [x] Create notification service
+- [x] Trigger notifications on relevant events
 
-### 8.2 In-App Notifications
+### 8.2 In-App Notifications ✅
 
-- [ ] Create notification listing endpoint
-- [ ] Create mark-as-read endpoint
-- [ ] Create notification bell component
-- [ ] Create notification dropdown
-- [ ] Show unread count badge
+- [x] Create notification listing endpoint
+- [x] Create mark-as-read endpoint
+- [x] Create notification bell component
+- [x] Create notification dropdown
+- [x] Show unread count badge
 
-### 8.3 Email Notifications
+### 8.3 Email Notifications ✅
 
-- [ ] Create email notification templates
-- [ ] Implement email sending for important events
-- [ ] Add emailSent tracking
-- [ ] Create notification preferences endpoint
-- [ ] Create notification settings UI
+- [x] Create email notification templates
+- [x] Implement email sending for important events
+- [x] Add emailSent tracking
+- [x] Create notification preferences endpoint
+- [x] Create notification settings UI
 
 ---
 
