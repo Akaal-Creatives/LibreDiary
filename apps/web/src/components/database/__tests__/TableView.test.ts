@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
 const { mockDatabasesService } = vi.hoisted(() => ({
@@ -171,14 +171,35 @@ describe('TableView', () => {
     expect(wrapper.find('.add-row-btn').exists()).toBe(true);
   });
 
-  it('calls createRow when clicking add row button', async () => {
+  it('does not call createRow immediately when clicking add row button', async () => {
+    setupStore();
+    const wrapper = mount(TableView);
+    const addBtn = wrapper.find('.add-row-btn');
+    await addBtn.trigger('click');
+
+    expect(mockDatabasesService.createRow).not.toHaveBeenCalled();
+  });
+
+  it('shows a draft row when clicking add row button', async () => {
+    setupStore();
+    const wrapper = mount(TableView);
+    const addBtn = wrapper.find('.add-row-btn');
+    await addBtn.trigger('click');
+
+    // Should now have 3 rows: 2 real + 1 draft
+    const rows = wrapper.findAll('.data-row');
+    expect(rows).toHaveLength(3);
+    expect(wrapper.find('.draft-row').exists()).toBe(true);
+  });
+
+  it('persists draft row when a cell is edited', async () => {
     setupStore();
     mockDatabasesService.createRow.mockResolvedValue({
       row: {
         id: 'row-new',
         databaseId: 'db-1',
         position: 2,
-        cells: {},
+        cells: { 'prop-1': 'New entry' },
         createdById: 'user-1',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
@@ -186,10 +207,40 @@ describe('TableView', () => {
     });
 
     const wrapper = mount(TableView);
-    const addBtn = wrapper.find('.add-row-btn');
-    await addBtn.trigger('click');
+    // Click New to create draft
+    await wrapper.find('.add-row-btn').trigger('click');
 
-    expect(mockDatabasesService.createRow).toHaveBeenCalledWith('org-1', 'db-1', {});
+    // Find the draft row's first data cell and click to edit
+    const draftRow = wrapper.find('.draft-row');
+    const cells = draftRow.findAll('.data-cell');
+    await cells[0]!.trigger('click');
+
+    // Find the editor input and type a value
+    const input = wrapper.find('.cell-input');
+    expect(input.exists()).toBe(true);
+    await input.setValue('New entry');
+    await input.trigger('blur');
+    await flushPromises();
+
+    expect(mockDatabasesService.createRow).toHaveBeenCalledWith(
+      'org-1',
+      'db-1',
+      expect.objectContaining({ cells: { 'prop-1': 'New entry' } })
+    );
+  });
+
+  it('discards draft row when clicking New again without entering data', async () => {
+    setupStore();
+    const wrapper = mount(TableView);
+
+    // Click New to create first draft
+    await wrapper.find('.add-row-btn').trigger('click');
+    expect(wrapper.findAll('.data-row')).toHaveLength(3);
+
+    // Click New again - old empty draft should be discarded, new one created
+    await wrapper.find('.add-row-btn').trigger('click');
+    expect(wrapper.findAll('.data-row')).toHaveLength(3);
+    expect(mockDatabasesService.createRow).not.toHaveBeenCalled();
   });
 
   it('deselects row when unchecking checkbox', async () => {

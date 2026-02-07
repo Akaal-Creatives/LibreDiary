@@ -16,6 +16,13 @@ const newPropertyType = ref<PropertyType>('TEXT');
 const columnMenuTarget = ref<string | null>(null);
 const configureTarget = ref<string | null>(null);
 
+// Draft row (local only, not yet persisted)
+interface DraftRow {
+  id: string;
+  cells: Record<string, unknown>;
+}
+const draftRow = ref<DraftRow | null>(null);
+
 // Drag state for row reorder
 const dragRowId = ref<string | null>(null);
 const dragOverRowId = ref<string | null>(null);
@@ -66,8 +73,22 @@ function getCellValue(row: { cells: unknown }, propertyId: string): unknown {
   return (row.cells as Record<string, unknown>)[propertyId] ?? null;
 }
 
-async function addRow() {
-  await databasesStore.createRow();
+function addRow() {
+  // Discard existing empty draft
+  draftRow.value = { id: 'draft', cells: {} };
+}
+
+async function saveDraftCell(propertyId: string, value: unknown) {
+  editingCell.value = null;
+  if (!draftRow.value) return;
+
+  // Only persist if the value is non-empty
+  const hasValue = value !== null && value !== undefined && value !== '';
+  if (!hasValue) return;
+
+  const cells = { ...draftRow.value.cells, [propertyId]: value };
+  draftRow.value = null;
+  await databasesStore.createRow({ cells });
 }
 
 async function addProperty() {
@@ -395,6 +416,35 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
               />
             </td>
             <!-- Empty add-column spacer -->
+            <td class="cell-spacer"></td>
+          </tr>
+          <!-- Draft row -->
+          <tr v-if="draftRow" class="data-row draft-row">
+            <td class="cell-checkbox">
+              <input type="checkbox" class="row-checkbox" disabled />
+            </td>
+            <td class="cell-drag"></td>
+            <td
+              v-for="prop in databasesStore.sortedProperties"
+              :key="prop.id"
+              class="data-cell"
+              @click="startEdit('draft', prop.id)"
+            >
+              <CellEditor
+                v-if="editingCell?.rowId === 'draft' && editingCell?.propertyId === prop.id"
+                :value="draftRow.cells[prop.id] ?? null"
+                :type="prop.type"
+                :config="(prop.config as Record<string, unknown>) ?? null"
+                @save="(v) => saveDraftCell(prop.id, v)"
+                @cancel="cancelEdit"
+              />
+              <CellRenderer
+                v-else
+                :value="draftRow.cells[prop.id] ?? null"
+                :type="prop.type"
+                :config="(prop.config as Record<string, unknown>) ?? null"
+              />
+            </td>
             <td class="cell-spacer"></td>
           </tr>
         </tbody>
