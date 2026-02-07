@@ -70,7 +70,7 @@ describe('Search Service', () => {
         createdById: 'user-456',
       });
 
-      const url = mockApi.get.mock.calls[0][0] as string;
+      const url = mockApi.get.mock.calls[0]![0] as string;
       expect(url).toContain('q=hello');
       expect(url).toContain('limit=10');
       expect(url).toContain('offset=5');

@@ -77,11 +77,8 @@ describe('SearchModal', () => {
       ],
       [
         {
-          id: 'mem-1',
           organizationId: 'org-123',
-          userId: 'user-123',
           role: 'OWNER' as const,
-          createdAt: new Date().toISOString(),
         },
       ]
     );
@@ -313,7 +310,7 @@ describe('SearchModal', () => {
       await flushPromises();
 
       const items = wrapper.findAll('.search-result-item');
-      expect(items[1].classes()).toContain('selected');
+      expect(items[1]!.classes()).toContain('selected');
     });
   });
 

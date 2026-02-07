@@ -115,14 +115,17 @@ function handleKeydown(event: KeyboardEvent) {
       event.preventDefault();
       selectedIndex.value = Math.max(selectedIndex.value - 1, 0);
       break;
-    case 'Enter':
+    case 'Enter': {
       event.preventDefault();
-      if (showRecent.value && recentSearches.value[selectedIndex.value]) {
-        query.value = recentSearches.value[selectedIndex.value];
-      } else if (results.value[selectedIndex.value]) {
-        navigateToPage(results.value[selectedIndex.value].id);
+      const recentItem = recentSearches.value[selectedIndex.value];
+      const resultItem = results.value[selectedIndex.value];
+      if (showRecent.value && recentItem) {
+        query.value = recentItem;
+      } else if (resultItem) {
+        navigateToPage(resultItem.id);
       }
       break;
+    }
     case 'Escape':
       event.preventDefault();
       emit('close');

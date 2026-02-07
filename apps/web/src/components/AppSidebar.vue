@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, usePagesStore } from '@/stores';
 import { useTheme, useToast } from '@/composables';
@@ -9,6 +9,7 @@ import PageTreeItem from './PageTreeItem.vue';
 import PageContextMenu from './PageContextMenu.vue';
 import FavoritesSection from './FavoritesSection.vue';
 import NotificationBell from './NotificationBell.vue';
+import SearchModal from './SearchModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -16,7 +17,35 @@ const pagesStore = usePagesStore();
 const { theme, toggleTheme } = useTheme();
 const toast = useToast();
 
-const searchQuery = ref('');
+const showSearchModal = ref(false);
+
+function openSearch() {
+  showSearchModal.value = true;
+}
+
+function closeSearch() {
+  showSearchModal.value = false;
+}
+
+function handleSearchNavigate(pageId: string) {
+  showSearchModal.value = false;
+  router.push({ name: 'page', params: { pageId } });
+}
+
+function handleGlobalKeydown(event: KeyboardEvent) {
+  if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+    event.preventDefault();
+    showSearchModal.value = !showSearchModal.value;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleGlobalKeydown);
+});
 const contextMenu = ref<{
   show: boolean;
   x: number;
@@ -136,7 +165,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
     <!-- Search -->
     <div class="sidebar-search">
-      <div class="search-wrapper">
+      <button class="search-wrapper" @click="openSearch">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7C2 9.76142 4.23858 12 7 12Z"
@@ -153,9 +182,9 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
             stroke-linejoin="round"
           />
         </svg>
-        <input v-model="searchQuery" type="text" placeholder="Search..." class="search-input" />
+        <span class="search-placeholder">Search...</span>
         <kbd class="search-shortcut"><span class="shortcut-mod">⌘</span>K</kbd>
-      </div>
+      </button>
     </div>
 
     <!-- Navigation -->
@@ -369,6 +398,9 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       </div>
     </div>
 
+    <!-- Search Modal -->
+    <SearchModal :visible="showSearchModal" @close="closeSearch" @navigate="handleSearchNavigate" />
+
     <!-- Context Menu -->
     <Teleport to="body">
       <PageContextMenu
@@ -409,20 +441,18 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  cursor: pointer;
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   transition: all var(--transition-fast);
+  font-family: inherit;
+  padding: 0;
 }
 
 .search-wrapper:hover {
   border-color: var(--color-border);
-}
-
-.search-wrapper:focus-within {
-  background: var(--color-surface);
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(107, 143, 113, 0.12);
 }
 
 .search-icon {
@@ -437,20 +467,13 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   color: var(--color-accent);
 }
 
-.search-input {
+.search-placeholder {
   flex: 1;
   min-width: 0;
   padding: var(--space-2) var(--space-2);
-  font-family: inherit;
   font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  background: transparent;
-  border: none;
-  outline: none;
-}
-
-.search-input::placeholder {
   color: var(--color-text-tertiary);
+  text-align: left;
 }
 
 .search-shortcut {
