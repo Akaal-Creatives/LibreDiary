@@ -536,23 +536,30 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 13: Backup System
+## Phase 13: Backup System (Take Your Data)
 
-### 13.1 Backup Implementation
+### 13.1 Per-Organisation Backup
 
 - [ ] Create Backup model
-- [ ] Implement pg_dump automation
+- [ ] Implement per-organisation data export (pages, databases, files)
 - [ ] Compress backups (gzip)
 - [ ] Encrypt backups (AES-256)
 - [ ] Upload to Backblaze B2
+- [ ] Create downloadable backup archive per organisation
 
-### 13.2 Backup Management
+### 13.2 System Backup (pg_dump)
 
-- [ ] Create backup listing endpoint
+- [ ] Implement pg_dump automation
 - [ ] Implement scheduled backups (cron)
 - [ ] Create manual backup trigger
 - [ ] Implement backup restoration
+
+### 13.3 Backup Management
+
+- [ ] Create backup listing endpoint
 - [ ] Create backup settings UI
+- [ ] Allow organisation admins to trigger their own backups
+- [ ] Allow organisation admins to download their backup archives
 
 ---
 
