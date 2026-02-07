@@ -20,6 +20,7 @@ import { notificationsRoutes } from './modules/notifications/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
+import { searchRoutes } from './modules/search/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -102,6 +103,11 @@ export async function buildApp() {
       // Mentions routes
       await api.register(mentionsRoutes, {
         prefix: '/organizations/:orgId/mentions',
+      });
+
+      // Search routes
+      await api.register(searchRoutes, {
+        prefix: '/organizations/:orgId/search',
       });
 
       // Notifications routes (user-specific, no org context needed)
