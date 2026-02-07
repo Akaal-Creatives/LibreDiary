@@ -471,9 +471,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.7 Gallery View
 
-- [ ] Create gallery grid component
-- [ ] Display row cards with cover image
-- [ ] Implement card layout options
+- [x] Create gallery grid component
+- [x] Display row cards with cover image
+- [x] Implement card layout options
 
 ### 10.8 Advanced Features
 
