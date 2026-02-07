@@ -160,4 +160,95 @@ describe('TableView', () => {
     await cells[0].trigger('click');
     expect(wrapper.find('.cell-input').exists()).toBe(true);
   });
+
+  it('renders empty state when no rows exist', () => {
+    const store = setupStore();
+    store.rows = [];
+    const wrapper = mount(TableView);
+    const rows = wrapper.findAll('.data-row');
+    expect(rows).toHaveLength(0);
+    // Add row button should still be present
+    expect(wrapper.find('.add-row-btn').exists()).toBe(true);
+  });
+
+  it('calls createRow when clicking add row button', async () => {
+    setupStore();
+    mockDatabasesService.createRow.mockResolvedValue({
+      row: {
+        id: 'row-new',
+        databaseId: 'db-1',
+        position: 2,
+        cells: {},
+        createdById: 'user-1',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    });
+
+    const wrapper = mount(TableView);
+    const addBtn = wrapper.find('.add-row-btn');
+    await addBtn.trigger('click');
+
+    expect(mockDatabasesService.createRow).toHaveBeenCalledWith('org-1', 'db-1', {});
+  });
+
+  it('deselects row when unchecking checkbox', async () => {
+    setupStore();
+    const wrapper = mount(TableView);
+    const checkboxes = wrapper.findAll('.row-checkbox');
+
+    // Select the row
+    await checkboxes[1].setValue(true);
+    expect(wrapper.find('.bulk-actions').exists()).toBe(true);
+
+    // Deselect the row
+    await checkboxes[1].setValue(false);
+    expect(wrapper.find('.bulk-actions').exists()).toBe(false);
+  });
+
+  it('calls bulkDeleteRows when clicking delete in bulk actions', async () => {
+    setupStore();
+    mockDatabasesService.bulkDeleteRows.mockResolvedValue({ count: 1, message: '1 deleted' });
+
+    const wrapper = mount(TableView);
+    const checkboxes = wrapper.findAll('.row-checkbox');
+    await checkboxes[1].setValue(true);
+
+    const deleteBtn = wrapper.find('.delete-btn');
+    await deleteBtn.trigger('click');
+
+    expect(mockDatabasesService.bulkDeleteRows).toHaveBeenCalledWith('org-1', 'db-1', ['row-1']);
+  });
+
+  it('does not enter edit mode for system column types', async () => {
+    const store = setupStore();
+    store.properties.push({
+      id: 'prop-sys',
+      databaseId: 'db-1',
+      name: 'Created',
+      type: 'CREATED_TIME',
+      position: 2,
+      config: null,
+    });
+    store.rows = [
+      {
+        id: 'row-1',
+        databaseId: 'db-1',
+        position: 0,
+        cells: { 'prop-1': 'Test', 'prop-2': 'Todo', 'prop-sys': '2024-01-01' },
+        createdById: 'user-1',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ];
+
+    const wrapper = mount(TableView);
+    // Find the system column cell (last data-cell in the row)
+    const cells = wrapper.findAll('.data-cell');
+    const systemCell = cells[cells.length - 1];
+    await systemCell.trigger('click');
+
+    // Should not show editor for system columns
+    expect(wrapper.findAll('.cell-input').length).toBe(0);
+  });
 });

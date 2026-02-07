@@ -100,4 +100,75 @@ describe('CellRenderer', () => {
     expect(wrapper.text()).toContain('Jun');
     expect(wrapper.text()).toContain('2024');
   });
+
+  it('renders number with currency format', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: 1500, type: 'NUMBER', config: { format: 'currency', currency: 'GBP' } },
+    });
+    expect(wrapper.text()).toContain('1,500');
+  });
+
+  it('renders phone value as text', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: '+44 7700 900000', type: 'PHONE' },
+    });
+    expect(wrapper.text()).toBe('+44 7700 900000');
+  });
+
+  it('renders empty string for NaN number', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: 'not-a-number', type: 'NUMBER' },
+    });
+    expect(wrapper.text()).toBe('');
+  });
+
+  it('renders created_time in UK format', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: '2024-03-15T10:30:00Z', type: 'CREATED_TIME' },
+    });
+    expect(wrapper.text()).toContain('Mar');
+    expect(wrapper.text()).toContain('2024');
+  });
+
+  it('renders updated_time in UK format', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: '2024-12-25T00:00:00Z', type: 'UPDATED_TIME' },
+    });
+    expect(wrapper.text()).toContain('Dec');
+    expect(wrapper.text()).toContain('2024');
+  });
+
+  it('renders select tag with default colour when no config match', () => {
+    const wrapper = mount(CellRenderer, {
+      props: {
+        value: 'Unknown',
+        type: 'SELECT',
+        config: { options: [{ label: 'Done', colour: '#22c55e' }] },
+      },
+    });
+    const tag = wrapper.find('.select-tag');
+    expect(tag.exists()).toBe(true);
+    expect(tag.text()).toBe('Unknown');
+  });
+
+  it('renders nothing for empty select value', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: null, type: 'SELECT', config: { options: [] } },
+    });
+    expect(wrapper.find('.select-tag').exists()).toBe(false);
+  });
+
+  it('renders nothing for empty multi-select array', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: [], type: 'MULTI_SELECT', config: { options: [] } },
+    });
+    expect(wrapper.findAll('.select-tag')).toHaveLength(0);
+  });
+
+  it('renders invalid date string as-is', () => {
+    const wrapper = mount(CellRenderer, {
+      props: { value: 'not-a-date', type: 'DATE' },
+    });
+    expect(wrapper.text()).toBe('not-a-date');
+  });
 });

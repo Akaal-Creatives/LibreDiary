@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
 const { mockDatabasesService } = vi.hoisted(() => ({
@@ -120,5 +120,103 @@ describe('DatabaseHeader', () => {
     const wrapper = mount(DatabaseHeader);
     await wrapper.find('.database-name').trigger('click');
     expect(wrapper.find('.database-name-input').exists()).toBe(true);
+  });
+
+  it('saves name on blur', async () => {
+    const store = setupStore();
+    mockDatabasesService.updateDatabase.mockResolvedValue({
+      database: { ...store.databases.get('db-1')!, name: 'New Name' },
+    });
+
+    const wrapper = mount(DatabaseHeader);
+    await wrapper.find('.database-name').trigger('click');
+
+    const input = wrapper.find('.database-name-input');
+    await input.setValue('New Name');
+    await input.trigger('blur');
+
+    expect(mockDatabasesService.updateDatabase).toHaveBeenCalledWith('org-1', 'db-1', {
+      name: 'New Name',
+    });
+  });
+
+  it('does not save if name is unchanged', async () => {
+    setupStore();
+    const wrapper = mount(DatabaseHeader);
+    await wrapper.find('.database-name').trigger('click');
+
+    const input = wrapper.find('.database-name-input');
+    // Keep the same name
+    await input.trigger('blur');
+
+    expect(mockDatabasesService.updateDatabase).not.toHaveBeenCalled();
+  });
+
+  it('cancels editing on Escape key', async () => {
+    setupStore();
+    const wrapper = mount(DatabaseHeader);
+    await wrapper.find('.database-name').trigger('click');
+    expect(wrapper.find('.database-name-input').exists()).toBe(true);
+
+    const input = wrapper.find('.database-name-input');
+    await input.trigger('keydown', { key: 'Escape' });
+
+    expect(wrapper.find('.database-name-input').exists()).toBe(false);
+    expect(wrapper.find('.database-name').exists()).toBe(true);
+  });
+
+  it('creates a new view when selecting from add view menu', async () => {
+    const store = setupStore();
+    const newView = {
+      id: 'view-2',
+      databaseId: 'db-1',
+      name: 'Kanban view',
+      type: 'KANBAN' as const,
+      position: 1,
+      config: null,
+    };
+    mockDatabasesService.createView.mockResolvedValue({ view: newView });
+
+    const wrapper = mount(DatabaseHeader);
+    const addBtn = wrapper.find('.add-view-btn');
+    await addBtn.trigger('click');
+
+    const kanbanOption = wrapper
+      .findAll('.new-view-option')
+      .find((btn) => btn.text().includes('Kanban'));
+    await kanbanOption?.trigger('click');
+    await flushPromises();
+
+    expect(mockDatabasesService.createView).toHaveBeenCalledWith('org-1', 'db-1', {
+      name: 'Kanban view',
+      type: 'KANBAN',
+    });
+    expect(store.activeViewId).toBe('view-2');
+  });
+
+  it('does not delete view when only one view exists', async () => {
+    setupStore();
+    const wrapper = mount(DatabaseHeader);
+
+    // Right-click the only view tab (contextmenu triggers deleteView)
+    const viewTab = wrapper.find('.view-tab');
+    await viewTab.trigger('contextmenu');
+
+    expect(mockDatabasesService.deleteView).not.toHaveBeenCalled();
+  });
+
+  it('renders Untitled when no database name', () => {
+    const store = setupStore();
+    store.databases.set('db-1', {
+      ...store.databases.get('db-1')!,
+      name: '',
+    });
+    // currentDatabase?.name will be '' which is falsy, falls to 'Untitled'
+    // Actually the template uses `?? 'Untitled'` which only catches null/undefined
+    // An empty string would show empty. Let's test null case:
+    store.currentDatabaseId = null;
+
+    const wrapper = mount(DatabaseHeader);
+    expect(wrapper.text()).toContain('Untitled');
   });
 });
