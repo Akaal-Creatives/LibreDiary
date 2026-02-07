@@ -8,6 +8,7 @@ const props = defineProps<{
   value: unknown;
   type: PropertyType;
   config?: Record<string, unknown> | null;
+  rowCells?: Record<string, unknown> | null;
 }>();
 
 const organizationsStore = useOrganizationsStore();
@@ -45,6 +46,77 @@ const relationItems = computed(() => {
     const cells = row.cells as Record<string, unknown>;
     return { id: rowId, title: String(cells[firstPropId] ?? rowId) };
   });
+});
+
+const rollupValue = computed<string>(() => {
+  if (props.type !== 'ROLLUP' || !props.rowCells || !props.config) return '';
+  const relationPropertyId = props.config.relationPropertyId as string;
+  const targetPropertyId = props.config.targetPropertyId as string;
+  const aggregation = props.config.aggregation as string;
+  if (!relationPropertyId || !targetPropertyId || !aggregation) return '';
+
+  const relatedRowIds = props.rowCells[relationPropertyId];
+  if (!Array.isArray(relatedRowIds) || relatedRowIds.length === 0) return '';
+
+  // Find the relation property to get the target database ID
+  const relationProp = databasesStore.properties.find((p) => p.id === relationPropertyId);
+  const targetDbId = (relationProp?.config as Record<string, unknown> | null)?.targetDatabaseId as
+    | string
+    | undefined;
+  if (!targetDbId) return '';
+
+  const targetDb = databasesStore.relatedDatabases.get(targetDbId);
+  if (!targetDb) return '';
+
+  const values = (relatedRowIds as string[])
+    .map((rowId) => {
+      const row = targetDb.rows.find((r) => r.id === rowId);
+      if (!row) return null;
+      return Number((row.cells as Record<string, unknown>)[targetPropertyId]);
+    })
+    .filter((v): v is number => v !== null && !isNaN(v));
+
+  if (aggregation === 'COUNT') return String(relatedRowIds.length);
+  if (values.length === 0) return '';
+
+  switch (aggregation) {
+    case 'SUM':
+      return String(values.reduce((a, b) => a + b, 0));
+    case 'AVG':
+      return String(values.reduce((a, b) => a + b, 0) / values.length);
+    case 'MIN':
+      return String(Math.min(...values));
+    case 'MAX':
+      return String(Math.max(...values));
+    default:
+      return '';
+  }
+});
+
+const formulaValue = computed<string>(() => {
+  if (props.type !== 'FORMULA' || !props.rowCells || !props.config) return '';
+  const expression = props.config.expression as string;
+  if (!expression) return '';
+
+  // Replace prop("Name") references with actual values
+  const resolved = expression.replace(/prop\("([^"]+)"\)/g, (_match, propName: string) => {
+    const prop = databasesStore.properties.find((p) => p.name === propName);
+    if (!prop) return 'null';
+    const val = props.rowCells![prop.id];
+    if (val == null) return 'null';
+    return String(val);
+  });
+
+  // Check for any unresolved null values
+  if (resolved.includes('null')) return '';
+
+  try {
+    // Safe evaluation of simple math expressions
+    const result = Function(`"use strict"; return (${resolved});`)();
+    return String(result);
+  } catch {
+    return '';
+  }
 });
 
 function formatValue(): string {
@@ -184,6 +256,16 @@ function getSelectColour(val: string): string {
       <span v-for="item in relationItems" :key="item.id" class="relation-pill">
         {{ item.title }}
       </span>
+    </template>
+
+    <!-- Rollup -->
+    <template v-else-if="type === 'ROLLUP' && rollupValue">
+      {{ rollupValue }}
+    </template>
+
+    <!-- Formula -->
+    <template v-else-if="type === 'FORMULA' && formulaValue">
+      {{ formulaValue }}
     </template>
 
     <!-- Default text display -->

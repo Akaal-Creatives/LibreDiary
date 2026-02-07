@@ -305,6 +305,8 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'PHONE', label: 'Phone' },
   { value: 'PERSON', label: 'Person' },
   { value: 'RELATION', label: 'Relation' },
+  { value: 'ROLLUP', label: 'Rollup' },
+  { value: 'FORMULA', label: 'Formula' },
 ];
 </script>
 
@@ -499,6 +501,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 :value="getCellValue(row, prop.id)"
                 :type="prop.type"
                 :config="(prop.config as Record<string, unknown>) ?? null"
+                :row-cells="row.cells as Record<string, unknown>"
               />
             </td>
             <!-- Empty add-column spacer -->
@@ -529,6 +532,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 :value="draftRow.cells[prop.id] ?? null"
                 :type="prop.type"
                 :config="(prop.config as Record<string, unknown>) ?? null"
+                :row-cells="draftRow.cells"
               />
             </td>
             <td class="cell-spacer"></td>
