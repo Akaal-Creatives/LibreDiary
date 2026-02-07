@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import { CellRenderer, CellEditor } from './cells';
 import ColumnHeaderMenu from './ColumnHeaderMenu.vue';
@@ -15,6 +15,84 @@ const newPropertyName = ref('');
 const newPropertyType = ref<PropertyType>('TEXT');
 const columnMenuTarget = ref<string | null>(null);
 const configureTarget = ref<string | null>(null);
+
+// Column resizing
+const DEFAULT_COL_WIDTH = 200;
+const MIN_COL_WIDTH = 80;
+const resizingColId = ref<string | null>(null);
+const resizeStartX = ref(0);
+const resizeStartWidth = ref(0);
+const localColumnWidths = ref<Record<string, number>>({});
+const isResizing = computed(() => resizingColId.value !== null);
+
+const viewConfig = computed(() => {
+  const view = databasesStore.activeView;
+  if (!view?.config) return {} as Record<string, unknown>;
+  return view.config as Record<string, unknown>;
+});
+
+const savedColumnWidths = computed(() => {
+  return (viewConfig.value.columnWidths as Record<string, number> | undefined) ?? {};
+});
+
+function getColumnWidth(propertyId: string): number {
+  if (localColumnWidths.value[propertyId] !== undefined) {
+    return localColumnWidths.value[propertyId]!;
+  }
+  return savedColumnWidths.value[propertyId] ?? DEFAULT_COL_WIDTH;
+}
+
+function onResizeStart(event: MouseEvent, propertyId: string) {
+  event.preventDefault();
+  event.stopPropagation();
+  resizingColId.value = propertyId;
+  resizeStartX.value = event.clientX;
+  resizeStartWidth.value = getColumnWidth(propertyId);
+  document.addEventListener('mousemove', onResizeMove);
+  document.addEventListener('mouseup', onResizeEnd);
+}
+
+function onResizeMove(event: MouseEvent) {
+  if (!resizingColId.value) return;
+  const delta = event.clientX - resizeStartX.value;
+  const newWidth = Math.max(MIN_COL_WIDTH, resizeStartWidth.value + delta);
+  localColumnWidths.value = { ...localColumnWidths.value, [resizingColId.value]: newWidth };
+}
+
+async function onResizeEnd() {
+  document.removeEventListener('mousemove', onResizeMove);
+  document.removeEventListener('mouseup', onResizeEnd);
+
+  if (!resizingColId.value) return;
+  resizingColId.value = null;
+
+  // Persist column widths
+  const view = databasesStore.activeView;
+  if (!view) return;
+  const widths = { ...savedColumnWidths.value, ...localColumnWidths.value };
+  const config = { ...viewConfig.value, columnWidths: widths };
+  await databasesStore.updateView(view.id, { config });
+  localColumnWidths.value = {};
+}
+
+async function onResizeHandleDblClick(event: MouseEvent, propertyId: string) {
+  event.preventDefault();
+  event.stopPropagation();
+  // Reset to default width
+  const view = databasesStore.activeView;
+  if (!view) return;
+  const widths = { ...savedColumnWidths.value };
+  delete widths[propertyId];
+  localColumnWidths.value = { ...localColumnWidths.value };
+  delete localColumnWidths.value[propertyId];
+  const config = { ...viewConfig.value, columnWidths: widths };
+  await databasesStore.updateView(view.id, { config });
+}
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', onResizeMove);
+  document.removeEventListener('mouseup', onResizeEnd);
+});
 
 // Draft row (local only, not yet persisted)
 interface DraftRow {
@@ -229,7 +307,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
 </script>
 
 <template>
-  <div class="table-view">
+  <div class="table-view" :class="{ 'table-view--resizing': isResizing }">
     <!-- Bulk Actions Bar -->
     <div v-if="selectedRows.size > 0" class="bulk-actions">
       <span class="bulk-count">{{ selectedRows.size }} selected</span>
@@ -277,6 +355,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 'drag-over': dragOverColId === prop.id,
                 dragging: dragColId === prop.id,
               }"
+              :style="{ width: getColumnWidth(prop.id) + 'px' }"
               draggable="true"
               @dragstart="onColDragStart($event, prop.id)"
               @dragover="onColDragOver($event, prop.id)"
@@ -298,6 +377,11 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                   </svg>
                 </button>
               </div>
+              <div
+                class="col-resize-handle"
+                @mousedown="onResizeStart($event, prop.id)"
+                @dblclick="onResizeHandleDblClick($event, prop.id)"
+              ></div>
               <ColumnHeaderMenu
                 v-if="columnMenuTarget === prop.id"
                 :property="prop"
@@ -571,6 +655,29 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
 
 .col-header.dragging {
   opacity: 0.5;
+}
+
+/* Column Resize Handle */
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  z-index: 1;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  transition: background var(--transition-fast);
+}
+
+.col-resize-handle:hover,
+.table-view--resizing .col-resize-handle {
+  background: var(--color-accent);
+}
+
+.table-view--resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .col-header-content {
