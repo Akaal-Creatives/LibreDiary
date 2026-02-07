@@ -376,15 +376,17 @@ export interface ApiToken {
 // TEMPLATES
 // ===========================================
 
+export type TemplateCategory = 'Meeting' | 'Project' | 'Personal' | 'Team' | 'Other';
+
 export interface Template {
   id: string;
-  organizationId: string | null;
-  userId: string | null;
+  organizationId: string;
   name: string;
   description: string | null;
   icon: string | null;
   category: string | null;
-  isPublic: boolean;
+  isBuiltIn: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
 }

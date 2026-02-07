@@ -224,7 +224,21 @@ export const createTemplateSchema = z.object({
   description: z.string().max(1000).optional(),
   icon: z.string().max(50).optional(),
   category: z.string().max(50).optional(),
-  isPublic: z.boolean().default(false),
+});
+
+export const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(200).trim().optional(),
+  description: z.string().max(1000).nullable().optional(),
+  icon: z.string().max(50).nullable().optional(),
+  category: z.string().max(50).nullable().optional(),
+});
+
+export const createTemplateFromPageSchema = z.object({
+  pageId: z.string().min(1, 'Page ID is required'),
+  name: z.string().min(1).max(200).trim().optional(),
+  description: z.string().max(1000).optional(),
+  icon: z.string().max(50).optional(),
+  category: z.string().max(50).optional(),
 });
 
 // ===========================================
@@ -291,6 +305,8 @@ export type CreateRowInput = z.infer<typeof createRowSchema>;
 export type UpdateRowInput = z.infer<typeof updateRowSchema>;
 export type ReorderInput = z.infer<typeof reorderSchema>;
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
+export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
+export type CreateTemplateFromPageInput = z.infer<typeof createTemplateFromPageSchema>;
 export type CreateWebhookInput = z.infer<typeof createWebhookSchema>;
 export type UpdateWebhookInput = z.infer<typeof updateWebhookSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;

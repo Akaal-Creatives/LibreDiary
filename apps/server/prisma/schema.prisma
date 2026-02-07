@@ -54,6 +54,7 @@ model User {
   notifications      Notification[]
   createdDatabases   Database[]           @relation("DatabaseCreatedBy")
   createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
+  createdTemplates   Template[]           @relation("TemplateCreatedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -162,6 +163,7 @@ model Organization {
   pages     Page[]
   invites   Invite[]
   databases Database[]
+  templates Template[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -554,5 +556,37 @@ model DatabaseRow {
 
   @@index([databaseId])
   @@index([databaseId, position])
+  @@index([createdById])
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+
+model Template {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  icon           String?
+  category       String?
+  isBuiltIn      Boolean @default(false)
+
+  // Template content (stored as Yjs state)
+  yjsState Bytes?
+
+  // Audit
+  createdById String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("TemplateCreatedBy", fields: [createdById], references: [id])
+
+  @@index([organizationId])
+  @@index([organizationId, category])
   @@index([createdById])
 }
