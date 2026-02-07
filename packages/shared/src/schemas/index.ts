@@ -186,6 +186,35 @@ export const createViewSchema = z.object({
   config: z.record(z.unknown()).optional(),
 });
 
+export const updateDatabaseSchema = z.object({
+  name: z.string().min(1).max(200).trim().optional(),
+  pageId: cuidSchema.nullable().optional(),
+});
+
+export const updatePropertySchema = z.object({
+  name: z.string().min(1).max(100).trim().optional(),
+  type: propertyTypeSchema.optional(),
+  config: z.record(z.unknown()).nullable().optional(),
+});
+
+export const updateViewSchema = z.object({
+  name: z.string().min(1).max(100).trim().optional(),
+  type: viewTypeSchema.optional(),
+  config: z.record(z.unknown()).nullable().optional(),
+});
+
+export const createRowSchema = z.object({
+  cells: z.record(z.unknown()).optional(),
+});
+
+export const updateRowSchema = z.object({
+  cells: z.record(z.unknown()).optional(),
+});
+
+export const reorderSchema = z.object({
+  orderedIds: z.array(z.string().min(1)).min(1),
+});
+
 // ===========================================
 // TEMPLATE SCHEMAS
 // ===========================================
@@ -253,8 +282,14 @@ export type SharePageInput = z.infer<typeof sharePageSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type UpdateCommentInput = z.infer<typeof updateCommentSchema>;
 export type CreateDatabaseInput = z.infer<typeof createDatabaseSchema>;
+export type UpdateDatabaseInput = z.infer<typeof updateDatabaseSchema>;
 export type CreatePropertyInput = z.infer<typeof createPropertySchema>;
+export type UpdatePropertyInput = z.infer<typeof updatePropertySchema>;
 export type CreateViewInput = z.infer<typeof createViewSchema>;
+export type UpdateViewInput = z.infer<typeof updateViewSchema>;
+export type CreateRowInput = z.infer<typeof createRowSchema>;
+export type UpdateRowInput = z.infer<typeof updateRowSchema>;
+export type ReorderInput = z.infer<typeof reorderSchema>;
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type CreateWebhookInput = z.infer<typeof createWebhookSchema>;
 export type UpdateWebhookInput = z.infer<typeof updateWebhookSchema>;

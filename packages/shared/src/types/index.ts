@@ -262,8 +262,15 @@ export interface DatabaseRow {
   databaseId: string;
   position: number;
   cells: Record<string, unknown>;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DatabaseWithRelations extends Database {
+  properties: DatabaseProperty[];
+  views: DatabaseView[];
+  rows: DatabaseRow[];
 }
 
 // ===========================================
