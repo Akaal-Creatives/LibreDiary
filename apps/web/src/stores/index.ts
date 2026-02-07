@@ -3,3 +3,4 @@ export { usePagesStore } from './pages';
 export { useOrganizationsStore } from './organizations';
 export { useSyncStore } from './sync';
 export { useDatabasesStore } from './databases';
+export { useTemplatesStore } from './templates';
