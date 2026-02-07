@@ -20,7 +20,8 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:dev": "tsx prisma/seed-dev.ts"
+    "db:seed:dev": "tsx prisma/seed-dev.ts",
+    "db:migrate:search": "tsx prisma/migrations/run-migrations.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",
