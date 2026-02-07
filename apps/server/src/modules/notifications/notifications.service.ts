@@ -279,18 +279,21 @@ export async function createCommentReplyNotification(
     },
   });
 
-  // Send email notification
+  // Send email notification if enabled
   try {
-    const user = await getUserForEmail(input.recipientId);
-    if (user) {
-      await sendCommentReplyNotificationEmail({
-        to: user.email,
-        recipientName: user.name || '',
-        actorName: input.actorName,
-        pageTitle: input.pageTitle,
-        pageUrl: getPageUrl(input.pageId),
-      });
-      await markEmailSent(notification.id);
+    const shouldEmail = await shouldSendEmail(input.recipientId, 'COMMENT_REPLY');
+    if (shouldEmail) {
+      const user = await getUserForEmail(input.recipientId);
+      if (user) {
+        await sendCommentReplyNotificationEmail({
+          to: user.email,
+          recipientName: user.name || '',
+          actorName: input.actorName,
+          pageTitle: input.pageTitle,
+          pageUrl: getPageUrl(input.pageId),
+        });
+        await markEmailSent(notification.id);
+      }
     }
   } catch (error) {
     console.error('Failed to send comment reply notification email:', error);
@@ -319,19 +322,22 @@ export async function createPageSharedNotification(
     },
   });
 
-  // Send email notification
+  // Send email notification if enabled
   try {
-    const user = await getUserForEmail(input.recipientId);
-    if (user) {
-      await sendPageSharedNotificationEmail({
-        to: user.email,
-        recipientName: user.name || '',
-        actorName: input.actorName,
-        pageTitle: input.pageTitle,
-        pageUrl: getPageUrl(input.pageId),
-        permissionLevel: input.permissionLevel,
-      });
-      await markEmailSent(notification.id);
+    const shouldEmail = await shouldSendEmail(input.recipientId, 'PAGE_SHARED');
+    if (shouldEmail) {
+      const user = await getUserForEmail(input.recipientId);
+      if (user) {
+        await sendPageSharedNotificationEmail({
+          to: user.email,
+          recipientName: user.name || '',
+          actorName: input.actorName,
+          pageTitle: input.pageTitle,
+          pageUrl: getPageUrl(input.pageId),
+          permissionLevel: input.permissionLevel,
+        });
+        await markEmailSent(notification.id);
+      }
     }
   } catch (error) {
     console.error('Failed to send page shared notification email:', error);
@@ -360,18 +366,21 @@ export async function createCommentResolvedNotification(
     },
   });
 
-  // Send email notification
+  // Send email notification if enabled
   try {
-    const user = await getUserForEmail(input.recipientId);
-    if (user) {
-      await sendCommentResolvedNotificationEmail({
-        to: user.email,
-        recipientName: user.name || '',
-        actorName: input.actorName,
-        pageTitle: input.pageTitle,
-        pageUrl: getPageUrl(input.pageId),
-      });
-      await markEmailSent(notification.id);
+    const shouldEmail = await shouldSendEmail(input.recipientId, 'COMMENT_RESOLVED');
+    if (shouldEmail) {
+      const user = await getUserForEmail(input.recipientId);
+      if (user) {
+        await sendCommentResolvedNotificationEmail({
+          to: user.email,
+          recipientName: user.name || '',
+          actorName: input.actorName,
+          pageTitle: input.pageTitle,
+          pageUrl: getPageUrl(input.pageId),
+        });
+        await markEmailSent(notification.id);
+      }
     }
   } catch (error) {
     console.error('Failed to send comment resolved notification email:', error);

@@ -10,6 +10,7 @@ const {
   mockSendCommentReplyNotificationEmail,
   mockSendPageSharedNotificationEmail,
   mockSendCommentResolvedNotificationEmail,
+  mockShouldSendEmail,
 } = vi.hoisted(() => {
   const mockPrismaNotification = {
     findFirst: vi.fn(),
@@ -35,6 +36,7 @@ const {
   const mockSendCommentReplyNotificationEmail = vi.fn().mockResolvedValue(undefined);
   const mockSendPageSharedNotificationEmail = vi.fn().mockResolvedValue(undefined);
   const mockSendCommentResolvedNotificationEmail = vi.fn().mockResolvedValue(undefined);
+  const mockShouldSendEmail = vi.fn().mockResolvedValue(true);
 
   function resetMocks() {
     Object.values(mockPrismaNotification).forEach((mock) => mock.mockReset());
@@ -43,6 +45,7 @@ const {
     mockSendCommentReplyNotificationEmail.mockReset().mockResolvedValue(undefined);
     mockSendPageSharedNotificationEmail.mockReset().mockResolvedValue(undefined);
     mockSendCommentResolvedNotificationEmail.mockReset().mockResolvedValue(undefined);
+    mockShouldSendEmail.mockReset().mockResolvedValue(true);
   }
 
   const now = new Date();
@@ -77,6 +80,7 @@ const {
     mockSendCommentReplyNotificationEmail,
     mockSendPageSharedNotificationEmail,
     mockSendCommentResolvedNotificationEmail,
+    mockShouldSendEmail,
   };
 });
 
@@ -91,6 +95,11 @@ vi.mock('../../../services/email.service.js', () => ({
   sendCommentReplyNotificationEmail: mockSendCommentReplyNotificationEmail,
   sendPageSharedNotificationEmail: mockSendPageSharedNotificationEmail,
   sendCommentResolvedNotificationEmail: mockSendCommentResolvedNotificationEmail,
+}));
+
+// Mock notification preferences service
+vi.mock('../notifications.prefs.service.js', () => ({
+  shouldSendEmail: mockShouldSendEmail,
 }));
 
 // Mock env config
@@ -472,6 +481,27 @@ describe('Notifications Service', () => {
         pageUrl: expect.stringContaining('page-123'),
       });
     });
+
+    it('should not send email when preference is disabled', async () => {
+      mockShouldSendEmail.mockResolvedValue(false);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-789',
+        type: 'COMMENT_REPLY',
+      });
+
+      await notificationsService.createCommentReplyNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockShouldSendEmail).toHaveBeenCalledWith('user-123', 'COMMENT_REPLY');
+      expect(mockSendCommentReplyNotificationEmail).not.toHaveBeenCalled();
+    });
   });
 
   describe('createPageSharedNotification', () => {
@@ -530,6 +560,27 @@ describe('Notifications Service', () => {
         permissionLevel: 'EDIT',
       });
     });
+
+    it('should not send email when preference is disabled', async () => {
+      mockShouldSendEmail.mockResolvedValue(false);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-shared',
+        type: 'PAGE_SHARED',
+      });
+
+      await notificationsService.createPageSharedNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        permissionLevel: 'EDIT',
+      });
+
+      expect(mockShouldSendEmail).toHaveBeenCalledWith('user-123', 'PAGE_SHARED');
+      expect(mockSendPageSharedNotificationEmail).not.toHaveBeenCalled();
+    });
   });
 
   describe('createCommentResolvedNotification', () => {
@@ -586,6 +637,27 @@ describe('Notifications Service', () => {
         pageTitle: 'Test Page',
         pageUrl: expect.stringContaining('page-123'),
       });
+    });
+
+    it('should not send email when preference is disabled', async () => {
+      mockShouldSendEmail.mockResolvedValue(false);
+      mockPrisma.notification.create.mockResolvedValue({
+        ...mockNotification,
+        id: 'notif-resolved',
+        type: 'COMMENT_RESOLVED',
+      });
+
+      await notificationsService.createCommentResolvedNotification({
+        recipientId: 'user-123',
+        actorId: 'actor-123',
+        actorName: 'Test Author',
+        pageId: 'page-123',
+        pageTitle: 'Test Page',
+        commentId: 'comment-456',
+      });
+
+      expect(mockShouldSendEmail).toHaveBeenCalledWith('user-123', 'COMMENT_RESOLVED');
+      expect(mockSendCommentResolvedNotificationEmail).not.toHaveBeenCalled();
     });
   });
 
