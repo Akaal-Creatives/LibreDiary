@@ -482,7 +482,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement Relations between databases
 - [x] Implement Rollup calculations
 - [x] Implement Formula properties
-- [ ] Add database templates
+- [x] Add database templates
 
 ---
 
