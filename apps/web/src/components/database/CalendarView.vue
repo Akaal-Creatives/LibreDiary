@@ -4,7 +4,10 @@ import { useDatabasesStore } from '@/stores';
 
 const databasesStore = useDatabasesStore();
 
+type CalendarMode = 'month' | 'week' | 'day';
+
 const currentDate = ref(new Date());
+const viewMode = ref<CalendarMode>('month');
 const dragEventId = ref<string | null>(null);
 const dragOverDate = ref<string | null>(null);
 
@@ -84,13 +87,23 @@ const eventsInView = computed<CalendarEvent[]>(() => {
   const allRows = databasesStore.filteredAndSortedRows;
   const events: CalendarEvent[] = [];
 
-  // Determine visible date range
-  const firstCell = calendarDays.value[0];
-  const lastCell = calendarDays.value[calendarDays.value.length - 1];
-  if (!firstCell || !lastCell) return [];
+  // Determine visible date range based on view mode
+  let startStr: string;
+  let endStr: string;
 
-  const startStr = firstCell.dateStr;
-  const endStr = lastCell.dateStr;
+  if (viewMode.value === 'week') {
+    const first = weekDays.value[0];
+    const last = weekDays.value[weekDays.value.length - 1];
+    if (!first || !last) return [];
+    startStr = first.dateStr;
+    endStr = last.dateStr;
+  } else {
+    const firstCell = calendarDays.value[0];
+    const lastCell = calendarDays.value[calendarDays.value.length - 1];
+    if (!firstCell || !lastCell) return [];
+    startStr = firstCell.dateStr;
+    endStr = lastCell.dateStr;
+  }
 
   for (const row of allRows) {
     const dateVal = (row.cells as Record<string, unknown>)[datePropertyId.value];
@@ -116,15 +129,85 @@ function formatDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+// Week view computeds
+const weekDays = computed<CalendarDay[]>(() => {
+  const d = new Date(currentDate.value);
+  // Get Monday of the current week
+  let dow = d.getDay() - 1;
+  if (dow < 0) dow = 6;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - dow);
+
+  const today = new Date();
+  const todayStr = formatDate(today);
+  const days: CalendarDay[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    const dateStr = formatDate(date);
+    days.push({
+      date,
+      dateStr,
+      dayNumber: date.getDate(),
+      isCurrentMonth: date.getMonth() === currentMonth.value,
+      isToday: dateStr === todayStr,
+    });
+  }
+  return days;
+});
+
+// Day view computeds
+const currentDayStr = computed(() => formatDate(currentDate.value));
+
+const dayLabel = computed(() => {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(currentDate.value);
+});
+
+const dayEvents = computed<CalendarEvent[]>(() => {
+  if (!datePropertyId.value || !titleProperty.value) return [];
+  const dateStr = currentDayStr.value;
+  return databasesStore.filteredAndSortedRows
+    .filter((row) => {
+      const val = (row.cells as Record<string, unknown>)[datePropertyId.value!];
+      return val != null && String(val) === dateStr;
+    })
+    .map((row) => ({
+      rowId: row.id,
+      title: String((row.cells as Record<string, unknown>)[titleProperty.value!.id] ?? ''),
+      dateStr,
+    }));
+});
+
+function setViewMode(mode: CalendarMode) {
+  viewMode.value = mode;
+}
+
 function navigatePrev() {
   const d = new Date(currentDate.value);
-  d.setMonth(d.getMonth() - 1);
+  if (viewMode.value === 'month') {
+    d.setMonth(d.getMonth() - 1);
+  } else if (viewMode.value === 'week') {
+    d.setDate(d.getDate() - 7);
+  } else {
+    d.setDate(d.getDate() - 1);
+  }
   currentDate.value = d;
 }
 
 function navigateNext() {
   const d = new Date(currentDate.value);
-  d.setMonth(d.getMonth() + 1);
+  if (viewMode.value === 'month') {
+    d.setMonth(d.getMonth() + 1);
+  } else if (viewMode.value === 'week') {
+    d.setDate(d.getDate() + 7);
+  } else {
+    d.setDate(d.getDate() + 1);
+  }
   currentDate.value = d;
 }
 
@@ -248,11 +331,38 @@ function onEventDragEnd() {
             </svg>
           </button>
         </div>
-        <span class="calendar-month-label">{{ monthLabel }}</span>
+        <span v-if="viewMode === 'month'" class="calendar-month-label">{{ monthLabel }}</span>
+        <span v-else-if="viewMode === 'day'" class="calendar-month-label">{{ dayLabel }}</span>
+        <span v-else class="calendar-month-label">{{ monthLabel }}</span>
+
+        <!-- Mode switcher -->
+        <div class="calendar-mode-switcher">
+          <button
+            class="calendar-mode-btn calendar-mode-btn--month"
+            :class="{ active: viewMode === 'month' }"
+            @click="setViewMode('month')"
+          >
+            Month
+          </button>
+          <button
+            class="calendar-mode-btn calendar-mode-btn--week"
+            :class="{ active: viewMode === 'week' }"
+            @click="setViewMode('week')"
+          >
+            Week
+          </button>
+          <button
+            class="calendar-mode-btn calendar-mode-btn--day"
+            :class="{ active: viewMode === 'day' }"
+            @click="setViewMode('day')"
+          >
+            Day
+          </button>
+        </div>
       </div>
 
-      <!-- Calendar grid -->
-      <div class="calendar-grid">
+      <!-- MONTH VIEW -->
+      <div v-if="viewMode === 'month'" class="calendar-grid">
         <!-- Weekday headers -->
         <div v-for="day in weekdays" :key="day" class="calendar-weekday">
           {{ day }}
@@ -286,6 +396,52 @@ function onEventDragEnd() {
               {{ event.title }}
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- WEEK VIEW -->
+      <div v-else-if="viewMode === 'week'" class="calendar-week-grid">
+        <div
+          v-for="day in weekDays"
+          :key="day.dateStr"
+          class="week-day-col"
+          :class="{
+            'calendar-day--today': day.isToday,
+            'calendar-day--drop-target': dragOverDate === day.dateStr && dragEventId !== null,
+          }"
+          @dragover="onDayDragOver($event, day.dateStr)"
+          @dragleave="onDayDragLeave"
+          @drop="onDayDrop($event, day.dateStr)"
+        >
+          <div class="week-day-header">
+            <span class="week-day-name">{{ weekdays[weekDays.indexOf(day)] }}</span>
+            <span class="week-day-number" :class="{ 'today-badge': day.isToday }">{{
+              day.dayNumber
+            }}</span>
+          </div>
+          <div class="week-day-events">
+            <div
+              v-for="event in eventsForDate(day.dateStr)"
+              :key="event.rowId"
+              class="calendar-event"
+              :class="{ 'calendar-event--dragging': dragEventId === event.rowId }"
+              draggable="true"
+              @dragstart="onEventDragStart($event, event.rowId)"
+              @dragend="onEventDragEnd"
+            >
+              {{ event.title }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY VIEW -->
+      <div v-else class="calendar-day-view">
+        <div class="day-view-events">
+          <div v-for="event in dayEvents" :key="event.rowId" class="calendar-event day-view-event">
+            {{ event.title }}
+          </div>
+          <div v-if="dayEvents.length === 0" class="day-view-empty">No events on this day</div>
         </div>
       </div>
     </div>
@@ -394,6 +550,44 @@ function onEventDragEnd() {
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
+  flex: 1;
+}
+
+/* Mode switcher */
+.calendar-mode-switcher {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.calendar-mode-btn {
+  padding: var(--space-1) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--color-border);
+  transition: all var(--transition-fast);
+}
+
+.calendar-mode-btn:last-child {
+  border-right: none;
+}
+
+.calendar-mode-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text-secondary);
+}
+
+.calendar-mode-btn.active {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  font-weight: 600;
 }
 
 /* Grid */
@@ -500,5 +694,106 @@ function onEventDragEnd() {
 .calendar-event--dragging {
   opacity: 0.4;
   cursor: grabbing;
+}
+
+/* Week View */
+.calendar-week-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  min-height: 0;
+}
+
+.week-day-col {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border-subtle);
+  min-height: 200px;
+  transition: background var(--transition-fast);
+}
+
+.week-day-col:last-child {
+  border-right: none;
+}
+
+.week-day-col.calendar-day--today {
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+}
+
+.week-day-col.calendar-day--drop-target {
+  background: var(--color-accent-subtle);
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -2px;
+}
+
+.week-day-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  user-select: none;
+}
+
+.week-day-name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.week-day-number {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.week-day-number.today-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-weight: 700;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.week-day-events {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  overflow-y: auto;
+}
+
+/* Day View */
+.calendar-day-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-6);
+  min-height: 0;
+}
+
+.day-view-events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.day-view-event {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.day-view-empty {
+  padding: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  text-align: center;
 }
 </style>
