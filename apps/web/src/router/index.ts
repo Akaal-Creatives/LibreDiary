@@ -75,6 +75,11 @@ const routes: RouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'templates',
+        name: 'templates',
+        component: () => import('@/pages/app/TemplatesPage.vue'),
+      },
+      {
         path: 'trash',
         name: 'trash',
         component: () => import('@/pages/app/TrashPage.vue'),

@@ -7,6 +7,7 @@ import type { PageWithChildren, Page } from '@librediary/shared';
 import OrganizationSwitcher from './OrganizationSwitcher.vue';
 import PageTreeItem from './PageTreeItem.vue';
 import PageContextMenu from './PageContextMenu.vue';
+import SaveAsTemplateModal from './SaveAsTemplateModal.vue';
 import FavoritesSection from './FavoritesSection.vue';
 import NotificationBell from './NotificationBell.vue';
 import SearchModal from './SearchModal.vue';
@@ -19,6 +20,11 @@ const { theme, toggleTheme } = useTheme();
 const toast = useToast();
 
 const showSearchModal = ref(false);
+const saveTemplateModal = ref<{ open: boolean; pageId: string; pageTitle: string }>({
+  open: false,
+  pageId: '',
+  pageTitle: '',
+});
 
 function openSearch() {
   showSearchModal.value = true;
@@ -157,6 +163,18 @@ async function createNewDatabase() {
 
 function navigateToDatabase(databaseId: string) {
   router.push({ name: 'database', params: { databaseId } });
+}
+
+function handleSaveAsTemplate(page: Page | PageWithChildren) {
+  saveTemplateModal.value = {
+    open: true,
+    pageId: page.id,
+    pageTitle: page.title,
+  };
+}
+
+function closeSaveTemplateModal() {
+  saveTemplateModal.value.open = false;
 }
 
 async function handleMoveToTrash(page: Page | PageWithChildren) {
@@ -503,9 +521,19 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         @duplicate="handleDuplicate"
         @rename="handleRename"
         @toggle-favorite="handleToggleFavorite"
+        @save-as-template="handleSaveAsTemplate"
         @move-to-trash="handleMoveToTrash"
       />
     </Teleport>
+
+    <!-- Save as Template Modal -->
+    <SaveAsTemplateModal
+      :open="saveTemplateModal.open"
+      :page-id="saveTemplateModal.pageId"
+      :page-title="saveTemplateModal.pageTitle"
+      @close="closeSaveTemplateModal"
+      @saved="closeSaveTemplateModal"
+    />
   </aside>
 </template>
 
