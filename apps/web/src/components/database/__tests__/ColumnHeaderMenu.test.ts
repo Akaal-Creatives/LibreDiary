@@ -267,4 +267,17 @@ describe('ColumnHeaderMenu', () => {
 
     expect(wrapper.emitted('close')).toBeTruthy();
   });
+
+  it('emits configure when clicking Configure', async () => {
+    setupStore();
+    const wrapper = mount(ColumnHeaderMenu, {
+      props: { property: secondProperty },
+    });
+
+    const configureBtn = wrapper.findAll('.menu-item').find((b) => b.text().includes('Configure'));
+    expect(configureBtn?.exists()).toBe(true);
+    await configureBtn?.trigger('click');
+
+    expect(wrapper.emitted('configure')).toBeTruthy();
+  });
 });
