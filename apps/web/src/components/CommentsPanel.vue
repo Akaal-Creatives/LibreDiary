@@ -747,6 +747,8 @@ function close() {
 
 /* New Comment */
 .new-comment-section {
+  position: relative;
+  z-index: 2;
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface-sunken, var(--color-bg-secondary));
   border-bottom: 1px solid var(--color-border);
