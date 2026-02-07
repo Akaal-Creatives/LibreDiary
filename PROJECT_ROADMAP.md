@@ -452,7 +452,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement Date property
 - [x] Implement Checkbox property
 - [x] Implement URL/Email/Phone properties
-- [ ] Implement Person property (user reference)
+- [x] Implement Person property (user reference)
 - [ ] Implement Files property
 
 ### 10.5 Kanban View
