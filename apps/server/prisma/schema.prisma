@@ -52,6 +52,8 @@ model User {
   resolvedComments   Comment[]            @relation("CommentResolvedBy")
   mentions           Mention[]            @relation("MentionedUser")
   notifications      Notification[]
+  createdDatabases   Database[]           @relation("DatabaseCreatedBy")
+  createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -156,9 +158,10 @@ model Organization {
   deletedAt DateTime?
 
   // Relations
-  members OrganizationMember[]
-  pages   Page[]
-  invites Invite[]
+  members   OrganizationMember[]
+  pages     Page[]
+  invites   Invite[]
+  databases Database[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -235,6 +238,7 @@ model Page {
   versions     PageVersion[]
   permissions  PagePermission[]
   comments     Comment[]
+  databases    Database[]
 
   @@index([organizationId])
   @@index([parentId])
@@ -445,4 +449,110 @@ enum NotificationType {
   PAGE_SHARED       // A page was shared with you
   COMMENT_RESOLVED  // Your comment was resolved
   INVITATION        // You were invited to an organization
+}
+
+// ============================================
+// DATABASES (Structured Tables)
+// ============================================
+
+enum PropertyType {
+  TEXT
+  NUMBER
+  SELECT
+  MULTI_SELECT
+  DATE
+  CHECKBOX
+  URL
+  EMAIL
+  PHONE
+  PERSON
+  FILES
+  RELATION
+  ROLLUP
+  FORMULA
+  CREATED_TIME
+  CREATED_BY
+  UPDATED_TIME
+  UPDATED_BY
+}
+
+enum ViewType {
+  TABLE
+  KANBAN
+  CALENDAR
+  GALLERY
+}
+
+model Database {
+  id             String   @id @default(cuid())
+  organizationId String
+  pageId         String?
+  name           String
+  createdById    String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  page         Page?              @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  createdBy    User               @relation("DatabaseCreatedBy", fields: [createdById], references: [id])
+  properties   DatabaseProperty[]
+  views        DatabaseView[]
+  rows         DatabaseRow[]
+
+  @@index([organizationId])
+  @@index([pageId])
+  @@index([createdById])
+}
+
+model DatabaseProperty {
+  id         String       @id @default(cuid())
+  databaseId String
+  name       String
+  type       PropertyType @default(TEXT)
+  position   Int          @default(0)
+  config     Json?
+
+  // Relations
+  database Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
+  @@index([databaseId, position])
+}
+
+model DatabaseView {
+  id         String   @id @default(cuid())
+  databaseId String
+  name       String
+  type       ViewType @default(TABLE)
+  position   Int      @default(0)
+  config     Json?
+
+  // Relations
+  database Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
+  @@index([databaseId, position])
+}
+
+model DatabaseRow {
+  id         String @id @default(cuid())
+  databaseId String
+  position   Int    @default(0)
+  cells      Json   @default("{}")
+  createdById String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  database  Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("DatabaseRowCreatedBy", fields: [createdById], references: [id])
+
+  @@index([databaseId])
+  @@index([databaseId, position])
+  @@index([createdById])
 }
