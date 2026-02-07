@@ -4,6 +4,7 @@ import { useDatabasesStore } from '@/stores';
 import DatabaseHeader from '@/components/database/DatabaseHeader.vue';
 import DatabaseToolbar from '@/components/database/DatabaseToolbar.vue';
 import TableView from '@/components/database/TableView.vue';
+import KanbanView from '@/components/database/KanbanView.vue';
 
 const databasesStore = useDatabasesStore();
 
@@ -63,6 +64,7 @@ async function loadDatabase() {
       <DatabaseHeader />
       <DatabaseToolbar />
       <TableView v-if="databasesStore.activeView?.type === 'TABLE'" />
+      <KanbanView v-else-if="databasesStore.activeView?.type === 'KANBAN'" />
       <div v-else class="view-placeholder">
         <span class="placeholder-text">
           {{ databasesStore.activeView?.type ?? 'Unknown' }} view is not yet supported.
