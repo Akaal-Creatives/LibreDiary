@@ -140,7 +140,7 @@ describe('TableView', () => {
     setupStore();
     const wrapper = mount(TableView);
     const checkboxes = wrapper.findAll('.row-checkbox');
-    await checkboxes[1].setValue(true);
+    await checkboxes[1]!.setValue(true);
     expect(wrapper.find('.bulk-actions').exists()).toBe(true);
     expect(wrapper.text()).toContain('1 selected');
   });
@@ -149,7 +149,7 @@ describe('TableView', () => {
     setupStore();
     const wrapper = mount(TableView);
     const checkboxes = wrapper.findAll('.row-checkbox');
-    await checkboxes[0].setValue(true);
+    await checkboxes[0]!.setValue(true);
     expect(wrapper.text()).toContain('2 selected');
   });
 
@@ -157,7 +157,7 @@ describe('TableView', () => {
     setupStore();
     const wrapper = mount(TableView);
     const cells = wrapper.findAll('.data-cell');
-    await cells[0].trigger('click');
+    await cells[0]!.trigger('click');
     expect(wrapper.find('.cell-input').exists()).toBe(true);
   });
 
@@ -198,11 +198,11 @@ describe('TableView', () => {
     const checkboxes = wrapper.findAll('.row-checkbox');
 
     // Select the row
-    await checkboxes[1].setValue(true);
+    await checkboxes[1]!.setValue(true);
     expect(wrapper.find('.bulk-actions').exists()).toBe(true);
 
     // Deselect the row
-    await checkboxes[1].setValue(false);
+    await checkboxes[1]!.setValue(false);
     expect(wrapper.find('.bulk-actions').exists()).toBe(false);
   });
 
@@ -212,7 +212,7 @@ describe('TableView', () => {
 
     const wrapper = mount(TableView);
     const checkboxes = wrapper.findAll('.row-checkbox');
-    await checkboxes[1].setValue(true);
+    await checkboxes[1]!.setValue(true);
 
     const deleteBtn = wrapper.find('.delete-btn');
     await deleteBtn.trigger('click');
@@ -245,7 +245,7 @@ describe('TableView', () => {
     const wrapper = mount(TableView);
     // Find the system column cell (last data-cell in the row)
     const cells = wrapper.findAll('.data-cell');
-    const systemCell = cells[cells.length - 1];
+    const systemCell = cells[cells.length - 1]!;
     await systemCell.trigger('click');
 
     // Should not show editor for system columns

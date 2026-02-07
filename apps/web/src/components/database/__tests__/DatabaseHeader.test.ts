@@ -103,7 +103,7 @@ describe('DatabaseHeader', () => {
     const wrapper = mount(DatabaseHeader);
     const tabs = wrapper.findAll('.view-tab');
     expect(tabs.length).toBeGreaterThanOrEqual(2);
-    await tabs[1].trigger('click');
+    await tabs[1]!.trigger('click');
     expect(store.activeViewId).toBe('view-2');
   });
 

@@ -82,7 +82,7 @@ describe('CellEditor', () => {
     });
     await flushPromises();
     const options = wrapper.findAll('.select-option');
-    await options[0].trigger('mousedown');
+    await options[0]!.trigger('mousedown');
     expect(wrapper.emitted('save')).toBeTruthy();
     expect(wrapper.emitted('save')![0]).toEqual(['Done']);
   });

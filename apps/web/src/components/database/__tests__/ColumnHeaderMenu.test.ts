@@ -118,7 +118,7 @@ describe('ColumnHeaderMenu', () => {
       props: { property: secondProperty },
     });
 
-    const sortAscBtn = wrapper.findAll('.menu-item')[0];
+    const sortAscBtn = wrapper.findAll('.menu-item')[0]!;
     await sortAscBtn.trigger('click');
 
     expect(mockDatabasesService.updateView).toHaveBeenCalledWith(
@@ -143,7 +143,7 @@ describe('ColumnHeaderMenu', () => {
       props: { property: secondProperty },
     });
 
-    const sortDescBtn = wrapper.findAll('.menu-item')[1];
+    const sortDescBtn = wrapper.findAll('.menu-item')[1]!;
     await sortDescBtn.trigger('click');
 
     expect(mockDatabasesService.updateView).toHaveBeenCalledWith(
@@ -164,7 +164,7 @@ describe('ColumnHeaderMenu', () => {
       props: { property: secondProperty },
     });
 
-    const renameBtn = wrapper.findAll('.menu-item')[2];
+    const renameBtn = wrapper.findAll('.menu-item')[2]!;
     await renameBtn.trigger('click');
 
     expect(wrapper.find('.rename-input').exists()).toBe(true);
@@ -182,7 +182,7 @@ describe('ColumnHeaderMenu', () => {
     });
 
     // Enter rename mode
-    const renameBtn = wrapper.findAll('.menu-item')[2];
+    const renameBtn = wrapper.findAll('.menu-item')[2]!;
     await renameBtn.trigger('click');
 
     const input = wrapper.find('.rename-input');
@@ -201,7 +201,7 @@ describe('ColumnHeaderMenu', () => {
     });
 
     // Enter rename mode
-    const renameBtn = wrapper.findAll('.menu-item')[2];
+    const renameBtn = wrapper.findAll('.menu-item')[2]!;
     await renameBtn.trigger('click');
     expect(wrapper.find('.rename-input').exists()).toBe(true);
 
@@ -246,7 +246,7 @@ describe('ColumnHeaderMenu', () => {
       props: { property: secondProperty },
     });
 
-    const sortAscBtn = wrapper.findAll('.menu-item')[0];
+    const sortAscBtn = wrapper.findAll('.menu-item')[0]!;
     await sortAscBtn.trigger('click');
     await flushPromises();
 

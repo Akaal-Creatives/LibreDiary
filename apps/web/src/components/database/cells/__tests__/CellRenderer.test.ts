@@ -71,8 +71,8 @@ describe('CellRenderer', () => {
     });
     const tags = wrapper.findAll('.select-tag');
     expect(tags).toHaveLength(2);
-    expect(tags[0].text()).toBe('Tag A');
-    expect(tags[1].text()).toBe('Tag B');
+    expect(tags[0]!.text()).toBe('Tag A');
+    expect(tags[1]!.text()).toBe('Tag B');
   });
 
   it('renders URL as a link', () => {

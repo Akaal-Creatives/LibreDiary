@@ -362,7 +362,7 @@ describe('useDatabasesStore', () => {
       await store.deleteProperty('prop-2');
 
       expect(store.properties).toHaveLength(1);
-      expect((store.rows[0].cells as Record<string, unknown>)['prop-2']).toBeUndefined();
+      expect((store.rows[0]!.cells as Record<string, unknown>)['prop-2']).toBeUndefined();
     });
   });
 
@@ -414,7 +414,7 @@ describe('useDatabasesStore', () => {
       const result = await store.updateProperty('prop-1', { name: 'Name' });
 
       expect(result.name).toBe('Name');
-      expect(store.properties[0].name).toBe('Name');
+      expect(store.properties[0]!.name).toBe('Name');
     });
   });
 
@@ -465,10 +465,10 @@ describe('useDatabasesStore', () => {
       await store.fetchDatabase('db-1');
       await store.reorderProperties(['prop-2', 'prop-1']);
 
-      expect(store.properties[0].id).toBe('prop-2');
-      expect(store.properties[0].position).toBe(0);
-      expect(store.properties[1].id).toBe('prop-1');
-      expect(store.properties[1].position).toBe(1);
+      expect(store.properties[0]!.id).toBe('prop-2');
+      expect(store.properties[0]!.position).toBe(0);
+      expect(store.properties[1]!.id).toBe('prop-1');
+      expect(store.properties[1]!.position).toBe(1);
     });
   });
 
@@ -569,7 +569,7 @@ describe('useDatabasesStore', () => {
       const result = await store.updateRow('row-1', { cells: { 'prop-1': 'Updated' } });
 
       expect(result.id).toBe('row-1');
-      expect((store.rows[0].cells as Record<string, unknown>)['prop-1']).toBe('Updated');
+      expect((store.rows[0]!.cells as Record<string, unknown>)['prop-1']).toBe('Updated');
     });
   });
 
@@ -623,7 +623,7 @@ describe('useDatabasesStore', () => {
       await store.deleteRow('row-1');
 
       expect(store.rows).toHaveLength(1);
-      expect(store.rows[0].id).toBe('row-2');
+      expect(store.rows[0]!.id).toBe('row-2');
     });
   });
 
@@ -676,10 +676,10 @@ describe('useDatabasesStore', () => {
       await store.fetchDatabase('db-1');
       await store.reorderRows(['row-2', 'row-1']);
 
-      expect(store.rows[0].id).toBe('row-2');
-      expect(store.rows[0].position).toBe(0);
-      expect(store.rows[1].id).toBe('row-1');
-      expect(store.rows[1].position).toBe(1);
+      expect(store.rows[0]!.id).toBe('row-2');
+      expect(store.rows[0]!.position).toBe(0);
+      expect(store.rows[1]!.id).toBe('row-1');
+      expect(store.rows[1]!.position).toBe(1);
     });
   });
 
@@ -735,7 +735,7 @@ describe('useDatabasesStore', () => {
       expect(mockedService.updateRow).toHaveBeenCalledWith('org-1', 'db-1', 'row-1', {
         cells: { 'prop-1': 'Updated' },
       });
-      expect((store.rows[0].cells as Record<string, unknown>)['prop-1']).toBe('Updated');
+      expect((store.rows[0]!.cells as Record<string, unknown>)['prop-1']).toBe('Updated');
     });
   });
 
@@ -799,7 +799,7 @@ describe('useDatabasesStore', () => {
 
       expect(count).toBe(2);
       expect(store.rows).toHaveLength(1);
-      expect(store.rows[0].id).toBe('row-3');
+      expect(store.rows[0]!.id).toBe('row-3');
     });
   });
 
@@ -888,7 +888,7 @@ describe('useDatabasesStore', () => {
       const result = await store.updateView('view-1', { name: 'Renamed' });
 
       expect(result.name).toBe('Renamed');
-      expect(store.views[0].name).toBe('Renamed');
+      expect(store.views[0]!.name).toBe('Renamed');
     });
   });
 
@@ -930,10 +930,10 @@ describe('useDatabasesStore', () => {
       await store.fetchDatabase('db-1');
       await store.reorderViews(['view-2', 'view-1']);
 
-      expect(store.views[0].id).toBe('view-2');
-      expect(store.views[0].position).toBe(0);
-      expect(store.views[1].id).toBe('view-1');
-      expect(store.views[1].position).toBe(1);
+      expect(store.views[0]!.id).toBe('view-2');
+      expect(store.views[0]!.position).toBe(0);
+      expect(store.views[1]!.id).toBe('view-1');
+      expect(store.views[1]!.position).toBe(1);
     });
   });
 
@@ -1039,9 +1039,9 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
 
-      expect(store.sortedProperties[0].id).toBe('prop-1');
-      expect(store.sortedProperties[1].id).toBe('prop-3');
-      expect(store.sortedProperties[2].id).toBe('prop-2');
+      expect(store.sortedProperties[0]!.id).toBe('prop-1');
+      expect(store.sortedProperties[1]!.id).toBe('prop-3');
+      expect(store.sortedProperties[2]!.id).toBe('prop-2');
     });
   });
 
@@ -1092,8 +1092,8 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
 
-      expect(store.sortedRows[0].id).toBe('row-1');
-      expect(store.sortedRows[1].id).toBe('row-2');
+      expect(store.sortedRows[0]!.id).toBe('row-1');
+      expect(store.sortedRows[1]!.id).toBe('row-2');
     });
   });
 
@@ -1276,9 +1276,9 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
 
-      expect(store.filteredAndSortedRows[0].id).toBe('row-2'); // Alice
-      expect(store.filteredAndSortedRows[1].id).toBe('row-3'); // Bob
-      expect(store.filteredAndSortedRows[2].id).toBe('row-1'); // Charlie
+      expect(store.filteredAndSortedRows[0]!.id).toBe('row-2'); // Alice
+      expect(store.filteredAndSortedRows[1]!.id).toBe('row-3'); // Bob
+      expect(store.filteredAndSortedRows[2]!.id).toBe('row-1'); // Charlie
     });
 
     it('should filter rows by contains operator', async () => {
@@ -1404,7 +1404,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r1');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r1');
     });
 
     it('should filter rows by not_equals operator', async () => {
@@ -1462,7 +1462,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r2');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r2');
     });
 
     it('should filter rows by is_empty operator', async () => {
@@ -1587,7 +1587,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r1');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r1');
     });
 
     it('should filter rows by gt operator', async () => {
@@ -1654,7 +1654,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r1');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r1');
     });
 
     it('should filter rows by lt operator', async () => {
@@ -1712,7 +1712,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r2');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r2');
     });
 
     it('should filter rows by gte operator', async () => {
@@ -1902,7 +1902,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r1');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r1');
     });
 
     it('should filter rows by is_unchecked operator', async () => {
@@ -1960,7 +1960,7 @@ describe('useDatabasesStore', () => {
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
       expect(store.filteredAndSortedRows).toHaveLength(1);
-      expect(store.filteredAndSortedRows[0].id).toBe('r2');
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r2');
     });
 
     it('should sort rows descending', async () => {
@@ -2026,9 +2026,9 @@ describe('useDatabasesStore', () => {
 
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
-      expect(store.filteredAndSortedRows[0].id).toBe('r2'); // Charlie
-      expect(store.filteredAndSortedRows[1].id).toBe('r3'); // Bob
-      expect(store.filteredAndSortedRows[2].id).toBe('r1'); // Alice
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r2'); // Charlie
+      expect(store.filteredAndSortedRows[1]!.id).toBe('r3'); // Bob
+      expect(store.filteredAndSortedRows[2]!.id).toBe('r1'); // Alice
     });
 
     it('should return all rows when no view config exists', async () => {
@@ -2142,9 +2142,9 @@ describe('useDatabasesStore', () => {
 
       const store = useDatabasesStore();
       await store.fetchDatabase('db-1');
-      expect(store.filteredAndSortedRows[0].id).toBe('r2'); // 5
-      expect(store.filteredAndSortedRows[1].id).toBe('r3'); // 20
-      expect(store.filteredAndSortedRows[2].id).toBe('r1'); // 100
+      expect(store.filteredAndSortedRows[0]!.id).toBe('r2'); // 5
+      expect(store.filteredAndSortedRows[1]!.id).toBe('r3'); // 20
+      expect(store.filteredAndSortedRows[2]!.id).toBe('r1'); // 100
     });
   });
 
