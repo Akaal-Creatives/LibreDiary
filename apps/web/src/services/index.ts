@@ -63,6 +63,7 @@ export {
 export type { SearchServiceResponse } from './search.service';
 export { databasesService } from './databases.service';
 export { templatesService } from './templates.service';
+export { filesService } from './files.service';
 export type {
   CreateTemplateInput,
   CreateTemplateFromPageInput,
