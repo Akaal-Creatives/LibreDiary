@@ -160,7 +160,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="pickerRef" class="emoji-picker">
+  <div ref="pickerRef" class="emoji-picker" role="dialog" aria-label="Emoji picker">
     <div class="picker-header">
       <input
         v-model="searchQuery"
@@ -177,8 +177,10 @@ onUnmounted(() => {
           <button
             v-for="emoji in category.emojis"
             :key="emoji"
+            type="button"
             class="emoji-btn"
             :class="{ selected: modelValue === emoji }"
+            :aria-label="emoji"
             @click="selectEmoji(emoji)"
           >
             {{ emoji }}
@@ -188,7 +190,7 @@ onUnmounted(() => {
     </div>
 
     <div v-if="modelValue" class="picker-footer">
-      <button class="remove-btn" @click="removeEmoji">
+      <button type="button" class="remove-btn" @click="removeEmoji">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path
             d="M3 3L11 11M11 3L3 11"

@@ -221,9 +221,10 @@ watch(isOpen, (open) => {
     <!-- Bell Button -->
     <button
       ref="bellRef"
+      type="button"
       class="bell-button"
       :class="{ active: isOpen, 'has-unread': hasUnread }"
-      aria-label="Notifications"
+      :aria-label="hasUnread ? `Notifications (${unreadCount} unread)` : 'Notifications'"
       :aria-expanded="isOpen"
       @click="togglePanel"
     >
@@ -265,6 +266,7 @@ watch(isOpen, (open) => {
           <div class="header-actions">
             <button
               v-if="hasUnread"
+              type="button"
               class="mark-all-btn"
               title="Mark all as read"
               @click="markAllAsRead"
@@ -281,6 +283,7 @@ watch(isOpen, (open) => {
               <span>Mark all read</span>
             </button>
             <button
+              type="button"
               class="settings-btn"
               title="Notification settings"
               @click="
@@ -320,7 +323,7 @@ watch(isOpen, (open) => {
           </div>
 
           <!-- Error State -->
-          <div v-else-if="error" class="error-state">
+          <div v-else-if="error" class="error-state" role="alert" aria-live="polite">
             <div class="error-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
@@ -334,7 +337,7 @@ watch(isOpen, (open) => {
               </svg>
             </div>
             <p>{{ error }}</p>
-            <button class="retry-btn" @click="fetchNotifications">Try again</button>
+            <button type="button" class="retry-btn" @click="fetchNotifications">Try again</button>
           </div>
 
           <!-- Empty State -->
@@ -371,7 +374,13 @@ watch(isOpen, (open) => {
           </div>
 
           <!-- Notifications List -->
-          <TransitionGroup v-else name="list" tag="div" class="notifications-list">
+          <TransitionGroup
+            v-else
+            name="list"
+            tag="div"
+            class="notifications-list"
+            aria-live="polite"
+          >
             <div
               v-for="notification in notifications"
               :key="notification.id"
@@ -482,6 +491,7 @@ watch(isOpen, (open) => {
               <!-- Actions -->
               <div class="notification-actions">
                 <button
+                  type="button"
                   class="delete-btn"
                   title="Delete notification"
                   @click="deleteNotification(notification.id, $event)"

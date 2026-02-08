@@ -201,7 +201,7 @@ onUnmounted(() => {
         class="search-modal-overlay"
         role="dialog"
         aria-modal="true"
-        aria-label="Search pages"
+        aria-labelledby="search-modal-input"
         @click="handleOverlayClick"
         @keydown="handleKeydown"
       >
@@ -225,6 +225,7 @@ onUnmounted(() => {
               />
             </svg>
             <input
+              id="search-modal-input"
               ref="searchInput"
               v-model="query"
               type="text"
@@ -235,6 +236,7 @@ onUnmounted(() => {
             />
             <button
               v-if="hasQuery"
+              type="button"
               class="search-clear-btn"
               aria-label="Clear search"
               @click="query = ''"
@@ -250,8 +252,10 @@ onUnmounted(() => {
             </button>
             <button
               class="search-filter-toggle"
+              type="button"
               :class="{ active: showFilters }"
               aria-label="Toggle filters"
+              :aria-expanded="showFilters"
               @click="toggleFilters"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -301,7 +305,9 @@ onUnmounted(() => {
             <div v-else-if="showRecent" class="search-recent">
               <div class="search-section-header">
                 <span class="search-section-title">Recent searches</span>
-                <button class="search-section-action" @click="handleClearRecent">Clear</button>
+                <button type="button" class="search-section-action" @click="handleClearRecent">
+                  Clear
+                </button>
               </div>
               <div class="search-results-list">
                 <div
