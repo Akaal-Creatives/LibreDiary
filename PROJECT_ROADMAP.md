@@ -570,33 +570,33 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 14.1 Public API
 
-- [ ] Create API token model
-- [ ] Implement token generation
-- [ ] Create API authentication middleware
-- [ ] Document API endpoints
-- [ ] Add rate limiting per token
+- [x] Create API token model (SHA-256 hashed, `ld_` prefix)
+- [x] Implement token generation (cryptographically secure, shown once)
+- [x] Create API authentication middleware (Bearer token with session fallback)
+- [ ] Document API endpoints (future enhancement)
+- [ ] Add rate limiting per token (future enhancement)
 
 ### 14.2 API Token Management
 
-- [ ] Create token listing endpoint
-- [ ] Create token revocation
-- [ ] Create API tokens UI
-- [ ] Track token last used
+- [x] Create token listing endpoint
+- [x] Create token revocation
+- [x] Create API tokens UI
+- [x] Track token last used
 
 ### 14.3 Webhooks
 
-- [ ] Create Webhook model
-- [ ] Create WebhookDelivery model
-- [ ] Implement webhook triggering service
-- [ ] Add webhook signature verification
-- [ ] Implement retry logic
+- [x] Create Webhook model
+- [x] Create WebhookDelivery model
+- [x] Implement webhook triggering service (fire-and-forget integration)
+- [x] Add webhook signature verification (HMAC-SHA256)
+- [x] Implement retry logic (exponential backoff, 3 attempts)
 
 ### 14.4 Webhook Management
 
-- [ ] Create webhook CRUD endpoints
-- [ ] Create webhooks management UI
-- [ ] Display delivery logs
-- [ ] Test webhook delivery
+- [x] Create webhook CRUD endpoints
+- [x] Create webhooks management UI (with event categories)
+- [x] Display delivery logs
+- [x] Test webhook delivery
 
 ---
 
