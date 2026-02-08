@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
+import type { CreateWebhookInput, WebhookEvent } from '@librediary/shared';
 
 const { mockService } = vi.hoisted(() => ({
   mockService: {
@@ -14,7 +15,7 @@ const { mockService } = vi.hoisted(() => ({
 }));
 
 const { mockAuthStore } = vi.hoisted(() => ({
-  mockAuthStore: { currentOrganizationId: 'org-1' },
+  mockAuthStore: { currentOrganizationId: 'org-1' as string | null },
 }));
 
 vi.mock('@/services/webhooks.service', () => ({
@@ -77,7 +78,11 @@ describe('Webhooks Store', () => {
       mockService.createWebhook.mockResolvedValue({ webhook: newWebhook });
 
       const store = useWebhooksStore();
-      const input = { name: 'Hook', url: 'https://example.com', events: ['page.created'] };
+      const input: CreateWebhookInput = {
+        name: 'Hook',
+        url: 'https://example.com',
+        events: ['page.created'],
+      };
       const result = await store.createWebhook(input);
 
       expect(result).toEqual(newWebhook);
@@ -92,7 +97,11 @@ describe('Webhooks Store', () => {
       const store = useWebhooksStore();
 
       await expect(
-        store.createWebhook({ name: 'Hook', url: 'https://example.com', events: [] })
+        store.createWebhook({
+          name: 'Hook',
+          url: 'https://example.com',
+          events: [] as WebhookEvent[],
+        })
       ).rejects.toThrow('Failed');
       expect(store.error).toBe('Failed');
       expect(store.creating).toBe(false);
@@ -112,7 +121,7 @@ describe('Webhooks Store', () => {
       const result = await store.updateWebhook('wh-1', { name: 'Updated' });
 
       expect(result).toEqual(updated);
-      expect(store.webhooks[0].name).toBe('Updated');
+      expect(store.webhooks[0]!.name).toBe('Updated');
       expect(mockService.updateWebhook).toHaveBeenCalledWith('org-1', 'wh-1', { name: 'Updated' });
     });
 
@@ -141,7 +150,7 @@ describe('Webhooks Store', () => {
       await store.deleteWebhook('wh-1');
 
       expect(store.webhooks).toHaveLength(1);
-      expect(store.webhooks[0].id).toBe('wh-2');
+      expect(store.webhooks[0]!.id).toBe('wh-2');
     });
 
     it('should set error on failure', async () => {

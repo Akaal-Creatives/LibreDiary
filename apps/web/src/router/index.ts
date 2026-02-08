@@ -107,6 +107,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/app/settings/BackupsPage.vue'),
         meta: { minRole: 'ADMIN' },
       },
+      {
+        path: 'settings/webhooks',
+        name: 'organization-webhooks',
+        component: () => import('@/pages/app/settings/WebhooksPage.vue'),
+        meta: { minRole: 'ADMIN' },
+      },
       // User Settings
       {
         path: 'settings/sessions',
@@ -117,6 +123,11 @@ const routes: RouteRecordRaw[] = [
         path: 'settings/notifications',
         name: 'notification-settings',
         component: () => import('@/pages/app/settings/NotificationSettingsPage.vue'),
+      },
+      {
+        path: 'settings/api-tokens',
+        name: 'api-tokens',
+        component: () => import('@/pages/app/settings/ApiTokensPage.vue'),
       },
       // Create Organization
       {
