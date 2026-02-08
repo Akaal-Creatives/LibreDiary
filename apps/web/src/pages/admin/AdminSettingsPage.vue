@@ -1,15 +1,30 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useFilesStore } from '@/stores/files';
+import { useBackupsStore } from '@/stores/backups';
 
+const router = useRouter();
 const filesStore = useFilesStore();
+const backupsStore = useBackupsStore();
 
 const loading = ref(true);
 const testingConnection = ref(false);
 const connectionResult = ref<{ success: boolean; message: string } | null>(null);
 
 onMounted(async () => {
-  await loadStorageInfo();
+  await Promise.all([loadStorageInfo(), backupsStore.fetchSettings()]);
+});
+
+const backupStorageLabel = computed(() => {
+  switch (backupsStore.settings?.storageType) {
+    case 'LOCAL':
+      return 'Local Disk';
+    case 'S3':
+      return 'S3 Compatible';
+    default:
+      return backupsStore.settings?.storageType ?? 'Unknown';
+  }
 });
 
 async function loadStorageInfo() {
@@ -198,6 +213,71 @@ const storageTypeLabel = computed(() => {
         </div>
       </div>
     </section>
+
+    <!-- Backups Section -->
+    <section class="settings-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M4 7V5C4 3.89543 4.89543 3 6 3H14C15.1046 3 16 3.89543 16 5V7M4 7V15C4 16.1046 4.89543 17 6 17H14C15.1046 17 16 16.1046 16 15V7M4 7H16"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M8 12L9.5 13.5L12.5 10.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 class="section-title">Backups</h2>
+          <p class="section-description">System and organisation backup configuration</p>
+        </div>
+      </div>
+
+      <!-- Backup Stats -->
+      <div v-if="backupsStore.settings" class="stats-row">
+        <div class="stat-item">
+          <span class="stat-value backup-status">
+            <span
+              class="status-dot"
+              :class="backupsStore.settings.enabled ? 'dot-success' : 'dot-error'"
+            ></span>
+            {{ backupsStore.settings.enabled ? 'Enabled' : 'Disabled' }}
+          </span>
+          <span class="stat-label">Scheduled Backups</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ backupStorageLabel }}</span>
+          <span class="stat-label">Storage Type</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ backupsStore.settings.schedule }}</span>
+          <span class="stat-label">Schedule</span>
+        </div>
+      </div>
+
+      <div class="section-footer">
+        <button class="manage-button" @click="router.push({ name: 'admin-backups' })">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3 8H13M10 5L13 8L10 11"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Manage Backups
+        </button>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -229,6 +309,11 @@ const storageTypeLabel = computed(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .section-header {
@@ -387,5 +472,55 @@ const storageTypeLabel = computed(() => {
   50% {
     opacity: 0.5;
   }
+}
+
+/* Backup Status */
+.backup-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.dot-success {
+  background: var(--color-success);
+}
+
+.dot-error {
+  background: var(--color-error);
+}
+
+/* Section Footer */
+.section-footer {
+  margin-top: var(--space-4);
+}
+
+.manage-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--admin-accent);
+  background: transparent;
+  border: 1px solid var(--admin-accent);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.manage-button:hover {
+  color: var(--color-text-inverse);
+  background: var(--admin-accent);
 }
 </style>
