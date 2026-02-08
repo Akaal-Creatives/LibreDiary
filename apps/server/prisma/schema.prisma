@@ -56,6 +56,7 @@ model User {
   createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
   createdTemplates   Template[]           @relation("TemplateCreatedBy")
   uploadedFiles      File[]               @relation("FileUploadedBy")
+  triggeredBackups   Backup[]             @relation("BackupTriggeredBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -166,6 +167,7 @@ model Organization {
   databases Database[]
   templates Template[]
   files     File[]
+  backups   Backup[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -628,4 +630,56 @@ model Template {
   @@index([organizationId])
   @@index([organizationId, category])
   @@index([createdById])
+}
+
+// ============================================
+// BACKUPS
+// ============================================
+
+enum BackupType {
+  ORGANISATION
+  SYSTEM
+}
+
+enum BackupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Backup {
+  id             String       @id @default(cuid())
+  type           BackupType
+  status         BackupStatus @default(PENDING)
+
+  // Organisation scope (null for system backups)
+  organizationId String?
+
+  // File metadata
+  fileName       String?
+  fileSize       Int?
+  storagePath    String?
+  storageType    String?    // LOCAL or S3
+  isEncrypted    Boolean    @default(false)
+
+  // Error tracking
+  errorMessage   String?
+
+  // Audit
+  triggeredById  String?
+
+  // Timing
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime   @default(now())
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  triggeredBy    User?         @relation("BackupTriggeredBy", fields: [triggeredById], references: [id])
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
 }
