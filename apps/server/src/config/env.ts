@@ -66,6 +66,22 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_BUCKET: z.string().optional(),
+
+  // Backup
+  BACKUP_ENABLED: z
+    .string()
+    .transform((v) => v === 'true')
+    .default('false'),
+  BACKUP_STORAGE_TYPE: z.enum(['LOCAL', 'S3']).default('LOCAL'),
+  BACKUP_LOCAL_PATH: z.string().default('./backups'),
+  BACKUP_S3_ENDPOINT: z.string().optional(),
+  BACKUP_S3_REGION: z.string().optional(),
+  BACKUP_S3_BUCKET: z.string().optional(),
+  BACKUP_S3_ACCESS_KEY: z.string().optional(),
+  BACKUP_S3_SECRET_KEY: z.string().optional(),
+  BACKUP_SCHEDULE: z.string().default('0 2 * * *'),
+  BACKUP_RETENTION_DAYS: z.coerce.number().default(30),
+  BACKUP_MAX_SIZE_MB: z.coerce.number().default(500),
 });
 
 export type Env = z.infer<typeof envSchema>;
