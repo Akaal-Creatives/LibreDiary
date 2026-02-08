@@ -101,6 +101,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/app/settings/InvitesPage.vue'),
         meta: { minRole: 'ADMIN' },
       },
+      {
+        path: 'settings/backups',
+        name: 'organization-backups',
+        component: () => import('@/pages/app/settings/BackupsPage.vue'),
+        meta: { minRole: 'ADMIN' },
+      },
       // User Settings
       {
         path: 'settings/sessions',
@@ -162,6 +168,11 @@ const routes: RouteRecordRaw[] = [
         path: 'settings',
         name: 'admin-settings',
         component: () => import('@/pages/admin/AdminSettingsPage.vue'),
+      },
+      {
+        path: 'backups',
+        name: 'admin-backups',
+        component: () => import('@/pages/admin/AdminBackupsPage.vue'),
       },
     ],
   },
