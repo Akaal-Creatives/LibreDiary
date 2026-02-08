@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import type { PropertyType, ViewType } from '../../generated/prisma/client.js';
+import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 
 // ===========================================
 // TYPES
@@ -111,7 +112,7 @@ export async function createDatabase(orgId: string, userId: string, input: Creat
     });
 
     // Return with relations
-    return tx.database.findUniqueOrThrow({
+    const result = await tx.database.findUniqueOrThrow({
       where: { id: database.id },
       include: {
         properties: { orderBy: { position: 'asc' } },
@@ -119,6 +120,12 @@ export async function createDatabase(orgId: string, userId: string, input: Creat
         rows: { orderBy: { position: 'asc' } },
       },
     });
+
+    triggerWebhooks(orgId, 'database.created', { databaseId: result.id, name: result.name }).catch(
+      () => {}
+    );
+
+    return result;
   });
 }
 
@@ -159,13 +166,19 @@ export async function updateDatabase(
     throw new Error('DATABASE_NOT_FOUND');
   }
 
-  return prisma.database.update({
+  const updated = await prisma.database.update({
     where: { id: databaseId },
     data: {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.pageId !== undefined && { pageId: input.pageId }),
     },
   });
+
+  triggerWebhooks(orgId, 'database.updated', { databaseId: updated.id, name: updated.name }).catch(
+    () => {}
+  );
+
+  return updated;
 }
 
 export async function deleteDatabase(orgId: string, databaseId: string) {
@@ -178,6 +191,8 @@ export async function deleteDatabase(orgId: string, databaseId: string) {
   }
 
   await prisma.database.delete({ where: { id: databaseId } });
+
+  triggerWebhooks(orgId, 'database.deleted', { databaseId, name: database.name }).catch(() => {});
 }
 
 // ===========================================

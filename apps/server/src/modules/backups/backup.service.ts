@@ -3,6 +3,7 @@ import { env } from '../../config/index.js';
 import { getBackupStorageProvider } from './storage/index.js';
 import { createTarGz } from './utils/compress.js';
 import { encryptBuffer } from './utils/encrypt.js';
+import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import type { TarEntry } from './utils/compress.js';
 
 export interface CreateBackupOptions {
@@ -209,6 +210,10 @@ export async function executeOrgBackup(backupId: string, password?: string): Pro
         completedAt: new Date(),
       },
     });
+
+    if (orgId) {
+      triggerWebhooks(orgId, 'backup.completed', { backupId, fileName }).catch(() => {});
+    }
   } catch (error) {
     await prisma.backup.update({
       where: { id: backupId },

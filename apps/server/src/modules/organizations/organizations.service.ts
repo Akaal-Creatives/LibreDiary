@@ -3,6 +3,7 @@ import { sendInviteEmail } from '../../services/email.service.js';
 import { generateInviteToken, expiresIn, isExpired, EXPIRATION } from '../../utils/tokens.js';
 import type { Organization, OrganizationMember, OrgRole, User, Invite } from '@prisma/client';
 import { canModifyMember, canAssignRole } from './organizations.middleware.js';
+import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 
 // ===========================================
 // TYPES
@@ -314,6 +315,8 @@ export async function removeMember(
   await prisma.organizationMember.delete({
     where: { id: memberId },
   });
+
+  triggerWebhooks(orgId, 'member.removed', { userId: targetMember.userId }).catch(() => {});
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   createCommentReplyNotification,
   createCommentResolvedNotification,
 } from '../notifications/notifications.service.js';
+import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 
 interface CreateCommentOptions {
   parentId?: string;
@@ -113,6 +114,10 @@ export async function createComment(
     }
   }
 
+  triggerWebhooks(organizationId, 'comment.created', { commentId: comment.id, pageId }).catch(
+    () => {}
+  );
+
   return comment;
 }
 
@@ -211,6 +216,7 @@ export async function resolveComment(commentId: string, userId: string, resolve:
         select: {
           id: true,
           title: true,
+          organizationId: true,
         },
       },
     },
@@ -256,6 +262,13 @@ export async function resolveComment(commentId: string, userId: string, resolve:
       // Log but don't fail resolution if notification fails
       console.error('Failed to create comment resolved notification:', error);
     }
+  }
+
+  if (resolve) {
+    triggerWebhooks(comment.page.organizationId, 'comment.resolved', {
+      commentId,
+      pageId: comment.page.id,
+    }).catch(() => {});
   }
 
   return updatedComment;
