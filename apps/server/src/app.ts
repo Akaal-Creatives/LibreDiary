@@ -25,6 +25,7 @@ import { searchRoutes } from './modules/search/index.js';
 import { databasesRoutes } from './modules/databases/index.js';
 import { templatesRoutes } from './modules/templates/index.js';
 import { filesRoutes } from './modules/files/index.js';
+import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -137,8 +138,14 @@ export async function buildApp() {
       // Notifications routes (user-specific, no org context needed)
       await api.register(notificationsRoutes, { prefix: '/notifications' });
 
+      // Backup routes (org-scoped)
+      await api.register(orgBackupRoutes, {
+        prefix: '/organizations/:orgId/backups',
+      });
+
       // Admin routes (super admin only)
       await api.register(adminRoutes, { prefix: '/admin' });
+      await api.register(adminBackupRoutes, { prefix: '/admin/backups' });
     },
     { prefix: '/api/v1' }
   );
