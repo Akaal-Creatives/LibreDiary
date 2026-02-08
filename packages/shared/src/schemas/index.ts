@@ -292,6 +292,30 @@ export const translateSchema = z.object({
 });
 
 // ===========================================
+// BACKUP SCHEMAS
+// ===========================================
+
+export const createOrgBackupSchema = z
+  .object({
+    encrypt: z.boolean().default(false),
+    password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  })
+  .refine((data) => !data.encrypt || (data.encrypt && data.password), {
+    message: 'Password is required when encryption is enabled',
+    path: ['password'],
+  });
+
+export const createSystemBackupSchema = z
+  .object({
+    encrypt: z.boolean().default(false),
+    password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  })
+  .refine((data) => !data.encrypt || (data.encrypt && data.password), {
+    message: 'Password is required when encryption is enabled',
+    path: ['password'],
+  });
+
+// ===========================================
 // TYPE EXPORTS
 // ===========================================
 
@@ -327,3 +351,5 @@ export type TranslateInput = z.infer<typeof translateSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type FileUploadInput = z.infer<typeof fileUploadSchema>;
 export type FileListQueryInput = z.infer<typeof fileListQuerySchema>;
+export type CreateOrgBackupInput = z.infer<typeof createOrgBackupSchema>;
+export type CreateSystemBackupInput = z.infer<typeof createSystemBackupSchema>;

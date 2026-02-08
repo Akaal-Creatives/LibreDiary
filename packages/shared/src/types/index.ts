@@ -435,3 +435,37 @@ export const DEVELOPER_INFO: DeveloperInfo = {
   name: 'Akaal Creatives',
   website: 'https://www.akaalcreatives.com',
 };
+
+// ===========================================
+// BACKUPS
+// ===========================================
+
+export type BackupType = 'ORGANISATION' | 'SYSTEM';
+export type BackupStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+export type BackupStorageType = 'LOCAL' | 'S3';
+
+export interface Backup {
+  id: string;
+  type: BackupType;
+  status: BackupStatus;
+  organizationId: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  storagePath: string | null;
+  storageType: string | null;
+  isEncrypted: boolean;
+  errorMessage: string | null;
+  triggeredById: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface BackupSettings {
+  enabled: boolean;
+  storageType: BackupStorageType;
+  schedule: string;
+  retentionDays: number;
+  maxSizeMb: number;
+  pgDumpAvailable: boolean;
+}
