@@ -26,6 +26,7 @@ import { databasesRoutes } from './modules/databases/index.js';
 import { templatesRoutes } from './modules/templates/index.js';
 import { filesRoutes } from './modules/files/index.js';
 import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
+import { apiTokenRoutes } from './modules/api-tokens/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -137,6 +138,9 @@ export async function buildApp() {
 
       // Notifications routes (user-specific, no org context needed)
       await api.register(notificationsRoutes, { prefix: '/notifications' });
+
+      // API Token routes (user-specific)
+      await api.register(apiTokenRoutes, { prefix: '/api-tokens' });
 
       // Backup routes (org-scoped)
       await api.register(orgBackupRoutes, {
