@@ -6,8 +6,22 @@ import type { StorageProvider, StorageConnectionResult } from './storage-provide
 export class LocalStorageProvider implements StorageProvider {
   constructor(private basePath: string) {}
 
+  /**
+   * Resolve a key to a safe file path, preventing directory traversal.
+   */
+  private safePath(key: string): string {
+    const resolved = path.resolve(this.basePath, key);
+    if (
+      !resolved.startsWith(path.resolve(this.basePath) + path.sep) &&
+      resolved !== path.resolve(this.basePath)
+    ) {
+      throw new Error('Invalid storage key: path traversal detected');
+    }
+    return resolved;
+  }
+
   async upload(key: string, buffer: Buffer, _mimeType: string): Promise<string> {
-    const filePath = path.join(this.basePath, key);
+    const filePath = this.safePath(key);
     const dir = path.dirname(filePath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, buffer);
@@ -15,19 +29,19 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async download(key: string): Promise<Buffer> {
-    const filePath = path.join(this.basePath, key);
+    const filePath = this.safePath(key);
     return fs.readFileSync(filePath);
   }
 
   async delete(key: string): Promise<void> {
-    const filePath = path.join(this.basePath, key);
+    const filePath = this.safePath(key);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   }
 
   async exists(key: string): Promise<boolean> {
-    const filePath = path.join(this.basePath, key);
+    const filePath = this.safePath(key);
     return fs.existsSync(filePath);
   }
 

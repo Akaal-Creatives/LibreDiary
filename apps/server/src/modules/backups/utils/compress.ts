@@ -60,13 +60,24 @@ export async function createTarGz(entries: TarEntry[]): Promise<Buffer> {
 
 /**
  * Extracts a tar.gz archive to the specified output directory.
+ * Validates all entry paths to prevent zip-slip (directory traversal) attacks.
  */
 export async function extractTarGz(data: Buffer, outputDir: string): Promise<void> {
   fs.mkdirSync(outputDir, { recursive: true });
 
+  const resolvedOutput = path.resolve(outputDir);
   const readable = Readable.from(data);
   const gunzip = createGunzip();
-  const extract = tar.extract({ cwd: outputDir });
+  const extract = tar.extract({
+    cwd: outputDir,
+    filter: (entryPath: string) => {
+      const resolved = path.resolve(outputDir, entryPath);
+      if (!resolved.startsWith(resolvedOutput + path.sep) && resolved !== resolvedOutput) {
+        throw new Error(`Zip-slip detected: entry "${entryPath}" escapes output directory`);
+      }
+      return true;
+    },
+  });
 
   await pipeline(readable, gunzip, extract);
 }
