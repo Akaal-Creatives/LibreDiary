@@ -255,19 +255,42 @@ export const fileListQuerySchema = z.object({
 });
 
 // ===========================================
+// API TOKEN SCHEMAS
+// ===========================================
+
+export const createApiTokenSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100).trim(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+// ===========================================
 // WEBHOOK SCHEMAS
 // ===========================================
+
+export const webhookEventSchema = z.enum([
+  'page.created',
+  'page.updated',
+  'page.deleted',
+  'database.created',
+  'database.updated',
+  'database.deleted',
+  'comment.created',
+  'comment.resolved',
+  'member.added',
+  'member.removed',
+  'backup.completed',
+]);
 
 export const createWebhookSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100).trim(),
   url: z.string().url('Invalid URL'),
-  events: z.array(z.string()).min(1, 'At least one event is required'),
+  events: z.array(webhookEventSchema).min(1, 'At least one event is required'),
 });
 
 export const updateWebhookSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
   url: z.string().url().optional(),
-  events: z.array(z.string()).optional(),
+  events: z.array(webhookEventSchema).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -344,6 +367,7 @@ export type ReorderInput = z.infer<typeof reorderSchema>;
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
 export type CreateTemplateFromPageInput = z.infer<typeof createTemplateFromPageSchema>;
+export type CreateApiTokenInput = z.infer<typeof createApiTokenSchema>;
 export type CreateWebhookInput = z.infer<typeof createWebhookSchema>;
 export type UpdateWebhookInput = z.infer<typeof updateWebhookSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;

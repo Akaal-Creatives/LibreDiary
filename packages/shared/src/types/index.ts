@@ -366,24 +366,60 @@ export interface SearchResponse {
 // WEBHOOKS & API
 // ===========================================
 
+export type WebhookEvent =
+  | 'page.created'
+  | 'page.updated'
+  | 'page.deleted'
+  | 'database.created'
+  | 'database.updated'
+  | 'database.deleted'
+  | 'comment.created'
+  | 'comment.resolved'
+  | 'member.added'
+  | 'member.removed'
+  | 'backup.completed';
+
+export type WebhookDeliveryStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+
 export interface Webhook {
   id: string;
   organizationId: string;
   name: string;
   url: string;
+  secret: string; // Masked when returned from API (e.g. "whsec_****abcd")
   events: string[];
   isActive: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  event: string;
+  payload: Record<string, unknown>;
+  status: WebhookDeliveryStatus;
+  statusCode: number | null;
+  responseBody: string | null;
+  attempts: number;
+  nextRetryAt: string | null;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export interface ApiToken {
   id: string;
   userId: string;
   name: string;
+  tokenPrefix: string; // First 8 chars for display
   lastUsedAt: string | null;
   expiresAt: string | null;
   createdAt: string;
+}
+
+export interface ApiTokenCreateResponse extends ApiToken {
+  rawToken: string; // Full token, shown only once
 }
 
 // ===========================================
