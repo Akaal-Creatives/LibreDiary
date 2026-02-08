@@ -27,6 +27,7 @@ import { templatesRoutes } from './modules/templates/index.js';
 import { filesRoutes } from './modules/files/index.js';
 import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
 import { apiTokenRoutes } from './modules/api-tokens/index.js';
+import { webhookRoutes } from './modules/webhooks/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -141,6 +142,11 @@ export async function buildApp() {
 
       // API Token routes (user-specific)
       await api.register(apiTokenRoutes, { prefix: '/api-tokens' });
+
+      // Webhook routes (org-scoped)
+      await api.register(webhookRoutes, {
+        prefix: '/organizations/:orgId/webhooks',
+      });
 
       // Backup routes (org-scoped)
       await api.register(orgBackupRoutes, {
