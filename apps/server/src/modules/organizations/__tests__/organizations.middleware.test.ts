@@ -118,7 +118,7 @@ describe('Organizations Middleware', () => {
       );
     });
 
-    it('should attach organisation and membership to request on success', async () => {
+    it('should attach organisationId, organisation and membership to request on success', async () => {
       const mockOrg = { id: 'org-1', name: 'Test Org', deletedAt: null };
       const mockMembership = { id: 'm1', role: 'MEMBER', userId: 'u1', organizationId: 'org-1' };
       const request = createMockRequest({
@@ -131,6 +131,7 @@ describe('Organizations Middleware', () => {
 
       await requireOrgAccess(request, reply);
 
+      expect(request.organizationId).toBe('org-1');
       expect(request.organization).toEqual(mockOrg);
       expect(request.membership).toEqual(mockMembership);
       expect(reply.status).not.toHaveBeenCalled();
