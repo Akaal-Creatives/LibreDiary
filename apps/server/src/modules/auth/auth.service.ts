@@ -129,7 +129,9 @@ export async function register(
     return user;
   });
 
-  triggerWebhooks(invite.organizationId, 'member.added', { userId: result.id }).catch(() => {});
+  triggerWebhooks(invite.organizationId, 'member.added', { userId: result.id }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 
   // Create session
   const session = await createSession({

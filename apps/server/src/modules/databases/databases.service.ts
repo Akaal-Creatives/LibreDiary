@@ -192,7 +192,9 @@ export async function deleteDatabase(orgId: string, databaseId: string) {
 
   await prisma.database.delete({ where: { id: databaseId } });
 
-  triggerWebhooks(orgId, 'database.deleted', { databaseId, name: database.name }).catch(() => {});
+  triggerWebhooks(orgId, 'database.deleted', { databaseId, name: database.name }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 }
 
 // ===========================================

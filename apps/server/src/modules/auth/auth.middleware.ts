@@ -106,7 +106,7 @@ export async function optionalAuth(request: FastifyRequest, _reply: FastifyReply
   request.sessionToken = token;
 
   // Update last active time
-  touchSession(session.id).catch(() => {});
+  touchSession(session.id).catch((err) => console.error('[session] touch failed:', err));
 }
 
 /**

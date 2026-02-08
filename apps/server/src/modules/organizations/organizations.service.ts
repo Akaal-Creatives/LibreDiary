@@ -316,7 +316,9 @@ export async function removeMember(
     where: { id: memberId },
   });
 
-  triggerWebhooks(orgId, 'member.removed', { userId: targetMember.userId }).catch(() => {});
+  triggerWebhooks(orgId, 'member.removed', { userId: targetMember.userId }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 }
 
 /**

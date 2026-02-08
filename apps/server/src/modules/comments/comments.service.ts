@@ -268,7 +268,7 @@ export async function resolveComment(commentId: string, userId: string, resolve:
     triggerWebhooks(comment.page.organizationId, 'comment.resolved', {
       commentId,
       pageId: comment.page.id,
-    }).catch(() => {});
+    }).catch((err) => console.error('[webhook] delivery failed:', err));
   }
 
   return updatedComment;

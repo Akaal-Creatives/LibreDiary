@@ -39,7 +39,7 @@ export async function triggerWebhooks(orgId: string, event: string, data: Record
     });
 
     // Execute immediately (fire-and-forget)
-    executeDelivery(delivery.id).catch(() => {});
+    executeDelivery(delivery.id).catch((err) => console.error('[webhook] delivery failed:', err));
   }
 }
 
@@ -121,7 +121,7 @@ async function handleFailure(
   if (shouldRetry && nextRetryAt) {
     const delay = nextRetryAt.getTime() - Date.now();
     setTimeout(() => {
-      executeDelivery(deliveryId).catch(() => {});
+      executeDelivery(deliveryId).catch((err) => console.error('[webhook] delivery failed:', err));
     }, delay);
   }
 }
@@ -137,7 +137,7 @@ export async function retryFailedDeliveries() {
 
   let retried = 0;
   for (const delivery of pendingRetries) {
-    executeDelivery(delivery.id).catch(() => {});
+    executeDelivery(delivery.id).catch((err) => console.error('[webhook] delivery failed:', err));
     retried++;
   }
 

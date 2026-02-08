@@ -83,7 +83,7 @@ export async function validateToken(rawToken: string) {
       where: { id: apiToken.id },
       data: { lastUsedAt: new Date() },
     })
-    .catch(() => {});
+    .catch((err) => console.error('[api-token] lastUsedAt update failed:', err));
 
   return {
     user: apiToken.user,

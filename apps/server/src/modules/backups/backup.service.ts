@@ -212,7 +212,9 @@ export async function executeOrgBackup(backupId: string, password?: string): Pro
     });
 
     if (orgId) {
-      triggerWebhooks(orgId, 'backup.completed', { backupId, fileName }).catch(() => {});
+      triggerWebhooks(orgId, 'backup.completed', { backupId, fileName }).catch((err) =>
+        console.error('[webhook] delivery failed:', err)
+      );
     }
   } catch (error) {
     await prisma.backup.update({

@@ -93,7 +93,9 @@ export async function createPage(
     },
   });
 
-  triggerWebhooks(orgId, 'page.created', { pageId: page.id, title: page.title }).catch(() => {});
+  triggerWebhooks(orgId, 'page.created', { pageId: page.id, title: page.title }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 
   return page;
 }
@@ -254,7 +256,9 @@ export async function trashPage(orgId: string, pageId: string): Promise<void> {
   // Trash the page and all its descendants
   await trashPageWithDescendants(orgId, pageId);
 
-  triggerWebhooks(orgId, 'page.deleted', { pageId, title: page.title }).catch(() => {});
+  triggerWebhooks(orgId, 'page.deleted', { pageId, title: page.title }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 }
 
 /**
