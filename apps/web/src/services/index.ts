@@ -66,6 +66,8 @@ export { templatesService } from './templates.service';
 export { filesService } from './files.service';
 export { backupsService } from './backups.service';
 export type { CreateBackupInput } from './backups.service';
+export { apiTokensService } from './api-tokens.service';
+export { webhooksService } from './webhooks.service';
 export type {
   CreateTemplateInput,
   CreateTemplateFromPageInput,
