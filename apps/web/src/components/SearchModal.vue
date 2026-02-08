@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import DOMPurify from 'dompurify';
 import { useAuthStore } from '@/stores';
 import {
   searchService,
@@ -166,6 +167,10 @@ function applyFilters() {
   if (hasQuery.value) {
     performSearch();
   }
+}
+
+function sanitiseHighlight(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: ['mark'], ALLOWED_ATTR: [] });
 }
 
 function formatRelativeDate(dateStr: string): string {
@@ -355,13 +360,13 @@ onUnmounted(() => {
                 >
                   <span class="result-page-icon">{{ result.icon || '📄' }}</span>
                   <div class="result-content">
-                    <!-- eslint-disable-next-line vue/no-v-html -- safe: ts_headline output with <mark> tags -->
-                    <span class="result-title" v-html="result.titleHighlight" />
-                    <!-- eslint-disable-next-line vue/no-v-html -- safe: ts_headline output with <mark> tags -->
+                    <!-- eslint-disable-next-line vue/no-v-html -- sanitised via DOMPurify -->
+                    <span class="result-title" v-html="sanitiseHighlight(result.titleHighlight)" />
+                    <!-- eslint-disable-next-line vue/no-v-html -- sanitised via DOMPurify -->
                     <span
                       v-if="result.contentHighlight"
                       class="result-snippet"
-                      v-html="result.contentHighlight"
+                      v-html="sanitiseHighlight(result.contentHighlight)"
                     />
                   </div>
                   <span class="result-meta">{{ formatRelativeDate(result.updatedAt) }}</span>

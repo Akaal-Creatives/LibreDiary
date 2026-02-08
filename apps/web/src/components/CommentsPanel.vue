@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue';
+import DOMPurify from 'dompurify';
 import { commentsService, type Comment } from '@/services';
 import { useOrganizationsStore, useAuthStore } from '@/stores';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
@@ -280,8 +281,9 @@ function getInitials(name: string | null): string {
 }
 
 function formatContentWithMentions(content: string): string {
-  // Replace @mentions with styled spans
-  return content.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+  // Sanitise first, then replace @mentions with styled spans
+  const clean = DOMPurify.sanitize(content, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  return clean.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
 }
 
 function close() {
