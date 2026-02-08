@@ -57,6 +57,8 @@ model User {
   createdTemplates   Template[]           @relation("TemplateCreatedBy")
   uploadedFiles      File[]               @relation("FileUploadedBy")
   triggeredBackups   Backup[]             @relation("BackupTriggeredBy")
+  apiTokens          ApiToken[]
+  createdWebhooks    Webhook[]            @relation("WebhookCreatedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -168,6 +170,7 @@ model Organization {
   templates Template[]
   files     File[]
   backups   Backup[]
+  webhooks  Webhook[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -681,5 +684,84 @@ model Backup {
   @@index([organizationId])
   @@index([type])
   @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// API TOKENS
+// ============================================
+
+model ApiToken {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  tokenHash   String    @unique  // SHA-256 hash of the token
+  tokenPrefix String             // First 8 chars for display
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// ============================================
+// WEBHOOKS
+// ============================================
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Webhook {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  url            String
+  secret         String   // HMAC-SHA256 signing secret
+  events         String[] // Array of event names
+  isActive       Boolean  @default(true)
+  createdById    String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User               @relation("WebhookCreatedBy", fields: [createdById], references: [id])
+  deliveries   WebhookDelivery[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+}
+
+model WebhookDelivery {
+  id           String                @id @default(cuid())
+  webhookId    String
+  event        String
+  payload      Json
+  status       WebhookDeliveryStatus @default(PENDING)
+  statusCode   Int?
+  responseBody String?
+  attempts     Int                   @default(0)
+  nextRetryAt  DateTime?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  // Relations
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([nextRetryAt])
   @@index([createdAt])
 }
