@@ -80,7 +80,7 @@ function goToLogin() {
 <template>
   <div class="register-page">
     <!-- Theme Toggle -->
-    <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+    <button type="button" class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
         <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
         <path
@@ -116,7 +116,7 @@ function goToLogin() {
 
     <div class="register-container">
       <!-- Brand -->
-      <button class="brand" @click="goHome">
+      <button type="button" class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
           <rect
             x="4"
@@ -165,7 +165,7 @@ function goToLogin() {
           </svg>
           <h2>Invalid Invite</h2>
           <p>{{ inviteError }}</p>
-          <button class="secondary-btn" @click="goToLogin">Go to Login</button>
+          <button type="button" class="secondary-btn" @click="goToLogin">Go to Login</button>
         </div>
       </div>
 
@@ -177,7 +177,7 @@ function goToLogin() {
         </div>
 
         <form class="register-form" @submit.prevent="handleSubmit">
-          <div v-if="error" class="error-message">
+          <div v-if="error" class="error-message" role="alert" aria-live="polite">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
               <path
@@ -238,12 +238,12 @@ function goToLogin() {
 
         <div class="register-footer">
           <span>Already have an account?</span>
-          <button class="link-btn" @click="goToLogin">Sign in</button>
+          <button type="button" class="link-btn" @click="goToLogin">Sign in</button>
         </div>
       </div>
 
       <!-- Back link -->
-      <button class="back-link" @click="goHome">
+      <button type="button" class="back-link" @click="goHome">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M10 12L6 8L10 4"

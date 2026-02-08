@@ -90,7 +90,7 @@ function showComingSoon(feature: string) {
     <section class="quick-actions">
       <h2 class="section-title">Get Started</h2>
       <div class="actions-grid">
-        <button class="action-card" @click="createNewPage">
+        <button type="button" class="action-card" @click="createNewPage">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -125,7 +125,7 @@ function showComingSoon(feature: string) {
           </span>
         </button>
 
-        <button class="action-card" @click="openTemplateLibrary">
+        <button type="button" class="action-card" @click="openTemplateLibrary">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <rect
@@ -158,7 +158,7 @@ function showComingSoon(feature: string) {
           </span>
         </button>
 
-        <button class="action-card" @click="showComingSoon('Import')">
+        <button type="button" class="action-card" @click="showComingSoon('Import')">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -190,12 +190,13 @@ function showComingSoon(feature: string) {
     <section v-if="pagesStore.rootPages.length > 0" class="recent-section">
       <div class="section-header">
         <h2 class="section-title">Recent Pages</h2>
-        <button class="view-all-btn">View all</button>
+        <button type="button" class="view-all-btn">View all</button>
       </div>
       <div class="pages-grid">
         <button
           v-for="page in pagesStore.rootPages.slice(0, 6)"
           :key="page.id"
+          type="button"
           class="page-card"
           @click="navigateToPage(page.id)"
         >
@@ -256,7 +257,7 @@ function showComingSoon(feature: string) {
         <p class="empty-description">
           Create your first page to start organizing your thoughts, notes, and ideas.
         </p>
-        <button class="empty-action" @click="createNewPage">
+        <button type="button" class="empty-action" @click="createNewPage">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 3.75V14.25"
@@ -279,7 +280,7 @@ function showComingSoon(feature: string) {
     <!-- Template Library Modal -->
     <Teleport to="body">
       <div v-if="showTemplateLibrary" class="modal-overlay" @click.self="closeTemplateLibrary">
-        <div class="template-modal">
+        <div class="template-modal" role="dialog" aria-modal="true" aria-label="Template Library">
           <TemplateLibrary @use-template="handleUseTemplate" @close="closeTemplateLibrary" />
         </div>
       </div>

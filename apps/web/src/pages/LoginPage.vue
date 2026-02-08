@@ -98,7 +98,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
 <template>
   <div class="login-page">
     <!-- Theme Toggle -->
-    <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+    <button type="button" class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
         <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
         <path
@@ -134,7 +134,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
 
     <div class="login-container">
       <!-- Brand -->
-      <button class="brand" @click="goHome">
+      <button type="button" class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
           <rect
             x="4"
@@ -180,7 +180,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
         <AuthDivider v-if="configuredProviders.length > 0" text="or continue with email" />
 
         <form class="login-form" @submit.prevent="handleSubmit">
-          <div v-if="error" class="error-message">
+          <div v-if="error" class="error-message" role="alert" aria-live="polite">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
               <path
@@ -202,6 +202,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
               placeholder="you@example.com"
               required
               autocomplete="email"
+              :aria-invalid="!!error"
             />
           </div>
 
@@ -214,6 +215,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
               placeholder="Enter your password"
               required
               autocomplete="current-password"
+              :aria-invalid="!!error"
             />
           </div>
 
@@ -224,12 +226,14 @@ async function handleOAuthClick(provider: OAuthProvider) {
         </form>
 
         <div class="login-footer">
-          <button class="forgot-link" @click="goToForgotPassword">Forgot your password?</button>
+          <button type="button" class="forgot-link" @click="goToForgotPassword">
+            Forgot your password?
+          </button>
         </div>
       </div>
 
       <!-- Back link -->
-      <button class="back-link" @click="goHome">
+      <button type="button" class="back-link" @click="goHome">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M10 12L6 8L10 4"
