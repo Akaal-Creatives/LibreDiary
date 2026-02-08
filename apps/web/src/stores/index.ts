@@ -5,3 +5,4 @@ export { useSyncStore } from './sync';
 export { useDatabasesStore } from './databases';
 export { useTemplatesStore } from './templates';
 export { useFilesStore } from './files';
+export { useBackupsStore } from './backups';
