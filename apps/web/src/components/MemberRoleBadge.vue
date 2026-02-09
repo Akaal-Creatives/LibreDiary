@@ -33,6 +33,7 @@ const roleConfig = computed(() => {
   color: var(--badge-color);
   background: color-mix(in srgb, var(--badge-color) 15%, transparent);
   border-radius: var(--radius-full);
+  width: fit-content;
 }
 
 .role-badge.sm {

@@ -334,6 +334,7 @@ const currentRole = computed(() => authStore.currentUserRole);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 4px;
+  width: fit-content;
 }
 
 .role-badge--sm {
