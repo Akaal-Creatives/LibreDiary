@@ -272,6 +272,9 @@ export interface SystemSettings {
   sessionMaxAge: number;
   maxOrganisationsPerUser: number;
   defaultUserLocale: string;
+  aiEnabled: boolean;
+  openrouterApiKey: string | null;
+  openrouterModel: string;
   updatedAt: string;
 }
 
@@ -282,6 +285,15 @@ export interface UpdateSystemSettingsData {
   sessionMaxAge?: number;
   maxOrganisationsPerUser?: number;
   defaultUserLocale?: string;
+  aiEnabled?: boolean;
+  openrouterApiKey?: string | null;
+  openrouterModel?: string;
+}
+
+export interface AiTestResult {
+  success: boolean;
+  message: string;
+  model?: string;
 }
 
 export async function getSystemSettings(): Promise<SystemSettings> {
@@ -294,4 +306,9 @@ export async function updateSystemSettings(
 ): Promise<SystemSettings> {
   const response = await api.patch<{ settings: SystemSettings }>('/admin/settings', data);
   return response.settings;
+}
+
+export async function testAiConnection(): Promise<AiTestResult> {
+  const response = await api.post<{ result: AiTestResult }>('/admin/ai/test');
+  return response.result;
 }
