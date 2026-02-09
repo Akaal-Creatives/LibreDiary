@@ -29,6 +29,7 @@ import { filesRoutes } from './modules/files/index.js';
 import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
 import { apiTokenRoutes } from './modules/api-tokens/index.js';
 import { webhookRoutes } from './modules/webhooks/index.js';
+import { auditRoutes } from './modules/audit/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -158,6 +159,7 @@ export async function buildApp() {
       // Admin routes (super admin only)
       await api.register(adminRoutes, { prefix: '/admin' });
       await api.register(adminBackupRoutes, { prefix: '/admin/backups' });
+      await api.register(auditRoutes, { prefix: '/admin/audit-logs' });
     },
     { prefix: '/api/v1' }
   );
