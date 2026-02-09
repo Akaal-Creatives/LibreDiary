@@ -151,7 +151,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement organization slug validation
 - [x] Add organization settings (name, logo, accent color)
 - [x] Create organization settings page
-- [ ] Implement logo upload
+- [x] Implement logo upload
 
 ### 3.2 Membership & Roles
 
@@ -240,7 +240,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create emoji picker component
 - [x] Implement icon selection UI
 - [x] Add coverUrl field to Page
-- [ ] Create cover image upload (deferred to Phase 12: File Storage)
+- [x] Create cover image upload
 - [x] Display cover in page header
 
 ### 4.6 Favorites
