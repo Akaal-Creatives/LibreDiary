@@ -34,6 +34,8 @@ export type {
   AdminUserDetail,
   AdminOrganization,
   AdminOrgDetail,
+  AuditLogEntry,
+  AuditLogFilters,
   Pagination,
 } from './admin.service';
 export { versionsService } from './versions.service';
