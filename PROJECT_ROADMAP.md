@@ -642,7 +642,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 16.3 AI-Assisted Content Creation
 
-- [ ] AI note writing (generate, expand, summarise, improve text)
+- [x] AI note writing (generate, expand, summarise, improve text)
 - [ ] AI database creation (generate schema and sample rows from description)
 - [ ] AI schedule generation (create schedules from natural language input)
 - [ ] AI to-do creation (generate task lists from goals or descriptions)
