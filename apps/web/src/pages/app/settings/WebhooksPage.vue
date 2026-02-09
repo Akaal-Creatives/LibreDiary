@@ -135,7 +135,7 @@ async function handleCreateWebhook() {
     const input: CreateWebhookInput = {
       name: createForm.name.trim(),
       url: createForm.url.trim(),
-      events: createForm.events,
+      events: createForm.events as CreateWebhookInput['events'],
     };
     await webhooksStore.createWebhook(input);
     toast.success('Webhook created');
@@ -195,7 +195,7 @@ async function handleUpdateWebhook() {
     const input: UpdateWebhookInput = {
       name: editForm.name.trim(),
       url: editForm.url.trim(),
-      events: editForm.events,
+      events: editForm.events as UpdateWebhookInput['events'],
       isActive: editForm.isActive,
     };
     await webhooksStore.updateWebhook(editingWebhookId.value, input);

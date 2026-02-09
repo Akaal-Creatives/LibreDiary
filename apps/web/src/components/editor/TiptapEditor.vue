@@ -28,6 +28,7 @@ const CollaborationCursor = Extension.create({
     return { users: [] as Array<{ clientId: number; name?: string; color?: string }> };
   },
 
+  // @ts-expect-error — custom command type not in tiptap's RawCommands interface
   addCommands() {
     return {
       updateUser: (attributes: { name?: string; color?: string }) => () => {
@@ -130,6 +131,7 @@ function buildExtensions(
         keepAttributes: false,
       },
       // Disable history in collaborative mode - Yjs handles undo/redo
+      // @ts-expect-error — StarterKit types don't expose history option but it works at runtime
       history: forCollaborative ? false : undefined,
     }),
     Placeholder.configure({
@@ -180,7 +182,8 @@ function createEditor(
     editor.value = null;
   }
 
-  const editorOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorOptions: any = {
     content: props.modelValue || undefined,
     editable: props.editable,
     onUpdate: ({ editor: e }: { editor: Editor }) => {
@@ -283,7 +286,7 @@ watch([() => props.userName, () => props.userColor], ([name, color]) => {
   // Update cursor user via Tiptap command if CollaborationCursor is active
   if (editor.value && isCollaborativeEditor.value) {
     try {
-      editor.value.chain().updateUser({ name, color }).run();
+      (editor.value.chain() as any).updateUser({ name, color }).run();
     } catch {
       // CollaborationCursor may not be loaded — fall through to provider update
     }

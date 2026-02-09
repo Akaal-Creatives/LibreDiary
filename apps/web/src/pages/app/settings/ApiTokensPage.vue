@@ -53,7 +53,7 @@ function openCreateModal() {
 function getMinDate(): string {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split('T')[0];
+  return tomorrow.toISOString().split('T')[0] ?? '';
 }
 
 async function handleCreateToken() {
