@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as pagesService from './pages.service.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -130,7 +130,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
-        const page = await pagesService.createPage(request.params.orgId, request.user!.id, {
+        const page = await pagesService.createPage(request.params.orgId, getAuthUser(request).id, {
           title: body.data.title,
           parentId: body.data.parentId ?? null,
           icon: body.data.icon ?? null,
@@ -211,7 +211,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
         const page = await pagesService.updatePage(
           request.params.orgId,
           request.params.pageId,
-          request.user!.id,
+          getAuthUser(request).id,
           {
             title: body.data.title,
             icon: body.data.icon,
@@ -325,7 +325,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
         const page = await pagesService.duplicatePage(
           request.params.orgId,
           request.params.pageId,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return reply.status(201).send({
@@ -351,7 +351,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: PageParams }>, reply: FastifyReply) => {
       try {
         const favorite = await pagesService.addFavorite(
-          request.user!.id,
+          getAuthUser(request).id,
           request.params.pageId,
           request.params.orgId
         );
@@ -374,7 +374,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
     '/:pageId/favorite',
     async (request: FastifyRequest<{ Params: PageParams }>, reply: FastifyReply) => {
       try {
-        await pagesService.removeFavorite(request.user!.id, request.params.pageId);
+        await pagesService.removeFavorite(getAuthUser(request).id, request.params.pageId);
 
         return {
           success: true,
@@ -473,7 +473,10 @@ export async function favoritesRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: OrgParams }>(
     '/',
     async (request: FastifyRequest<{ Params: OrgParams }>, _reply: FastifyReply) => {
-      const favorites = await pagesService.getUserFavorites(request.params.orgId, request.user!.id);
+      const favorites = await pagesService.getUserFavorites(
+        request.params.orgId,
+        getAuthUser(request).id
+      );
 
       return {
         success: true,
@@ -502,7 +505,7 @@ export async function favoritesRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
-        await pagesService.reorderFavorites(request.user!.id, body.data.orderedIds);
+        await pagesService.reorderFavorites(getAuthUser(request).id, body.data.orderedIds);
 
         return {
           success: true,

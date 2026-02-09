@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as filesService from './files.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -72,7 +72,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
 
         const file = await filesService.uploadFile(
           request.params.orgId,
-          request.user!.id,
+          getAuthUser(request).id,
           {
             buffer,
             originalName: data.filename,

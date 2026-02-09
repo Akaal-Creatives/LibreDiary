@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { createApiTokenSchema } from '@librediary/shared';
 import * as apiTokenService from './api-token.service.js';
+import { getAuthUser } from '../../utils/errors.js';
 
 export async function apiTokenRoutes(fastify: FastifyInstance) {
   // All routes require auth
@@ -22,7 +23,7 @@ export async function apiTokenRoutes(fastify: FastifyInstance) {
 
     const { name, expiresAt } = parsed.data;
     const { rawToken, apiToken } = await apiTokenService.createToken(
-      request.user!.id,
+      getAuthUser(request).id,
       name,
       expiresAt
     );
@@ -46,7 +47,7 @@ export async function apiTokenRoutes(fastify: FastifyInstance) {
 
   // GET / — List user's tokens
   fastify.get('/', async (request) => {
-    const tokens = await apiTokenService.listTokens(request.user!.id);
+    const tokens = await apiTokenService.listTokens(getAuthUser(request).id);
 
     return {
       success: true,
@@ -57,7 +58,7 @@ export async function apiTokenRoutes(fastify: FastifyInstance) {
   // DELETE /:tokenId — Revoke token
   fastify.delete<{ Params: { tokenId: string } }>('/:tokenId', async (request, reply) => {
     try {
-      await apiTokenService.deleteToken(request.params.tokenId, request.user!.id);
+      await apiTokenService.deleteToken(request.params.tokenId, getAuthUser(request).id);
       return { success: true };
     } catch (error) {
       if (error instanceof Error && error.message === 'Token not found') {

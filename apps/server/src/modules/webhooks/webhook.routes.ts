@@ -4,6 +4,7 @@ import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { createWebhookSchema, updateWebhookSchema } from '@librediary/shared';
 import * as webhookService from './webhook.service.js';
 import * as deliveryService from './webhook-delivery.service.js';
+import { getAuthUser } from '../../utils/errors.js';
 
 export async function webhookRoutes(fastify: FastifyInstance) {
   // All routes require auth + org access
@@ -33,7 +34,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
 
     const webhook = await webhookService.createWebhook(
       (request as { organizationId: string }).organizationId,
-      request.user!.id,
+      getAuthUser(request).id,
       parsed.data
     );
 

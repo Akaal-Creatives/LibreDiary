@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as templatesService from './templates.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -104,7 +104,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
       try {
         const template = await templatesService.createTemplate(
           request.params.orgId,
-          request.user!.id,
+          getAuthUser(request).id,
           body.data
         );
 
@@ -139,7 +139,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
         const { pageId, ...input } = body.data;
         const template = await templatesService.createTemplateFromPage(
           request.params.orgId,
-          request.user!.id,
+          getAuthUser(request).id,
           pageId,
           Object.keys(input).length > 0 ? input : undefined
         );
@@ -265,7 +265,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
       try {
         const page = await templatesService.createPageFromTemplate(
           request.params.orgId,
-          request.user!.id,
+          getAuthUser(request).id,
           request.params.templateId,
           body.data
         );

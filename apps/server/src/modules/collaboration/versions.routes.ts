@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as versionsService from './versions.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { getAuthUser } from '../../utils/errors.js';
 
 // Request types
 interface VersionParams {
@@ -85,7 +86,7 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
     '/',
     async (request: FastifyRequest<{ Params: VersionParams }>, reply: FastifyReply) => {
       const { orgId, pageId } = request.params;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
 
       try {
         const version = await versionsService.createVersion(orgId, pageId, userId);
@@ -107,7 +108,7 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
     '/:versionId/restore',
     async (request: FastifyRequest<{ Params: VersionParams }>, reply: FastifyReply) => {
       const { orgId, pageId, versionId } = request.params;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
 
       try {
         const page = await versionsService.restoreVersion(orgId, pageId, versionId!, userId);

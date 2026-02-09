@@ -1,4 +1,5 @@
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { User } from '@prisma/client';
 
 export interface ErrorMapping {
   status: number;
@@ -21,6 +22,18 @@ const DEFAULT_ERROR: ErrorMapping = {
  * strings to HTTP status codes and user-facing error details.
  * Unmapped errors fall back to 500 Internal Server Error.
  */
+/**
+ * Returns the authenticated user from the request.
+ * Safe replacement for `request.user!` — throws if the auth
+ * middleware has not run or did not attach a user.
+ */
+export function getAuthUser(request: FastifyRequest): User {
+  if (!request.user) {
+    throw new Error('UNAUTHORIZED');
+  }
+  return request.user;
+}
+
 export function mapServiceError(
   error: unknown,
   reply: FastifyReply,

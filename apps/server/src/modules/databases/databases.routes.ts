@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as databasesService from './databases.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -172,7 +172,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
       try {
         const database = await databasesService.createDatabase(
           request.params.orgId,
-          request.user!.id,
+          getAuthUser(request).id,
           body.data
         );
 
@@ -397,7 +397,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
         const row = await databasesService.createRow(
           request.params.orgId,
           request.params.databaseId,
-          request.user!.id,
+          getAuthUser(request).id,
           body.data
         );
         return reply.status(201).send({

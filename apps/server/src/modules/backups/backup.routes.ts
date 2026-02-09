@@ -6,7 +6,7 @@ import { env } from '../../config/index.js';
 import * as backupService from './backup.service.js';
 import * as systemBackupService from './system-backup.service.js';
 import { createOrgBackupSchema, createSystemBackupSchema } from '@librediary/shared';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -99,7 +99,7 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
   app.post('/system', async (request, reply) => {
     const body = createSystemBackupSchema.parse(request.body);
 
-    const backup = await systemBackupService.createSystemBackup(request.user!.id, {
+    const backup = await systemBackupService.createSystemBackup(getAuthUser(request).id, {
       encrypt: body.encrypt,
       password: body.password,
     });
@@ -191,10 +191,14 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: OrgParams }>, reply) => {
       const body = createOrgBackupSchema.parse(request.body);
 
-      const backup = await backupService.createOrgBackup(request.params.orgId, request.user!.id, {
-        encrypt: body.encrypt,
-        password: body.password,
-      });
+      const backup = await backupService.createOrgBackup(
+        request.params.orgId,
+        getAuthUser(request).id,
+        {
+          encrypt: body.encrypt,
+          password: body.password,
+        }
+      );
 
       return reply.status(201).send({
         success: true,

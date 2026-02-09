@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import * as commentsService from './comments.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -152,7 +152,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
     async (request, reply) => {
       const { pageId } = request.params;
       const { content, parentId, blockId } = request.body;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
       const organizationId = request.organizationId;
 
       try {
@@ -194,7 +194,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
     async (request, reply) => {
       const { commentId } = request.params;
       const { content } = request.body;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
 
       try {
         const comment = await commentsService.updateComment(commentId, userId, content);
@@ -215,7 +215,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
    */
   fastify.delete<{ Params: CommentParams }>('/:commentId', async (request, reply) => {
     const { commentId } = request.params;
-    const userId = request.user!.id;
+    const userId = getAuthUser(request).id;
 
     try {
       await commentsService.deleteComment(commentId, userId);
@@ -249,7 +249,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
     async (request, reply) => {
       const { commentId } = request.params;
       const { resolve } = request.body;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
 
       try {
         const comment = await commentsService.resolveComment(commentId, userId, resolve);

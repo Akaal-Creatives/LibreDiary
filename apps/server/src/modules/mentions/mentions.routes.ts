@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import * as mentionsService from './mentions.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -52,7 +52,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
     },
     async (request, reply) => {
       const { q } = request.query;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
       const organizationId = request.organizationId;
 
       try {
@@ -77,7 +77,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
    * Get all mentions for the current user in the organization
    */
   fastify.get('/', async (request, reply) => {
-    const userId = request.user!.id;
+    const userId = getAuthUser(request).id;
     const organizationId = request.organizationId;
 
     try {

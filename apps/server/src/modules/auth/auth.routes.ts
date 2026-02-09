@@ -9,6 +9,7 @@ import {
 } from './auth.middleware.js';
 import { EXPIRATION, generateWsToken } from '../../utils/tokens.js';
 import { env } from '../../config/index.js';
+import { getAuthUser } from '../../utils/errors.js';
 
 // Request schemas
 const registerSchema = z.object({
@@ -156,7 +157,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const result = await authService.getCurrentUser(request.user!.id);
+        const result = await authService.getCurrentUser(getAuthUser(request).id);
 
         return {
           success: true,
@@ -225,7 +226,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        await authService.resendVerificationEmail(request.user!.id);
+        await authService.resendVerificationEmail(getAuthUser(request).id);
 
         return {
           success: true,
@@ -313,7 +314,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     '/sessions',
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, _reply: FastifyReply) => {
-      const sessions = await authService.getSessions(request.user!.id);
+      const sessions = await authService.getSessions(getAuthUser(request).id);
 
       return {
         success: true,
@@ -340,7 +341,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       try {
-        await authService.revokeSession(request.params.id, request.user!.id);
+        await authService.revokeSession(request.params.id, getAuthUser(request).id);
 
         return {
           success: true,
@@ -368,7 +369,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, _reply: FastifyReply) => {
       const secret = env.SESSION_SECRET ?? env.APP_SECRET;
-      const wsToken = generateWsToken(request.user!.id, secret);
+      const wsToken = generateWsToken(getAuthUser(request).id, secret);
 
       return {
         success: true,

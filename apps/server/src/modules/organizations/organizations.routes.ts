@@ -4,7 +4,7 @@ import * as orgService from './organizations.service.js';
 import { requireOrgAccess, requireOrgRole } from './organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import type { OrgRole } from '@prisma/client';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -174,7 +174,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
     }
 
     try {
-      const result = await orgService.createOrganization(request.user!.id, {
+      const result = await orgService.createOrganization(getAuthUser(request).id, {
         name: body.data.name,
         slug: body.data.slug,
         logoUrl: body.data.logoUrl,
@@ -200,7 +200,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
    * List user's organizations
    */
   fastify.get('/', async (request: FastifyRequest, _reply: FastifyReply) => {
-    const organizations = await orgService.getUserOrganizations(request.user!.id);
+    const organizations = await orgService.getUserOrganizations(getAuthUser(request).id);
 
     return {
       success: true,
@@ -362,7 +362,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         await orgService.removeMember(
           request.params.orgId,
           request.params.memberId,
-          request.user!.id,
+          getAuthUser(request).id,
           request.membership!.role
         );
 
@@ -385,7 +385,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
     { preHandler: [requireOrgAccess] },
     async (request: FastifyRequest<{ Params: OrgParams }>, reply: FastifyReply) => {
       try {
-        await orgService.leaveOrganization(request.params.orgId, request.user!.id);
+        await orgService.leaveOrganization(request.params.orgId, getAuthUser(request).id);
 
         return {
           success: true,
@@ -421,7 +421,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         await orgService.transferOwnership(
           request.params.orgId,
           body.data.newOwnerId,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return {
@@ -462,7 +462,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         const invite = await orgService.createInvite(
           request.params.orgId,
           body.data as { email: string; role: OrgRole },
-          request.user!.id,
+          getAuthUser(request).id,
           request.membership!.role
         );
 

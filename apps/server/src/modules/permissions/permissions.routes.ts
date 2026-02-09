@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as permissionsService from './permissions.service.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -121,7 +121,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           request.params.pageId,
           body.data.userId,
           body.data.level,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return reply.status(201).send({
@@ -218,7 +218,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
         const shareLink = await permissionsService.createShareLink(
           request.params.pageId,
           body.data.level,
-          request.user!.id,
+          getAuthUser(request).id,
           expiresAt
         );
 

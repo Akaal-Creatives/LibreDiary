@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as notificationsService from './notifications.service.js';
 import * as notificationPrefsService from './notifications.prefs.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
-import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -83,7 +83,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
 
     const { limit, offset, unreadOnly } = queryResult.data;
 
-    const notifications = await notificationsService.getNotifications(request.user!.id, {
+    const notifications = await notificationsService.getNotifications(getAuthUser(request).id, {
       limit,
       offset,
       unreadOnly,
@@ -100,7 +100,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
    * Get count of unread notifications
    */
   fastify.get('/unread-count', async (request: FastifyRequest, _reply: FastifyReply) => {
-    const count = await notificationsService.getUnreadCount(request.user!.id);
+    const count = await notificationsService.getUnreadCount(getAuthUser(request).id);
 
     return {
       success: true,
@@ -115,7 +115,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
   fastify.get('/preferences', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const preferences = await notificationPrefsService.getNotificationPreferences(
-        request.user!.id
+        getAuthUser(request).id
       );
 
       return {
@@ -146,7 +146,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
 
     try {
       const preferences = await notificationPrefsService.updateNotificationPreferences(
-        request.user!.id,
+        getAuthUser(request).id,
         bodyResult.data
       );
 
@@ -168,7 +168,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
     async (request: FastifyRequest<{ Params: NotificationParams }>, reply: FastifyReply) => {
       const notification = await notificationsService.getNotificationById(
         request.params.notificationId,
-        request.user!.id
+        getAuthUser(request).id
       );
 
       if (!notification) {
@@ -198,7 +198,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
       try {
         const notification = await notificationsService.markAsRead(
           request.params.notificationId,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return {
@@ -216,7 +216,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
    * Mark all notifications as read
    */
   fastify.patch('/read-all', async (request: FastifyRequest, _reply: FastifyReply) => {
-    const result = await notificationsService.markAllAsRead(request.user!.id);
+    const result = await notificationsService.markAllAsRead(getAuthUser(request).id);
 
     return {
       success: true,
@@ -234,7 +234,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
       try {
         await notificationsService.deleteNotification(
           request.params.notificationId,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return {
