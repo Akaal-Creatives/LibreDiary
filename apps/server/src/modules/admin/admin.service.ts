@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma.js';
 import type { User, Organization, Prisma } from '../../generated/prisma/client.js';
 import * as filesService from '../files/files.service.js';
 import { getHocuspocusServer } from '../collaboration/hocuspocus.js';
+import { maskApiKey } from '../ai/ai.service.js';
 
 export interface PaginationParams {
   page?: number;
@@ -403,6 +404,9 @@ export interface SystemSettingsResponse {
   sessionMaxAge: number;
   maxOrganisationsPerUser: number;
   defaultUserLocale: string;
+  aiEnabled: boolean;
+  openrouterApiKey: string | null;
+  openrouterModel: string;
   updatedAt: Date;
 }
 
@@ -413,6 +417,9 @@ function curateSettings(settings: {
   sessionMaxAge: number;
   maxOrganisationsPerUser: number;
   defaultUserLocale: string;
+  aiEnabled: boolean;
+  openrouterApiKey: string | null;
+  openrouterModel: string;
   updatedAt: Date;
 }): SystemSettingsResponse {
   return {
@@ -422,6 +429,9 @@ function curateSettings(settings: {
     sessionMaxAge: settings.sessionMaxAge,
     maxOrganisationsPerUser: settings.maxOrganisationsPerUser,
     defaultUserLocale: settings.defaultUserLocale,
+    aiEnabled: settings.aiEnabled,
+    openrouterApiKey: settings.openrouterApiKey ? maskApiKey(settings.openrouterApiKey) : null,
+    openrouterModel: settings.openrouterModel,
     updatedAt: settings.updatedAt,
   };
 }
@@ -443,13 +453,25 @@ export interface UpdateSettingsData {
   sessionMaxAge?: number;
   maxOrganisationsPerUser?: number;
   defaultUserLocale?: string;
+  aiEnabled?: boolean;
+  openrouterApiKey?: string | null;
+  openrouterModel?: string;
 }
 
 export async function updateSettings(data: UpdateSettingsData): Promise<SystemSettingsResponse> {
+  // Strip masked API key to prevent overwriting real key with masked value
+  const updateData = { ...data };
+  if (
+    typeof updateData.openrouterApiKey === 'string' &&
+    updateData.openrouterApiKey.startsWith('****')
+  ) {
+    delete updateData.openrouterApiKey;
+  }
+
   const settings = await prisma.systemSettings.upsert({
     where: { id: 'system' },
-    update: data,
-    create: { id: 'system', ...data },
+    update: updateData,
+    create: { id: 'system', ...updateData },
   });
 
   return curateSettings(settings);

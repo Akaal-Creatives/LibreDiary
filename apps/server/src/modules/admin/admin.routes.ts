@@ -35,6 +35,9 @@ const updateSettingsSchema = z
     sessionMaxAge: z.number().int().min(300000).max(2592000000).optional(),
     maxOrganisationsPerUser: z.number().int().min(0).max(1000).optional(),
     defaultUserLocale: z.string().min(2).max(10).optional(),
+    aiEnabled: z.boolean().optional(),
+    openrouterApiKey: z.string().max(500).nullable().optional(),
+    openrouterModel: z.string().min(1).max(200).optional(),
   })
   .strict();
 
