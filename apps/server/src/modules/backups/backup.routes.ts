@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireSuperAdmin } from '../admin/admin.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
@@ -6,6 +6,7 @@ import { env } from '../../config/index.js';
 import * as backupService from './backup.service.js';
 import * as systemBackupService from './system-backup.service.js';
 import { createOrgBackupSchema, createSystemBackupSchema } from '@librediary/shared';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -24,39 +25,21 @@ interface OrgBackupParams extends OrgParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    BACKUP_NOT_FOUND: {
-      status: 404,
-      code: 'BACKUP_NOT_FOUND',
-      message: 'Backup not found',
-    },
-    BACKUP_NOT_AVAILABLE: {
-      status: 400,
-      code: 'BACKUP_NOT_AVAILABLE',
-      message: 'Backup is not available for download',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  BACKUP_NOT_FOUND: {
+    status: 404,
+    code: 'BACKUP_NOT_FOUND',
+    message: 'Backup not found',
+  },
+  BACKUP_NOT_AVAILABLE: {
+    status: 400,
+    code: 'BACKUP_NOT_AVAILABLE',
+    message: 'Backup is not available for download',
+  },
+};
 
 // ===========================================
 // ADMIN BACKUP ROUTES (Super Admin only)
@@ -138,7 +121,7 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
           data: { backup },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -158,7 +141,7 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
           )
           .send(result.buffer);
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -175,7 +158,7 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
           data: { message: 'Backup deleted' },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -232,7 +215,7 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
           data: { backup },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -255,7 +238,7 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
           )
           .send(result.buffer);
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -272,7 +255,7 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
           data: { message: 'Backup deleted' },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

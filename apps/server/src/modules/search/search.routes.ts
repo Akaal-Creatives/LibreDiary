@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as searchService from './search.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -32,34 +33,16 @@ interface OrgParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    INVALID_QUERY: {
-      status: 400,
-      code: 'INVALID_QUERY',
-      message: 'Search query is invalid',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  INVALID_QUERY: {
+    status: 400,
+    code: 'INVALID_QUERY',
+    message: 'Search query is invalid',
+  },
+};
 
 // ===========================================
 // SEARCH ROUTES
@@ -123,7 +106,7 @@ export default async function searchRoutes(fastify: FastifyInstance): Promise<vo
         },
       };
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 }

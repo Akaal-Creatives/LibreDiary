@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as notificationsService from './notifications.service.js';
 import * as notificationPrefsService from './notifications.prefs.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -39,39 +40,21 @@ interface NotificationParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    NOTIFICATION_NOT_FOUND: {
-      status: 404,
-      code: 'NOTIFICATION_NOT_FOUND',
-      message: 'Notification not found',
-    },
-    USER_NOT_FOUND: {
-      status: 404,
-      code: 'USER_NOT_FOUND',
-      message: 'User not found',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  NOTIFICATION_NOT_FOUND: {
+    status: 404,
+    code: 'NOTIFICATION_NOT_FOUND',
+    message: 'Notification not found',
+  },
+  USER_NOT_FOUND: {
+    status: 404,
+    code: 'USER_NOT_FOUND',
+    message: 'User not found',
+  },
+};
 
 // ===========================================
 // NOTIFICATION ROUTES
@@ -140,7 +123,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
         data: { preferences },
       };
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 
@@ -172,7 +155,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
         data: { preferences },
       };
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 
@@ -223,7 +206,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
           data: { notification },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -259,7 +242,7 @@ export default async function notificationsRoutes(fastify: FastifyInstance): Pro
           data: { message: 'Notification deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
