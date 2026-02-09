@@ -467,15 +467,41 @@ export interface AdminStats {
     total: number;
     active: number;
   };
+  pages: number;
+  databases: number;
+  files: {
+    total: number;
+    totalSize: number;
+  };
+  templates: number;
+  backups: number;
 }
 
 export async function getStats(): Promise<AdminStats> {
-  const [totalUsers, verifiedUsers, superAdmins, totalOrgs, activeOrgs] = await Promise.all([
+  const [
+    totalUsers,
+    verifiedUsers,
+    superAdmins,
+    totalOrgs,
+    activeOrgs,
+    pages,
+    databases,
+    fileCount,
+    fileAggregation,
+    templates,
+    backups,
+  ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.user.count({ where: { deletedAt: null, emailVerified: true } }),
     prisma.user.count({ where: { deletedAt: null, isSuperAdmin: true } }),
     prisma.organization.count(),
     prisma.organization.count({ where: { deletedAt: null } }),
+    prisma.page.count(),
+    prisma.database.count(),
+    prisma.file.count(),
+    prisma.file.aggregate({ _sum: { size: true } }),
+    prisma.template.count(),
+    prisma.backup.count(),
   ]);
 
   return {
@@ -488,5 +514,13 @@ export async function getStats(): Promise<AdminStats> {
       total: totalOrgs,
       active: activeOrgs,
     },
+    pages,
+    databases,
+    files: {
+      total: fileCount,
+      totalSize: fileAggregation._sum.size ?? 0,
+    },
+    templates,
+    backups,
   };
 }
