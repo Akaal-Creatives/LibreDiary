@@ -353,6 +353,11 @@ model SystemSettings {
   maxOrganisationsPerUser  Int     @default(0)         // 0 = unlimited
   defaultUserLocale        String  @default("en")
 
+  // AI settings
+  aiEnabled         Boolean @default(false)
+  openrouterApiKey  String?
+  openrouterModel   String  @default("openai/gpt-4o-mini")
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
