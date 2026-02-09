@@ -1,7 +1,13 @@
 import { prisma } from '../../lib/prisma.js';
 import { sendInviteEmail } from '../../services/email.service.js';
 import { generateInviteToken, expiresIn, isExpired, EXPIRATION } from '../../utils/tokens.js';
-import type { Organization, OrganizationMember, OrgRole, User, Invite } from '@prisma/client';
+import type {
+  Organization,
+  OrganizationMember,
+  OrgRole,
+  User,
+  Invite,
+} from '../../generated/prisma/client.js';
 import { canModifyMember, canAssignRole } from './organizations.middleware.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';

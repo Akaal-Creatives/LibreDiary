@@ -1,6 +1,6 @@
 import { hash } from '@node-rs/argon2';
 import { prisma } from '../../lib/prisma.js';
-import type { User, Organization, SystemSettings } from '@prisma/client';
+import type { User, Organization, SystemSettings } from '../../generated/prisma/client.js';
 
 // Argon2 options for password hashing
 const ARGON2_OPTIONS = {

@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import type { PagePermission, PermissionLevel } from '@prisma/client';
+import type { PagePermission, PermissionLevel } from '../../generated/prisma/client.js';
 import crypto from 'crypto';
 import { createPageSharedNotification } from '../notifications/notifications.service.js';
 import { logAudit } from '../audit/audit.service.js';

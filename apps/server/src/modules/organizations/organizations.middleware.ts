@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { Organization, OrganizationMember, OrgRole } from '@prisma/client';
+import type { Organization, OrganizationMember, OrgRole } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
 
 // Extend FastifyRequest type for organization context

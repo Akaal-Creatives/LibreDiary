@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { User } from '@prisma/client';
+import type { User } from '../generated/prisma/client.js';
 
 export interface ErrorMapping {
   status: number;

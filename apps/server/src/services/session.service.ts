@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma.js';
 import { generateSessionToken, expiresIn, isExpired, EXPIRATION } from '../utils/tokens.js';
-import type { Session, User } from '@prisma/client';
+import type { Session, User } from '../generated/prisma/client.js';
 
 export interface CreateSessionOptions {
   userId: string;

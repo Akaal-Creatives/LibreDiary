@@ -19,7 +19,7 @@ import {
   isExpired,
   EXPIRATION,
 } from '../../utils/tokens.js';
-import type { User, Session, Organization } from '@prisma/client';
+import type { User, Session, Organization } from '../../generated/prisma/client.js';
 
 // Argon2 options for password hashing
 const ARGON2_OPTIONS = {

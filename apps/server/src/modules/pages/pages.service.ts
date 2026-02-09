@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import type { Page, Favorite } from '@prisma/client';
+import type { Page, Favorite } from '../../generated/prisma/client.js';
 import { generatePublicSlug } from '../public/public.service.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';

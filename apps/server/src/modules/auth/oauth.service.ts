@@ -2,7 +2,7 @@ import { GitHub, Google, generateState, generateCodeVerifier } from 'arctic';
 import { prisma } from '../../lib/prisma.js';
 import { createSession } from '../../services/session.service.js';
 import { env } from '../../config/env.js';
-import type { Session, User, Account } from '@prisma/client';
+import type { Session, User, Account } from '../../generated/prisma/client.js';
 
 // Supported OAuth providers
 export type OAuthProvider = 'github' | 'google';

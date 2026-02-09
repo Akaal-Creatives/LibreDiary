@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as orgService from './organizations.service.js';
 import { requireOrgAccess, requireOrgRole } from './organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
-import type { OrgRole } from '@prisma/client';
+import type { OrgRole } from '../../generated/prisma/client.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
