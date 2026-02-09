@@ -629,9 +629,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 16.1 OpenRouter Integration
 
-- [ ] Create OpenRouter client
-- [ ] Implement API key configuration
-- [ ] Add AI enabled toggle
+- [x] Create OpenRouter client
+- [x] Implement API key configuration
+- [x] Add AI enabled toggle
 
 ### 16.2 Content Translation
 
