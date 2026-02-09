@@ -843,6 +843,7 @@ enum AuditAction {
   TEMPLATE_CREATED
   TEMPLATE_DELETED
   AI_TRANSLATION
+  AI_WRITING
 }
 
 // No foreign keys — audit logs must persist as immutable records even after entity deletion
