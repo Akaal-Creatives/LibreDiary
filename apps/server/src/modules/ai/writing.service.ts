@@ -1,0 +1,85 @@
+import { prisma } from '../../lib/prisma.js';
+import { chatCompletion } from './ai.service.js';
+
+export type WritingAction = 'generate' | 'expand' | 'summarise' | 'improve';
+
+export interface WriteTextInput {
+  action: WritingAction;
+  text: string;
+  organizationId: string;
+}
+
+export interface WriteTextResult {
+  content: string;
+}
+
+const SYSTEM_PROMPTS: Record<WritingAction, string> = {
+  generate: `Generate well-structured content based on the user's prompt. Rules:
+- Return ONLY the generated content, nothing else
+- Do not add meta-commentary, explanations, or notes
+- Preserve the tone implied by the prompt
+- Use clear, well-organised formatting`,
+  expand: `Expand the following text with more detail and depth. Rules:
+- Return ONLY the expanded text, nothing else
+- Do not add meta-commentary, explanations, or notes
+- Preserve the original tone, style, and formatting
+- Add relevant detail, examples, or elaboration`,
+  summarise: `Summarise the following text concisely. Rules:
+- Return ONLY the summary, nothing else
+- Do not add meta-commentary, explanations, or notes
+- Preserve the original tone and key points
+- Be concise but comprehensive`,
+  improve: `Improve the following text for grammar, clarity, and readability. Rules:
+- Return ONLY the improved text, nothing else
+- Do not add meta-commentary, explanations, or notes
+- Preserve the original tone and meaning
+- Fix grammar, spelling, and punctuation
+- Improve sentence structure and flow`,
+};
+
+const TEMPERATURE: Record<WritingAction, number> = {
+  generate: 0.7,
+  expand: 0.3,
+  summarise: 0.3,
+  improve: 0.3,
+};
+
+export async function writeText(input: WriteTextInput): Promise<WriteTextResult> {
+  const org = await prisma.organization.findUnique({
+    where: { id: input.organizationId },
+    select: { aiEnabled: true },
+  });
+
+  if (!org || !org.aiEnabled) {
+    throw new Error('AI_DISABLED');
+  }
+
+  const systemPrompt = SYSTEM_PROMPTS[input.action];
+  const temperature = TEMPERATURE[input.action];
+
+  let result: unknown;
+  try {
+    result = await chatCompletion(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: input.text },
+      ],
+      { temperature }
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (message === 'AI is disabled' || message === 'No API key configured') {
+      throw error;
+    }
+    throw new Error('WRITING_FAILED');
+  }
+
+  const choices = (result as { choices?: Array<{ message?: { content?: string } }> })?.choices;
+  const content = choices?.[0]?.message?.content?.trim();
+
+  if (!content) {
+    throw new Error('WRITING_FAILED');
+  }
+
+  return { content };
+}
