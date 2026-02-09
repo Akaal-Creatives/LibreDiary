@@ -21,6 +21,7 @@ const mockBackupsStore = vi.hoisted(() => ({
 const mockAdminService = vi.hoisted(() => ({
   getSystemSettings: vi.fn(),
   updateSystemSettings: vi.fn(),
+  testAiConnection: vi.fn(),
 }));
 
 vi.mock('vue-router', () => ({
@@ -61,6 +62,9 @@ const sampleSystemSettings = {
   sessionMaxAge: 604800000,
   maxOrganisationsPerUser: 0,
   defaultUserLocale: 'en',
+  aiEnabled: false,
+  openrouterApiKey: '****2345',
+  openrouterModel: 'openai/gpt-4o-mini',
   updatedAt: '2025-06-01T00:00:00.000Z',
 };
 
@@ -86,6 +90,7 @@ describe('AdminSettingsPage', () => {
 
     mockAdminService.getSystemSettings.mockResolvedValue(sampleSystemSettings);
     mockAdminService.updateSystemSettings.mockResolvedValue(sampleSystemSettings);
+    mockAdminService.testAiConnection.mockReset();
   });
 
   it('renders the page header with title and description', () => {
@@ -383,6 +388,136 @@ describe('AdminSettingsPage', () => {
       await flushPromises();
 
       expect(wrapper.find('.general-settings .settings-error').exists()).toBe(true);
+    });
+  });
+
+  // ===========================================
+  // AI Settings Section
+  // ===========================================
+
+  describe('AI Settings', () => {
+    it('displays "AI Settings" section heading', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('AI Settings');
+    });
+
+    it('shows AI enabled toggle', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const toggle = wrapper.find('.ai-settings input[data-field="aiEnabled"]');
+      expect(toggle.exists()).toBe(true);
+    });
+
+    it('shows API key input as password type', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.ai-settings input[data-field="openrouterApiKey"]');
+      expect(input.exists()).toBe(true);
+      expect((input.element as HTMLInputElement).type).toBe('password');
+    });
+
+    it('toggles API key visibility on button click', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const toggleBtn = wrapper.find('.ai-settings .input-toggle-btn');
+      expect(toggleBtn.exists()).toBe(true);
+
+      const input = wrapper.find('.ai-settings input[data-field="openrouterApiKey"]');
+      expect((input.element as HTMLInputElement).type).toBe('password');
+
+      await toggleBtn.trigger('click');
+      expect((input.element as HTMLInputElement).type).toBe('text');
+
+      await toggleBtn.trigger('click');
+      expect((input.element as HTMLInputElement).type).toBe('password');
+    });
+
+    it('shows model input with current value', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.ai-settings input[data-field="openrouterModel"]');
+      expect(input.exists()).toBe(true);
+      expect((input.element as HTMLInputElement).value).toBe('openai/gpt-4o-mini');
+    });
+
+    it('shows save and test connection buttons', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const saveBtn = wrapper.find('.ai-settings .save-button');
+      expect(saveBtn.exists()).toBe(true);
+
+      const testBtn = wrapper.find('.ai-settings .test-button');
+      expect(testBtn.exists()).toBe(true);
+    });
+
+    it('calls updateSystemSettings on AI save', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.ai-settings .save-button').trigger('click');
+      await flushPromises();
+
+      expect(mockAdminService.updateSystemSettings).toHaveBeenCalled();
+    });
+
+    it('calls testAiConnection on test click', async () => {
+      mockAdminService.testAiConnection.mockResolvedValue({
+        success: true,
+        message: 'Connection successful',
+        model: 'openai/gpt-4o-mini',
+      });
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.ai-settings .test-button').trigger('click');
+      await flushPromises();
+
+      expect(mockAdminService.testAiConnection).toHaveBeenCalled();
+    });
+
+    it('shows success result after test', async () => {
+      mockAdminService.testAiConnection.mockResolvedValue({
+        success: true,
+        message: 'Connection successful',
+        model: 'openai/gpt-4o-mini',
+      });
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.ai-settings .test-button').trigger('click');
+      await flushPromises();
+
+      const result = wrapper.find('.ai-settings .connection-result');
+      expect(result.exists()).toBe(true);
+      expect(result.classes()).toContain('success');
+      expect(result.text()).toContain('Connection successful');
+    });
+
+    it('shows failure result after failed test', async () => {
+      mockAdminService.testAiConnection.mockResolvedValue({
+        success: false,
+        message: 'No API key configured',
+      });
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.ai-settings .test-button').trigger('click');
+      await flushPromises();
+
+      const result = wrapper.find('.ai-settings .connection-result');
+      expect(result.exists()).toBe(true);
+      expect(result.classes()).toContain('failure');
+      expect(result.text()).toContain('No API key configured');
     });
   });
 });
