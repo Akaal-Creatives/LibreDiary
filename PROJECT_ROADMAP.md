@@ -618,10 +618,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 15.3 Admin Dashboard
 
-- [ ] Create system stats endpoints
-- [ ] Display user/org/page counts
-- [ ] Show storage usage
-- [ ] Show system health status
+- [x] Create system stats endpoints
+- [x] Display user/org/page counts
+- [x] Show storage usage
+- [x] Show system health status
 
 ---
 
