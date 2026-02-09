@@ -781,7 +781,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create PWA manifest
 - [ ] Implement service worker
 - [ ] Design mobile-optimized views
-- [ ] Plan native app (React Native)
+- [ ] Plan native app (React Native OR CapacitorJS)
 
 ---
 
