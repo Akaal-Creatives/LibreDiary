@@ -674,34 +674,16 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 18: Compliance
+## Phase 18: Editor Enhancements
 
-### 18.1 GDPR - Data Export
-
-- [ ] Create user data export endpoint
-- [ ] Export user's pages, comments, files
-- [ ] Generate downloadable archive
-- [ ] Create data export UI
-
-### 18.2 GDPR - Account Deletion
-
-- [ ] Create account deletion endpoint
-- [ ] Implement cascading deletes
-- [ ] Add deletion confirmation flow
-- [ ] Remove from all organizations
-
----
-
-## Phase 19: Editor Enhancements
-
-### 19.1 Slash Commands
+### 18.1 Slash Commands
 
 - [ ] Create slash command extension
 - [ ] Build command menu component
 - [ ] Add block type commands
 - [ ] Add keyboard navigation
 
-### 19.2 Additional Block Types
+### 18.2 Additional Block Types
 
 - [ ] Add Code block with syntax highlighting
 - [ ] Add Quote block
@@ -710,12 +692,30 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Add Table of Contents block
 - [ ] Add Toggle/Collapsible block
 
-### 19.3 Drag & Drop
+### 18.3 Drag & Drop
 
 - [ ] Implement block drag handles
 - [ ] Add drop indicators
 - [ ] Reorder blocks via drag
 - [ ] Move blocks between pages (optional)
+
+---
+
+## Phase 19: Compliance
+
+### 19.1 GDPR - Data Export
+
+- [ ] Create user data export endpoint
+- [ ] Export user's pages, comments, files
+- [ ] Generate downloadable archive
+- [ ] Create data export UI
+
+### 19.2 GDPR - Account Deletion
+
+- [ ] Create account deletion endpoint
+- [ ] Implement cascading deletes
+- [ ] Add deletion confirmation flow
+- [ ] Remove from all organizations
 
 ---
 
