@@ -2,52 +2,76 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vites
 import type { FastifyInstance } from 'fastify';
 
 // Use vi.hoisted() to ensure mock variables are available when vi.mock is hoisted
-const { mockPrismaUser, mockPrismaSystemSettings, mockPrisma } = vi.hoisted(() => {
-  const mockPrismaUser = {
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    update: vi.fn(),
-    count: vi.fn(),
-  };
+const { mockPrismaUser, mockPrismaSystemSettings, mockPrisma, mockFilesService, mockHocuspocus } =
+  vi.hoisted(() => {
+    const mockPrismaUser = {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    };
 
-  const mockPrismaOrganization = {
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    update: vi.fn(),
-    count: vi.fn(),
-  };
+    const mockPrismaOrganization = {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    };
 
-  const mockPrismaOrganizationMember = {
-    findMany: vi.fn(),
-    count: vi.fn(),
-  };
+    const mockPrismaOrganizationMember = {
+      findMany: vi.fn(),
+      count: vi.fn(),
+    };
 
-  const mockPrismaSystemSettings = {
-    findUnique: vi.fn(),
-    upsert: vi.fn(),
-  };
+    const mockPrismaSystemSettings = {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+    };
 
-  const mockPrisma = {
-    user: mockPrismaUser,
-    organization: mockPrismaOrganization,
-    organizationMember: mockPrismaOrganizationMember,
-    systemSettings: mockPrismaSystemSettings,
-    auditLog: { create: vi.fn().mockResolvedValue({}) },
-  };
+    const mockPrisma = {
+      user: mockPrismaUser,
+      organization: mockPrismaOrganization,
+      organizationMember: mockPrismaOrganizationMember,
+      systemSettings: mockPrismaSystemSettings,
+      auditLog: { create: vi.fn().mockResolvedValue({}) },
+      page: { count: vi.fn().mockResolvedValue(0) },
+      database: { count: vi.fn().mockResolvedValue(0) },
+      file: {
+        count: vi.fn().mockResolvedValue(0),
+        aggregate: vi.fn().mockResolvedValue({ _sum: { size: null } }),
+      },
+      template: { count: vi.fn().mockResolvedValue(0) },
+      backup: { count: vi.fn().mockResolvedValue(0) },
+    };
 
-  return {
-    mockPrismaUser,
-    mockPrismaOrganization,
-    mockPrismaOrganizationMember,
-    mockPrismaSystemSettings,
-    mockPrisma,
-  };
-});
+    const mockFilesService = {
+      testStorageConnection: vi.fn().mockResolvedValue({ success: true, message: 'OK' }),
+      getStorageInfo: vi.fn().mockResolvedValue({ type: 'local', totalFiles: 0, totalSize: 0 }),
+    };
+
+    const mockHocuspocus = {
+      getHocuspocusServer: vi.fn().mockReturnValue({}),
+    };
+
+    return {
+      mockPrismaUser,
+      mockPrismaOrganization,
+      mockPrismaOrganizationMember,
+      mockPrismaSystemSettings,
+      mockPrisma,
+      mockFilesService,
+      mockHocuspocus,
+    };
+  });
 
 // Mock modules before any imports
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
+
+vi.mock('../../files/files.service.js', () => mockFilesService);
+
+vi.mock('../../collaboration/hocuspocus.js', () => mockHocuspocus);
 
 vi.mock('../../../services/session.service.js', async (importOriginal) => {
   const original = (await importOriginal()) as Record<string, unknown>;
@@ -570,6 +594,56 @@ describe('Admin Routes', () => {
           }),
         })
       );
+    });
+  });
+
+  // ============================================
+  // HEALTH
+  // ============================================
+
+  describe('GET /api/v1/admin/health', () => {
+    it('should return 401 without authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/health',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 403 for non-super-admin users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/health',
+        cookies: {
+          session_token: 'regular-user-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+    });
+
+    it('should return 200 with health object for super admin', async () => {
+      mockPrismaUser.count.mockResolvedValue(1);
+      mockFilesService.testStorageConnection.mockResolvedValue({ success: true, message: 'OK' });
+      mockHocuspocus.getHocuspocusServer.mockReturnValue({});
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/health',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.health).toBeDefined();
+      expect(body.data.health.database).toBeDefined();
+      expect(body.data.health.storage).toBeDefined();
+      expect(body.data.health.collaboration).toBeDefined();
+      expect(body.data.health.server).toBeDefined();
     });
   });
 });
