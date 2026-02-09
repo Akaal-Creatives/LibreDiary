@@ -346,8 +346,12 @@ model SystemSettings {
   setupCompletedBy String?
 
   // General settings
-  siteName        String @default("LibreDiary")
-  allowSignups    Boolean @default(false) // Invite-only by default
+  siteName                 String  @default("LibreDiary")
+  allowSignups             Boolean @default(false) // Invite-only by default
+  requireEmailVerification Boolean @default(true)
+  sessionMaxAge            Int     @default(604800000) // 7 days in ms
+  maxOrganisationsPerUser  Int     @default(0)         // 0 = unlimited
+  defaultUserLocale        String  @default("en")
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -818,6 +822,7 @@ enum AuditAction {
   ADMIN_ORG_UPDATED
   ADMIN_ORG_DELETED
   ADMIN_ORG_RESTORED
+  ADMIN_SETTINGS_UPDATED
 
   // Resources
   DATABASE_CREATED
