@@ -3,6 +3,11 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFilesStore } from '@/stores/files';
 import { useBackupsStore } from '@/stores/backups';
+import {
+  getSystemSettings,
+  updateSystemSettings,
+  type SystemSettings,
+} from '@/services/admin.service';
 
 const router = useRouter();
 const filesStore = useFilesStore();
@@ -12,8 +17,67 @@ const loading = ref(true);
 const testingConnection = ref(false);
 const connectionResult = ref<{ success: boolean; message: string } | null>(null);
 
+// General settings state
+const settingsLoading = ref(true);
+const settingsError = ref<string | null>(null);
+const saving = ref(false);
+const saveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
+
+const formSiteName = ref('');
+const formAllowSignups = ref(false);
+const formRequireEmailVerification = ref(true);
+const formSessionHours = ref(168);
+const formMaxOrgsPerUser = ref(0);
+const formDefaultLocale = ref('en');
+
+function populateForm(settings: SystemSettings) {
+  formSiteName.value = settings.siteName;
+  formAllowSignups.value = settings.allowSignups;
+  formRequireEmailVerification.value = settings.requireEmailVerification;
+  formSessionHours.value = Math.round(settings.sessionMaxAge / 3600000);
+  formMaxOrgsPerUser.value = settings.maxOrganisationsPerUser;
+  formDefaultLocale.value = settings.defaultUserLocale;
+}
+
+async function loadSettings() {
+  settingsLoading.value = true;
+  settingsError.value = null;
+  try {
+    const settings = await getSystemSettings();
+    populateForm(settings);
+  } catch (error) {
+    settingsError.value = error instanceof Error ? error.message : 'Failed to load settings';
+  } finally {
+    settingsLoading.value = false;
+  }
+}
+
+async function handleSave() {
+  saving.value = true;
+  saveMessage.value = null;
+  try {
+    const settings = await updateSystemSettings({
+      siteName: formSiteName.value,
+      allowSignups: formAllowSignups.value,
+      requireEmailVerification: formRequireEmailVerification.value,
+      sessionMaxAge: formSessionHours.value * 3600000,
+      maxOrganisationsPerUser: formMaxOrgsPerUser.value,
+      defaultUserLocale: formDefaultLocale.value,
+    });
+    populateForm(settings);
+    saveMessage.value = { type: 'success', text: 'Settings saved' };
+  } catch (error) {
+    saveMessage.value = {
+      type: 'error',
+      text: error instanceof Error ? error.message : 'Failed to save settings',
+    };
+  } finally {
+    saving.value = false;
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([loadStorageInfo(), backupsStore.fetchSettings()]);
+  await Promise.all([loadStorageInfo(), backupsStore.fetchSettings(), loadSettings()]);
 });
 
 const backupStorageLabel = computed(() => {
@@ -82,6 +146,193 @@ const storageTypeLabel = computed(() => {
       <h1 class="page-title">System Settings</h1>
       <p class="page-description">Storage configuration and system preferences</p>
     </div>
+
+    <!-- General Section -->
+    <section class="settings-section general-settings">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M16.17 12.5a1.39 1.39 0 0 0 .28 1.53l.05.05a1.69 1.69 0 1 1-2.38 2.38l-.05-.05a1.39 1.39 0 0 0-1.53-.28 1.39 1.39 0 0 0-.84 1.27v.14a1.69 1.69 0 0 1-3.37 0v-.07A1.39 1.39 0 0 0 7.42 16a1.39 1.39 0 0 0-1.53.28l-.05.05a1.69 1.69 0 1 1-2.38-2.38l.05-.05a1.39 1.39 0 0 0 .28-1.53 1.39 1.39 0 0 0-1.27-.84h-.14a1.69 1.69 0 0 1 0-3.37h.07A1.39 1.39 0 0 0 3.36 7.25a1.39 1.39 0 0 0-.28-1.53l-.05-.05a1.69 1.69 0 1 1 2.38-2.38l.05.05a1.39 1.39 0 0 0 1.53.28h.07a1.39 1.39 0 0 0 .84-1.27v-.14a1.69 1.69 0 0 1 3.37 0v.07a1.39 1.39 0 0 0 .84 1.27 1.39 1.39 0 0 0 1.53-.28l.05-.05a1.69 1.69 0 1 1 2.38 2.38l-.05.05a1.39 1.39 0 0 0-.28 1.53v.07a1.39 1.39 0 0 0 1.27.84h.14a1.69 1.69 0 0 1 0 3.37h-.07a1.39 1.39 0 0 0-1.27.84Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 class="section-title">General</h2>
+          <p class="section-description">Platform-wide settings</p>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div v-if="settingsLoading" class="settings-skeleton">
+        <div v-for="i in 4" :key="i" class="form-field-skeleton">
+          <div class="skeleton-field-label"></div>
+          <div class="skeleton-field-input"></div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="settingsError" class="settings-error">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M8 5v3M8 11h.01M14 8A6 6 0 1 1 2 8a6 6 0 0 1 12 0Z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>{{ settingsError }}</span>
+      </div>
+
+      <!-- Settings Form -->
+      <div v-else class="settings-form">
+        <div class="form-field">
+          <label class="form-label" for="siteName">Site Name</label>
+          <input
+            id="siteName"
+            v-model="formSiteName"
+            type="text"
+            class="form-input"
+            data-field="siteName"
+          />
+        </div>
+
+        <div class="form-field form-field--toggle">
+          <div class="toggle-content">
+            <label class="form-label" for="allowSignups">Allow Signups</label>
+            <span class="form-hint">Allow new users to register on the platform</span>
+          </div>
+          <input
+            id="allowSignups"
+            v-model="formAllowSignups"
+            type="checkbox"
+            class="form-toggle"
+            data-field="allowSignups"
+          />
+        </div>
+
+        <div class="form-field form-field--toggle">
+          <div class="toggle-content">
+            <label class="form-label" for="requireEmailVerification"
+              >Require Email Verification</label
+            >
+            <span class="form-hint"
+              >Users must verify their email before accessing the platform</span
+            >
+          </div>
+          <input
+            id="requireEmailVerification"
+            v-model="formRequireEmailVerification"
+            type="checkbox"
+            class="form-toggle"
+            data-field="requireEmailVerification"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="sessionMaxAge">Session Duration (hours)</label>
+          <input
+            id="sessionMaxAge"
+            v-model.number="formSessionHours"
+            type="number"
+            class="form-input"
+            data-field="sessionMaxAge"
+            min="1"
+            max="720"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="maxOrganisationsPerUser">Max Organisations Per User</label>
+          <input
+            id="maxOrganisationsPerUser"
+            v-model.number="formMaxOrgsPerUser"
+            type="number"
+            class="form-input"
+            data-field="maxOrganisationsPerUser"
+            min="0"
+          />
+          <span class="form-hint">0 = unlimited</span>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="defaultUserLocale">Default Locale</label>
+          <input
+            id="defaultUserLocale"
+            v-model="formDefaultLocale"
+            type="text"
+            class="form-input"
+            data-field="defaultUserLocale"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button class="save-button" :disabled="saving" @click="handleSave">
+            <svg
+              v-if="saving"
+              class="spinner"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-dasharray="28"
+                stroke-dashoffset="8"
+                stroke-linecap="round"
+              />
+            </svg>
+            {{ saving ? 'Saving...' : 'Save Settings' }}
+          </button>
+
+          <div
+            v-if="saveMessage"
+            class="save-message"
+            :class="saveMessage.type === 'success' ? 'save-success' : 'save-error'"
+          >
+            <svg
+              v-if="saveMessage.type === 'success'"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <path
+                d="M3 8L6.5 11.5L13 4.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4L12 12M12 4L4 12"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>{{ saveMessage.text }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Storage Section -->
     <section class="settings-section">
@@ -522,5 +773,160 @@ const storageTypeLabel = computed(() => {
 .manage-button:hover {
   color: var(--color-text-inverse);
   background: var(--admin-accent);
+}
+
+/* General Settings Form */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-field--toggle {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.toggle-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.form-input {
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  border-color: var(--admin-accent);
+}
+
+.form-toggle {
+  width: 36px;
+  height: 20px;
+  accent-color: var(--admin-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.save-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-inverse);
+  background: var(--admin-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.save-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-message {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.save-success {
+  color: var(--color-success);
+  background: var(--color-success-bg, rgba(34, 197, 94, 0.1));
+}
+
+.save-error {
+  color: var(--color-error);
+  background: var(--color-error-bg, rgba(239, 68, 68, 0.1));
+}
+
+/* Settings Skeleton */
+.settings-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.form-field-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeleton-field-label {
+  height: 14px;
+  width: 30%;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-field-input {
+  height: 36px;
+  width: 100%;
+  background: var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Settings Error */
+.settings-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: var(--color-error-bg, rgba(239, 68, 68, 0.1));
+  border-radius: var(--radius-md);
 }
 </style>
