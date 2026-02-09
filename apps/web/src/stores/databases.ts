@@ -8,6 +8,7 @@ import type {
   DatabaseWithRelations,
 } from '@librediary/shared';
 import { databasesService } from '@/services';
+import { getTemplate } from '@/components/database/databaseTemplates';
 import type {
   CreateDatabaseServiceInput,
   UpdateDatabaseServiceInput,
@@ -32,6 +33,7 @@ export const useDatabasesStore = defineStore('databases', () => {
   const rows = ref<DatabaseRow[]>([]);
   const activeViewId = ref<string | null>(null);
   const loading = ref(false);
+  const relatedDatabases = ref<Map<string, DatabaseWithRelations>>(new Map());
 
   // ===========================================
   // GETTERS
@@ -203,6 +205,16 @@ export const useDatabasesStore = defineStore('databases', () => {
     }
   }
 
+  async function fetchRelatedDatabase(databaseId: string): Promise<DatabaseWithRelations> {
+    if (relatedDatabases.value.has(databaseId)) {
+      return relatedDatabases.value.get(databaseId)!;
+    }
+    const orgId = getOrgId();
+    const data = await databasesService.getDatabase(orgId, databaseId);
+    relatedDatabases.value.set(databaseId, data.database);
+    return data.database;
+  }
+
   async function createDatabase(input: CreateDatabaseServiceInput): Promise<DatabaseWithRelations> {
     const orgId = getOrgId();
     loading.value = true;
@@ -213,6 +225,26 @@ export const useDatabasesStore = defineStore('databases', () => {
     } finally {
       loading.value = false;
     }
+  }
+
+  async function createDatabaseFromTemplate(templateId: string): Promise<DatabaseWithRelations> {
+    const template = getTemplate(templateId);
+    const name = template && templateId !== 'blank' ? template.name : 'Untitled Database';
+    const db = await createDatabase({ name });
+
+    if (template && template.properties.length > 0) {
+      const orgId = getOrgId();
+      for (const prop of template.properties) {
+        const data = await databasesService.createProperty(orgId, db.id, {
+          name: prop.name,
+          type: prop.type,
+          config: prop.config,
+        });
+        properties.value.push(data.property);
+      }
+    }
+
+    return db;
   }
 
   async function updateDatabase(
@@ -411,6 +443,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     views.value = [];
     rows.value = [];
     activeViewId.value = null;
+    relatedDatabases.value.clear();
   }
 
   return {
@@ -422,6 +455,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     rows,
     activeViewId,
     loading,
+    relatedDatabases,
     // Getters
     currentDatabase,
     databaseList,
@@ -432,6 +466,8 @@ export const useDatabasesStore = defineStore('databases', () => {
     // API Actions - Database
     fetchDatabases,
     fetchDatabase,
+    fetchRelatedDatabase,
+    createDatabaseFromTemplate,
     createDatabase,
     updateDatabase,
     deleteDatabase,

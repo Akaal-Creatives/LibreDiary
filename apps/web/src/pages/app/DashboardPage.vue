@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore, usePagesStore } from '@/stores';
-import { useDialog } from '@/composables';
+import { useAuthStore, usePagesStore, useTemplatesStore } from '@/stores';
+import { useDialog, useToast } from '@/composables';
+import type { Template } from '@librediary/shared';
+import TemplateLibrary from '@/components/TemplateLibrary.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
+const templatesStore = useTemplatesStore();
 const { alert } = useDialog();
+const toast = useToast();
 
 const creating = ref(false);
+const showTemplateLibrary = ref(false);
 
 function navigateToPage(pageId: string) {
   router.push({ name: 'page', params: { pageId } });
@@ -28,6 +33,27 @@ async function createNewPage() {
     console.error('Failed to create page:', e);
   } finally {
     creating.value = false;
+  }
+}
+
+function openTemplateLibrary() {
+  showTemplateLibrary.value = true;
+}
+
+function closeTemplateLibrary() {
+  showTemplateLibrary.value = false;
+}
+
+async function handleUseTemplate(template: Template) {
+  try {
+    const page = await templatesStore.createPageFromTemplate(template.id);
+    await pagesStore.fetchPageTree();
+    showTemplateLibrary.value = false;
+    router.push({ name: 'page', params: { pageId: page.id } });
+    toast.success(`Page created from "${template.name}"`);
+  } catch (e) {
+    console.error('Failed to create page from template:', e);
+    toast.error('Failed to create page from template');
   }
 }
 
@@ -64,7 +90,7 @@ function showComingSoon(feature: string) {
     <section class="quick-actions">
       <h2 class="section-title">Get Started</h2>
       <div class="actions-grid">
-        <button class="action-card" @click="createNewPage">
+        <button type="button" class="action-card" @click="createNewPage">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -99,7 +125,7 @@ function showComingSoon(feature: string) {
           </span>
         </button>
 
-        <button class="action-card" @click="showComingSoon('Templates')">
+        <button type="button" class="action-card" @click="openTemplateLibrary">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <rect
@@ -119,10 +145,20 @@ function showComingSoon(feature: string) {
             <h3>Templates</h3>
             <p>Start with a pre-built template</p>
           </div>
-          <span class="action-badge">Soon</span>
+          <span class="action-arrow">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M7.5 5L12.5 10L7.5 15"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
         </button>
 
-        <button class="action-card" @click="showComingSoon('Import')">
+        <button type="button" class="action-card" @click="showComingSoon('Import')">
           <div class="action-icon-wrapper">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -154,12 +190,13 @@ function showComingSoon(feature: string) {
     <section v-if="pagesStore.rootPages.length > 0" class="recent-section">
       <div class="section-header">
         <h2 class="section-title">Recent Pages</h2>
-        <button class="view-all-btn">View all</button>
+        <button type="button" class="view-all-btn">View all</button>
       </div>
       <div class="pages-grid">
         <button
           v-for="page in pagesStore.rootPages.slice(0, 6)"
           :key="page.id"
+          type="button"
           class="page-card"
           @click="navigateToPage(page.id)"
         >
@@ -220,7 +257,7 @@ function showComingSoon(feature: string) {
         <p class="empty-description">
           Create your first page to start organizing your thoughts, notes, and ideas.
         </p>
-        <button class="empty-action" @click="createNewPage">
+        <button type="button" class="empty-action" @click="createNewPage">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 3.75V14.25"
@@ -239,6 +276,15 @@ function showComingSoon(feature: string) {
         </button>
       </div>
     </section>
+
+    <!-- Template Library Modal -->
+    <Teleport to="body">
+      <div v-if="showTemplateLibrary" class="modal-overlay" @click.self="closeTemplateLibrary">
+        <div class="template-modal" role="dialog" aria-modal="true" aria-label="Template Library">
+          <TemplateLibrary @use-template="handleUseTemplate" @close="closeTemplateLibrary" />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -503,5 +549,29 @@ function showComingSoon(feature: string) {
 .empty-action:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
+}
+
+/* Template Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.template-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow: hidden;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
 }
 </style>

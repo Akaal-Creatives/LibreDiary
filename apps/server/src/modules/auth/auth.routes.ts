@@ -9,6 +9,8 @@ import {
 } from './auth.middleware.js';
 import { EXPIRATION, generateWsToken } from '../../utils/tokens.js';
 import { env } from '../../config/index.js';
+import { getAuthUser } from '../../utils/errors.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // Request schemas
 const registerSchema = z.object({
@@ -62,6 +64,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
       setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
 
+      logAudit({
+        action: 'AUTH_REGISTER',
+        userId: result.user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+        metadata: { email: result.user.email },
+      });
+
       return {
         success: true,
         data: {
@@ -107,6 +117,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
       setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
 
+      logAudit({
+        action: 'AUTH_LOGIN',
+        userId: result.user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+        metadata: { email: result.user.email },
+      });
+
       return {
         success: true,
         data: {
@@ -140,6 +158,13 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       }
       clearSessionCookie(reply);
 
+      logAudit({
+        action: 'AUTH_LOGOUT',
+        userId: request.user?.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
+
       return {
         success: true,
         data: { message: 'Logged out successfully' },
@@ -156,7 +181,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const result = await authService.getCurrentUser(request.user!.id);
+        const result = await authService.getCurrentUser(getAuthUser(request).id);
 
         return {
           success: true,
@@ -197,6 +222,13 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     try {
       const user = await authService.verifyEmail(body.data.token);
 
+      logAudit({
+        action: 'AUTH_EMAIL_VERIFIED',
+        userId: user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
+
       return {
         success: true,
         data: {
@@ -225,7 +257,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        await authService.resendVerificationEmail(request.user!.id);
+        await authService.resendVerificationEmail(getAuthUser(request).id);
 
         return {
           success: true,
@@ -289,6 +321,12 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     try {
       await authService.resetPassword(body.data.token, body.data.password);
 
+      logAudit({
+        action: 'AUTH_PASSWORD_RESET',
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
+
       return {
         success: true,
         data: { message: 'Password reset successfully' },
@@ -313,7 +351,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     '/sessions',
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, _reply: FastifyReply) => {
-      const sessions = await authService.getSessions(request.user!.id);
+      const sessions = await authService.getSessions(getAuthUser(request).id);
 
       return {
         success: true,
@@ -335,12 +373,12 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * DELETE /auth/sessions/:id
    * Revoke a session
    */
-  fastify.delete(
+  fastify.delete<{ Params: { id: string } }>(
     '/sessions/:id',
     { preHandler: [requireAuth] },
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    async (request, reply) => {
       try {
-        await authService.revokeSession(request.params.id, request.user!.id);
+        await authService.revokeSession(request.params.id, getAuthUser(request).id);
 
         return {
           success: true,
@@ -368,7 +406,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, _reply: FastifyReply) => {
       const secret = env.SESSION_SECRET ?? env.APP_SECRET;
-      const wsToken = generateWsToken(request.user!.id, secret);
+      const wsToken = generateWsToken(getAuthUser(request).id, secret);
 
       return {
         success: true,

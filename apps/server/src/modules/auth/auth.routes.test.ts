@@ -57,6 +57,7 @@ const {
     verificationToken: mockPrismaVerificationToken,
     invite: mockPrismaInvite,
     organizationMember: mockPrismaOrganizationMember,
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
     $transaction: vi.fn(),
   };
 

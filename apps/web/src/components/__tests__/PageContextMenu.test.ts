@@ -34,16 +34,17 @@ function mountMenu(props: Partial<{ page: Page; x: number; y: number }> = {}) {
 }
 
 describe('PageContextMenu', () => {
-  it('renders all 5 menu items', () => {
+  it('renders all 6 menu items', () => {
     const wrapper = mountMenu();
 
     const items = wrapper.findAll('.menu-item');
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(6);
 
     expect(wrapper.text()).toContain('Add subpage');
     expect(wrapper.text()).toContain('Duplicate');
     expect(wrapper.text()).toContain('Rename');
     expect(wrapper.text()).toContain('Add to favorites');
+    expect(wrapper.text()).toContain('Save as template');
     expect(wrapper.text()).toContain('Move to trash');
 
     wrapper.unmount();
@@ -107,6 +108,19 @@ describe('PageContextMenu', () => {
 
     expect(wrapper.emitted('toggleFavorite')).toBeTruthy();
     expect(wrapper.emitted('toggleFavorite')![0]).toEqual([page]);
+    expect(wrapper.emitted('close')).toBeTruthy();
+
+    wrapper.unmount();
+  });
+
+  it('emits saveAsTemplate and close when clicking save as template', async () => {
+    const wrapper = mountMenu();
+
+    const items = wrapper.findAll('.menu-item');
+    await items[4].trigger('click');
+
+    expect(wrapper.emitted('saveAsTemplate')).toBeTruthy();
+    expect(wrapper.emitted('saveAsTemplate')![0]).toEqual([page]);
     expect(wrapper.emitted('close')).toBeTruthy();
 
     wrapper.unmount();

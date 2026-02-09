@@ -1,5 +1,6 @@
 import { hash, verify } from '@node-rs/argon2';
 import { prisma } from '../../lib/prisma.js';
+import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import {
   createSession,
   deleteSession,
@@ -18,7 +19,7 @@ import {
   isExpired,
   EXPIRATION,
 } from '../../utils/tokens.js';
-import type { User, Session, Organization } from '@prisma/client';
+import type { User, Session, Organization } from '../../generated/prisma/client.js';
 
 // Argon2 options for password hashing
 const ARGON2_OPTIONS = {
@@ -127,6 +128,10 @@ export async function register(
 
     return user;
   });
+
+  triggerWebhooks(invite.organizationId, 'member.added', { userId: result.id }).catch((err) =>
+    console.error('[webhook] delivery failed:', err)
+  );
 
   // Create session
   const session = await createSession({

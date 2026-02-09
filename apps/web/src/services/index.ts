@@ -34,6 +34,8 @@ export type {
   AdminUserDetail,
   AdminOrganization,
   AdminOrgDetail,
+  AuditLogEntry,
+  AuditLogFilters,
   Pagination,
 } from './admin.service';
 export { versionsService } from './versions.service';
@@ -62,6 +64,19 @@ export {
 } from './search.service';
 export type { SearchServiceResponse } from './search.service';
 export { databasesService } from './databases.service';
+export { templatesService } from './templates.service';
+export { filesService } from './files.service';
+export { backupsService } from './backups.service';
+export type { CreateBackupInput } from './backups.service';
+export { apiTokensService } from './api-tokens.service';
+export { webhooksService } from './webhooks.service';
+export type {
+  CreateTemplateInput,
+  CreateTemplateFromPageInput,
+  UpdateTemplateInput,
+  GetTemplatesOptions,
+  UseTemplateInput,
+} from './templates.service';
 export type {
   CreateDatabaseInput as CreateDatabaseServiceInput,
   UpdateDatabaseInput as UpdateDatabaseServiceInput,

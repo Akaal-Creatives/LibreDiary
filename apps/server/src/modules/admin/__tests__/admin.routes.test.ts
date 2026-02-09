@@ -26,6 +26,7 @@ const { mockPrismaUser, mockPrisma } = vi.hoisted(() => {
     user: mockPrismaUser,
     organization: mockPrismaOrganization,
     organizationMember: mockPrismaOrganizationMember,
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
   };
 
   return {

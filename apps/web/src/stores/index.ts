@@ -3,3 +3,8 @@ export { usePagesStore } from './pages';
 export { useOrganizationsStore } from './organizations';
 export { useSyncStore } from './sync';
 export { useDatabasesStore } from './databases';
+export { useTemplatesStore } from './templates';
+export { useFilesStore } from './files';
+export { useBackupsStore } from './backups';
+export { useApiTokensStore } from './api-tokens';
+export { useWebhooksStore } from './webhooks';

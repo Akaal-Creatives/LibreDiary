@@ -1,7 +1,5 @@
 # LibreDiary Project Roadmap
 
-> **Status Legend:** ⬜ Not Started | 🟡 In Progress | ✅ Completed | ⏸️ Blocked
-
 ## 1. Project Overview
 
 LibreDiary is an open-source, self-hosted, local-first workspace platform (Notion alternative) with block-based editing, real-time collaboration, and multi-tenant support.
@@ -97,7 +95,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 2: Authentication (Backend ✅)
+## Phase 2: Authentication (Backend)
 
 ### 2.1 Email/Password Auth
 
@@ -145,7 +143,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 3: Multi-Tenancy & Organizations ✅
+## Phase 3: Multi-Tenancy & Organizations
 
 ### 3.1 Organization Management
 
@@ -185,7 +183,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Persist selected workspace in localStorage
 - [x] Update API calls with organization context
 
-### 3.6 Super Admin ✅
+### 3.6 Super Admin
 
 - [x] Create isSuperAdmin flag on User
 - [x] Create super admin middleware
@@ -193,7 +191,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add system-wide user management
 - [x] Add system-wide organization management
 
-### 3.7 Setup Wizard ✅
+### 3.7 Setup Wizard
 
 - [x] Detect first-run state (no super admin)
 - [x] Create setup wizard pages
@@ -203,7 +201,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 4: Page System ✅
+## Phase 4: Page System
 
 ### 4.1 Page CRUD
 
@@ -262,9 +260,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 5: Real-Time Collaboration ✅
+## Phase 5: Real-Time Collaboration
 
-### 5.1 Hocuspocus Setup ✅
+### 5.1 Hocuspocus Setup
 
 - [x] Install @hocuspocus/server
 - [x] Create Hocuspocus server configuration
@@ -273,7 +271,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement onStoreDocument hook (save to DB)
 - [x] Setup WebSocket route (/collaboration/:pageId)
 
-### 5.2 Yjs Integration ✅
+### 5.2 Yjs Integration
 
 - [x] Install y-websocket provider
 - [x] Create Y.Doc per page
@@ -281,7 +279,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Connect Tiptap to Yjs document (frontend)
 - [x] Test multi-user editing
 
-### 5.3 Presence & Cursors ✅
+### 5.3 Presence & Cursors
 
 - [x] Enable Yjs awareness
 - [x] Create presence indicator component (frontend)
@@ -290,7 +288,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Display remote cursors with user colors (backend support)
 - [x] Show user name tooltips on cursors (backend support)
 
-### 5.4 Page Version History ✅
+### 5.4 Page Version History
 
 - [x] Create PageVersion model
 - [x] Save version on significant changes (via API endpoint)
@@ -301,16 +299,16 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 6: Page Sharing & Permissions ✅
+## Phase 6: Page Sharing & Permissions
 
-### 6.1 Page-Level Permissions ✅
+### 6.1 Page-Level Permissions
 
 - [x] Create PagePermission model
 - [x] Define permission levels (View, Edit, Full Access)
 - [x] Create permission check middleware
 - [x] Integrate permissions into Hocuspocus auth hook
 
-### 6.2 Share UI ✅
+### 6.2 Share UI
 
 - [x] Create share modal component
 - [x] List current permissions
@@ -318,7 +316,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Remove user permission
 - [x] Update permission level
 
-### 6.3 Public Pages ✅
+### 6.3 Public Pages
 
 - [x] Add isPublic and publicSlug fields
 - [x] Generate unique public slug
@@ -326,7 +324,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create public page viewer (read-only)
 - [x] Add share to web toggle in share modal
 
-### 6.4 Guest Access ✅
+### 6.4 Guest Access
 
 - [x] Create share token system (via PagePermission model)
 - [x] Generate guest access tokens
@@ -338,7 +336,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ## Phase 7: Comments & Mentions
 
-### 7.1 Comments System ✅
+### 7.1 Comments System
 
 - [x] Create Comment model with threading
 - [x] Create comment CRUD endpoints
@@ -346,7 +344,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create comments sidebar component
 - [x] Create inline comment markers in editor
 
-### 7.2 Comment UI ✅
+### 7.2 Comment UI
 
 - [x] Display comment threads
 - [x] Add reply functionality
@@ -354,7 +352,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add comment editing
 - [x] Add comment deletion
 
-### 7.3 Mentions ✅
+### 7.3 Mentions
 
 - [x] Create Mention model
 - [x] Implement @mention detection in comment input
@@ -364,16 +362,16 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 8: Notifications ✅
+## Phase 8: Notifications
 
-### 8.1 Notification System ✅
+### 8.1 Notification System
 
 - [x] Create Notification model
 - [x] Define notification types (mention, comment, share, etc.)
 - [x] Create notification service
 - [x] Trigger notifications on relevant events
 
-### 8.2 In-App Notifications ✅
+### 8.2 In-App Notifications
 
 - [x] Create notification listing endpoint
 - [x] Create mark-as-read endpoint
@@ -381,7 +379,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create notification dropdown
 - [x] Show unread count badge
 
-### 8.3 Email Notifications ✅
+### 8.3 Email Notifications
 
 - [x] Create email notification templates
 - [x] Implement email sending for important events
@@ -391,9 +389,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ---
 
-## Phase 9: Search ✅
+## Phase 9: Search
 
-### 9.1 PostgreSQL Full-Text Search ✅
+### 9.1 PostgreSQL Full-Text Search
 
 - [x] Add tsvector column to Page
 - [x] Create search index trigger
@@ -401,7 +399,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement search query parsing
 - [x] Create search UI with results
 
-### 9.2 Search Enhancements ✅
+### 9.2 Search Enhancements
 
 - [x] Add search filters (type, date, author)
 - [x] Implement search highlighting
@@ -423,36 +421,36 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.1 Database Models
 
-- [ ] Create Database model
-- [ ] Create DatabaseProperty model with types
-- [ ] Create DatabaseRow model
-- [ ] Create DatabaseCell model (JSON value)
-- [ ] Create DatabaseView model
+- [x] Create Database model
+- [x] Create DatabaseProperty model with types
+- [x] Create DatabaseRow model
+- [x] Create DatabaseCell model (JSON value)
+- [x] Create DatabaseView model
 
 ### 10.2 Database CRUD
 
-- [ ] Create database endpoints
-- [ ] Create property management endpoints
-- [ ] Create row CRUD endpoints
-- [ ] Create view management endpoints
+- [x] Create database endpoints
+- [x] Create property management endpoints
+- [x] Create row CRUD endpoints
+- [x] Create view management endpoints
 
 ### 10.3 Table View
 
-- [ ] Create data table component
-- [ ] Implement column resizing
-- [ ] Add cell editing by type
-- [ ] Implement sorting
-- [ ] Implement filtering
+- [x] Create data table component
+- [x] Implement column resizing
+- [x] Add cell editing by type
+- [x] Implement sorting
+- [x] Implement filtering
 
 ### 10.4 Property Types
 
-- [ ] Implement Text property
-- [ ] Implement Number property
-- [ ] Implement Select/Multi-select properties
-- [ ] Implement Date property
-- [ ] Implement Checkbox property
-- [ ] Implement URL/Email/Phone properties
-- [ ] Implement Person property (user reference)
+- [x] Implement Text property
+- [x] Implement Number property
+- [x] Implement Select/Multi-select properties
+- [x] Implement Date property
+- [x] Implement Checkbox property
+- [x] Implement URL/Email/Phone properties
+- [x] Implement Person property (user reference)
 - [ ] Implement Files property
 
 ### 10.5 Kanban View
@@ -466,8 +464,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 - [x] Create calendar component
 - [x] Display rows by date property
-- [x] Implement month/week/day views
+- [x] Implement month view
 - [x] Add drag to reschedule
+- [x] Implement week view
+- [x] Implement day view
 
 ### 10.7 Gallery View
 
@@ -477,10 +477,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 10.8 Advanced Features
 
-- [ ] Implement Relations between databases
-- [ ] Implement Rollup calculations
-- [ ] Implement Formula properties
-- [ ] Add database templates
+- [x] Implement Relations between databases
+- [x] Implement Rollup calculations
+- [x] Implement Formula properties
+- [x] Add database templates
 
 ---
 
@@ -488,22 +488,22 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 11.1 Template System
 
-- [ ] Create Template model
-- [ ] Create template CRUD endpoints
-- [ ] Store template content as Yjs state
+- [x] Create Template model
+- [x] Create template CRUD endpoints
+- [x] Store template content as Yjs state
 
 ### 11.2 Template Management
 
-- [ ] Create template library page
-- [ ] Create template from page
-- [ ] Implement template categories
-- [ ] Add template search
+- [x] Create template library page
+- [x] Create template from page
+- [x] Implement template categories
+- [x] Add template search
 
 ### 11.3 Template Usage
 
-- [ ] Create page from template endpoint
-- [ ] Add "Use template" in new page flow
-- [ ] Create quick-start templates
+- [x] Create page from template endpoint
+- [x] Add "Use template" in new page flow
+- [x] Create quick-start templates
 
 ---
 
@@ -511,46 +511,56 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 12.1 Storage Service
 
-- [ ] Create storage service interface
-- [ ] Implement local disk storage
-- [ ] Implement MinIO storage
-- [ ] Implement S3 storage
-- [ ] Create file upload endpoint
-- [ ] Create file download endpoint
+- [x] Create storage service interface
+- [x] Implement local disk storage
+- [x] Implement MinIO storage (skeleton)
+- [x] Implement S3 storage (skeleton)
+- [x] Create file upload endpoint
+- [x] Create file download endpoint
 
 ### 12.2 File Management
 
-- [ ] Create File model
-- [ ] Track file metadata (size, type)
-- [ ] Implement file type validation
-- [ ] Implement file size limits
-- [ ] Create file deletion
+- [x] Create File model
+- [x] Track file metadata (size, type)
+- [x] Implement file type validation
+- [x] Implement file size limits
+- [x] Create file deletion
 
 ### 12.3 Admin Storage Config
 
-- [ ] Create storage settings UI
-- [ ] Validate storage credentials
+- [x] Create storage settings UI
+- [x] Validate storage credentials
 - [ ] Migrate between storage providers (optional)
 
 ---
 
-## Phase 13: Backup System
+## Phase 13: Backup System (Take Your Data)
 
-### 13.1 Backup Implementation
+### 13.1 Per-Organisation Backup
 
-- [ ] Create Backup model
-- [ ] Implement pg_dump automation
-- [ ] Compress backups (gzip)
-- [ ] Encrypt backups (AES-256)
-- [ ] Upload to Backblaze B2
+- [x] Create Backup model (BackupType, BackupStatus enums)
+- [x] Implement per-organisation data export (pages, databases, files)
+- [x] Compress backups (tar.gz)
+- [x] Encrypt backups (AES-256-GCM with PBKDF2)
+- [x] Pluggable backup storage (Local disk / S3-compatible / Backblaze B2)
+- [x] Create downloadable backup archive per organisation
 
-### 13.2 Backup Management
+### 13.2 System Backup (pg_dump)
 
-- [ ] Create backup listing endpoint
-- [ ] Implement scheduled backups (cron)
-- [ ] Create manual backup trigger
-- [ ] Implement backup restoration
-- [ ] Create backup settings UI
+- [x] Implement pg_dump automation (via execFile, no shell injection)
+- [x] Implement scheduled backups (node-cron)
+- [x] Create manual backup trigger
+- [x] Implement backup retention cleanup
+- [ ] Implement backup restoration (future enhancement)
+
+### 13.3 Backup Management
+
+- [x] Create backup listing endpoints (admin + org)
+- [x] Create admin backup management page
+- [x] Create backup settings summary in admin settings
+- [x] Create organisation backup management page
+- [x] Allow organisation admins to trigger their own backups
+- [x] Allow organisation admins to download their backup archives
 
 ---
 
@@ -558,33 +568,33 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 14.1 Public API
 
-- [ ] Create API token model
-- [ ] Implement token generation
-- [ ] Create API authentication middleware
-- [ ] Document API endpoints
-- [ ] Add rate limiting per token
+- [x] Create API token model (SHA-256 hashed, `ld_` prefix)
+- [x] Implement token generation (cryptographically secure, shown once)
+- [x] Create API authentication middleware (Bearer token with session fallback)
+- [ ] Document API endpoints (future enhancement)
+- [ ] Add rate limiting per token (future enhancement)
 
 ### 14.2 API Token Management
 
-- [ ] Create token listing endpoint
-- [ ] Create token revocation
-- [ ] Create API tokens UI
-- [ ] Track token last used
+- [x] Create token listing endpoint
+- [x] Create token revocation
+- [x] Create API tokens UI
+- [x] Track token last used
 
 ### 14.3 Webhooks
 
-- [ ] Create Webhook model
-- [ ] Create WebhookDelivery model
-- [ ] Implement webhook triggering service
-- [ ] Add webhook signature verification
-- [ ] Implement retry logic
+- [x] Create Webhook model
+- [x] Create WebhookDelivery model
+- [x] Implement webhook triggering service (fire-and-forget integration)
+- [x] Add webhook signature verification (HMAC-SHA256)
+- [x] Implement retry logic (exponential backoff, 3 attempts)
 
 ### 14.4 Webhook Management
 
-- [ ] Create webhook CRUD endpoints
-- [ ] Create webhooks management UI
-- [ ] Display delivery logs
-- [ ] Test webhook delivery
+- [x] Create webhook CRUD endpoints
+- [x] Create webhooks management UI (with event categories)
+- [x] Display delivery logs
+- [x] Test webhook delivery
 
 ---
 
@@ -592,11 +602,11 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 15.1 Audit Logging
 
-- [ ] Create AuditLog model
-- [ ] Implement audit logging service
-- [ ] Log user actions (CRUD, auth, permissions)
-- [ ] Create audit log viewing endpoint
-- [ ] Create audit logs UI with filters
+- [x] Create AuditLog model with AuditAction enum (50+ action types)
+- [x] Implement audit logging service (fire-and-forget pattern)
+- [x] Log user actions across all modules (auth, pages, comments, permissions, organisations, admin, databases, backups, api-tokens, webhooks, templates)
+- [x] Create audit log viewing endpoints (paginated, filtered, enriched)
+- [x] Create audit logs admin page with action filter, pagination, and table view
 
 ### 15.2 System Settings
 

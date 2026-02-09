@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import multipart from '@fastify/multipart';
 import { env } from './config/index.js';
 import {
   corsPlugin,
@@ -6,6 +7,7 @@ import {
   cookiePlugin,
   sensiblePlugin,
   errorHandlerPlugin,
+  rateLimitPlugin,
   websocketPlugin,
 } from './plugins/index.js';
 import { healthRoutes, devRoutes } from './routes/index.js';
@@ -22,6 +24,12 @@ import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
 import { searchRoutes } from './modules/search/index.js';
 import { databasesRoutes } from './modules/databases/index.js';
+import { templatesRoutes } from './modules/templates/index.js';
+import { filesRoutes } from './modules/files/index.js';
+import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
+import { apiTokenRoutes } from './modules/api-tokens/index.js';
+import { webhookRoutes } from './modules/webhooks/index.js';
+import { auditRoutes } from './modules/audit/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -48,7 +56,13 @@ export async function buildApp() {
   await fastify.register(cookiePlugin);
   await fastify.register(sensiblePlugin);
   await fastify.register(errorHandlerPlugin);
+  await fastify.register(rateLimitPlugin);
   await fastify.register(websocketPlugin);
+  await fastify.register(multipart, {
+    limits: {
+      fileSize: env.STORAGE_MAX_FILE_SIZE,
+    },
+  });
 
   // Register routes
   await fastify.register(healthRoutes);
@@ -116,11 +130,36 @@ export async function buildApp() {
         prefix: '/organizations/:orgId/databases',
       });
 
+      // Template routes
+      await api.register(templatesRoutes, {
+        prefix: '/organizations/:orgId/templates',
+      });
+
+      // File routes
+      await api.register(filesRoutes, {
+        prefix: '/organizations/:orgId/files',
+      });
+
       // Notifications routes (user-specific, no org context needed)
       await api.register(notificationsRoutes, { prefix: '/notifications' });
 
+      // API Token routes (user-specific)
+      await api.register(apiTokenRoutes, { prefix: '/api-tokens' });
+
+      // Webhook routes (org-scoped)
+      await api.register(webhookRoutes, {
+        prefix: '/organizations/:orgId/webhooks',
+      });
+
+      // Backup routes (org-scoped)
+      await api.register(orgBackupRoutes, {
+        prefix: '/organizations/:orgId/backups',
+      });
+
       // Admin routes (super admin only)
       await api.register(adminRoutes, { prefix: '/admin' });
+      await api.register(adminBackupRoutes, { prefix: '/admin/backups' });
+      await api.register(auditRoutes, { prefix: '/admin/audit-logs' });
     },
     { prefix: '/api/v1' }
   );

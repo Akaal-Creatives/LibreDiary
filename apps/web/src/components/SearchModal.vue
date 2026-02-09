@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import DOMPurify from 'dompurify';
 import { useAuthStore } from '@/stores';
 import {
   searchService,
@@ -168,6 +169,10 @@ function applyFilters() {
   }
 }
 
+function sanitiseHighlight(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: ['mark'], ALLOWED_ATTR: [] });
+}
+
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -196,7 +201,7 @@ onUnmounted(() => {
         class="search-modal-overlay"
         role="dialog"
         aria-modal="true"
-        aria-label="Search pages"
+        aria-labelledby="search-modal-input"
         @click="handleOverlayClick"
         @keydown="handleKeydown"
       >
@@ -220,6 +225,7 @@ onUnmounted(() => {
               />
             </svg>
             <input
+              id="search-modal-input"
               ref="searchInput"
               v-model="query"
               type="text"
@@ -230,6 +236,7 @@ onUnmounted(() => {
             />
             <button
               v-if="hasQuery"
+              type="button"
               class="search-clear-btn"
               aria-label="Clear search"
               @click="query = ''"
@@ -245,8 +252,10 @@ onUnmounted(() => {
             </button>
             <button
               class="search-filter-toggle"
+              type="button"
               :class="{ active: showFilters }"
               aria-label="Toggle filters"
+              :aria-expanded="showFilters"
               @click="toggleFilters"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -296,7 +305,9 @@ onUnmounted(() => {
             <div v-else-if="showRecent" class="search-recent">
               <div class="search-section-header">
                 <span class="search-section-title">Recent searches</span>
-                <button class="search-section-action" @click="handleClearRecent">Clear</button>
+                <button type="button" class="search-section-action" @click="handleClearRecent">
+                  Clear
+                </button>
               </div>
               <div class="search-results-list">
                 <div
@@ -355,13 +366,13 @@ onUnmounted(() => {
                 >
                   <span class="result-page-icon">{{ result.icon || '📄' }}</span>
                   <div class="result-content">
-                    <!-- eslint-disable-next-line vue/no-v-html -- safe: ts_headline output with <mark> tags -->
-                    <span class="result-title" v-html="result.titleHighlight" />
-                    <!-- eslint-disable-next-line vue/no-v-html -- safe: ts_headline output with <mark> tags -->
+                    <!-- eslint-disable-next-line vue/no-v-html -- sanitised via DOMPurify -->
+                    <span class="result-title" v-html="sanitiseHighlight(result.titleHighlight)" />
+                    <!-- eslint-disable-next-line vue/no-v-html -- sanitised via DOMPurify -->
                     <span
                       v-if="result.contentHighlight"
                       class="result-snippet"
-                      v-html="result.contentHighlight"
+                      v-html="sanitiseHighlight(result.contentHighlight)"
                     />
                   </div>
                   <span class="result-meta">{{ formatRelativeDate(result.updatedAt) }}</span>
@@ -652,14 +663,16 @@ onUnmounted(() => {
   color: var(--color-text-tertiary);
 }
 
+/* Touch target: 36px minimum clickable area with padding (WCAG 2.5.5) */
 .remove-recent-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  min-width: 36px;
+  min-height: 36px;
   flex-shrink: 0;
-  padding: 0;
+  padding: 8px;
+  margin: -8px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;

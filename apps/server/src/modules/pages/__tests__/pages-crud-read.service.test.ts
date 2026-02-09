@@ -5,6 +5,7 @@ import { mockPrisma, mockPrismaPage, resetMocks, mockPage, mockChildPage } from 
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 import * as pagesService from '../pages.service.js';
 

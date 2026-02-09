@@ -173,3 +173,57 @@ export async function deleteOrganization(orgId: string): Promise<void> {
 export async function restoreOrganization(orgId: string): Promise<void> {
   await api.post(`/admin/organizations/${orgId}/restore`);
 }
+
+// Audit Logs
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  userId: string | null;
+  organizationId: string | null;
+  resourceType: string | null;
+  resourceId: string | null;
+  metadata: unknown;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  user: { email: string; name: string | null } | null;
+  organization: { name: string; slug: string } | null;
+}
+
+export interface AuditLogFilters {
+  page?: number;
+  limit?: number;
+  action?: string;
+  userId?: string;
+  organizationId?: string;
+  resourceType?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function getAuditLogs(
+  filters?: AuditLogFilters
+): Promise<{ logs: AuditLogEntry[]; pagination: Pagination }> {
+  const searchParams = new URLSearchParams();
+  if (filters?.page) searchParams.set('page', filters.page.toString());
+  if (filters?.limit) searchParams.set('limit', filters.limit.toString());
+  if (filters?.action) searchParams.set('action', filters.action);
+  if (filters?.userId) searchParams.set('userId', filters.userId);
+  if (filters?.organizationId) searchParams.set('organizationId', filters.organizationId);
+  if (filters?.resourceType) searchParams.set('resourceType', filters.resourceType);
+  if (filters?.startDate) searchParams.set('startDate', filters.startDate);
+  if (filters?.endDate) searchParams.set('endDate', filters.endDate);
+
+  const query = searchParams.toString();
+  const endpoint = query ? `/admin/audit-logs?${query}` : '/admin/audit-logs';
+
+  const response = await api.get<{
+    data: { logs: AuditLogEntry[]; pagination: Pagination };
+  }>(endpoint);
+  return response.data;
+}
+
+export async function getAuditLogActions(): Promise<string[]> {
+  const response = await api.get<{ data: { actions: string[] } }>('/admin/audit-logs/actions');
+  return response.data.actions;
+}

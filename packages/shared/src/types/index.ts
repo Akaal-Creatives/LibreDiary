@@ -282,11 +282,25 @@ export interface FileInfo {
   organizationId: string;
   pageId: string | null;
   name: string;
+  originalName: string;
   mimeType: string;
   size: number;
   storageType: StorageType;
-  url: string;
+  storagePath: string;
+  url: string | null;
+  uploadedById: string;
   createdAt: string;
+}
+
+export interface StorageInfo {
+  type: StorageType;
+  totalFiles: number;
+  totalSize: number;
+}
+
+export interface StorageConnectionResult {
+  success: boolean;
+  message: string;
 }
 
 // ===========================================
@@ -352,39 +366,77 @@ export interface SearchResponse {
 // WEBHOOKS & API
 // ===========================================
 
+export type WebhookEvent =
+  | 'page.created'
+  | 'page.updated'
+  | 'page.deleted'
+  | 'database.created'
+  | 'database.updated'
+  | 'database.deleted'
+  | 'comment.created'
+  | 'comment.resolved'
+  | 'member.added'
+  | 'member.removed'
+  | 'backup.completed';
+
+export type WebhookDeliveryStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+
 export interface Webhook {
   id: string;
   organizationId: string;
   name: string;
   url: string;
+  secret: string; // Masked when returned from API (e.g. "whsec_****abcd")
   events: string[];
   isActive: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  event: string;
+  payload: Record<string, unknown>;
+  status: WebhookDeliveryStatus;
+  statusCode: number | null;
+  responseBody: string | null;
+  attempts: number;
+  nextRetryAt: string | null;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export interface ApiToken {
   id: string;
   userId: string;
   name: string;
+  tokenPrefix: string; // First 8 chars for display
   lastUsedAt: string | null;
   expiresAt: string | null;
   createdAt: string;
+}
+
+export interface ApiTokenCreateResponse extends ApiToken {
+  rawToken: string; // Full token, shown only once
 }
 
 // ===========================================
 // TEMPLATES
 // ===========================================
 
+export type TemplateCategory = 'Meeting' | 'Project' | 'Personal' | 'Team' | 'Other';
+
 export interface Template {
   id: string;
-  organizationId: string | null;
-  userId: string | null;
+  organizationId: string;
   name: string;
   description: string | null;
   icon: string | null;
   category: string | null;
-  isPublic: boolean;
+  isBuiltIn: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -419,3 +471,37 @@ export const DEVELOPER_INFO: DeveloperInfo = {
   name: 'Akaal Creatives',
   website: 'https://www.akaalcreatives.com',
 };
+
+// ===========================================
+// BACKUPS
+// ===========================================
+
+export type BackupType = 'ORGANISATION' | 'SYSTEM';
+export type BackupStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+export type BackupStorageType = 'LOCAL' | 'S3';
+
+export interface Backup {
+  id: string;
+  type: BackupType;
+  status: BackupStatus;
+  organizationId: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  storagePath: string | null;
+  storageType: string | null;
+  isEncrypted: boolean;
+  errorMessage: string | null;
+  triggeredById: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface BackupSettings {
+  enabled: boolean;
+  storageType: BackupStorageType;
+  schedule: string;
+  retentionDays: number;
+  maxSizeMb: number;
+  pgDumpAvailable: boolean;
+}

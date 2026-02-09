@@ -54,6 +54,11 @@ model User {
   notifications      Notification[]
   createdDatabases   Database[]           @relation("DatabaseCreatedBy")
   createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
+  createdTemplates   Template[]           @relation("TemplateCreatedBy")
+  uploadedFiles      File[]               @relation("FileUploadedBy")
+  triggeredBackups   Backup[]             @relation("BackupTriggeredBy")
+  apiTokens          ApiToken[]
+  createdWebhooks    Webhook[]            @relation("WebhookCreatedBy")
 
   @@index([email])
   @@index([deletedAt])
@@ -162,6 +167,10 @@ model Organization {
   pages     Page[]
   invites   Invite[]
   databases Database[]
+  templates Template[]
+  files     File[]
+  backups   Backup[]
+  webhooks  Webhook[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -239,6 +248,7 @@ model Page {
   permissions  PagePermission[]
   comments     Comment[]
   databases    Database[]
+  files        File[]
 
   @@index([organizationId])
   @@index([parentId])
@@ -555,4 +565,293 @@ model DatabaseRow {
   @@index([databaseId])
   @@index([databaseId, position])
   @@index([createdById])
+}
+
+// ============================================
+// FILES & STORAGE
+// ============================================
+
+enum StorageType {
+  LOCAL
+  MINIO
+  S3
+}
+
+model File {
+  id             String      @id @default(cuid())
+  organizationId String
+  pageId         String?
+  name           String
+  originalName   String
+  mimeType       String
+  size           Int
+  storageType    StorageType
+  storagePath    String
+  url            String?
+  uploadedById   String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  page         Page?        @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  uploadedBy   User         @relation("FileUploadedBy", fields: [uploadedById], references: [id])
+
+  @@index([organizationId])
+  @@index([pageId])
+  @@index([uploadedById])
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+
+model Template {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  icon           String?
+  category       String?
+  isBuiltIn      Boolean @default(false)
+
+  // Template content (stored as Yjs state)
+  yjsState Bytes?
+
+  // Audit
+  createdById String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("TemplateCreatedBy", fields: [createdById], references: [id])
+
+  @@index([organizationId])
+  @@index([organizationId, category])
+  @@index([createdById])
+}
+
+// ============================================
+// BACKUPS
+// ============================================
+
+enum BackupType {
+  ORGANISATION
+  SYSTEM
+}
+
+enum BackupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Backup {
+  id             String       @id @default(cuid())
+  type           BackupType
+  status         BackupStatus @default(PENDING)
+
+  // Organisation scope (null for system backups)
+  organizationId String?
+
+  // File metadata
+  fileName       String?
+  fileSize       Int?
+  storagePath    String?
+  storageType    String?    // LOCAL or S3
+  isEncrypted    Boolean    @default(false)
+
+  // Error tracking
+  errorMessage   String?
+
+  // Audit
+  triggeredById  String?
+
+  // Timing
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime   @default(now())
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  triggeredBy    User?         @relation("BackupTriggeredBy", fields: [triggeredById], references: [id])
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// API TOKENS
+// ============================================
+
+model ApiToken {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  tokenHash   String    @unique  // SHA-256 hash of the token
+  tokenPrefix String             // First 8 chars for display
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// ============================================
+// WEBHOOKS
+// ============================================
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Webhook {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  url            String
+  secret         String   // HMAC-SHA256 signing secret
+  events         String[] // Array of event names
+  isActive       Boolean  @default(true)
+  createdById    String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User               @relation("WebhookCreatedBy", fields: [createdById], references: [id])
+  deliveries   WebhookDelivery[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+}
+
+model WebhookDelivery {
+  id           String                @id @default(cuid())
+  webhookId    String
+  event        String
+  payload      Json
+  status       WebhookDeliveryStatus @default(PENDING)
+  statusCode   Int?
+  responseBody String?
+  attempts     Int                   @default(0)
+  nextRetryAt  DateTime?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  // Relations
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([nextRetryAt])
+  @@index([createdAt])
+}
+
+// ============================================
+// AUDIT LOGGING
+// ============================================
+
+enum AuditAction {
+  // Auth
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  AUTH_REGISTER
+  AUTH_PASSWORD_RESET
+  AUTH_EMAIL_VERIFIED
+
+  // Pages
+  PAGE_CREATED
+  PAGE_UPDATED
+  PAGE_TRASHED
+  PAGE_RESTORED
+  PAGE_DELETED_PERMANENTLY
+  PAGE_MADE_PUBLIC
+  PAGE_MADE_PRIVATE
+
+  // Comments
+  COMMENT_CREATED
+  COMMENT_UPDATED
+  COMMENT_DELETED
+  COMMENT_RESOLVED
+  COMMENT_UNRESOLVED
+
+  // Permissions
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+  PERMISSION_UPDATED
+  SHARE_LINK_CREATED
+  SHARE_LINK_DELETED
+
+  // Organisation
+  ORG_CREATED
+  ORG_UPDATED
+  ORG_DELETED
+  ORG_RESTORED
+  MEMBER_INVITED
+  MEMBER_ROLE_CHANGED
+  MEMBER_REMOVED
+  MEMBER_LEFT
+
+  // Admin
+  ADMIN_USER_UPDATED
+  ADMIN_USER_DELETED
+  ADMIN_USER_RESTORED
+  ADMIN_ORG_UPDATED
+  ADMIN_ORG_DELETED
+  ADMIN_ORG_RESTORED
+
+  // Resources
+  DATABASE_CREATED
+  DATABASE_DELETED
+  BACKUP_CREATED
+  BACKUP_DOWNLOADED
+  BACKUP_DELETED
+  API_TOKEN_CREATED
+  API_TOKEN_DELETED
+  WEBHOOK_CREATED
+  WEBHOOK_UPDATED
+  WEBHOOK_DELETED
+  TEMPLATE_CREATED
+  TEMPLATE_DELETED
+}
+
+// No foreign keys — audit logs must persist as immutable records even after entity deletion
+model AuditLog {
+  id             String      @id @default(cuid())
+  action         AuditAction
+  userId         String?     // null for system actions
+  organizationId String?     // null for system-level
+  resourceType   String?     // "page", "user", "organization", etc.
+  resourceId     String?     // ID of affected resource
+  metadata       Json?       // extra context (old/new values)
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime    @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([action, createdAt])
 }

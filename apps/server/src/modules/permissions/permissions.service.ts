@@ -1,7 +1,8 @@
 import { prisma } from '../../lib/prisma.js';
-import type { PagePermission, PermissionLevel } from '@prisma/client';
+import type { PagePermission, PermissionLevel } from '../../generated/prisma/client.js';
 import crypto from 'crypto';
 import { createPageSharedNotification } from '../notifications/notifications.service.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPES
@@ -196,6 +197,14 @@ export async function grantPermission(
     }
   }
 
+  logAudit({
+    action: 'PERMISSION_GRANTED',
+    userId: grantedById,
+    resourceType: 'page',
+    resourceId: pageId,
+    metadata: { targetUserId: userId, level },
+  });
+
   return permission;
 }
 
@@ -213,6 +222,13 @@ export async function revokePermission(permissionId: string): Promise<void> {
 
   await prisma.pagePermission.delete({
     where: { id: permissionId },
+  });
+
+  logAudit({
+    action: 'PERMISSION_REVOKED',
+    resourceType: 'permission',
+    resourceId: permissionId,
+    metadata: { pageId: permission.pageId, userId: permission.userId },
   });
 }
 
@@ -242,11 +258,20 @@ export async function updatePermissionLevel(
     throw new Error('PERMISSION_NOT_FOUND');
   }
 
-  return prisma.pagePermission.update({
+  const updated = await prisma.pagePermission.update({
     where: { id: permissionId },
     data: { level },
     include: { user: true },
   });
+
+  logAudit({
+    action: 'PERMISSION_UPDATED',
+    resourceType: 'permission',
+    resourceId: permissionId,
+    metadata: { pageId: permission.pageId, level },
+  });
+
+  return updated;
 }
 
 // ===========================================
@@ -273,7 +298,7 @@ export async function createShareLink(
 
   const shareToken = generateShareToken();
 
-  return prisma.pagePermission.create({
+  const shareLink = await prisma.pagePermission.create({
     data: {
       pageId,
       userId: null, // No specific user - anyone with the token
@@ -283,6 +308,16 @@ export async function createShareLink(
       grantedById,
     },
   });
+
+  logAudit({
+    action: 'SHARE_LINK_CREATED',
+    userId: grantedById,
+    resourceType: 'page',
+    resourceId: pageId,
+    metadata: { level },
+  });
+
+  return shareLink;
 }
 
 /**
@@ -336,6 +371,12 @@ export async function deleteShareLink(permissionId: string): Promise<void> {
 
   await prisma.pagePermission.delete({
     where: { id: permissionId },
+  });
+
+  logAudit({
+    action: 'SHARE_LINK_DELETED',
+    resourceType: 'page',
+    resourceId: permission.pageId,
   });
 }
 

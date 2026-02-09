@@ -1,8 +1,121 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { setActivePinia, createPinia } from 'pinia';
+
+vi.mock('@/stores/organizations', () => ({
+  useOrganizationsStore: () => ({
+    members: [
+      {
+        id: 'member-1',
+        userId: 'user-1',
+        organizationId: 'org-1',
+        role: 'MEMBER',
+        createdAt: '2024-01-01',
+        user: { id: 'user-1', email: 'alice@example.com', name: 'Alice Smith', avatarUrl: null },
+      },
+      {
+        id: 'member-2',
+        userId: 'user-2',
+        organizationId: 'org-1',
+        role: 'ADMIN',
+        createdAt: '2024-01-01',
+        user: {
+          id: 'user-2',
+          email: 'bob@example.com',
+          name: 'Bob Jones',
+          avatarUrl: 'https://example.com/bob.jpg',
+        },
+      },
+    ],
+  }),
+}));
+
+vi.mock('@/stores/databases', () => ({
+  useDatabasesStore: () => ({
+    properties: [
+      {
+        id: 'rel-prop',
+        databaseId: 'db-1',
+        name: 'Related Projects',
+        type: 'RELATION',
+        position: 2,
+        config: { targetDatabaseId: 'target-db-1' },
+      },
+      {
+        id: 'price-prop',
+        databaseId: 'db-1',
+        name: 'Price',
+        type: 'NUMBER',
+        position: 3,
+        config: null,
+      },
+      {
+        id: 'qty-prop',
+        databaseId: 'db-1',
+        name: 'Quantity',
+        type: 'NUMBER',
+        position: 4,
+        config: null,
+      },
+    ],
+    relatedDatabases: new Map([
+      [
+        'target-db-1',
+        {
+          id: 'target-db-1',
+          name: 'Projects',
+          properties: [
+            {
+              id: 'tp-1',
+              databaseId: 'target-db-1',
+              name: 'Name',
+              type: 'TEXT',
+              position: 0,
+              config: null,
+            },
+            {
+              id: 'tp-2',
+              databaseId: 'target-db-1',
+              name: 'Budget',
+              type: 'NUMBER',
+              position: 1,
+              config: null,
+            },
+          ],
+          rows: [
+            {
+              id: 'trow-1',
+              databaseId: 'target-db-1',
+              position: 0,
+              cells: { 'tp-1': 'Alpha Project', 'tp-2': 100 },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+            {
+              id: 'trow-2',
+              databaseId: 'target-db-1',
+              position: 1,
+              cells: { 'tp-1': 'Beta Project', 'tp-2': 250 },
+              createdById: 'user-1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+            },
+          ],
+          views: [],
+        },
+      ],
+    ]),
+  }),
+}));
+
 import CellRenderer from '../CellRenderer.vue';
 
 describe('CellRenderer', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
   it('renders text value', () => {
     const wrapper = mount(CellRenderer, {
       props: { value: 'Hello world', type: 'TEXT' },
@@ -170,5 +283,280 @@ describe('CellRenderer', () => {
       props: { value: 'not-a-date', type: 'DATE' },
     });
     expect(wrapper.text()).toBe('not-a-date');
+  });
+
+  // Person property type
+  describe('PERSON type', () => {
+    it('renders user name for a valid user ID', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-1', type: 'PERSON' },
+      });
+      expect(wrapper.text()).toContain('Alice Smith');
+    });
+
+    it('renders person badge with initials when no avatar', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-1', type: 'PERSON' },
+      });
+      const badge = wrapper.find('.person-badge');
+      expect(badge.exists()).toBe(true);
+      expect(badge.find('.person-initials').text()).toBe('AS');
+    });
+
+    it('renders person avatar when avatarUrl exists', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'user-2', type: 'PERSON' },
+      });
+      const img = wrapper.find('.person-avatar');
+      expect(img.exists()).toBe(true);
+      expect(img.attributes('src')).toBe('https://example.com/bob.jpg');
+    });
+
+    it('renders empty for null person value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: null, type: 'PERSON' },
+      });
+      expect(wrapper.find('.person-badge').exists()).toBe(false);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders user ID when member not found', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 'unknown-user-id', type: 'PERSON' },
+      });
+      expect(wrapper.text()).toContain('unknown-user-id');
+    });
+  });
+
+  // Relation property type
+  describe('RELATION type', () => {
+    it('renders related row titles as pills', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['trow-1', 'trow-2'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(2);
+      expect(pills[0]!.text()).toBe('Alpha Project');
+      expect(pills[1]!.text()).toBe('Beta Project');
+    });
+
+    it('renders empty for null relation value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      expect(wrapper.find('.relation-pill').exists()).toBe(false);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty for empty array', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: [],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      expect(wrapper.findAll('.relation-pill')).toHaveLength(0);
+    });
+
+    it('renders row IDs when related database not loaded', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['unknown-row-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'nonexistent-db' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(1);
+      expect(pills[0]!.text()).toContain('unknown-row-1');
+    });
+
+    it('renders single relation row title', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: ['trow-1'],
+          type: 'RELATION',
+          config: { targetDatabaseId: 'target-db-1' },
+        },
+      });
+      const pills = wrapper.findAll('.relation-pill');
+      expect(pills).toHaveLength(1);
+      expect(pills[0]!.text()).toBe('Alpha Project');
+    });
+  });
+
+  // Rollup property type
+  describe('ROLLUP type', () => {
+    it('renders COUNT aggregation of related rows', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: {
+            relationPropertyId: 'rel-prop',
+            targetPropertyId: 'tp-2',
+            aggregation: 'COUNT',
+          },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('2');
+    });
+
+    it('renders SUM aggregation of related row values', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('350');
+    });
+
+    it('renders AVG aggregation of related row values', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'AVG' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('175');
+    });
+
+    it('renders MIN aggregation', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'MIN' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('100');
+    });
+
+    it('renders MAX aggregation', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'MAX' },
+          rowCells: { 'rel-prop': ['trow-1', 'trow-2'] },
+        },
+      });
+      expect(wrapper.text()).toBe('250');
+    });
+
+    it('renders empty when no related rows', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: { 'rel-prop': [] },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty when relation property not in rowCells', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'ROLLUP',
+          config: { relationPropertyId: 'rel-prop', targetPropertyId: 'tp-2', aggregation: 'SUM' },
+          rowCells: {},
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+  });
+
+  // Formula property type
+  describe('FORMULA type', () => {
+    it('renders result of simple addition', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") + prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 5 },
+        },
+      });
+      expect(wrapper.text()).toBe('15');
+    });
+
+    it('renders result of multiplication', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") * prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 5 },
+        },
+      });
+      expect(wrapper.text()).toBe('50');
+    });
+
+    it('renders empty when expression is missing', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: {},
+          rowCells: { 'price-prop': 10 },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders empty when referenced property has no value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") + prop("Quantity")' },
+          rowCells: { 'price-prop': 10 },
+        },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders result of subtraction', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") - prop("Quantity")' },
+          rowCells: { 'price-prop': 10, 'qty-prop': 3 },
+        },
+      });
+      expect(wrapper.text()).toBe('7');
+    });
+
+    it('renders result of division', () => {
+      const wrapper = mount(CellRenderer, {
+        props: {
+          value: null,
+          type: 'FORMULA',
+          config: { expression: 'prop("Price") / prop("Quantity")' },
+          rowCells: { 'price-prop': 100, 'qty-prop': 4 },
+        },
+      });
+      expect(wrapper.text()).toBe('25');
+    });
   });
 });

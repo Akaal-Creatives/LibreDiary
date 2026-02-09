@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import type { PropertyType } from '@librediary/shared';
+import { useOrganizationsStore } from '@/stores/organizations';
+import { useDatabasesStore } from '@/stores/databases';
 
 const props = defineProps<{
   value: unknown;
@@ -16,10 +18,83 @@ const emit = defineEmits<{
 const editValue = ref<string>('');
 const inputRef = ref<HTMLInputElement | null>(null);
 const showSelectDropdown = ref(false);
+const showPersonDropdown = ref(false);
+const showRelationDropdown = ref(false);
+
+const organizationsStore = useOrganizationsStore();
+const databasesStore = useDatabasesStore();
+
+const personMembers = computed(() => {
+  return organizationsStore.members.map((m) => ({
+    userId: m.user.id,
+    name: m.user.name ?? m.user.email,
+    email: m.user.email,
+    avatarUrl: m.user.avatarUrl,
+  }));
+});
+
+function getPersonInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0]!.toUpperCase())
+    .slice(0, 2)
+    .join('');
+}
+
+function selectPerson(userId: string) {
+  emit('save', userId);
+}
+
+function clearPerson() {
+  emit('save', null);
+}
+
+const relationRows = computed(() => {
+  const targetDbId = props.config?.targetDatabaseId as string | undefined;
+  if (!targetDbId) return [];
+  const targetDb = databasesStore.relatedDatabases.get(targetDbId);
+  if (!targetDb) return [];
+  const firstPropId = targetDb.properties?.sort((a, b) => a.position - b.position)[0]?.id;
+  if (!firstPropId) return [];
+  return targetDb.rows.map((row) => {
+    const cells = row.cells as Record<string, unknown>;
+    return { id: row.id, title: String(cells[firstPropId] ?? row.id) };
+  });
+});
+
+function isRelationSelected(rowId: string): boolean {
+  return Array.isArray(props.value) && (props.value as string[]).includes(rowId);
+}
+
+function toggleRelation(rowId: string) {
+  const current = Array.isArray(props.value) ? [...(props.value as string[])] : [];
+  const idx = current.indexOf(rowId);
+  if (idx >= 0) {
+    current.splice(idx, 1);
+  } else {
+    current.push(rowId);
+  }
+  emit('save', current);
+}
 
 onMounted(async () => {
   if (props.type === 'CHECKBOX') {
     emit('save', props.value !== true);
+    return;
+  }
+
+  if (props.type === 'PERSON') {
+    showPersonDropdown.value = true;
+    return;
+  }
+
+  if (props.type === 'RELATION') {
+    showRelationDropdown.value = true;
+    const targetDbId = props.config?.targetDatabaseId as string | undefined;
+    if (targetDbId) {
+      databasesStore.fetchRelatedDatabase(targetDbId);
+    }
     return;
   }
 
@@ -107,6 +182,62 @@ function getInputType(): string {
 
 <template>
   <div class="cell-editor">
+    <!-- Person dropdown -->
+    <div v-if="type === 'PERSON' && showPersonDropdown" class="person-dropdown">
+      <button v-if="value" class="person-clear" @mousedown.prevent="clearPerson">
+        Clear selection
+      </button>
+      <button
+        v-for="member in personMembers"
+        :key="member.userId"
+        class="person-option"
+        :class="{ selected: String(value) === member.userId }"
+        @mousedown.prevent="selectPerson(member.userId)"
+      >
+        <img
+          v-if="member.avatarUrl"
+          class="person-option-avatar"
+          :src="member.avatarUrl"
+          :alt="member.name"
+        />
+        <span v-else class="person-option-initials">{{ getPersonInitials(member.name) }}</span>
+        <span class="person-option-name">{{ member.name }}</span>
+      </button>
+      <div v-if="personMembers.length === 0" class="select-empty">No members found</div>
+    </div>
+
+    <!-- Relation dropdown -->
+    <div v-if="type === 'RELATION' && showRelationDropdown" class="relation-dropdown">
+      <button
+        v-for="row in relationRows"
+        :key="row.id"
+        class="relation-option"
+        :class="{ selected: isRelationSelected(row.id) }"
+        @mousedown.prevent="toggleRelation(row.id)"
+      >
+        <span class="option-check">
+          <svg
+            v-if="isRelationSelected(row.id)"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+          >
+            <path
+              d="M2.5 6L5 8.5L9.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        {{ row.title }}
+      </button>
+      <div v-if="relationRows.length === 0" class="select-empty">No rows found</div>
+      <button class="relation-done" @mousedown.prevent="emit('save', value)">Done</button>
+    </div>
+
     <!-- Select / Multi-select dropdown -->
     <div
       v-if="(type === 'SELECT' || type === 'MULTI_SELECT') && showSelectDropdown"
@@ -253,6 +384,158 @@ function getInputType(): string {
 }
 
 .select-done:hover {
+  background: var(--color-hover);
+}
+
+/* Person Dropdown */
+.person-dropdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.person-option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.person-option:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.person-option.selected {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.person-option-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-option-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.person-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-clear {
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.person-clear:hover {
+  background: var(--color-hover);
+}
+
+/* Relation Dropdown */
+.relation-dropdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.relation-option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.relation-option:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.relation-option.selected {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.relation-done {
+  padding: var(--space-2);
+  margin-top: var(--space-1);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.relation-done:hover {
   background: var(--color-hover);
 }
 </style>

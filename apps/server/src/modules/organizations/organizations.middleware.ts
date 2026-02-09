@@ -1,10 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { Organization, OrganizationMember, OrgRole } from '@prisma/client';
+import type { Organization, OrganizationMember, OrgRole } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
 
 // Extend FastifyRequest type for organization context
 declare module 'fastify' {
   interface FastifyRequest {
+    organizationId?: string;
     organization?: Organization;
     membership?: OrganizationMember;
   }
@@ -95,6 +96,7 @@ export async function requireOrgAccess(
   }
 
   // Attach to request
+  request.organizationId = orgId;
   request.organization = organization;
   request.membership = membership;
 }
@@ -118,7 +120,7 @@ export function requireOrgRole(
       });
     }
 
-    const userRoleLevel = ROLE_HIERARCHY[request.membership.role];
+    const userRoleLevel = ROLE_HIERARCHY[request.membership.role as OrgRole];
     const requiredRoleLevel = ROLE_HIERARCHY[minRole];
 
     if (userRoleLevel < requiredRoleLevel) {

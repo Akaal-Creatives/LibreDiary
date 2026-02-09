@@ -5,6 +5,7 @@ import { requireAuth, setSessionCookie, getClientIp } from './auth.middleware.js
 import { EXPIRATION } from '../../utils/tokens.js';
 import { env } from '../../config/env.js';
 import type { OAuthProvider } from './oauth.service.js';
+import { getAuthUser } from '../../utils/errors.js';
 
 // Supported providers
 const SUPPORTED_PROVIDERS = ['github', 'google'] as const;
@@ -188,7 +189,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
     '/accounts',
     { preHandler: [requireAuth] },
     async (request: FastifyRequest, _reply: FastifyReply) => {
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
       const accounts = await oauthService.getUserLinkedAccounts(userId);
 
       return {
@@ -281,7 +282,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       const provider = params.data.provider as OAuthProvider;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
 
       try {
         await oauthService.unlinkOAuthAccount({

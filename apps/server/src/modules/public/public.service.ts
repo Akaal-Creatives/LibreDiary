@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
-import type { PermissionLevel } from '@prisma/client';
+import type { PermissionLevel } from '../../generated/prisma/client.js';
 import crypto from 'crypto';
 
 // ===========================================

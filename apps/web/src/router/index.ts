@@ -75,6 +75,11 @@ const routes: RouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'templates',
+        name: 'templates',
+        component: () => import('@/pages/app/TemplatesPage.vue'),
+      },
+      {
         path: 'trash',
         name: 'trash',
         component: () => import('@/pages/app/TrashPage.vue'),
@@ -96,6 +101,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/app/settings/InvitesPage.vue'),
         meta: { minRole: 'ADMIN' },
       },
+      {
+        path: 'settings/backups',
+        name: 'organization-backups',
+        component: () => import('@/pages/app/settings/BackupsPage.vue'),
+        meta: { minRole: 'ADMIN' },
+      },
+      {
+        path: 'settings/webhooks',
+        name: 'organization-webhooks',
+        component: () => import('@/pages/app/settings/WebhooksPage.vue'),
+        meta: { minRole: 'ADMIN' },
+      },
       // User Settings
       {
         path: 'settings/sessions',
@@ -106,6 +123,11 @@ const routes: RouteRecordRaw[] = [
         path: 'settings/notifications',
         name: 'notification-settings',
         component: () => import('@/pages/app/settings/NotificationSettingsPage.vue'),
+      },
+      {
+        path: 'settings/api-tokens',
+        name: 'api-tokens',
+        component: () => import('@/pages/app/settings/ApiTokensPage.vue'),
       },
       // Create Organization
       {
@@ -157,6 +179,16 @@ const routes: RouteRecordRaw[] = [
         path: 'settings',
         name: 'admin-settings',
         component: () => import('@/pages/admin/AdminSettingsPage.vue'),
+      },
+      {
+        path: 'backups',
+        name: 'admin-backups',
+        component: () => import('@/pages/admin/AdminBackupsPage.vue'),
+      },
+      {
+        path: 'audit-logs',
+        name: 'admin-audit-logs',
+        component: () => import('@/pages/admin/AdminAuditLogsPage.vue'),
       },
     ],
   },

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue';
+import DOMPurify from 'dompurify';
 import { commentsService, type Comment } from '@/services';
 import { useOrganizationsStore, useAuthStore } from '@/stores';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
@@ -280,8 +281,9 @@ function getInitials(name: string | null): string {
 }
 
 function formatContentWithMentions(content: string): string {
-  // Replace @mentions with styled spans
-  return content.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+  // Sanitise first, then replace @mentions with styled spans
+  const clean = DOMPurify.sanitize(content, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  return clean.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
 }
 
 function close() {
@@ -318,7 +320,7 @@ function close() {
                 </p>
               </div>
             </div>
-            <button class="close-btn" aria-label="Close" @click="close">
+            <button type="button" class="close-btn" aria-label="Close" @click="close">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5"
@@ -344,6 +346,7 @@ function close() {
               <div class="input-actions">
                 <span class="input-hint">Use @ to mention · Cmd+Enter to send</span>
                 <button
+                  type="button"
                   class="submit-btn"
                   :disabled="!newCommentContent.trim() || submitting"
                   @click="submitComment"
@@ -389,7 +392,7 @@ function close() {
             </div>
 
             <!-- Error -->
-            <div v-else-if="error" class="panel-error">
+            <div v-else-if="error" class="panel-error" role="alert" aria-live="polite">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
                 <path
@@ -401,7 +404,7 @@ function close() {
                 <circle cx="12" cy="16" r="1" fill="currentColor" />
               </svg>
               <p>{{ error }}</p>
-              <button class="retry-btn" @click="loadComments">Try Again</button>
+              <button type="button" class="retry-btn" @click="loadComments">Try Again</button>
             </div>
 
             <!-- Empty -->
@@ -469,6 +472,7 @@ function close() {
                       <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
                       <button
                         v-if="!comment.parentId"
+                        type="button"
                         class="resolve-btn"
                         :class="{ resolved: comment.isResolved }"
                         :title="comment.isResolved ? 'Reopen thread' : 'Resolve thread'"
@@ -498,10 +502,16 @@ function close() {
                         :disabled="submitting"
                       />
                       <div class="edit-actions">
-                        <button class="cancel-btn" :disabled="submitting" @click="cancelEdit">
+                        <button
+                          type="button"
+                          class="cancel-btn"
+                          :disabled="submitting"
+                          @click="cancelEdit"
+                        >
                           Cancel
                         </button>
                         <button
+                          type="button"
                           class="save-btn"
                           :disabled="!editContent.trim() || submitting"
                           @click="saveEdit(comment.id)"
@@ -521,10 +531,18 @@ function close() {
 
                     <!-- Actions -->
                     <div v-if="editingComment !== comment.id" class="comment-actions">
-                      <button class="action-btn" @click="startReply(comment.id)">Reply</button>
+                      <button type="button" class="action-btn" @click="startReply(comment.id)">
+                        Reply
+                      </button>
                       <template v-if="comment.createdById === currentUserId">
-                        <button class="action-btn" @click="startEdit(comment)">Edit</button>
-                        <button class="action-btn delete" @click="confirmDelete(comment.id)">
+                        <button type="button" class="action-btn" @click="startEdit(comment)">
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="action-btn delete"
+                          @click="confirmDelete(comment.id)"
+                        >
                           Delete
                         </button>
                       </template>
@@ -567,10 +585,16 @@ function close() {
                           :disabled="submitting"
                         />
                         <div class="edit-actions">
-                          <button class="cancel-btn" :disabled="submitting" @click="cancelEdit">
+                          <button
+                            type="button"
+                            class="cancel-btn"
+                            :disabled="submitting"
+                            @click="cancelEdit"
+                          >
                             Cancel
                           </button>
                           <button
+                            type="button"
                             class="save-btn"
                             :disabled="!editContent.trim() || submitting"
                             @click="saveEdit(reply.id)"
@@ -591,8 +615,14 @@ function close() {
                         v-if="editingComment !== reply.id && reply.createdById === currentUserId"
                         class="comment-actions"
                       >
-                        <button class="action-btn" @click="startEdit(reply)">Edit</button>
-                        <button class="action-btn delete" @click="confirmDelete(reply.id)">
+                        <button type="button" class="action-btn" @click="startEdit(reply)">
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="action-btn delete"
+                          @click="confirmDelete(reply.id)"
+                        >
                           Delete
                         </button>
                       </div>
@@ -611,10 +641,16 @@ function close() {
                     @submit="submitReply(comment.id)"
                   />
                   <div class="reply-actions">
-                    <button class="cancel-btn" :disabled="submitting" @click="cancelReply">
+                    <button
+                      type="button"
+                      class="cancel-btn"
+                      :disabled="submitting"
+                      @click="cancelReply"
+                    >
                       Cancel
                     </button>
                     <button
+                      type="button"
                       class="submit-reply-btn"
                       :disabled="!replyContent.trim() || submitting"
                       @click="submitReply(comment.id)"

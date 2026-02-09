@@ -50,7 +50,12 @@ const syncStore = useSyncStore();
         </div>
 
         <!-- Error: Gentle Alert -->
-        <div v-else-if="syncStore.status === 'error'" class="sync-error">
+        <div
+          v-else-if="syncStore.status === 'error'"
+          class="sync-error"
+          role="alert"
+          aria-live="polite"
+        >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="error-icon">
             <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
             <path d="M7 4V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -66,7 +71,7 @@ const syncStore = useSyncStore();
     <div class="header-right">
       <!-- Page Actions -->
       <div class="header-actions">
-        <button class="action-btn" title="View history">
+        <button class="action-btn" type="button" title="View history" aria-label="View history">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="6.75" stroke="currentColor" stroke-width="1.5" />
             <path
@@ -78,7 +83,7 @@ const syncStore = useSyncStore();
             />
           </svg>
         </button>
-        <button class="action-btn" title="Comments">
+        <button class="action-btn" type="button" title="Comments" aria-label="Comments">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M15.75 8.625C15.7526 9.59369 15.5139 10.5479 15.0562 11.3973C14.5985 12.2467 13.9367 12.9633 13.1306 13.4833C12.3245 14.0033 11.4001 14.3097 10.4428 14.3732C9.48557 14.4367 8.52754 14.2552 7.6575 13.845L3 15L4.155 10.3425C3.74481 9.47245 3.56334 8.51442 3.62683 7.55719C3.69032 6.59996 3.99675 5.67551 4.51674 4.86941C5.03673 4.06331 5.75327 3.40154 6.60266 2.94383C7.45204 2.48611 8.40631 2.24742 9.375 2.25C10.6304 2.25 11.8568 2.62378 12.893 3.32101C13.9293 4.01825 14.7274 5.0065 15.1861 6.16031C15.6448 7.31411 15.7432 8.58012 15.4686 9.79124"
@@ -89,7 +94,7 @@ const syncStore = useSyncStore();
             />
           </svg>
         </button>
-        <button class="action-btn" title="Favorite">
+        <button class="action-btn" type="button" title="Favorite" aria-label="Favourite">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 2.25L11.0962 6.50074L15.75 7.18125L12.375 10.4693L13.1925 15.1013L9 12.8925L4.8075 15.1013L5.625 10.4693L2.25 7.18125L6.90375 6.50074L9 2.25Z"
@@ -105,7 +110,7 @@ const syncStore = useSyncStore();
       <div class="header-divider"></div>
 
       <!-- Share Button -->
-      <button class="share-btn">
+      <button class="share-btn" type="button">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M12 5.5C13.1046 5.5 14 4.60457 14 3.5C14 2.39543 13.1046 1.5 12 1.5C10.8954 1.5 10 2.39543 10 3.5C10 4.60457 10.8954 5.5 12 5.5Z"
@@ -147,7 +152,7 @@ const syncStore = useSyncStore();
       </button>
 
       <!-- More Options -->
-      <button class="more-btn" title="More options">
+      <button class="more-btn" type="button" title="More options" aria-label="More options">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="1.5" fill="currentColor" />
           <circle cx="9" cy="4.5" r="1.5" fill="currentColor" />
@@ -212,13 +217,14 @@ const syncStore = useSyncStore();
   align-items: center;
 }
 
+/* Touch target: 36px visible + 4px padding each side = 44px effective area (WCAG 2.5.5) */
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;
@@ -259,13 +265,14 @@ const syncStore = useSyncStore();
   background: var(--color-accent-hover);
 }
 
+/* Touch target: 36px visible + 4px padding each side = 44px effective area (WCAG 2.5.5) */
 .more-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;

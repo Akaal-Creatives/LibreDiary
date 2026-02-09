@@ -2209,4 +2209,106 @@ describe('useDatabasesStore', () => {
       expect(store.activeViewId).toBeNull();
     });
   });
+
+  // ===========================================
+  // DATABASE TEMPLATES
+  // ===========================================
+
+  describe('createDatabaseFromTemplate', () => {
+    const baseDatabaseResponse = {
+      database: {
+        id: 'db-new',
+        organizationId: 'org-1',
+        pageId: null,
+        name: 'Task Tracker',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+        properties: [
+          {
+            id: 'default-title',
+            databaseId: 'db-new',
+            name: 'Title',
+            type: 'TEXT',
+            position: 0,
+            config: null,
+          },
+        ],
+        views: [
+          {
+            id: 'default-view',
+            databaseId: 'db-new',
+            name: 'Table view',
+            type: 'TABLE',
+            position: 0,
+            config: null,
+          },
+        ],
+        rows: [],
+      },
+    };
+
+    it('should create database and add template properties', async () => {
+      mockedService.createDatabase.mockResolvedValue(baseDatabaseResponse);
+      let propPosition = 1;
+      mockedService.createProperty.mockImplementation(async (_orgId, _dbId, input) => ({
+        property: {
+          id: `prop-${propPosition}`,
+          databaseId: 'db-new',
+          name: input.name,
+          type: input.type,
+          position: propPosition++,
+          config: input.config ?? null,
+        },
+      }));
+
+      const store = useDatabasesStore();
+      await store.createDatabaseFromTemplate('task-tracker');
+
+      expect(mockedService.createDatabase).toHaveBeenCalledWith('org-1', { name: 'Task Tracker' });
+      // Should have created additional properties beyond the default Title
+      expect(mockedService.createProperty).toHaveBeenCalled();
+      const calls = mockedService.createProperty.mock.calls;
+      // Check that a Status SELECT property was created
+      const statusCall = calls.find((c) => c[2].name === 'Status');
+      expect(statusCall).toBeDefined();
+      expect(statusCall![2].type).toBe('SELECT');
+    });
+
+    it('should create database without extra properties for blank template', async () => {
+      mockedService.createDatabase.mockResolvedValue({
+        database: {
+          ...baseDatabaseResponse.database,
+          name: 'Untitled Database',
+        },
+      });
+
+      const store = useDatabasesStore();
+      await store.createDatabaseFromTemplate('blank');
+
+      expect(mockedService.createDatabase).toHaveBeenCalledWith('org-1', {
+        name: 'Untitled Database',
+      });
+      expect(mockedService.createProperty).not.toHaveBeenCalled();
+    });
+
+    it('should set current database to the newly created one', async () => {
+      mockedService.createDatabase.mockResolvedValue(baseDatabaseResponse);
+      mockedService.createProperty.mockResolvedValue({
+        property: {
+          id: 'p',
+          databaseId: 'db-new',
+          name: 'Status',
+          type: 'SELECT',
+          position: 1,
+          config: null,
+        },
+      });
+
+      const store = useDatabasesStore();
+      const result = await store.createDatabaseFromTemplate('task-tracker');
+
+      expect(result.id).toBe('db-new');
+      expect(store.currentDatabaseId).toBe('db-new');
+    });
+  });
 });

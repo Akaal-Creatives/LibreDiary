@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as pagesService from './pages.service.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -50,69 +51,51 @@ interface PageParams extends OrgParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    PAGE_NOT_FOUND: {
-      status: 404,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    },
-    PAGE_IN_TRASH: {
-      status: 400,
-      code: 'PAGE_IN_TRASH',
-      message: 'Cannot perform this operation on a trashed page',
-    },
-    PAGE_NOT_IN_TRASH: {
-      status: 400,
-      code: 'PAGE_NOT_IN_TRASH',
-      message: 'Page is not in trash',
-    },
-    PAGE_ALREADY_IN_TRASH: {
-      status: 400,
-      code: 'PAGE_ALREADY_IN_TRASH',
-      message: 'Page is already in trash',
-    },
-    INVALID_PARENT: {
-      status: 400,
-      code: 'INVALID_PARENT',
-      message: 'Invalid parent page (cannot set page as its own parent or descendant)',
-    },
-    SLUG_ALREADY_EXISTS: {
-      status: 400,
-      code: 'SLUG_ALREADY_EXISTS',
-      message: 'This public slug is already in use',
-    },
-    FAVORITE_EXISTS: {
-      status: 400,
-      code: 'FAVORITE_EXISTS',
-      message: 'Page is already in favorites',
-    },
-    FAVORITE_NOT_FOUND: {
-      status: 404,
-      code: 'FAVORITE_NOT_FOUND',
-      message: 'Favorite not found',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  PAGE_NOT_FOUND: {
+    status: 404,
+    code: 'PAGE_NOT_FOUND',
+    message: 'Page not found',
+  },
+  PAGE_IN_TRASH: {
+    status: 400,
+    code: 'PAGE_IN_TRASH',
+    message: 'Cannot perform this operation on a trashed page',
+  },
+  PAGE_NOT_IN_TRASH: {
+    status: 400,
+    code: 'PAGE_NOT_IN_TRASH',
+    message: 'Page is not in trash',
+  },
+  PAGE_ALREADY_IN_TRASH: {
+    status: 400,
+    code: 'PAGE_ALREADY_IN_TRASH',
+    message: 'Page is already in trash',
+  },
+  INVALID_PARENT: {
+    status: 400,
+    code: 'INVALID_PARENT',
+    message: 'Invalid parent page (cannot set page as its own parent or descendant)',
+  },
+  SLUG_ALREADY_EXISTS: {
+    status: 400,
+    code: 'SLUG_ALREADY_EXISTS',
+    message: 'This public slug is already in use',
+  },
+  FAVORITE_EXISTS: {
+    status: 400,
+    code: 'FAVORITE_EXISTS',
+    message: 'Page is already in favorites',
+  },
+  FAVORITE_NOT_FOUND: {
+    status: 404,
+    code: 'FAVORITE_NOT_FOUND',
+    message: 'Favorite not found',
+  },
+};
 
 // ===========================================
 // PAGE ROUTES (registered under /organizations/:orgId/pages)
@@ -147,7 +130,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
-        const page = await pagesService.createPage(request.params.orgId, request.user!.id, {
+        const page = await pagesService.createPage(request.params.orgId, getAuthUser(request).id, {
           title: body.data.title,
           parentId: body.data.parentId ?? null,
           icon: body.data.icon ?? null,
@@ -158,7 +141,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -228,7 +211,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
         const page = await pagesService.updatePage(
           request.params.orgId,
           request.params.pageId,
-          request.user!.id,
+          getAuthUser(request).id,
           {
             title: body.data.title,
             icon: body.data.icon,
@@ -244,7 +227,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -264,7 +247,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Page moved to trash' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -303,7 +286,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -326,7 +309,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { ancestors },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -342,7 +325,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
         const page = await pagesService.duplicatePage(
           request.params.orgId,
           request.params.pageId,
-          request.user!.id
+          getAuthUser(request).id
         );
 
         return reply.status(201).send({
@@ -350,7 +333,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -368,7 +351,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: PageParams }>, reply: FastifyReply) => {
       try {
         const favorite = await pagesService.addFavorite(
-          request.user!.id,
+          getAuthUser(request).id,
           request.params.pageId,
           request.params.orgId
         );
@@ -378,7 +361,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { favorite },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -391,14 +374,14 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
     '/:pageId/favorite',
     async (request: FastifyRequest<{ Params: PageParams }>, reply: FastifyReply) => {
       try {
-        await pagesService.removeFavorite(request.user!.id, request.params.pageId);
+        await pagesService.removeFavorite(getAuthUser(request).id, request.params.pageId);
 
         return {
           success: true,
           data: { message: 'Removed from favorites' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -422,7 +405,7 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -468,7 +451,7 @@ export async function trashRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Page permanently deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -490,7 +473,10 @@ export async function favoritesRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: OrgParams }>(
     '/',
     async (request: FastifyRequest<{ Params: OrgParams }>, _reply: FastifyReply) => {
-      const favorites = await pagesService.getUserFavorites(request.params.orgId, request.user!.id);
+      const favorites = await pagesService.getUserFavorites(
+        request.params.orgId,
+        getAuthUser(request).id
+      );
 
       return {
         success: true,
@@ -519,14 +505,14 @@ export async function favoritesRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
-        await pagesService.reorderFavorites(request.user!.id, body.data.orderedIds);
+        await pagesService.reorderFavorites(getAuthUser(request).id, body.data.orderedIds);
 
         return {
           success: true,
           data: { message: 'Favorites reordered' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

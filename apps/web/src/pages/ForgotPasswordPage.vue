@@ -42,7 +42,7 @@ function goToLogin() {
 <template>
   <div class="forgot-page">
     <!-- Theme Toggle -->
-    <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+    <button type="button" class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
         <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
         <path
@@ -78,7 +78,7 @@ function goToLogin() {
 
     <div class="forgot-container">
       <!-- Brand -->
-      <button class="brand" @click="goHome">
+      <button type="button" class="brand" @click="goHome">
         <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
           <rect
             x="4"
@@ -108,7 +108,7 @@ function goToLogin() {
       <!-- Forgot Password Card -->
       <div class="forgot-card">
         <!-- Success State -->
-        <div v-if="success" class="success-state">
+        <div v-if="success" class="success-state" role="alert" aria-live="polite">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
             <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
             <path
@@ -124,7 +124,7 @@ function goToLogin() {
             We've sent a password reset link to <strong>{{ email }}</strong>
           </p>
           <p class="muted">If you don't see it, check your spam folder.</p>
-          <button class="secondary-btn" @click="goToLogin">Back to Login</button>
+          <button type="button" class="secondary-btn" @click="goToLogin">Back to Login</button>
         </div>
 
         <!-- Form State -->
@@ -135,7 +135,7 @@ function goToLogin() {
           </div>
 
           <form class="forgot-form" @submit.prevent="handleSubmit">
-            <div v-if="error" class="error-message">
+            <div v-if="error" class="error-message" role="alert" aria-live="polite">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
                 <path
@@ -167,7 +167,7 @@ function goToLogin() {
           </form>
 
           <div class="forgot-footer">
-            <button class="link-btn" @click="goToLogin">
+            <button type="button" class="link-btn" @click="goToLogin">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
                   d="M10 12L6 8L10 4"
@@ -184,7 +184,7 @@ function goToLogin() {
       </div>
 
       <!-- Back link -->
-      <button class="back-link" @click="goHome">
+      <button type="button" class="back-link" @click="goHome">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M10 12L6 8L10 4"

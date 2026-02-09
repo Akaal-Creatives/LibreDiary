@@ -109,6 +109,7 @@ vi.mock('../../notifications/notifications.service.js', () => ({
   createCommentReplyNotification: mockCreateCommentReplyNotification,
   createCommentResolvedNotification: mockCreateCommentResolvedNotification,
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 // Import service AFTER mocking
 import * as commentsService from '../comments.service.js';

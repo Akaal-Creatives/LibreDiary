@@ -257,6 +257,7 @@ function onDraftBlur() {
                   :value="getCellValue(row, prop.id)"
                   :type="prop.type"
                   :config="(prop.config as Record<string, unknown>) ?? null"
+                  :row-cells="row.cells as Record<string, unknown>"
                 />
               </div>
             </div>

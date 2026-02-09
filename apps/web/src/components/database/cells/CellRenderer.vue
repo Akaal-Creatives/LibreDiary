@@ -1,11 +1,123 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { PropertyType } from '@librediary/shared';
+import { useOrganizationsStore } from '@/stores/organizations';
+import { useDatabasesStore } from '@/stores/databases';
 
 const props = defineProps<{
   value: unknown;
   type: PropertyType;
   config?: Record<string, unknown> | null;
+  rowCells?: Record<string, unknown> | null;
 }>();
+
+const organizationsStore = useOrganizationsStore();
+const databasesStore = useDatabasesStore();
+
+const personUser = computed(() => {
+  if (props.type !== 'PERSON' || !props.value) return null;
+  const userId = String(props.value);
+  const member = organizationsStore.members.find((m) => m.user.id === userId);
+  return member?.user ?? null;
+});
+
+const personInitials = computed(() => {
+  const user = personUser.value;
+  if (!user?.name) return '?';
+  return user.name
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0]!.toUpperCase())
+    .slice(0, 2)
+    .join('');
+});
+
+const relationItems = computed(() => {
+  if (props.type !== 'RELATION' || !Array.isArray(props.value) || props.value.length === 0)
+    return [];
+  const targetDbId = props.config?.targetDatabaseId as string | undefined;
+  const targetDb = targetDbId ? databasesStore.relatedDatabases.get(targetDbId) : undefined;
+  const firstPropId = targetDb?.properties?.sort((a, b) => a.position - b.position)[0]?.id;
+
+  return (props.value as string[]).map((rowId) => {
+    if (!targetDb || !firstPropId) return { id: rowId, title: rowId };
+    const row = targetDb.rows.find((r) => r.id === rowId);
+    if (!row) return { id: rowId, title: rowId };
+    const cells = row.cells as Record<string, unknown>;
+    return { id: rowId, title: String(cells[firstPropId] ?? rowId) };
+  });
+});
+
+const rollupValue = computed<string>(() => {
+  if (props.type !== 'ROLLUP' || !props.rowCells || !props.config) return '';
+  const relationPropertyId = props.config.relationPropertyId as string;
+  const targetPropertyId = props.config.targetPropertyId as string;
+  const aggregation = props.config.aggregation as string;
+  if (!relationPropertyId || !targetPropertyId || !aggregation) return '';
+
+  const relatedRowIds = props.rowCells[relationPropertyId];
+  if (!Array.isArray(relatedRowIds) || relatedRowIds.length === 0) return '';
+
+  // Find the relation property to get the target database ID
+  const relationProp = databasesStore.properties.find((p) => p.id === relationPropertyId);
+  const targetDbId = (relationProp?.config as Record<string, unknown> | null)?.targetDatabaseId as
+    | string
+    | undefined;
+  if (!targetDbId) return '';
+
+  const targetDb = databasesStore.relatedDatabases.get(targetDbId);
+  if (!targetDb) return '';
+
+  const values = (relatedRowIds as string[])
+    .map((rowId) => {
+      const row = targetDb.rows.find((r) => r.id === rowId);
+      if (!row) return null;
+      return Number((row.cells as Record<string, unknown>)[targetPropertyId]);
+    })
+    .filter((v): v is number => v !== null && !isNaN(v));
+
+  if (aggregation === 'COUNT') return String(relatedRowIds.length);
+  if (values.length === 0) return '';
+
+  switch (aggregation) {
+    case 'SUM':
+      return String(values.reduce((a, b) => a + b, 0));
+    case 'AVG':
+      return String(values.reduce((a, b) => a + b, 0) / values.length);
+    case 'MIN':
+      return String(Math.min(...values));
+    case 'MAX':
+      return String(Math.max(...values));
+    default:
+      return '';
+  }
+});
+
+const formulaValue = computed<string>(() => {
+  if (props.type !== 'FORMULA' || !props.rowCells || !props.config) return '';
+  const expression = props.config.expression as string;
+  if (!expression) return '';
+
+  // Replace prop("Name") references with actual values
+  const resolved = expression.replace(/prop\("([^"]+)"\)/g, (_match, propName: string) => {
+    const prop = databasesStore.properties.find((p) => p.name === propName);
+    if (!prop) return 'null';
+    const val = props.rowCells![prop.id];
+    if (val == null) return 'null';
+    return String(val);
+  });
+
+  // Check for any unresolved null values
+  if (resolved.includes('null')) return '';
+
+  try {
+    // Safe evaluation of simple math expressions
+    const result = Function(`"use strict"; return (${resolved});`)();
+    return String(result);
+  } catch {
+    return '';
+  }
+});
 
 function formatValue(): string {
   if (props.value == null) return '';
@@ -16,6 +128,11 @@ function formatValue(): string {
     case 'EMAIL':
     case 'PHONE':
       return String(props.value);
+
+    case 'PERSON': {
+      if (personUser.value) return personUser.value.name ?? String(props.value);
+      return String(props.value);
+    }
 
     case 'NUMBER': {
       const num = Number(props.value);
@@ -120,6 +237,37 @@ function getSelectColour(val: string): string {
       </a>
     </template>
 
+    <!-- Person -->
+    <template v-else-if="type === 'PERSON' && value">
+      <span class="person-badge">
+        <img
+          v-if="personUser?.avatarUrl"
+          class="person-avatar"
+          :src="personUser.avatarUrl"
+          :alt="personUser.name ?? ''"
+        />
+        <span v-else class="person-initials">{{ personInitials }}</span>
+        <span class="person-name">{{ personUser?.name ?? String(value) }}</span>
+      </span>
+    </template>
+
+    <!-- Relation pills -->
+    <template v-else-if="type === 'RELATION' && relationItems.length > 0">
+      <span v-for="item in relationItems" :key="item.id" class="relation-pill">
+        {{ item.title }}
+      </span>
+    </template>
+
+    <!-- Rollup -->
+    <template v-else-if="type === 'ROLLUP' && rollupValue">
+      {{ rollupValue }}
+    </template>
+
+    <!-- Formula -->
+    <template v-else-if="type === 'FORMULA' && formulaValue">
+      {{ formulaValue }}
+    </template>
+
     <!-- Default text display -->
     <template v-else>
       {{ formatValue() }}
@@ -169,6 +317,55 @@ function getSelectColour(val: string): string {
   font-weight: 500;
   color: var(--tag-colour, var(--color-accent));
   background: color-mix(in srgb, var(--tag-colour, var(--color-accent)) 12%, transparent);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Person */
+.person-badge {
+  display: inline-flex;
+  gap: var(--space-1-5);
+  align-items: center;
+}
+
+.person-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.person-name {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Relation */
+.relation-pill {
+  display: inline-flex;
+  padding: 1px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   border-radius: var(--radius-sm);
   white-space: nowrap;
 }

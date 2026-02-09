@@ -22,7 +22,7 @@ const envSchema = z.object({
   RATE_LIMIT_ENABLED: z
     .string()
     .transform((v) => v === 'true')
-    .default('true'),
+    .default(true),
   RATE_LIMIT_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().default(60), // seconds
 
@@ -32,7 +32,7 @@ const envSchema = z.object({
   SMTP_SECURE: z
     .string()
     .transform((v) => v === 'true')
-    .default('false'),
+    .default(false),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().email().default('noreply@librediary.local'),
@@ -44,6 +44,44 @@ const envSchema = z.object({
   // OAuth - Google
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  // Storage
+  STORAGE_TYPE: z.enum(['LOCAL', 'MINIO', 'S3']).default('LOCAL'),
+  STORAGE_LOCAL_PATH: z.string().default('./uploads'),
+  STORAGE_MAX_FILE_SIZE: z.coerce.number().default(10485760), // 10MB
+
+  // MinIO
+  MINIO_ENDPOINT: z.string().optional(),
+  MINIO_PORT: z.coerce.number().optional(),
+  MINIO_ACCESS_KEY: z.string().optional(),
+  MINIO_SECRET_KEY: z.string().optional(),
+  MINIO_BUCKET: z.string().optional(),
+  MINIO_USE_SSL: z
+    .string()
+    .transform((v) => v === 'true')
+    .default(false),
+
+  // S3
+  S3_REGION: z.string().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
+
+  // Backup
+  BACKUP_ENABLED: z
+    .string()
+    .transform((v) => v === 'true')
+    .default(false),
+  BACKUP_STORAGE_TYPE: z.enum(['LOCAL', 'S3']).default('LOCAL'),
+  BACKUP_LOCAL_PATH: z.string().default('./backups'),
+  BACKUP_S3_ENDPOINT: z.string().optional(),
+  BACKUP_S3_REGION: z.string().optional(),
+  BACKUP_S3_BUCKET: z.string().optional(),
+  BACKUP_S3_ACCESS_KEY: z.string().optional(),
+  BACKUP_S3_SECRET_KEY: z.string().optional(),
+  BACKUP_SCHEDULE: z.string().default('0 2 * * *'),
+  BACKUP_RETENTION_DAYS: z.coerce.number().default(30),
+  BACKUP_MAX_SIZE_MB: z.coerce.number().default(500),
 });
 
 export type Env = z.infer<typeof envSchema>;

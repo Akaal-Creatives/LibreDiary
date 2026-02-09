@@ -1,7 +1,8 @@
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import * as mentionsService from './mentions.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -12,34 +13,16 @@ interface SearchUsersQuery {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    COMMENT_NOT_FOUND: {
-      status: 404,
-      code: 'COMMENT_NOT_FOUND',
-      message: 'Comment not found',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  COMMENT_NOT_FOUND: {
+    status: 404,
+    code: 'COMMENT_NOT_FOUND',
+    message: 'Comment not found',
+  },
+};
 
 // ===========================================
 // MENTIONS ROUTES
@@ -69,7 +52,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
     },
     async (request, reply) => {
       const { q } = request.query;
-      const userId = request.user!.id;
+      const userId = getAuthUser(request).id;
       const organizationId = request.organizationId;
 
       try {
@@ -84,7 +67,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
           data: { users },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -94,7 +77,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
    * Get all mentions for the current user in the organization
    */
   fastify.get('/', async (request, reply) => {
-    const userId = request.user!.id;
+    const userId = getAuthUser(request).id;
     const organizationId = request.organizationId;
 
     try {
@@ -105,7 +88,7 @@ export default async function mentionsRoutes(fastify: FastifyInstance): Promise<
         data: { mentions },
       };
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 }

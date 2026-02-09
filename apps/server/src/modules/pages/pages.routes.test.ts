@@ -44,6 +44,7 @@ const {
     favorite: mockPrismaFavorite,
     organization: mockPrismaOrganization,
     organizationMember: mockPrismaOrganizationMember,
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
     $transaction: vi.fn(),
   };
 
