@@ -55,6 +55,14 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
+  app.get('/health', async (_request, reply) => {
+    const health = await adminService.getSystemHealth();
+    return reply.send({
+      success: true,
+      data: { health },
+    });
+  });
+
   // ============================================
   // USER MANAGEMENT
   // ============================================
