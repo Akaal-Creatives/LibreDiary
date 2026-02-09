@@ -872,6 +872,8 @@ function statusClass(status: string): string {
 .modal-actions .btn-primary {
   min-width: 100px;
   padding: var(--space-2) var(--space-5);
+  color: var(--color-text-inverse);
+  background: var(--admin-accent);
 }
 
 /* Empty State */
