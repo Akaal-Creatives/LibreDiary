@@ -28,6 +28,7 @@ import {
   getSystemSettings,
   updateSystemSettings,
   getSystemHealth,
+  testAiConnection,
 } from '../admin.service';
 
 describe('Admin Service', () => {
@@ -531,6 +532,9 @@ describe('Admin Service', () => {
       sessionMaxAge: 604800000,
       maxOrganisationsPerUser: 0,
       defaultUserLocale: 'en',
+      aiEnabled: false,
+      openrouterApiKey: '****2345',
+      openrouterModel: 'openai/gpt-4o-mini',
       updatedAt: '2025-06-01T00:00:00.000Z',
     };
 
@@ -558,6 +562,9 @@ describe('Admin Service', () => {
       sessionMaxAge: 604800000,
       maxOrganisationsPerUser: 0,
       defaultUserLocale: 'en',
+      aiEnabled: false,
+      openrouterApiKey: '****2345',
+      openrouterModel: 'openai/gpt-4o-mini',
       updatedAt: '2025-06-01T00:00:00.000Z',
     };
 
@@ -607,6 +614,32 @@ describe('Admin Service', () => {
       mockApi.get.mockRejectedValue(new Error('Forbidden'));
 
       await expect(getSystemHealth()).rejects.toThrow('Forbidden');
+    });
+  });
+
+  // ===========================================
+  // AI Test Connection
+  // ===========================================
+
+  describe('testAiConnection', () => {
+    it('should call POST /admin/ai/test and return result', async () => {
+      const mockResult = {
+        success: true,
+        message: 'Connection successful',
+        model: 'openai/gpt-4o-mini',
+      };
+      mockApi.post.mockResolvedValue({ result: mockResult });
+
+      const result = await testAiConnection();
+
+      expect(mockApi.post).toHaveBeenCalledWith('/admin/ai/test');
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApi.post.mockRejectedValue(new Error('Forbidden'));
+
+      await expect(testAiConnection()).rejects.toThrow('Forbidden');
     });
   });
 });
