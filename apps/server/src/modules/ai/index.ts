@@ -8,3 +8,5 @@ export {
   type ChatCompletionOptions,
   type TestConnectionResult,
 } from './ai.service.js';
+
+export { translateText, type TranslateInput, type TranslateResult } from './translation.service.js';
