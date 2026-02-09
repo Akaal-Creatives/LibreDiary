@@ -161,7 +161,7 @@ describe('AdminSettingsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const testBtn = wrapper.find('.test-button');
+    const testBtn = wrapper.find('.storage-settings .test-button');
     expect(testBtn.exists()).toBe(true);
     expect(testBtn.text()).toContain('Test Connection');
   });
@@ -176,10 +176,10 @@ describe('AdminSettingsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.find('.test-button').trigger('click');
+    await wrapper.find('.storage-settings .test-button').trigger('click');
     await flushPromises();
 
-    const result = wrapper.find('.connection-result');
+    const result = wrapper.find('.storage-settings .connection-result');
     expect(result.exists()).toBe(true);
     expect(result.classes()).toContain('success');
     expect(result.text()).toContain('Connection successful');
@@ -192,10 +192,10 @@ describe('AdminSettingsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.find('.test-button').trigger('click');
+    await wrapper.find('.storage-settings .test-button').trigger('click');
     await flushPromises();
 
-    const result = wrapper.find('.connection-result');
+    const result = wrapper.find('.storage-settings .connection-result');
     expect(result.exists()).toBe(true);
     expect(result.classes()).toContain('failure');
     expect(result.text()).toContain('Connection refused');

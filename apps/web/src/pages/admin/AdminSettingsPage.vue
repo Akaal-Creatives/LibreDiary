@@ -6,6 +6,7 @@ import { useBackupsStore } from '@/stores/backups';
 import {
   getSystemSettings,
   updateSystemSettings,
+  testAiConnection,
   type SystemSettings,
 } from '@/services/admin.service';
 
@@ -30,6 +31,16 @@ const formSessionHours = ref(168);
 const formMaxOrgsPerUser = ref(0);
 const formDefaultLocale = ref('en');
 
+// AI settings state
+const formAiEnabled = ref(false);
+const formOpenrouterApiKey = ref('');
+const formOpenrouterModel = ref('openai/gpt-4o-mini');
+const showApiKey = ref(false);
+const aiSaving = ref(false);
+const aiSaveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
+const testingAi = ref(false);
+const aiTestResult = ref<{ success: boolean; message: string } | null>(null);
+
 function populateForm(settings: SystemSettings) {
   formSiteName.value = settings.siteName;
   formAllowSignups.value = settings.allowSignups;
@@ -37,6 +48,9 @@ function populateForm(settings: SystemSettings) {
   formSessionHours.value = Math.round(settings.sessionMaxAge / 3600000);
   formMaxOrgsPerUser.value = settings.maxOrganisationsPerUser;
   formDefaultLocale.value = settings.defaultUserLocale;
+  formAiEnabled.value = settings.aiEnabled;
+  formOpenrouterApiKey.value = settings.openrouterApiKey ?? '';
+  formOpenrouterModel.value = settings.openrouterModel;
 }
 
 async function loadSettings() {
@@ -73,6 +87,49 @@ async function handleSave() {
     };
   } finally {
     saving.value = false;
+  }
+}
+
+async function handleSaveAiSettings() {
+  aiSaving.value = true;
+  aiSaveMessage.value = null;
+  try {
+    const updateData: Record<string, unknown> = {
+      aiEnabled: formAiEnabled.value,
+      openrouterModel: formOpenrouterModel.value,
+    };
+
+    // Only send API key if it's changed (not masked)
+    if (!formOpenrouterApiKey.value.startsWith('****')) {
+      updateData.openrouterApiKey = formOpenrouterApiKey.value || null;
+    }
+
+    const settings = await updateSystemSettings(updateData);
+    populateForm(settings);
+    aiSaveMessage.value = { type: 'success', text: 'AI settings saved' };
+  } catch (error) {
+    aiSaveMessage.value = {
+      type: 'error',
+      text: error instanceof Error ? error.message : 'Failed to save AI settings',
+    };
+  } finally {
+    aiSaving.value = false;
+  }
+}
+
+async function handleTestAiConnection() {
+  testingAi.value = true;
+  aiTestResult.value = null;
+  try {
+    const result = await testAiConnection();
+    aiTestResult.value = result;
+  } catch (error) {
+    aiTestResult.value = {
+      success: false,
+      message: error instanceof Error ? error.message : 'Connection test failed',
+    };
+  } finally {
+    testingAi.value = false;
   }
 }
 
@@ -334,8 +391,203 @@ const storageTypeLabel = computed(() => {
       </div>
     </section>
 
+    <!-- AI Settings Section -->
+    <section class="settings-section ai-settings">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M10 2L3 6v8l7 4 7-4V6l-7-4Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10 10V18M10 10L3 6M10 10L17 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 class="section-title">AI Settings</h2>
+          <p class="section-description">OpenRouter integration for AI features</p>
+        </div>
+      </div>
+
+      <div v-if="!settingsLoading && !settingsError" class="settings-form">
+        <div class="form-field form-field--toggle">
+          <div class="toggle-content">
+            <label class="form-label" for="aiEnabled">Enable AI</label>
+            <span class="form-hint">Enable AI-powered features across the platform</span>
+          </div>
+          <input
+            id="aiEnabled"
+            v-model="formAiEnabled"
+            type="checkbox"
+            class="form-toggle"
+            data-field="aiEnabled"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="openrouterApiKey">API Key</label>
+          <div class="input-with-toggle">
+            <input
+              id="openrouterApiKey"
+              v-model="formOpenrouterApiKey"
+              :type="showApiKey ? 'text' : 'password'"
+              class="form-input"
+              data-field="openrouterApiKey"
+              placeholder="sk-or-v1-..."
+            />
+            <button type="button" class="input-toggle-btn" @click="showApiKey = !showApiKey">
+              <svg v-if="showApiKey" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M2.5 8S4.5 4 8 4s5.5 4 5.5 4-2 4-5.5 4S2.5 8 2.5 8Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="8" cy="8" r="1.5" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M2 2L14 14M6.5 6.64A1.5 1.5 0 0 0 9.36 9.5M3.5 5.5C2.5 6.5 2 8 2 8s2.5 4.5 6 4.5c.9 0 1.7-.3 2.4-.7M8 3.5c3.5 0 6 4.5 6 4.5s-.7 1.3-2 2.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="openrouterModel">Model</label>
+          <input
+            id="openrouterModel"
+            v-model="formOpenrouterModel"
+            type="text"
+            class="form-input"
+            data-field="openrouterModel"
+            placeholder="openai/gpt-4o-mini"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button class="save-button" :disabled="aiSaving" @click="handleSaveAiSettings">
+            <svg
+              v-if="aiSaving"
+              class="spinner"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-dasharray="28"
+                stroke-dashoffset="8"
+                stroke-linecap="round"
+              />
+            </svg>
+            {{ aiSaving ? 'Saving...' : 'Save AI Settings' }}
+          </button>
+
+          <button class="test-button" :disabled="testingAi" @click="handleTestAiConnection">
+            <svg
+              v-if="testingAi"
+              class="spinner"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-dasharray="28"
+                stroke-dashoffset="8"
+                stroke-linecap="round"
+              />
+            </svg>
+            {{ testingAi ? 'Testing...' : 'Test Connection' }}
+          </button>
+
+          <div
+            v-if="aiSaveMessage"
+            class="save-message"
+            :class="aiSaveMessage.type === 'success' ? 'save-success' : 'save-error'"
+          >
+            <svg
+              v-if="aiSaveMessage.type === 'success'"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <path
+                d="M3 8L6.5 11.5L13 4.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4L12 12M12 4L4 12"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>{{ aiSaveMessage.text }}</span>
+          </div>
+        </div>
+
+        <div
+          v-if="aiTestResult"
+          class="connection-result"
+          :class="{ success: aiTestResult.success, failure: !aiTestResult.success }"
+        >
+          <svg v-if="aiTestResult.success" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3 8L6.5 11.5L13 4.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M4 4L12 12M12 4L4 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>{{ aiTestResult.message }}</span>
+        </div>
+      </div>
+    </section>
+
     <!-- Storage Section -->
-    <section class="settings-section">
+    <section class="settings-section storage-settings">
       <div class="section-header">
         <div class="section-icon">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -888,6 +1140,39 @@ const storageTypeLabel = computed(() => {
 .save-error {
   color: var(--color-error);
   background: var(--color-error-bg, rgba(239, 68, 68, 0.1));
+}
+
+/* Input with Toggle (API Key) */
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-toggle .form-input {
+  flex: 1;
+  padding-right: var(--space-10);
+}
+
+.input-toggle-btn {
+  position: absolute;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.input-toggle-btn:hover {
+  color: var(--color-text-primary);
 }
 
 /* Settings Skeleton */
