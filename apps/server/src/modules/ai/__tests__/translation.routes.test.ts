@@ -14,7 +14,10 @@ vi.mock('../../organizations/organizations.middleware.js', () => ({
 }));
 
 // Mock audit service
-vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
+const { mockLogAudit } = vi.hoisted(() => ({
+  mockLogAudit: vi.fn(),
+}));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: mockLogAudit }));
 
 // Mock translation service
 const { mockTranslateText } = vi.hoisted(() => ({
@@ -189,6 +192,108 @@ describe('Translation Routes', () => {
       });
 
       expect(response.statusCode).toBe(503);
+    });
+
+    // ===========================================
+    // Audit logging
+    // ===========================================
+
+    it('should call logAudit with correct args on successful translation', async () => {
+      mockTranslateText.mockResolvedValue({ translatedText: 'Hola' });
+
+      await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'Hello', targetLanguage: 'Spanish' },
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith({
+        action: 'AI_TRANSLATION',
+        userId: 'user-123',
+        organizationId: 'org-123',
+        metadata: { targetLanguage: 'Spanish', textLength: 5 },
+      });
+    });
+
+    it('should not call logAudit when translation fails', async () => {
+      mockTranslateText.mockRejectedValue(new Error('TRANSLATION_FAILED'));
+
+      await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'Hello', targetLanguage: 'Spanish' },
+      });
+
+      expect(mockLogAudit).not.toHaveBeenCalled();
+    });
+
+    // ===========================================
+    // Error response body structure
+    // ===========================================
+
+    it('should return structured error body for 403 errors', async () => {
+      mockTranslateText.mockRejectedValue(new Error('AI_DISABLED'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'Hello', targetLanguage: 'Spanish' },
+      });
+
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('AI_DISABLED');
+      expect(body.error.message).toBe('AI features are disabled for this organisation');
+    });
+
+    it('should return structured error body for 503 errors', async () => {
+      mockTranslateText.mockRejectedValue(new Error('TRANSLATION_FAILED'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'Hello', targetLanguage: 'Spanish' },
+      });
+
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('TRANSLATION_FAILED');
+      expect(body.error.message).toBe('Translation failed. Please try again later.');
+    });
+
+    // ===========================================
+    // Boundary values
+    // ===========================================
+
+    it('should accept text at exactly 10000 characters', async () => {
+      mockTranslateText.mockResolvedValue({ translatedText: 'translated' });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'a'.repeat(10000), targetLanguage: 'Spanish' },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    // ===========================================
+    // Unmapped errors
+    // ===========================================
+
+    it('should return 500 for unmapped errors', async () => {
+      mockTranslateText.mockRejectedValue(new Error('Something completely unexpected'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/ai/translate',
+        payload: { text: 'Hello', targetLanguage: 'Spanish' },
+      });
+
+      expect(response.statusCode).toBe(500);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
     });
   });
 });

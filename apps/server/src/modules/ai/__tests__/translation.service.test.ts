@@ -133,4 +133,53 @@ describe('Translation Service', () => {
 
     await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
   });
+
+  // ===========================================
+  // Prisma query verification
+  // ===========================================
+
+  it('should query prisma with correct where and select args', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockResolvedValue({
+      choices: [{ message: { content: 'Hola' } }],
+    });
+
+    await translateText(validInput);
+
+    expect(mockPrisma.organization.findUnique).toHaveBeenCalledWith({
+      where: { id: 'org-123' },
+      select: { aiEnabled: true },
+    });
+  });
+
+  // ===========================================
+  // Non-Error throw from chatCompletion
+  // ===========================================
+
+  it('should throw TRANSLATION_FAILED when chatCompletion throws a non-Error value', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockRejectedValue('string error');
+
+    await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
+  });
+
+  // ===========================================
+  // Edge cases for response shape
+  // ===========================================
+
+  it('should throw TRANSLATION_FAILED when response has undefined choices', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockResolvedValue({});
+
+    await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
+  });
+
+  it('should throw TRANSLATION_FAILED when message content is null', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockResolvedValue({
+      choices: [{ message: { content: null } }],
+    });
+
+    await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
+  });
 });

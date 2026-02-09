@@ -46,6 +46,17 @@ describe('Translation Service', () => {
 
       await expect(translateText('org-123', 'Hello', 'Spanish')).rejects.toThrow('Network error');
     });
+
+    it('should construct URL with the given orgId', async () => {
+      mockApi.post.mockResolvedValue({ translatedText: 'Hallo' });
+
+      await translateText('org-xyz-999', 'Hello', 'German');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/organizations/org-xyz-999/ai/translate', {
+        text: 'Hello',
+        targetLanguage: 'German',
+      });
+    });
   });
 
   // ===========================================

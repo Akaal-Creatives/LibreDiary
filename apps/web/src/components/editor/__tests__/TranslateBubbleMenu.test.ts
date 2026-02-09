@@ -225,4 +225,85 @@ describe('TranslateBubbleMenu', () => {
 
     wrapper.unmount();
   });
+
+  it('replaces editor selection with translated text', async () => {
+    const editor = createMockEditor('Hello, world!');
+    mockTranslateText.mockResolvedValue({ translatedText: 'Hola, mundo!' });
+
+    const wrapper = mountComponent({ editor });
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    const spanishBtn = wrapper.findAll('.language-item').find((btn) => btn.text() === 'Spanish');
+    await spanishBtn!.trigger('click');
+    await flushPromises();
+
+    expect(editor.chain).toHaveBeenCalled();
+    const chainResult = editor.chain();
+    const focusResult = chainResult.focus();
+    expect(focusResult.insertContentAt).toHaveBeenCalledWith({ from: 0, to: 13 }, 'Hola, mundo!');
+
+    wrapper.unmount();
+  });
+
+  it('shows success toast after translation', async () => {
+    const editor = createMockEditor('Hello');
+    mockTranslateText.mockResolvedValue({ translatedText: 'Hola' });
+
+    const wrapper = mountComponent({ editor });
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    const spanishBtn = wrapper.findAll('.language-item').find((btn) => btn.text() === 'Spanish');
+    await spanishBtn!.trigger('click');
+    await flushPromises();
+
+    expect(mockToastSuccess).toHaveBeenCalledWith('Translated to Spanish');
+
+    wrapper.unmount();
+  });
+
+  it('shows error toast on translation failure', async () => {
+    const editor = createMockEditor('Hello');
+    mockTranslateText.mockRejectedValue(new Error('TRANSLATION_FAILED'));
+
+    const wrapper = mountComponent({ editor });
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    const spanishBtn = wrapper.findAll('.language-item').find((btn) => btn.text() === 'Spanish');
+    await spanishBtn!.trigger('click');
+    await flushPromises();
+
+    expect(mockToastError).toHaveBeenCalledWith('Translation failed. Please try again.');
+
+    wrapper.unmount();
+  });
+
+  it('closes language dropdown after successful translation', async () => {
+    const editor = createMockEditor('Hello');
+    mockTranslateText.mockResolvedValue({ translatedText: 'Hola' });
+
+    const wrapper = mountComponent({ editor });
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    expect(wrapper.find('.translate-languages').exists()).toBe(true);
+
+    const spanishBtn = wrapper.findAll('.language-item').find((btn) => btn.text() === 'Spanish');
+    await spanishBtn!.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('.translate-languages').exists()).toBe(false);
+
+    wrapper.unmount();
+  });
+
+  it('toggles language dropdown closed when Translate button clicked again', async () => {
+    const wrapper = mountComponent();
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    expect(wrapper.find('.translate-languages').exists()).toBe(true);
+
+    await wrapper.find('.translate-trigger').trigger('click');
+    expect(wrapper.find('.translate-languages').exists()).toBe(false);
+
+    wrapper.unmount();
+  });
 });
