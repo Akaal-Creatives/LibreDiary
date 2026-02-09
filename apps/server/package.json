@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "clean": "rm -rf dist .turbo coverage",
     "test": "vitest run",
     "test:watch": "vitest",
