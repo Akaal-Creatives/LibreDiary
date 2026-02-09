@@ -19,6 +19,11 @@ const { mockPrisma } = vi.hoisted(() => {
     mockPrisma: {
       user: mockPrismaUser,
       organization: mockPrismaOrganization,
+      page: { count: vi.fn() },
+      database: { count: vi.fn() },
+      file: { count: vi.fn(), aggregate: vi.fn() },
+      template: { count: vi.fn() },
+      backup: { count: vi.fn() },
     },
   };
 });
@@ -410,12 +415,23 @@ describe('Admin Service', () => {
       mockPrisma.organization.count
         .mockResolvedValueOnce(20) // total orgs
         .mockResolvedValueOnce(18); // active orgs
+      mockPrisma.page.count.mockResolvedValue(50);
+      mockPrisma.database.count.mockResolvedValue(5);
+      mockPrisma.file.count.mockResolvedValue(30);
+      mockPrisma.file.aggregate.mockResolvedValue({ _sum: { size: 1024 } });
+      mockPrisma.template.count.mockResolvedValue(7);
+      mockPrisma.backup.count.mockResolvedValue(2);
 
       const result = await getStats();
 
       expect(result).toEqual({
         users: { total: 100, verified: 85, superAdmins: 3 },
         organizations: { total: 20, active: 18 },
+        pages: 50,
+        databases: 5,
+        files: { total: 30, totalSize: 1024 },
+        templates: 7,
+        backups: 2,
       });
     });
   });
