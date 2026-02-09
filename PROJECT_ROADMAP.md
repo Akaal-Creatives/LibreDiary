@@ -610,10 +610,11 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 15.2 System Settings
 
-- [ ] Create SystemSettings model
-- [ ] Create settings endpoints
-- [ ] Create admin settings pages
-- [ ] Implement setting validation
+- [x] Extend SystemSettings model with runtime-configurable fields
+- [x] Create settings service (getSettings, updateSettings)
+- [x] Create GET/PATCH /admin/settings endpoints with Zod validation
+- [x] Create admin settings page (General section with editable form)
+- [x] Frontend service functions (getSystemSettings, updateSystemSettings)
 
 ### 15.3 Admin Dashboard
 
