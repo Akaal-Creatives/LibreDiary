@@ -635,9 +635,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 16.2 Content Translation
 
-- [ ] Create translation endpoint
-- [ ] Implement translation UI (context menu)
-- [ ] Support multiple target languages
+- [x] Create translation endpoint
+- [x] Implement translation UI (bubble menu)
+- [x] Support multiple target languages (31 languages)
 - [ ] Cache translations (optional)
 
 ### 16.3 AI-Assisted Content Creation
