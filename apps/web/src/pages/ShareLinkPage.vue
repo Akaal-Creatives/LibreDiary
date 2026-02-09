@@ -116,15 +116,28 @@ function onContentUpdate(newContent: string) {
         <router-link to="/" class="brand-link">
           <div class="brand">
             <div class="brand-icon">
-              <svg viewBox="0 0 32 32" fill="none">
-                <path
-                  d="M8 6C8 4.89543 8.89543 4 10 4H22C23.1046 4 24 4.89543 24 6V26C24 27.1046 23.1046 28 22 28H10C8.89543 28 8 27.1046 8 26V6Z"
+              <svg viewBox="0 0 28 28" fill="none">
+                <rect
+                  x="4"
+                  y="3"
+                  width="16"
+                  height="22"
+                  rx="2"
                   stroke="currentColor"
-                  stroke-width="2"
+                  stroke-width="1.5"
                 />
-                <path d="M12 10H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                <path d="M12 14H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                <path d="M12 18H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M8 8H16M8 12H16M8 16H12"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M20 7V23C20 24.1046 20.8954 25 22 25C23.1046 25 24 24.1046 24 23V7"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <span class="brand-name">LibreDiary</span>

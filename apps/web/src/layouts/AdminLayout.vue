@@ -53,18 +53,27 @@ async function handleLogout() {
       <div class="sidebar-header">
         <div class="admin-brand">
           <div class="brand-icon">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2L18 6V14L10 18L2 14V6L10 2Z"
+            <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+              <rect
+                x="4"
+                y="3"
+                width="16"
+                height="22"
+                rx="2"
                 stroke="currentColor"
                 stroke-width="1.5"
-                stroke-linejoin="round"
               />
               <path
-                d="M10 10L18 6M10 10L2 6M10 10V18"
+                d="M8 8H16M8 12H16M8 16H12"
                 stroke="currentColor"
                 stroke-width="1.5"
-                stroke-linejoin="round"
+                stroke-linecap="round"
+              />
+              <path
+                d="M20 7V23C20 24.1046 20.8954 25 22 25C23.1046 25 24 24.1046 24 23V7"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
               />
             </svg>
           </div>
