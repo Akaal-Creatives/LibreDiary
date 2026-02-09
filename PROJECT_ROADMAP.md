@@ -602,13 +602,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ## Phase 15: Admin Features
 
-### 15.1 Audit Logging
+### 15.1 Audit Logging ✅
 
-- [ ] Create AuditLog model
-- [ ] Implement audit logging service
-- [ ] Log user actions (CRUD, auth, permissions)
-- [ ] Create audit log viewing endpoint
-- [ ] Create audit logs UI with filters
+- [x] Create AuditLog model with AuditAction enum (50+ action types)
+- [x] Implement audit logging service (fire-and-forget pattern)
+- [x] Log user actions across all modules (auth, pages, comments, permissions, organisations, admin, databases, backups, api-tokens, webhooks, templates)
+- [x] Create audit log viewing endpoints (paginated, filtered, enriched)
+- [x] Create audit logs admin page with action filter, pagination, and table view
 
 ### 15.2 System Settings
 
