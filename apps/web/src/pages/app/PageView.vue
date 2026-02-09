@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import { usePagesStore, useSyncStore, useAuthStore } from '@/stores';
 import { useCollaboration } from '@/composables';
-import { TiptapEditor } from '@/components/editor';
+import { TiptapEditor, TranslateBubbleMenu } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import ShareModal from '@/components/ShareModal.vue';
@@ -453,6 +453,7 @@ function formatDate(dateString: string): string {
           :user-color="userColor"
           @update:model-value="onContentUpdate"
         />
+        <TranslateBubbleMenu v-if="editorRef?.editor" :editor="editorRef.editor" />
       </div>
     </div>
 
