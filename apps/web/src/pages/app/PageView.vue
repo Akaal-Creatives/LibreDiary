@@ -360,6 +360,7 @@ function formatDate(dateString: string): string {
       <PageCoverImage
         :cover-url="pagesStore.currentPage?.coverUrl ?? null"
         :page-id="props.pageId"
+        :org-id="authStore.currentOrganizationId ?? ''"
         @update="loadPage"
       />
 

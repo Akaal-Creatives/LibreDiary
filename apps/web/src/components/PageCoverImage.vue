@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { usePagesStore } from '@/stores';
 import { useToast } from '@/composables/useToast';
+import { filesService } from '@/services/files.service';
 
 const props = defineProps<{
   coverUrl: string | null;
   pageId: string;
+  orgId: string;
 }>();
 
 const emit = defineEmits<{
@@ -15,63 +17,43 @@ const emit = defineEmits<{
 const pagesStore = usePagesStore();
 const toast = useToast();
 
-const showModal = ref(false);
-const urlInput = ref('');
-const urlError = ref<string | null>(null);
+const uploading = ref(false);
+const uploadProgress = ref(0);
 const saving = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
-watch(
-  () => showModal.value,
-  (isOpen) => {
-    if (isOpen) {
-      urlInput.value = props.coverUrl || '';
-      urlError.value = null;
+function openFileDialog() {
+  fileInputRef.value?.click();
+}
+
+async function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  uploading.value = true;
+  uploadProgress.value = 0;
+
+  try {
+    const result = await filesService.uploadFile(props.orgId, file, {}, (progress) => {
+      uploadProgress.value = progress;
+    });
+
+    try {
+      await pagesStore.updatePageData(props.pageId, { coverUrl: result.file.url });
+      emit('update');
+    } catch (e) {
+      console.error('Failed to update cover:', e);
+      toast.error('Failed to update cover image');
     }
-  }
-);
-
-function openModal() {
-  showModal.value = true;
-}
-
-function closeModal() {
-  showModal.value = false;
-  urlInput.value = '';
-  urlError.value = null;
-}
-
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function submitUrl() {
-  const url = urlInput.value.trim();
-
-  if (!url) {
-    urlError.value = 'Please enter a URL';
-    return;
-  }
-
-  if (!isValidUrl(url)) {
-    urlError.value = 'Please enter a valid URL';
-    return;
-  }
-
-  saving.value = true;
-  try {
-    await pagesStore.updatePageData(props.pageId, { coverUrl: url });
-    emit('update');
-    closeModal();
   } catch (e) {
-    console.error('Failed to update cover:', e);
-    toast.error('Failed to update cover image');
+    console.error('Failed to upload cover:', e);
+    toast.error('Failed to upload cover image');
   } finally {
-    saving.value = false;
+    uploading.value = false;
+    uploadProgress.value = 0;
+    // Reset file input so the same file can be re-selected
+    if (input) input.value = '';
   }
 }
 
@@ -91,11 +73,27 @@ async function removeCover() {
 
 <template>
   <div class="page-cover-wrapper">
+    <!-- Hidden file input -->
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept="image/*"
+      class="sr-only"
+      @change="handleFileSelect"
+    />
+
     <!-- Cover Image Display -->
     <div v-if="coverUrl" class="cover-container">
       <div class="cover-image" :style="{ backgroundImage: `url(${coverUrl})` }"></div>
+
+      <!-- Upload progress overlay -->
+      <div v-if="uploading" class="cover-upload-progress">
+        <div class="upload-progress-bar" :style="{ width: `${uploadProgress}%` }"></div>
+        <span class="upload-progress-text">Uploading...</span>
+      </div>
+
       <div class="cover-actions">
-        <button class="cover-action-btn change-cover-btn" @click="openModal">
+        <button class="cover-action-btn change-cover-btn" @click="openFileDialog">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
               d="M10.5 1.5L12.5 3.5L5 11H3V9L10.5 1.5Z"
@@ -132,7 +130,12 @@ async function removeCover() {
 
     <!-- Add Cover Button (when no cover) -->
     <div v-else class="add-cover-area">
-      <button class="add-cover-btn" aria-label="Add cover image" @click="openModal">
+      <!-- Upload progress overlay when adding new cover -->
+      <div v-if="uploading" class="cover-upload-progress cover-upload-progress--inline">
+        <div class="upload-progress-bar" :style="{ width: `${uploadProgress}%` }"></div>
+        <span class="upload-progress-text">Uploading...</span>
+      </div>
+      <button v-else class="add-cover-btn" aria-label="Add cover image" @click="openFileDialog">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <rect
             x="2"
@@ -155,67 +158,6 @@ async function removeCover() {
         <span>Add cover</span>
       </button>
     </div>
-
-    <!-- URL Input Modal -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-          <div
-            class="cover-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cover-modal-title"
-          >
-            <div class="modal-header">
-              <h3 id="cover-modal-title" class="modal-title">
-                {{ coverUrl ? 'Change cover image' : 'Add cover image' }}
-              </h3>
-              <button class="close-btn" aria-label="Close" @click="closeModal">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M4 4L12 12M4 12L12 4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label for="cover-url" class="form-label">Image URL</label>
-                <input
-                  id="cover-url"
-                  v-model="urlInput"
-                  type="url"
-                  class="form-input"
-                  placeholder="https://example.com/image.jpg"
-                  :disabled="saving"
-                />
-                <p v-if="urlError" class="form-error">{{ urlError }}</p>
-                <p class="form-help">Enter a direct URL to an image (JPG, PNG, GIF, WebP)</p>
-              </div>
-
-              <!-- Preview -->
-              <div v-if="urlInput && isValidUrl(urlInput)" class="preview-section">
-                <p class="preview-label">Preview</p>
-                <div class="preview-image" :style="{ backgroundImage: `url(${urlInput})` }"></div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button class="btn btn-secondary cancel-btn" :disabled="saving" @click="closeModal">
-                Cancel
-              </button>
-              <button class="btn btn-primary submit-btn" :disabled="saving" @click="submitUrl">
-                {{ saving ? 'Saving...' : 'Save' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
   </div>
 </template>
 
@@ -223,6 +165,19 @@ async function removeCover() {
 .page-cover-wrapper {
   position: relative;
   width: 100%;
+}
+
+/* Visually hidden file input */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Cover Image */
@@ -304,189 +259,42 @@ async function removeCover() {
   border-color: var(--color-border-strong);
 }
 
-/* Modal */
-.modal-overlay {
-  position: fixed;
+/* Upload Progress */
+.cover-upload-progress {
+  position: absolute;
   inset: 0;
-  z-index: 1000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
 }
 
-.cover-modal {
-  width: 100%;
-  max-width: 480px;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-}
-
-.close-btn:hover {
-  color: var(--color-text-primary);
-  background: var(--color-hover);
-}
-
-.modal-body {
-  padding: var(--space-4);
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-label {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.form-input {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
+.cover-upload-progress--inline {
+  position: relative;
+  height: 48px;
   background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.form-input:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-focus-ring);
-}
-
-.form-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.form-error {
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--color-error);
-}
-
-.form-help {
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-}
-
-.preview-section {
-  margin-top: var(--space-4);
-}
-
-.preview-label {
-  margin-bottom: var(--space-2);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.preview-image {
-  width: 100%;
-  height: 120px;
-  background-color: var(--color-surface-sunken);
-  background-position: center;
-  background-size: cover;
   border-radius: var(--radius-md);
 }
 
-.modal-footer {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  padding: var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
-.btn {
-  padding: var(--space-2) var(--space-4);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  color: var(--color-text-secondary);
-  background: var(--color-surface-sunken);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-hover);
-}
-
-.btn-primary {
-  color: white;
+.upload-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
   background: var(--color-accent);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: width 0.2s ease;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-accent-hover);
+.upload-progress-text {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-inverse);
 }
 
-/* Modal Transitions */
-.modal-enter-active,
-.modal-leave-active {
-  transition: all var(--transition-normal);
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-from .cover-modal,
-.modal-leave-to .cover-modal {
-  transform: scale(0.95) translateY(10px);
+.cover-upload-progress--inline .upload-progress-text {
+  color: var(--color-text-secondary);
 }
 </style>

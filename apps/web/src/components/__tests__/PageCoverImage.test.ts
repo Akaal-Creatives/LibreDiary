@@ -6,11 +6,24 @@ import { usePagesStore } from '@/stores/pages';
 import { useAuthStore } from '@/stores/auth';
 
 // Mock the toast composable
+const mockToast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+}));
+
 vi.mock('@/composables/useToast', () => ({
-  useToast: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-  }),
+  useToast: () => mockToast,
+}));
+
+// Mock filesService
+const mockFilesService = vi.hoisted(() => ({
+  uploadFile: vi.fn(),
+}));
+
+vi.mock('@/services/files.service', () => ({
+  filesService: mockFilesService,
 }));
 
 // Mock localStorage
@@ -66,12 +79,9 @@ describe('PageCoverImage', () => {
     return { authStore, pagesStore };
   }
 
-  function mountComponent(coverUrl: string | null = null, pageId = 'page-1') {
+  function mountComponent(coverUrl: string | null = null, pageId = 'page-1', orgId = 'org-1') {
     return mount(PageCoverImage, {
-      props: { coverUrl, pageId },
-      global: {
-        stubs: { teleport: true },
-      },
+      props: { coverUrl, pageId, orgId },
     });
   }
 
@@ -114,66 +124,168 @@ describe('PageCoverImage', () => {
     });
   });
 
-  describe('URL input modal', () => {
-    it('opens modal when Add cover is clicked', async () => {
+  describe('file upload', () => {
+    it('has a hidden file input with accept="image/*"', () => {
       const wrapper = mountComponent(null);
-      await wrapper.find('.add-cover-btn').trigger('click');
-      expect(wrapper.find('.cover-modal').exists()).toBe(true);
+      const fileInput = wrapper.find('input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      expect(fileInput.attributes('accept')).toBe('image/*');
     });
 
-    it('opens modal when Change cover is clicked', async () => {
+    it('triggers file input when "Add cover" is clicked', async () => {
+      const wrapper = mountComponent(null);
+      const fileInput = wrapper.find('input[type="file"]');
+      const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click');
+
+      await wrapper.find('.add-cover-btn').trigger('click');
+      expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('triggers file input when "Change cover" is clicked', async () => {
       const wrapper = mountComponent('https://example.com/cover.jpg');
+      const fileInput = wrapper.find('input[type="file"]');
+      const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click');
+
       await wrapper.find('.change-cover-btn').trigger('click');
-      expect(wrapper.find('.cover-modal').exists()).toBe(true);
+      expect(clickSpy).toHaveBeenCalled();
     });
 
-    it('has URL input field', async () => {
+    it('calls filesService.uploadFile with orgId and selected file', async () => {
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/uploaded-cover.jpg' },
+      });
+
+      setupStores();
       const wrapper = mountComponent(null);
-      await wrapper.find('.add-cover-btn').trigger('click');
-      expect(wrapper.find('input[type="url"]').exists()).toBe(true);
+
+      const fileInput = wrapper.find('input[type="file"]');
+      // Simulate file selection
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockFilesService.uploadFile).toHaveBeenCalledWith(
+        'org-1',
+        testFile,
+        {},
+        expect.any(Function)
+      );
     });
 
-    it('closes modal on cancel', async () => {
-      const wrapper = mountComponent(null);
-      await wrapper.find('.add-cover-btn').trigger('click');
-      expect(wrapper.find('.cover-modal').exists()).toBe(true);
+    it('calls pagesStore.updatePageData with returned file URL', async () => {
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/uploaded-cover.jpg' },
+      });
 
-      await wrapper.find('.cancel-btn').trigger('click');
-      expect(wrapper.find('.cover-modal').exists()).toBe(false);
-    });
-
-    it('calls updatePageData when submitting URL', async () => {
       const { pagesStore } = setupStores();
       const wrapper = mountComponent(null);
 
-      await wrapper.find('.add-cover-btn').trigger('click');
-      await wrapper.find('input[type="url"]').setValue('https://example.com/new-cover.jpg');
-      await wrapper.find('.submit-btn').trigger('click');
+      const fileInput = wrapper.find('input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
       await flushPromises();
 
       expect(pagesStore.updatePageData).toHaveBeenCalledWith('page-1', {
-        coverUrl: 'https://example.com/new-cover.jpg',
+        coverUrl: 'https://cdn.example.com/uploaded-cover.jpg',
       });
     });
 
-    it('shows error for invalid URL', async () => {
+    it('emits update after successful upload', async () => {
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/uploaded-cover.jpg' },
+      });
+
+      setupStores();
       const wrapper = mountComponent(null);
 
-      await wrapper.find('.add-cover-btn').trigger('click');
-      await wrapper.find('input[type="url"]').setValue('not-a-valid-url');
-      await wrapper.find('.submit-btn').trigger('click');
+      const fileInput = wrapper.find('input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
 
-      expect(wrapper.text()).toContain('enter a valid URL');
+      expect(wrapper.emitted('update')).toBeTruthy();
     });
 
-    it('pre-fills input with current cover URL when changing', async () => {
-      const currentUrl = 'https://example.com/current.jpg';
-      const wrapper = mountComponent(currentUrl);
+    it('shows uploading state during upload', async () => {
+      let resolveUpload: (value: { file: { url: string } }) => void;
+      mockFilesService.uploadFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveUpload = resolve;
+          })
+      );
 
-      await wrapper.find('.change-cover-btn').trigger('click');
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      setupStores();
+      const wrapper = mountComponent(null);
 
-      const input = wrapper.find('input[type="url"]');
-      expect((input.element as HTMLInputElement).value).toBe(currentUrl);
+      const fileInput = wrapper.find('input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      // Should show uploading indicator
+      expect(wrapper.find('.cover-upload-progress').exists()).toBe(true);
+
+      // Resolve upload
+      resolveUpload!({ file: { url: 'https://cdn.example.com/cover.jpg' } });
+      await flushPromises();
+    });
+
+    it('shows error toast when upload fails', async () => {
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      mockFilesService.uploadFile.mockRejectedValue(new Error('Upload failed'));
+
+      setupStores();
+      const wrapper = mountComponent(null);
+
+      const fileInput = wrapper.find('input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to upload cover image');
+    });
+
+    it('shows error toast when page update fails', async () => {
+      const testFile = new File(['image-data'], 'cover.jpg', { type: 'image/jpeg' });
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/uploaded-cover.jpg' },
+      });
+
+      const { pagesStore } = setupStores();
+      (pagesStore.updatePageData as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Update failed')
+      );
+      const wrapper = mountComponent(null);
+
+      const fileInput = wrapper.find('input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to update cover image');
     });
   });
 
@@ -210,13 +322,12 @@ describe('PageCoverImage', () => {
       expect(wrapper.find('.remove-cover-btn').attributes('aria-label')).toBe('Remove cover image');
     });
 
-    it('modal has proper dialog role', async () => {
+    it('file input is visually hidden', () => {
       const wrapper = mountComponent(null);
-      await wrapper.find('.add-cover-btn').trigger('click');
-
-      const modal = wrapper.find('.cover-modal');
-      expect(modal.attributes('role')).toBe('dialog');
-      expect(modal.attributes('aria-modal')).toBe('true');
+      const fileInput = wrapper.find('input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      // Check it has the sr-only/hidden class
+      expect(fileInput.classes()).toContain('sr-only');
     });
   });
 });
