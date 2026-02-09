@@ -87,6 +87,7 @@ import {
   revokeSession,
   createInvite,
   getInviteByToken,
+  updateUserProfile,
 } from '../auth.service.js';
 
 // ===========================================
@@ -778,6 +779,69 @@ describe('Auth Service', () => {
       const result = await getInviteByToken('expired-token');
 
       expect(result).toBeNull();
+    });
+  });
+
+  // -----------------------------------------
+  // updateUserProfile
+  // -----------------------------------------
+
+  describe('updateUserProfile', () => {
+    const mockUser = {
+      id: 'user-1',
+      email: 'test@example.com',
+      name: 'Test User',
+      locale: 'en',
+    };
+
+    it('should update user name', async () => {
+      const updatedUser = { ...mockUser, name: 'New Name' };
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      const result = await updateUserProfile('user-1', { name: 'New Name' });
+
+      expect(result).toEqual(updatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { name: 'New Name' },
+      });
+    });
+
+    it('should update user locale', async () => {
+      const updatedUser = { ...mockUser, locale: 'en-GB' };
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      const result = await updateUserProfile('user-1', { locale: 'en-GB' });
+
+      expect(result).toEqual(updatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { locale: 'en-GB' },
+      });
+    });
+
+    it('should update both name and locale', async () => {
+      const updatedUser = { ...mockUser, name: 'New Name', locale: 'en-US' };
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      const result = await updateUserProfile('user-1', { name: 'New Name', locale: 'en-US' });
+
+      expect(result).toEqual(updatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { name: 'New Name', locale: 'en-US' },
+      });
+    });
+
+    it('should only include provided fields in update', async () => {
+      mockPrisma.user.update.mockResolvedValue(mockUser);
+
+      await updateUserProfile('user-1', { locale: 'en-GB' });
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { locale: 'en-GB' },
+      });
     });
   });
 });

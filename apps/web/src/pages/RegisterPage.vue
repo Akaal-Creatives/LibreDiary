@@ -149,7 +149,7 @@ function goToLogin() {
       <div v-if="loadingInvite" class="register-card">
         <div class="loading-state">
           <div class="loading-spinner large"></div>
-          <p>Loading invite...</p>
+          <p>{{ $t('auth.loadingInvite') }}</p>
         </div>
       </div>
 
@@ -165,17 +165,19 @@ function goToLogin() {
               stroke-linecap="round"
             />
           </svg>
-          <h2>Invalid Invite</h2>
+          <h2>{{ $t('auth.invalidInvite') }}</h2>
           <p>{{ inviteError }}</p>
-          <button type="button" class="secondary-btn" @click="goToLogin">Go to Login</button>
+          <button type="button" class="secondary-btn" @click="goToLogin">
+            {{ $t('auth.signIn') }}
+          </button>
         </div>
       </div>
 
       <!-- Registration Form -->
       <div v-else class="register-card">
         <div class="register-header">
-          <h1>Join {{ organizationName }}</h1>
-          <p>Create your account to get started</p>
+          <h1>{{ $t('auth.joinOrganisation', { organisationName: organizationName }) }}</h1>
+          <p>{{ $t('auth.createAccountToGetStarted') }}</p>
         </div>
 
         <form class="register-form" @submit.prevent="handleSubmit">
@@ -193,36 +195,36 @@ function goToLogin() {
           </div>
 
           <div class="form-field">
-            <label for="email">Email</label>
+            <label for="email">{{ $t('auth.email') }}</label>
             <input id="email" v-model="email" type="email" readonly class="readonly" />
           </div>
 
           <div class="form-field">
-            <label for="name">Name (optional)</label>
+            <label for="name">{{ $t('auth.nameOptional') }}</label>
             <input
               id="name"
               v-model="name"
               type="text"
-              placeholder="Your name"
+              :placeholder="$t('auth.namePlaceholder')"
               autocomplete="name"
             />
           </div>
 
           <div class="form-field">
-            <label for="password">Password</label>
+            <label for="password">{{ $t('auth.password') }}</label>
             <div class="input-group">
               <input
                 id="password"
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="At least 8 characters"
+                :placeholder="$t('auth.newPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
               />
               <button
                 type="button"
                 class="password-toggle-btn"
-                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
                 @click="showPassword = !showPassword"
               >
                 <!-- Eye open icon (password is hidden, click to show) -->
@@ -264,20 +266,22 @@ function goToLogin() {
           </div>
 
           <div class="form-field">
-            <label for="confirm-password">Confirm Password</label>
+            <label for="confirm-password">{{ $t('auth.confirmPassword') }}</label>
             <div class="input-group">
               <input
                 id="confirm-password"
                 v-model="confirmPassword"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                placeholder="Confirm your password"
+                :placeholder="$t('auth.confirmPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
               />
               <button
                 type="button"
                 class="password-toggle-btn"
-                :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                :aria-label="
+                  showConfirmPassword ? $t('auth.hidePassword') : $t('auth.showPassword')
+                "
                 @click="showConfirmPassword = !showConfirmPassword"
               >
                 <!-- Eye open icon (password is hidden, click to show) -->
@@ -326,13 +330,13 @@ function goToLogin() {
 
           <button type="submit" class="submit-btn" :disabled="loading">
             <span v-if="loading" class="loading-spinner"></span>
-            <span v-else>Create Account</span>
+            <span v-else>{{ $t('auth.createAccount') }}</span>
           </button>
         </form>
 
         <div class="register-footer">
-          <span>Already have an account?</span>
-          <button type="button" class="link-btn" @click="goToLogin">Sign in</button>
+          <span>{{ $t('auth.alreadyHaveAccount') }}</span>
+          <button type="button" class="link-btn" @click="goToLogin">{{ $t('auth.signIn') }}</button>
         </div>
       </div>
 
@@ -347,7 +351,7 @@ function goToLogin() {
             stroke-linejoin="round"
           />
         </svg>
-        Back to home
+        {{ $t('auth.backToHome') }}
       </button>
     </div>
   </div>

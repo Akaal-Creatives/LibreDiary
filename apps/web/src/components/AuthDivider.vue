@@ -6,7 +6,7 @@ defineProps<{
 
 <template>
   <div class="auth-divider" role="separator">
-    <span class="auth-divider__text">{{ text || 'or' }}</span>
+    <span class="auth-divider__text">{{ text || $t('common.or') }}</span>
   </div>
 </template>
 

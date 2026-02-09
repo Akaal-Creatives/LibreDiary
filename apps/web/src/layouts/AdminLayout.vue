@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores';
 import { useTheme } from '@/composables';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
 
@@ -16,12 +18,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'admin-dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { name: 'admin-users', label: 'Users', icon: 'users' },
-  { name: 'admin-organizations', label: 'Organizations', icon: 'organizations' },
-  { name: 'admin-backups', label: 'Backups', icon: 'backups' },
-  { name: 'admin-audit-logs', label: 'Audit Logs', icon: 'audit' },
-  { name: 'admin-settings', label: 'System Settings', icon: 'settings' },
+  { name: 'admin-dashboard', label: t('admin.dashboard'), icon: 'dashboard' },
+  { name: 'admin-users', label: t('admin.users'), icon: 'users' },
+  { name: 'admin-organizations', label: t('admin.organisations'), icon: 'organizations' },
+  { name: 'admin-backups', label: t('admin.backups'), icon: 'backups' },
+  { name: 'admin-audit-logs', label: t('admin.auditLog'), icon: 'audit' },
+  { name: 'admin-settings', label: t('admin.settings'), icon: 'settings' },
 ];
 
 const breadcrumbs = computed(() => {

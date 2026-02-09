@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDatabasesStore } from '@/stores';
 
+const { t } = useI18n();
 const databasesStore = useDatabasesStore();
 
 const showFilterPanel = ref(false);
@@ -93,7 +95,7 @@ async function saveSorts() {
 
 function getOperatorsForProperty(propertyId: string): Array<{ value: string; label: string }> {
   const prop = databasesStore.properties.find((p) => p.id === propertyId);
-  if (!prop) return [{ value: 'contains', label: 'contains' }];
+  if (!prop) return [{ value: 'contains', label: t('databases.filterOperators.contains') }];
 
   switch (prop.type) {
     case 'TEXT':
@@ -101,50 +103,50 @@ function getOperatorsForProperty(propertyId: string): Array<{ value: string; lab
     case 'EMAIL':
     case 'PHONE':
       return [
-        { value: 'contains', label: 'contains' },
-        { value: 'equals', label: 'equals' },
-        { value: 'not_equals', label: 'does not equal' },
-        { value: 'is_empty', label: 'is empty' },
-        { value: 'is_not_empty', label: 'is not empty' },
+        { value: 'contains', label: t('databases.filterOperators.contains') },
+        { value: 'equals', label: t('databases.filterOperators.equals') },
+        { value: 'not_equals', label: t('databases.filterOperators.doesNotEqual') },
+        { value: 'is_empty', label: t('databases.filterOperators.isEmpty') },
+        { value: 'is_not_empty', label: t('databases.filterOperators.isNotEmpty') },
       ];
     case 'NUMBER':
       return [
-        { value: 'equals', label: '=' },
-        { value: 'not_equals', label: '!=' },
-        { value: 'gt', label: '>' },
-        { value: 'lt', label: '<' },
-        { value: 'gte', label: '>=' },
-        { value: 'lte', label: '<=' },
-        { value: 'is_empty', label: 'is empty' },
-        { value: 'is_not_empty', label: 'is not empty' },
+        { value: 'equals', label: t('databases.filterOperators.equals') },
+        { value: 'not_equals', label: t('databases.filterOperators.doesNotEqual') },
+        { value: 'gt', label: t('databases.filterOperators.greaterThan') },
+        { value: 'lt', label: t('databases.filterOperators.lessThan') },
+        { value: 'gte', label: t('databases.filterOperators.greaterThanOrEqual') },
+        { value: 'lte', label: t('databases.filterOperators.lessThanOrEqual') },
+        { value: 'is_empty', label: t('databases.filterOperators.isEmpty') },
+        { value: 'is_not_empty', label: t('databases.filterOperators.isNotEmpty') },
       ];
     case 'SELECT':
     case 'MULTI_SELECT':
       return [
-        { value: 'is', label: 'is' },
-        { value: 'is_not', label: 'is not' },
-        { value: 'is_empty', label: 'is empty' },
-        { value: 'is_not_empty', label: 'is not empty' },
+        { value: 'is', label: t('databases.filterOperators.is') },
+        { value: 'is_not', label: t('databases.filterOperators.isNot') },
+        { value: 'is_empty', label: t('databases.filterOperators.isEmpty') },
+        { value: 'is_not_empty', label: t('databases.filterOperators.isNotEmpty') },
       ];
     case 'DATE':
     case 'CREATED_TIME':
     case 'UPDATED_TIME':
       return [
-        { value: 'equals', label: 'is' },
-        { value: 'before', label: 'is before' },
-        { value: 'after', label: 'is after' },
-        { value: 'is_empty', label: 'is empty' },
-        { value: 'is_not_empty', label: 'is not empty' },
+        { value: 'equals', label: t('databases.filterOperators.is') },
+        { value: 'before', label: t('databases.filterOperators.isBefore') },
+        { value: 'after', label: t('databases.filterOperators.isAfter') },
+        { value: 'is_empty', label: t('databases.filterOperators.isEmpty') },
+        { value: 'is_not_empty', label: t('databases.filterOperators.isNotEmpty') },
       ];
     case 'CHECKBOX':
       return [
-        { value: 'is_checked', label: 'is checked' },
-        { value: 'is_unchecked', label: 'is unchecked' },
+        { value: 'is_checked', label: t('databases.filterOperators.isChecked') },
+        { value: 'is_unchecked', label: t('databases.filterOperators.isUnchecked') },
       ];
     default:
       return [
-        { value: 'contains', label: 'contains' },
-        { value: 'is_empty', label: 'is empty' },
+        { value: 'contains', label: t('databases.filterOperators.contains') },
+        { value: 'is_empty', label: t('databases.filterOperators.isEmpty') },
       ];
   }
 }
@@ -175,7 +177,7 @@ function onFilterPropertyChange(index: number) {
             stroke-linejoin="round"
           />
         </svg>
-        Filter
+        {{ $t('databases.filter') }}
         <span v-if="activeFilters.length > 0" class="toolbar-badge filter-badge">
           {{ activeFilters.length }}
         </span>
@@ -192,7 +194,7 @@ function onFilterPropertyChange(index: number) {
           <path d="M3.5 7H10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
           <path d="M5 10H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
         </svg>
-        Sort
+        {{ $t('databases.sort') }}
         <span v-if="activeSorts.length > 0" class="toolbar-badge sort-badge">
           {{ activeSorts.length }}
         </span>
@@ -202,9 +204,9 @@ function onFilterPropertyChange(index: number) {
     <!-- Filter Panel -->
     <div v-if="showFilterPanel" class="filter-panel">
       <div class="panel-header">
-        <span class="panel-title">Filters</span>
+        <span class="panel-title">{{ $t('databases.filters') }}</span>
         <button v-if="localFilters.length > 0" class="clear-filters-btn" @click="clearFilters">
-          Clear all
+          {{ $t('common.clearAll') }}
         </button>
       </div>
 
@@ -240,11 +242,15 @@ function onFilterPropertyChange(index: number) {
           v-model="filter.value"
           class="filter-input filter-value"
           type="text"
-          placeholder="Value..."
+          :placeholder="$t('databases.valuePlaceholder')"
           @change="saveFilters"
         />
 
-        <button class="remove-filter-btn" title="Remove filter" @click="removeFilter(idx)">
+        <button
+          class="remove-filter-btn"
+          :title="$t('databases.removeFilter')"
+          @click="removeFilter(idx)"
+        >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M3 3L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
             <path d="M9 3L3 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
@@ -257,14 +263,14 @@ function onFilterPropertyChange(index: number) {
           <path d="M6 2V10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
           <path d="M2 6H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
         </svg>
-        Add filter
+        {{ $t('databases.addFilter') }}
       </button>
     </div>
 
     <!-- Sort Panel -->
     <div v-if="showSortPanel" class="sort-panel">
       <div class="panel-header">
-        <span class="panel-title">Sorts</span>
+        <span class="panel-title">{{ $t('databases.sorts') }}</span>
         <button
           v-if="localSorts.length > 0"
           class="clear-sorts-btn"
@@ -273,7 +279,7 @@ function onFilterPropertyChange(index: number) {
             saveSorts();
           "
         >
-          Clear all
+          {{ $t('common.clearAll') }}
         </button>
       </div>
 
@@ -285,11 +291,15 @@ function onFilterPropertyChange(index: number) {
         </select>
 
         <select v-model="sort.direction" class="filter-select sort-direction" @change="saveSorts">
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
+          <option value="asc">{{ $t('common.ascending') }}</option>
+          <option value="desc">{{ $t('common.descending') }}</option>
         </select>
 
-        <button class="remove-sort-btn" title="Remove sort" @click="removeSort(idx)">
+        <button
+          class="remove-sort-btn"
+          :title="$t('databases.removeSort')"
+          @click="removeSort(idx)"
+        >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M3 3L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
             <path d="M9 3L3 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
@@ -302,7 +312,7 @@ function onFilterPropertyChange(index: number) {
           <path d="M6 2V10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
           <path d="M2 6H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
         </svg>
-        Add sort
+        {{ $t('databases.addSort') }}
       </button>
     </div>
   </div>

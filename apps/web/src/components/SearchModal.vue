@@ -230,7 +230,7 @@ onUnmounted(() => {
               v-model="query"
               type="text"
               class="search-modal-input"
-              placeholder="Search pages..."
+              :placeholder="$t('search.placeholder')"
               autocomplete="off"
               spellcheck="false"
             />
@@ -298,15 +298,15 @@ onUnmounted(() => {
             <!-- Loading -->
             <div v-if="loading" class="search-loading">
               <div class="search-spinner" />
-              <span>Searching...</span>
+              <span>{{ $t('search.searching') }}</span>
             </div>
 
             <!-- Recent Searches -->
             <div v-else-if="showRecent" class="search-recent">
               <div class="search-section-header">
-                <span class="search-section-title">Recent searches</span>
+                <span class="search-section-title">{{ $t('search.recentSearches') }}</span>
                 <button type="button" class="search-section-action" @click="handleClearRecent">
-                  Clear
+                  {{ $t('search.clear') }}
                 </button>
               </div>
               <div class="search-results-list">
@@ -382,21 +382,21 @@ onUnmounted(() => {
 
             <!-- Empty State -->
             <div v-else-if="showEmpty" class="search-empty">
-              <span class="search-empty-text">No results found for "{{ query }}"</span>
+              <span class="search-empty-text">{{ $t('search.noResults') }} "{{ query }}"</span>
             </div>
 
             <!-- Initial State -->
             <div v-else-if="!hasQuery && !showRecent" class="search-initial">
-              <span class="search-initial-text">Type to search pages...</span>
+              <span class="search-initial-text">{{ $t('search.typeToSearch') }}</span>
             </div>
           </div>
 
           <!-- Footer -->
           <div class="search-footer">
             <div class="search-hints">
-              <span class="hint"><kbd>↑↓</kbd> Navigate</span>
-              <span class="hint"><kbd>↵</kbd> Open</span>
-              <span class="hint"><kbd>esc</kbd> Close</span>
+              <span class="hint"><kbd>↑↓</kbd> {{ $t('search.navigate') }}</span>
+              <span class="hint"><kbd>↵</kbd> {{ $t('search.openResult') }}</span>
+              <span class="hint"><kbd>esc</kbd> {{ $t('search.closeSearch') }}</span>
             </div>
           </div>
         </div>

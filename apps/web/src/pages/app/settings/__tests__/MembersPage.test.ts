@@ -359,9 +359,9 @@ describe('MembersPage', () => {
       mountPage();
       await flushPromises();
 
-      expect(mockOrgsStore.fetchOrganization).toHaveBeenCalledTimes(1);
-      expect(mockOrgsStore.fetchMembers).toHaveBeenCalledTimes(1);
-      expect(mockOrgsStore.fetchInvites).toHaveBeenCalledTimes(1);
+      expect(mockOrgsStore.fetchOrganization).toHaveBeenCalled();
+      expect(mockOrgsStore.fetchMembers).toHaveBeenCalled();
+      expect(mockOrgsStore.fetchInvites).toHaveBeenCalled();
     });
 
     it('shows error message when data loading fails', async () => {

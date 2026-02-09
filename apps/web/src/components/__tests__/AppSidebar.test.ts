@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
+import { i18n } from '@/i18n';
 import AppSidebar from '../AppSidebar.vue';
 import { usePagesStore } from '@/stores/pages';
 import { useDatabasesStore } from '@/stores/databases';
@@ -32,9 +33,16 @@ vi.mock('../NotificationBell.vue', () => ({
 vi.mock('../SearchModal.vue', () => ({
   default: { template: '<div class="search-modal-stub" />' },
 }));
+vi.mock('../LanguageSwitcher.vue', () => ({
+  default: { template: '<div class="language-switcher-stub" />' },
+}));
+vi.mock('../SaveAsTemplateModal.vue', () => ({
+  default: { template: '<div class="save-template-modal-stub" />' },
+}));
 
 // Mock composables
 vi.mock('@/composables', () => ({
+  useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
   useTheme: () => ({ theme: ref('light'), toggleTheme: vi.fn() }),
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
@@ -110,7 +118,7 @@ describe('AppSidebar', () => {
   }
 
   it('renders the sidebar with navigation items (Home, New Page, Trash)', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.text()).toContain('Home');
     expect(wrapper.text()).toContain('New Page');
@@ -118,31 +126,31 @@ describe('AppSidebar', () => {
   });
 
   it('renders user name in footer', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.find('.user-name').text()).toBe('Test User');
   });
 
   it('renders user avatar initial (first letter of name, uppercase)', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.find('.user-avatar').text()).toBe('T');
   });
 
   it('renders search button with placeholder "Search..."', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.find('.search-placeholder').text()).toBe('Search...');
   });
 
   it('shows "No pages yet" when page tree is empty', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.text()).toContain('No pages yet');
   });
 
   it('renders "Pages" section header', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     const sectionTitles = wrapper.findAll('.nav-section-title');
     const pagesSectionTitle = sectionTitles.find((el) => el.text() === 'Pages');
@@ -150,7 +158,7 @@ describe('AppSidebar', () => {
   });
 
   it('renders "Databases" section header', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     const sectionTitles = wrapper.findAll('.nav-section-title');
     const databasesSectionTitle = sectionTitles.find((el) => el.text() === 'Databases');
@@ -158,13 +166,13 @@ describe('AppSidebar', () => {
   });
 
   it('shows "No databases yet" when database list is empty', () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     expect(wrapper.text()).toContain('No databases yet');
   });
 
   it('navigates to dashboard when clicking Home', async () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     const navItems = wrapper.findAll('.nav-item');
     const homeButton = navItems.find((el) => el.text().includes('Home'));
@@ -176,7 +184,7 @@ describe('AppSidebar', () => {
   });
 
   it('navigates to trash when clicking Trash', async () => {
-    const wrapper = mount(AppSidebar);
+    const wrapper = mount(AppSidebar, { global: { plugins: [i18n] } });
 
     const trashButton = wrapper.find('.trash-link');
     expect(trashButton.exists()).toBe(true);

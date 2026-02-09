@@ -43,7 +43,7 @@ describe('PageContextMenu', () => {
     expect(wrapper.text()).toContain('Add subpage');
     expect(wrapper.text()).toContain('Duplicate');
     expect(wrapper.text()).toContain('Rename');
-    expect(wrapper.text()).toContain('Add to favorites');
+    expect(wrapper.text()).toContain('Add to favourites');
     expect(wrapper.text()).toContain('Save as template');
     expect(wrapper.text()).toContain('Move to trash');
 

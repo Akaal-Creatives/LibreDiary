@@ -100,7 +100,7 @@ async function handleDrop(event: DragEvent, targetFavId: string) {
         class="expand-btn"
         :class="{ expanded: isExpanded }"
         :aria-expanded="isExpanded"
-        :aria-label="isExpanded ? 'Collapse favorites' : 'Expand favorites'"
+        :aria-label="isExpanded ? $t('sidebar.collapseFavourites') : $t('sidebar.expandFavourites')"
         @click="toggleExpanded"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -113,7 +113,7 @@ async function handleDrop(event: DragEvent, targetFavId: string) {
           />
         </svg>
       </button>
-      <span class="section-title">Favorites</span>
+      <span class="section-title">{{ $t('nav.favourites') }}</span>
     </div>
 
     <div v-if="isExpanded" class="favorites-list" role="list">

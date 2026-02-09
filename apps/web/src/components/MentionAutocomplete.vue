@@ -243,7 +243,7 @@ onUnmounted(() => {
       ref="textareaRef"
       v-model="localValue"
       class="mention-input"
-      :placeholder="placeholder || 'Type @ to mention someone...'"
+      :placeholder="placeholder || $t('mentions.placeholder')"
       :rows="rows || 2"
       :disabled="disabled"
       @keydown="handleKeydown"
@@ -258,8 +258,8 @@ onUnmounted(() => {
         :style="dropdownStyle"
       >
         <div class="dropdown-header">
-          <span class="dropdown-label">Mention someone</span>
-          <span class="dropdown-hint">↑↓ to navigate · Enter to select</span>
+          <span class="dropdown-label">{{ $t('mentions.mentionSomeone') }}</span>
+          <span class="dropdown-hint">{{ $t('mentions.navigateHint') }}</span>
         </div>
         <div class="dropdown-list">
           <button

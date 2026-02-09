@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { useToast } from '@/composables/useToast';
 
+const { t } = useI18n();
 const { toasts, removeToast } = useToast();
 
 function getIcon(type: 'success' | 'error' | 'info' | 'warning') {
@@ -38,7 +40,7 @@ function getIcon(type: 'success' | 'error' | 'info' | 'warning') {
           <span class="toast-message">{{ toast.message }}</span>
           <button
             class="toast-close"
-            aria-label="Dismiss notification"
+            :aria-label="t('common.dismiss')"
             @click="removeToast(toast.id)"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

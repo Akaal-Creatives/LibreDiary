@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore, usePagesStore, useDatabasesStore } from '@/stores';
 import { useTheme, useToast } from '@/composables';
 import type { PageWithChildren, Page } from '@librediary/shared';
@@ -10,6 +11,7 @@ import PageContextMenu from './PageContextMenu.vue';
 import SaveAsTemplateModal from './SaveAsTemplateModal.vue';
 import FavoritesSection from './FavoritesSection.vue';
 import NotificationBell from './NotificationBell.vue';
+import LanguageSwitcher from './LanguageSwitcher.vue';
 import SearchModal from './SearchModal.vue';
 
 const router = useRouter();
@@ -18,6 +20,7 @@ const pagesStore = usePagesStore();
 const databasesStore = useDatabasesStore();
 const { theme, toggleTheme } = useTheme();
 const toast = useToast();
+const { t } = useI18n();
 
 const showSearchModal = ref(false);
 const saveTemplateModal = ref<{ open: boolean; pageId: string; pageTitle: string }>({
@@ -78,7 +81,7 @@ watch(
         ]);
       } catch (e) {
         console.error('Failed to fetch pages:', e);
-        toast.error('Failed to load pages');
+        toast.error(t('pages.failedToLoadPages'));
       }
     }
   },
@@ -96,13 +99,13 @@ function navigateToTrash() {
 async function createNewPage(parentId?: string) {
   try {
     const page = await pagesStore.createPage({
-      title: 'Untitled',
+      title: t('pages.untitled'),
       parentId: parentId ?? null,
     });
     router.push({ name: 'page', params: { pageId: page.id } });
   } catch (e) {
     console.error('Failed to create page:', e);
-    toast.error('Failed to create page');
+    toast.error(t('pages.failedToCreate'));
   }
 }
 
@@ -127,11 +130,11 @@ async function handleAddSubpage(page: Page | PageWithChildren) {
 async function handleDuplicate(page: Page | PageWithChildren) {
   try {
     const newPage = await pagesStore.duplicatePage(page.id);
-    toast.success('Page duplicated');
+    toast.success(t('pages.pageDuplicated'));
     router.push({ name: 'page', params: { pageId: newPage.id } });
   } catch (e) {
     console.error('Failed to duplicate page:', e);
-    toast.error('Failed to duplicate page');
+    toast.error(t('pages.failedToDuplicate'));
   }
 }
 
@@ -144,20 +147,20 @@ async function handleToggleFavorite(page: Page | PageWithChildren) {
   try {
     const wasFavorite = pagesStore.isFavorite(page.id);
     await pagesStore.toggleFavorite(page.id);
-    toast.success(wasFavorite ? 'Removed from favorites' : 'Added to favorites');
+    toast.success(wasFavorite ? t('pages.removeFromFavourites') : t('pages.addToFavourites'));
   } catch (e) {
     console.error('Failed to toggle favorite:', e);
-    toast.error('Failed to update favorites');
+    toast.error(t('pages.failedToUpdateFavourites'));
   }
 }
 
 async function createNewDatabase() {
   try {
-    const db = await databasesStore.createDatabase({ name: 'Untitled Database' });
+    const db = await databasesStore.createDatabase({ name: t('databases.untitledDatabase') });
     router.push({ name: 'database', params: { databaseId: db.id } });
   } catch (e) {
     console.error('Failed to create database:', e);
-    toast.error('Failed to create database');
+    toast.error(t('pages.failedToCreate'));
   }
 }
 
@@ -180,14 +183,14 @@ function closeSaveTemplateModal() {
 async function handleMoveToTrash(page: Page | PageWithChildren) {
   try {
     await pagesStore.trashPage(page.id);
-    toast.success('Moved to trash');
+    toast.success(t('pages.movedToTrash'));
     // Navigate to dashboard if the trashed page was the current page
     if (pagesStore.currentPageId === page.id) {
       router.push({ name: 'dashboard' });
     }
   } catch (e) {
     console.error('Failed to trash page:', e);
-    toast.error('Failed to move to trash');
+    toast.error(t('pages.failedToTrash'));
   }
 }
 </script>
@@ -218,7 +221,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
             stroke-linejoin="round"
           />
         </svg>
-        <span class="search-placeholder">Search...</span>
+        <span class="search-placeholder">{{ $t('sidebar.searchPlaceholder') }}</span>
         <kbd class="search-shortcut"><span class="shortcut-mod">⌘</span>K</kbd>
       </button>
     </div>
@@ -246,7 +249,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
               />
             </svg>
           </span>
-          <span>Home</span>
+          <span>{{ $t('nav.home') }}</span>
         </button>
         <button class="nav-item create-btn" @click="createNewPage()">
           <span class="nav-icon">
@@ -267,7 +270,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
               />
             </svg>
           </span>
-          <span>New Page</span>
+          <span>{{ $t('nav.newPage') }}</span>
         </button>
       </div>
 
@@ -277,11 +280,11 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <!-- Pages Section -->
       <div class="nav-section">
         <div class="nav-section-header">
-          <span class="nav-section-title">Pages</span>
+          <span class="nav-section-title">{{ $t('nav.pages') }}</span>
           <button
             class="section-action"
-            title="Add page"
-            aria-label="Add new page"
+            :title="$t('sidebar.addPage')"
+            :aria-label="$t('sidebar.addNewPage')"
             @click="createNewPage()"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -332,7 +335,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
               />
             </svg>
           </span>
-          <span class="empty-text">No pages yet</span>
+          <span class="empty-text">{{ $t('sidebar.noPagesYet') }}</span>
         </div>
 
         <!-- Page Tree -->
@@ -349,11 +352,11 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <!-- Databases Section -->
       <div class="nav-section">
         <div class="nav-section-header">
-          <span class="nav-section-title">Databases</span>
+          <span class="nav-section-title">{{ $t('nav.databases') }}</span>
           <button
             class="section-action"
-            title="Add database"
-            aria-label="Add new database"
+            :title="$t('sidebar.addDatabase')"
+            :aria-label="$t('sidebar.addNewDatabase')"
             @click="createNewDatabase"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -374,7 +377,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         </div>
 
         <div v-if="databasesStore.databaseList.length === 0" class="empty-state">
-          <span class="empty-text">No databases yet</span>
+          <span class="empty-text">{{ $t('sidebar.noDatabasesYet') }}</span>
         </div>
 
         <div v-else class="database-list">
@@ -441,7 +444,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
               />
             </svg>
           </span>
-          <span>Trash</span>
+          <span>{{ $t('nav.trash') }}</span>
         </button>
       </div>
     </nav>
@@ -459,6 +462,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       </div>
       <div class="footer-actions">
         <NotificationBell />
+        <LanguageSwitcher />
         <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
           <span v-if="theme === 'light'">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

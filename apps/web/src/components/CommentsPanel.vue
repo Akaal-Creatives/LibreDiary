@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DOMPurify from 'dompurify';
 import { commentsService, type Comment } from '@/services';
 import { useOrganizationsStore, useAuthStore } from '@/stores';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import MentionAutocomplete from '@/components/MentionAutocomplete.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   pageId: string;
@@ -81,7 +84,7 @@ async function loadComments() {
     comments.value = await commentsService.getComments(orgId.value, props.pageId);
   } catch (e) {
     console.error('Failed to load comments:', e);
-    error.value = 'Failed to load comments';
+    error.value = t('comments.failedToLoad');
   } finally {
     loading.value = false;
   }
@@ -100,7 +103,7 @@ async function submitComment() {
     newCommentContent.value = '';
   } catch (e) {
     console.error('Failed to create comment:', e);
-    error.value = 'Failed to post comment';
+    error.value = t('comments.failedToPost');
   } finally {
     submitting.value = false;
   }
@@ -128,7 +131,7 @@ async function submitReply(parentId: string) {
     replyingTo.value = null;
   } catch (e) {
     console.error('Failed to create reply:', e);
-    error.value = 'Failed to post reply';
+    error.value = t('comments.failedToPostReply');
   } finally {
     submitting.value = false;
   }
@@ -185,7 +188,7 @@ async function saveEdit(commentId: string) {
     editContent.value = '';
   } catch (e) {
     console.error('Failed to update comment:', e);
-    error.value = 'Failed to update comment';
+    error.value = t('comments.failedToUpdate');
   } finally {
     submitting.value = false;
   }
@@ -223,7 +226,7 @@ async function deleteComment() {
     deletingCommentId.value = null;
   } catch (e) {
     console.error('Failed to delete comment:', e);
-    error.value = 'Failed to delete comment';
+    error.value = t('comments.failedToDelete');
   } finally {
     deleting.value = false;
   }
@@ -246,7 +249,7 @@ async function toggleResolve(comment: Comment) {
     }
   } catch (e) {
     console.error('Failed to resolve comment:', e);
-    error.value = 'Failed to resolve comment';
+    error.value = t('comments.failedToResolve');
   }
 }
 
@@ -258,10 +261,10 @@ function formatDate(dateString: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t('time.justNow');
+  if (diffMins < 60) return t('time.minuteAgo', { count: diffMins });
+  if (diffHours < 24) return t('time.hourAgo', { count: diffHours });
+  if (diffDays < 7) return t('time.dayAgo', { count: diffDays });
 
   return date.toLocaleDateString(undefined, {
     month: 'short',
@@ -311,16 +314,16 @@ function close() {
                 </svg>
               </div>
               <div class="header-text">
-                <h2 class="panel-title">Comments</h2>
+                <h2 class="panel-title">{{ $t('comments.title') }}</h2>
                 <p class="panel-subtitle">
-                  {{ totalComments }} {{ totalComments === 1 ? 'comment' : 'comments' }}
+                  {{ totalComments }} {{ $t('comments.comment', totalComments) }}
                   <span v-if="unresolvedCount > 0" class="unresolved-badge">
-                    {{ unresolvedCount }} open
+                    {{ unresolvedCount }} {{ $t('comments.open') }}
                   </span>
                 </p>
               </div>
             </div>
-            <button type="button" class="close-btn" aria-label="Close" @click="close">
+            <button type="button" class="close-btn" :aria-label="$t('common.close')" @click="close">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5"
@@ -338,13 +341,13 @@ function close() {
               <MentionAutocomplete
                 v-model="newCommentContent"
                 :organization-id="orgId || ''"
-                placeholder="Add a comment... Use @ to mention"
+                :placeholder="$t('comments.addComment')"
                 :rows="2"
                 :disabled="submitting"
                 @submit="submitComment"
               />
               <div class="input-actions">
-                <span class="input-hint">Use @ to mention · Cmd+Enter to send</span>
+                <span class="input-hint">{{ $t('comments.mentionHint') }}</span>
                 <button
                   type="button"
                   class="submit-btn"
@@ -404,7 +407,9 @@ function close() {
                 <circle cx="12" cy="16" r="1" fill="currentColor" />
               </svg>
               <p>{{ error }}</p>
-              <button type="button" class="retry-btn" @click="loadComments">Try Again</button>
+              <button type="button" class="retry-btn" @click="loadComments">
+                {{ $t('common.tryAgain') }}
+              </button>
             </div>
 
             <!-- Empty -->
@@ -436,8 +441,8 @@ function close() {
                   />
                 </svg>
               </div>
-              <h3>Start the conversation</h3>
-              <p>Be the first to leave a comment on this page</p>
+              <h3>{{ $t('comments.startConversation') }}</h3>
+              <p>{{ $t('comments.beFirstToComment') }}</p>
             </div>
 
             <!-- Comments -->
@@ -475,7 +480,11 @@ function close() {
                         type="button"
                         class="resolve-btn"
                         :class="{ resolved: comment.isResolved }"
-                        :title="comment.isResolved ? 'Reopen thread' : 'Resolve thread'"
+                        :title="
+                          comment.isResolved
+                            ? $t('comments.reopenThread')
+                            : $t('comments.resolveThread')
+                        "
                         @click="toggleResolve(comment)"
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -508,7 +517,7 @@ function close() {
                           :disabled="submitting"
                           @click="cancelEdit"
                         >
-                          Cancel
+                          {{ $t('common.cancel') }}
                         </button>
                         <button
                           type="button"
@@ -516,7 +525,7 @@ function close() {
                           :disabled="!editContent.trim() || submitting"
                           @click="saveEdit(comment.id)"
                         >
-                          Save
+                          {{ $t('common.save') }}
                         </button>
                       </div>
                     </div>
@@ -532,18 +541,18 @@ function close() {
                     <!-- Actions -->
                     <div v-if="editingComment !== comment.id" class="comment-actions">
                       <button type="button" class="action-btn" @click="startReply(comment.id)">
-                        Reply
+                        {{ $t('comments.reply') }}
                       </button>
                       <template v-if="comment.createdById === currentUserId">
                         <button type="button" class="action-btn" @click="startEdit(comment)">
-                          Edit
+                          {{ $t('common.edit') }}
                         </button>
                         <button
                           type="button"
                           class="action-btn delete"
                           @click="confirmDelete(comment.id)"
                         >
-                          Delete
+                          {{ $t('common.delete') }}
                         </button>
                       </template>
                     </div>
@@ -591,7 +600,7 @@ function close() {
                             :disabled="submitting"
                             @click="cancelEdit"
                           >
-                            Cancel
+                            {{ $t('common.cancel') }}
                           </button>
                           <button
                             type="button"
@@ -599,7 +608,7 @@ function close() {
                             :disabled="!editContent.trim() || submitting"
                             @click="saveEdit(reply.id)"
                           >
-                            Save
+                            {{ $t('common.save') }}
                           </button>
                         </div>
                       </div>
@@ -616,14 +625,14 @@ function close() {
                         class="comment-actions"
                       >
                         <button type="button" class="action-btn" @click="startEdit(reply)">
-                          Edit
+                          {{ $t('common.edit') }}
                         </button>
                         <button
                           type="button"
                           class="action-btn delete"
                           @click="confirmDelete(reply.id)"
                         >
-                          Delete
+                          {{ $t('common.delete') }}
                         </button>
                       </div>
                     </div>
@@ -635,7 +644,7 @@ function close() {
                   <MentionAutocomplete
                     v-model="replyContent"
                     :organization-id="orgId || ''"
-                    placeholder="Write a reply... Use @ to mention"
+                    :placeholder="$t('comments.writeReply')"
                     :rows="2"
                     :disabled="submitting"
                     @submit="submitReply(comment.id)"
@@ -647,7 +656,7 @@ function close() {
                       :disabled="submitting"
                       @click="cancelReply"
                     >
-                      Cancel
+                      {{ $t('common.cancel') }}
                     </button>
                     <button
                       type="button"
@@ -655,7 +664,7 @@ function close() {
                       :disabled="!replyContent.trim() || submitting"
                       @click="submitReply(comment.id)"
                     >
-                      Reply
+                      {{ $t('comments.reply') }}
                     </button>
                   </div>
                 </div>
@@ -670,10 +679,10 @@ function close() {
   <!-- Delete Confirmation -->
   <ConfirmDialog
     :open="showDeleteConfirm"
-    title="Delete Comment"
-    message="Are you sure you want to delete this comment? This action cannot be undone."
-    confirm-text="Delete"
-    cancel-text="Cancel"
+    :title="$t('comments.deleteComment')"
+    :message="$t('comments.deleteCommentConfirm')"
+    :confirm-text="$t('common.delete')"
+    :cancel-text="$t('common.cancel')"
     variant="destructive"
     @confirm="deleteComment"
     @close="showDeleteConfirm = false"

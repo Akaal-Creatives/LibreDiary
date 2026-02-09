@@ -167,7 +167,7 @@ describe('AppHeader', () => {
       const titles = actionButtons.map((btn) => btn.attributes('title'));
       expect(titles).toContain('View history');
       expect(titles).toContain('Comments');
-      expect(titles).toContain('Favorite');
+      expect(titles).toContain('Favourite');
     });
 
     it('renders share button with "Share" text', () => {

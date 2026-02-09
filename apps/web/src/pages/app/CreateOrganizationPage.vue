@@ -66,8 +66,8 @@ function handleCancel() {
   <div class="create-org-page">
     <div class="page-container">
       <div class="page-header">
-        <h1 class="page-title">Create Organization</h1>
-        <p class="page-subtitle">Create a new organization to collaborate with your team.</p>
+        <h1 class="page-title">{{ $t('organisation.createOrganisation') }}</h1>
+        <p class="page-subtitle">{{ $t('organisation.createDescription') }}</p>
       </div>
 
       <div v-if="error" class="alert alert-error">
@@ -76,7 +76,7 @@ function handleCancel() {
 
       <form class="create-form" @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label for="org-name" class="form-label">Organization name</label>
+          <label for="org-name" class="form-label">{{ $t('organisation.organisationName') }}</label>
           <input
             id="org-name"
             v-model="form.name"
@@ -89,7 +89,7 @@ function handleCancel() {
         </div>
 
         <div class="form-group">
-          <label for="org-slug" class="form-label">URL slug</label>
+          <label for="org-slug" class="form-label">{{ $t('organisation.urlSlug') }}</label>
           <div class="input-prefix-wrapper">
             <span class="input-prefix">librediary.app/</span>
             <input
@@ -109,10 +109,10 @@ function handleCancel() {
 
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" :disabled="loading" @click="handleCancel">
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Creating...' : 'Create Organization' }}
+            {{ loading ? $t('common.creating') : $t('organisation.createOrganisation') }}
           </button>
         </div>
       </form>

@@ -2,6 +2,7 @@
 import { ref, createApp, h, type App } from 'vue';
 import AlertDialog, { type AlertVariant } from '@/components/ui/AlertDialog.vue';
 import ConfirmDialog, { type ConfirmVariant } from '@/components/ui/ConfirmDialog.vue';
+import { i18n } from '@/i18n';
 
 interface AlertOptions {
   title?: string;
@@ -75,6 +76,7 @@ export function alert(options: AlertOptions | string): Promise<void> {
     });
 
     mountedApp = app;
+    app.use(i18n);
     app.mount(container);
   });
 }
@@ -126,6 +128,7 @@ export function confirm(options: ConfirmOptions | string): Promise<boolean> {
     });
 
     mountedApp = app;
+    app.use(i18n);
     app.mount(container);
   });
 }

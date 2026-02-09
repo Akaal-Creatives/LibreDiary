@@ -34,7 +34,7 @@ function navigateToHome() {
 </script>
 
 <template>
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
+  <nav class="breadcrumbs" :aria-label="$t('pages.breadcrumb')">
     <ol class="breadcrumb-list">
       <!-- Home -->
       <li class="breadcrumb-item">

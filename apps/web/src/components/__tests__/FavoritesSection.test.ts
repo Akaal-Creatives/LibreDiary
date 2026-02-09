@@ -220,7 +220,7 @@ describe('FavoritesSection', () => {
     setupWithFavorites();
     const wrapper = mount(FavoritesSection);
 
-    expect(wrapper.find('.section-title').text()).toBe('Favorites');
+    expect(wrapper.find('.section-title').text()).toBe('Favourites');
   });
 
   it('shows active state for current page', () => {

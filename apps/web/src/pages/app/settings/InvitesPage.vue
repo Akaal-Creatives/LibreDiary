@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
 import MemberRoleBadge from '@/components/MemberRoleBadge.vue';
 import InviteMemberModal from '@/components/InviteMemberModal.vue';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const orgsStore = useOrganizationsStore();
 
@@ -51,7 +53,7 @@ async function handleCancel(inviteId: string) {
 
   try {
     await orgsStore.cancelInvite(inviteId);
-    success.value = 'Invite cancelled';
+    success.value = t('invites.inviteCancelled');
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.message;
@@ -71,7 +73,7 @@ async function handleResend(inviteId: string) {
 
   try {
     await orgsStore.resendInvite(inviteId);
-    success.value = 'Invite resent successfully';
+    success.value = t('invites.inviteResent');
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.message;
@@ -103,7 +105,7 @@ function isExpired(expiresAt: string): boolean {
   <div class="invites-page">
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">Pending Invites</h1>
+        <h1 class="page-title">{{ $t('invites.title') }}</h1>
         <p class="page-subtitle">
           Manage pending invitations to {{ authStore.currentOrganization?.name }}
         </p>
@@ -117,7 +119,7 @@ function isExpired(expiresAt: string): boolean {
             stroke-linecap="round"
           />
         </svg>
-        <span>Send Invite</span>
+        <span>{{ $t('invites.sendInvite') }}</span>
       </button>
     </div>
 
@@ -159,9 +161,12 @@ function isExpired(expiresAt: string): boolean {
         <div class="invite-info">
           <div class="invite-email">{{ invite.email }}</div>
           <div class="invite-meta">
-            <span v-if="isExpired(invite.expiresAt)" class="status-expired">Expired</span>
+            <span v-if="isExpired(invite.expiresAt)" class="status-expired">{{
+              $t('invites.expired')
+            }}</span>
             <template v-else>
-              Invited {{ formatDate(invite.createdAt) }} &middot; Expires
+              {{ $t('invites.invited') }} {{ formatDate(invite.createdAt) }} &middot;
+              {{ $t('invites.expires') }}
               {{ formatDate(invite.expiresAt) }}
             </template>
           </div>
@@ -171,7 +176,7 @@ function isExpired(expiresAt: string): boolean {
           <button
             v-if="!isExpired(invite.expiresAt)"
             class="action-btn"
-            title="Resend invite"
+            :title="$t('invites.resendInvite')"
             :disabled="actionLoading === invite.id"
             @click="handleResend(invite.id)"
           >

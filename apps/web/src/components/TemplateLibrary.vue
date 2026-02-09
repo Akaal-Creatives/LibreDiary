@@ -50,7 +50,7 @@ function getCategoryIcon(category: string | null): string {
   <div class="template-library">
     <!-- Header -->
     <div class="library-header">
-      <h2 class="library-title">Templates</h2>
+      <h2 class="library-title">{{ $t('templates.library') }}</h2>
       <button class="close-btn" aria-label="Close" @click="$emit('close')">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path

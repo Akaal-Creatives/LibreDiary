@@ -72,9 +72,9 @@ describe('CreateOrganizationPage', () => {
     it('should render the page title and subtitle', () => {
       const wrapper = mountPage();
 
-      expect(wrapper.find('.page-title').text()).toBe('Create Organization');
+      expect(wrapper.find('.page-title').text()).toBe('Create Organisation');
       expect(wrapper.find('.page-subtitle').text()).toContain(
-        'Create a new organization to collaborate with your team.'
+        'Create a new organisation to collaborate with your team.'
       );
     });
 
@@ -91,7 +91,7 @@ describe('CreateOrganizationPage', () => {
       const buttons = wrapper.findAll('.btn');
       expect(buttons).toHaveLength(2);
       expect(buttons[0].text()).toBe('Cancel');
-      expect(buttons[1].text()).toBe('Create Organization');
+      expect(buttons[1].text()).toBe('Create Organisation');
     });
 
     it('should display URL prefix "librediary.app/" before the slug input', () => {
@@ -265,7 +265,7 @@ describe('CreateOrganizationPage', () => {
       await flushPromises();
 
       const submitBtn = wrapper.find('.btn-primary');
-      expect(submitBtn.text()).toBe('Create Organization');
+      expect(submitBtn.text()).toBe('Create Organisation');
       expect(submitBtn.attributes('disabled')).toBeUndefined();
     });
   });

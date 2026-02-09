@@ -47,7 +47,7 @@ async function loadDatabase() {
     <!-- Loading State -->
     <div v-if="loading" class="database-loading">
       <div class="loading-spinner"></div>
-      <span class="loading-text">Loading...</span>
+      <span class="loading-text">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Error State -->
@@ -57,8 +57,8 @@ async function loadDatabase() {
         <path d="M24 14V26" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         <circle cx="24" cy="32" r="2" fill="currentColor" />
       </svg>
-      <h2 class="error-title">{{ error }}</h2>
-      <button class="error-retry" @click="loadDatabase">Try again</button>
+      <h2 class="error-title">{{ $t('databases.failedToLoad') }}</h2>
+      <button class="error-retry" @click="loadDatabase">{{ $t('common.tryAgain') }}</button>
     </div>
 
     <!-- Database Content -->
@@ -71,7 +71,9 @@ async function loadDatabase() {
       <GalleryView v-else-if="databasesStore.activeView?.type === 'GALLERY'" />
       <div v-else class="view-placeholder">
         <span class="placeholder-text">
-          {{ databasesStore.activeView?.type ?? 'Unknown' }} view is not yet supported.
+          {{
+            $t('databases.viewNotSupported', { view: databasesStore.activeView?.type ?? 'Unknown' })
+          }}
         </span>
       </div>
     </div>

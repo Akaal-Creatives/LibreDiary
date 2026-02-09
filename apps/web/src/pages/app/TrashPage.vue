@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { usePagesStore } from '@/stores';
 import { useDialog } from '@/composables';
 import type { Page } from '@librediary/shared';
 
+const { t } = useI18n();
 const pagesStore = usePagesStore();
 const { confirm } = useDialog();
 
@@ -35,10 +37,10 @@ async function handleRestore(page: Page) {
 
 async function handleDelete(page: Page) {
   const confirmed = await confirm({
-    title: 'Delete Permanently',
-    message: `Are you sure you want to permanently delete "${page.title}"? This action cannot be undone.`,
+    title: t('trash.permanentlyDelete'),
+    message: t('trash.permanentlyDeleteConfirm', { title: page.title }),
     variant: 'destructive',
-    confirmText: 'Delete',
+    confirmText: t('common.delete'),
     cancelText: 'Cancel',
   });
 
@@ -88,9 +90,9 @@ function formatDate(dateString: string): string {
           <path d="M10 11V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           <path d="M14 11V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
-        Trash
+        {{ $t('trash.title') }}
       </h1>
-      <p class="page-description">Items in trash will be permanently deleted after 30 days.</p>
+      <p class="page-description">{{ $t('trash.description') }}</p>
     </header>
 
     <!-- Error Message -->
@@ -106,7 +108,7 @@ function formatDate(dateString: string): string {
     <!-- Loading State -->
     <div v-if="pagesStore.trashLoading" class="loading-state">
       <div class="spinner" />
-      <span>Loading trashed pages...</span>
+      <span>{{ $t('trash.loadingTrashedPages') }}</span>
     </div>
 
     <!-- Empty State -->
@@ -126,8 +128,8 @@ function formatDate(dateString: string): string {
         <path d="M20 22V32" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         <path d="M28 22V32" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
-      <h2 class="empty-title">Trash is empty</h2>
-      <p class="empty-text">Items you delete will appear here.</p>
+      <h2 class="empty-title">{{ $t('trash.emptyTrash') }}</h2>
+      <p class="empty-text">{{ $t('trash.emptyTrashDescription') }}</p>
     </div>
 
     <!-- Trash List -->
@@ -156,7 +158,7 @@ function formatDate(dateString: string): string {
         <div class="item-info">
           <span class="item-title">{{ page.title }}</span>
           <span v-if="page.trashedAt" class="item-date">
-            Deleted {{ formatDate(page.trashedAt) }}
+            {{ $t('trash.deleted') }} {{ formatDate(page.trashedAt) }}
           </span>
         </div>
 
@@ -181,7 +183,7 @@ function formatDate(dateString: string): string {
                 stroke-linejoin="round"
               />
             </svg>
-            {{ restoring.has(page.id) ? 'Restoring...' : 'Restore' }}
+            {{ restoring.has(page.id) ? $t('trash.restoring') : $t('trash.restore') }}
           </button>
 
           <button
@@ -203,7 +205,7 @@ function formatDate(dateString: string): string {
                 stroke-linecap="round"
               />
             </svg>
-            {{ deleting.has(page.id) ? 'Deleting...' : 'Delete' }}
+            {{ deleting.has(page.id) ? $t('common.deleting') : $t('common.delete') }}
           </button>
         </div>
       </div>

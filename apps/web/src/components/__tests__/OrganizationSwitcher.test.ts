@@ -134,7 +134,7 @@ describe('OrganizationSwitcher', () => {
 
     await wrapper.find('.switcher-button').trigger('click');
 
-    expect(wrapper.text()).toContain('Switch Organization');
+    expect(wrapper.text()).toContain('Switch organisation');
     expect(wrapper.text()).toContain('Another Org');
   });
 
@@ -144,7 +144,7 @@ describe('OrganizationSwitcher', () => {
 
     await wrapper.find('.switcher-button').trigger('click');
 
-    expect(wrapper.text()).not.toContain('Switch Organization');
+    expect(wrapper.text()).not.toContain('Switch organisation');
   });
 
   it('shows Settings and Members actions in dropdown', async () => {
@@ -163,7 +163,7 @@ describe('OrganizationSwitcher', () => {
 
     await wrapper.find('.switcher-button').trigger('click');
 
-    expect(wrapper.text()).toContain('Create Organization');
+    expect(wrapper.text()).toContain('Create Organisation');
   });
 
   it('has correct aria attributes', () => {

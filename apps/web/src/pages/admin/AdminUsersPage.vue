@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useToast } from '@/composables';
 import { adminService, type AdminUser, type Pagination } from '@/services';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 
 // State
@@ -40,7 +42,7 @@ async function loadUsers() {
     pagination.value = response.pagination;
   } catch (error) {
     console.error('Failed to load users:', error);
-    toast.error('Failed to load users');
+    toast.error(t('admin.failedToLoadUsers'));
   } finally {
     loading.value = false;
   }
@@ -67,21 +69,22 @@ function goToPage(page: number) {
 // Toggle super admin status
 async function toggleSuperAdmin(user: AdminUser) {
   const newStatus = !user.isSuperAdmin;
-  const action = newStatus ? 'grant' : 'revoke';
 
   confirmDialogConfig.value = {
-    title: `${newStatus ? 'Grant' : 'Revoke'} Super Admin`,
-    message: `Are you sure you want to ${action} super admin privileges for ${user.name || user.email}?`,
-    confirmText: newStatus ? 'Grant Access' : 'Revoke Access',
+    title: newStatus ? t('admin.grantSuperAdmin') : t('admin.revokeSuperAdmin'),
+    message: newStatus
+      ? t('admin.grantSuperAdminConfirm', { name: user.name || user.email })
+      : t('admin.revokeSuperAdminConfirm', { name: user.name || user.email }),
+    confirmText: newStatus ? t('admin.grantAccess') : t('admin.revokeAccess'),
     variant: 'destructive',
     onConfirm: async () => {
       try {
         await adminService.updateUser(user.id, { isSuperAdmin: newStatus });
-        toast.success(`Super admin ${action}ed successfully`);
+        toast.success(newStatus ? t('admin.superAdminGranted') : t('admin.superAdminRevoked'));
         await loadUsers();
       } catch (error) {
         console.error('Failed to update user:', error);
-        toast.error('Failed to update user');
+        toast.error(t('admin.failedToUpdateUser'));
       }
     },
   };
@@ -91,18 +94,18 @@ async function toggleSuperAdmin(user: AdminUser) {
 // Delete user
 function confirmDeleteUser(user: AdminUser) {
   confirmDialogConfig.value = {
-    title: 'Delete User',
-    message: `Are you sure you want to delete ${user.name || user.email}? This action can be undone by restoring the user.`,
-    confirmText: 'Delete User',
+    title: t('admin.deleteUser'),
+    message: t('admin.deleteUserConfirm', { name: user.name || user.email }),
+    confirmText: t('admin.deleteUser'),
     variant: 'destructive',
     onConfirm: async () => {
       try {
         await adminService.deleteUser(user.id);
-        toast.success('User deleted successfully');
+        toast.success(t('admin.userDeleted'));
         await loadUsers();
       } catch (error) {
         console.error('Failed to delete user:', error);
-        toast.error('Failed to delete user');
+        toast.error(t('admin.failedToDeleteUser'));
       }
     },
   };
@@ -113,11 +116,11 @@ function confirmDeleteUser(user: AdminUser) {
 async function restoreUser(user: AdminUser) {
   try {
     await adminService.restoreUser(user.id);
-    toast.success('User restored successfully');
+    toast.success(t('admin.userRestored'));
     await loadUsers();
   } catch (error) {
     console.error('Failed to restore user:', error);
-    toast.error('Failed to restore user');
+    toast.error(t('admin.failedToRestoreUser'));
   }
 }
 
@@ -139,8 +142,8 @@ onMounted(() => {
   <div class="admin-users">
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">Users</h1>
-        <p class="page-description">Manage all users in the system</p>
+        <h1 class="page-title">{{ $t('admin.users') }}</h1>
+        <p class="page-description">{{ $t('admin.manageAllUsers') }}</p>
       </div>
     </div>
 
@@ -166,13 +169,15 @@ onMounted(() => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search users by name or email..."
+          :placeholder="$t('admin.searchUsersPlaceholder')"
           class="search-input"
         />
       </div>
 
       <div class="toolbar-stats">
-        <span v-if="pagination" class="stats-text"> {{ pagination.total }} users total </span>
+        <span v-if="pagination" class="stats-text">
+          {{ pagination.total }} {{ $t('admin.usersTotal') }}
+        </span>
       </div>
     </div>
 
@@ -181,11 +186,11 @@ onMounted(() => {
       <table class="data-table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Status</th>
-            <th>Organizations</th>
-            <th>Joined</th>
-            <th class="actions-col">Actions</th>
+            <th>{{ $t('admin.user') }}</th>
+            <th>{{ $t('admin.status') }}</th>
+            <th>{{ $t('admin.organisations_column') }}</th>
+            <th>{{ $t('admin.joined') }}</th>
+            <th class="actions-col">{{ $t('admin.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -221,7 +226,7 @@ onMounted(() => {
                     stroke-linecap="round"
                   />
                 </svg>
-                <span>No users found</span>
+                <span>{{ $t('admin.noUsersFound') }}</span>
               </div>
             </td>
           </tr>
@@ -235,8 +240,10 @@ onMounted(() => {
                 </div>
                 <div class="user-info">
                   <span class="user-name">
-                    {{ user.name || 'No name' }}
-                    <span v-if="user.isSuperAdmin" class="admin-badge">Admin</span>
+                    {{ user.name || $t('admin.noName') }}
+                    <span v-if="user.isSuperAdmin" class="admin-badge">{{
+                      $t('admin.admin')
+                    }}</span>
                   </span>
                   <span class="user-email">{{ user.email }}</span>
                 </div>
@@ -244,9 +251,13 @@ onMounted(() => {
             </td>
             <td>
               <div class="status-badges">
-                <span v-if="user.deletedAt" class="badge badge-deleted">Deleted</span>
-                <span v-else-if="user.emailVerified" class="badge badge-verified">Verified</span>
-                <span v-else class="badge badge-unverified">Unverified</span>
+                <span v-if="user.deletedAt" class="badge badge-deleted">{{
+                  $t('admin.deleted')
+                }}</span>
+                <span v-else-if="user.emailVerified" class="badge badge-verified">{{
+                  $t('admin.verified')
+                }}</span>
+                <span v-else class="badge badge-unverified">{{ $t('admin.unverified') }}</span>
               </div>
             </td>
             <td>
@@ -260,7 +271,7 @@ onMounted(() => {
                 <button
                   v-if="user.deletedAt"
                   class="action-btn restore"
-                  title="Restore user"
+                  :title="$t('admin.restoreUser')"
                   @click="restoreUser(user)"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -283,7 +294,11 @@ onMounted(() => {
                   <button
                     class="action-btn"
                     :class="{ warning: !user.isSuperAdmin, danger: user.isSuperAdmin }"
-                    :title="user.isSuperAdmin ? 'Revoke super admin' : 'Grant super admin'"
+                    :title="
+                      user.isSuperAdmin
+                        ? $t('admin.revokeSuperAdminTooltip')
+                        : $t('admin.grantSuperAdminTooltip')
+                    "
                     @click="toggleSuperAdmin(user)"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -297,7 +312,7 @@ onMounted(() => {
                   </button>
                   <button
                     class="action-btn danger"
-                    title="Delete user"
+                    :title="$t('admin.deleteUserTooltip')"
                     @click="confirmDeleteUser(user)"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -343,7 +358,9 @@ onMounted(() => {
         </svg>
       </button>
 
-      <span class="page-info"> Page {{ currentPage }} of {{ totalPages }} </span>
+      <span class="page-info">
+        {{ $t('admin.pageOf', { current: currentPage, total: totalPages }) }}
+      </span>
 
       <button
         class="page-btn"

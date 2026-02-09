@@ -59,6 +59,7 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
       getSessions: vi.fn(),
       revokeSession: vi.fn(),
       getInviteByToken: vi.fn(),
+      updateUserProfile: vi.fn(),
     };
 
     function resetMocks() {
@@ -673,6 +674,91 @@ describe('Auth Routes', () => {
       });
 
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  // ===========================================
+  // UPDATE PROFILE
+  // ===========================================
+
+  describe('PATCH /auth/profile', () => {
+    it('should update user profile with name', async () => {
+      const updatedUser = { ...mockUser, name: 'New Name' };
+      mockAuthService.updateUserProfile.mockResolvedValue(updatedUser);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: { name: 'New Name' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.user.name).toBe('New Name');
+      expect(body.data.user).not.toHaveProperty('passwordHash');
+    });
+
+    it('should update user profile with locale', async () => {
+      const updatedUser = { ...mockUser, locale: 'en-GB' };
+      mockAuthService.updateUserProfile.mockResolvedValue(updatedUser);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: { locale: 'en-GB' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.user.locale).toBe('en-GB');
+    });
+
+    it('should return 400 for empty name', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: { name: '' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 400 for invalid locale (too short)', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: { locale: 'a' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 if no valid fields provided', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 on service error', async () => {
+      mockAuthService.updateUserProfile.mockRejectedValue(new Error('Update failed'));
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/profile',
+        payload: { name: 'New Name' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('PROFILE_UPDATE_ERROR');
     });
   });
 });

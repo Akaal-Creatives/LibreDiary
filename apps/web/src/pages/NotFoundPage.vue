@@ -38,9 +38,9 @@ function goHome() {
       <!-- Content -->
       <div class="not-found-content">
         <h1 class="error-code">404</h1>
-        <h2 class="error-title">Page not found</h2>
+        <h2 class="error-title">{{ $t('errors.pageNotFound') }}</h2>
         <p class="error-description">
-          The page you're looking for doesn't exist or has been moved. Let's get you back on track.
+          {{ $t('errors.pageNotFoundDescription') }}
         </p>
 
         <div class="error-actions">
@@ -61,7 +61,7 @@ function goHome() {
                 stroke-linejoin="round"
               />
             </svg>
-            <span>Go Home</span>
+            <span>{{ $t('errors.goHome') }}</span>
           </button>
           <button class="btn-secondary" @click="router.back()">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -73,7 +73,7 @@ function goHome() {
                 stroke-linejoin="round"
               />
             </svg>
-            <span>Go Back</span>
+            <span>{{ $t('errors.goBack') }}</span>
           </button>
         </div>
       </div>

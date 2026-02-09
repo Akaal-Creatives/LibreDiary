@@ -660,11 +660,11 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 17.1 UI Translation
 
-- [ ] Setup vue-i18n
-- [ ] Extract UI strings to locale files
-- [ ] Create English locale (en.json)
-- [ ] Create language switcher
-- [ ] Persist language preference
+- [x] Setup vue-i18n
+- [x] Extract UI strings to locale files
+- [x] Create English locale (en-GB.json, en-US.json)
+- [x] Create language switcher
+- [x] Persist language preference
 
 ### 17.2 Community Translations
 

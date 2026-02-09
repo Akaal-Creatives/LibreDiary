@@ -80,22 +80,25 @@ function goToLogin() {
             <path d="M10 15V18" stroke="currentColor" stroke-width="1.5" />
           </svg>
         </button>
-        <button class="nav-link" @click="goToLogin">Sign In</button>
+        <button class="nav-link" @click="goToLogin">{{ $t('auth.signIn') }}</button>
       </div>
     </nav>
 
     <!-- Hero Section -->
     <header class="hero">
       <div class="hero-content">
-        <div class="hero-badge">Open Source • Self-Hosted • Local-First</div>
-        <h1 class="hero-title">Your ideas deserve<br />a calm home</h1>
+        <div class="hero-badge">
+          {{ $t('homePage.openSource') }} • {{ $t('homePage.selfHosted') }} •
+          {{ $t('homePage.localFirst') }}
+        </div>
+        <h1 class="hero-title">{{ $t('homePage.tagline') }}</h1>
         <p class="hero-subtitle">
           A workspace for notes, docs, and databases. Built for focus, designed for clarity, and
           always under your control.
         </p>
         <div class="hero-actions">
           <button class="btn-primary" @click="goToLogin">
-            Get Started
+            {{ $t('homePage.getStarted') }}
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 d="M3 8H13M13 8L9 4M13 8L9 12"
@@ -116,7 +119,7 @@ function goToLogin() {
                 stroke-linejoin="round"
               />
             </svg>
-            View on GitHub
+            {{ $t('homePage.viewOnGitHub') }}
           </a>
         </div>
       </div>
@@ -162,7 +165,7 @@ function goToLogin() {
               />
             </svg>
           </div>
-          <h3>Block Editor</h3>
+          <h3>{{ $t('homePage.blockEditor') }}</h3>
           <p>
             Write naturally with a powerful editor. Drag, drop, and organize your thoughts with
             ease.
@@ -192,7 +195,7 @@ function goToLogin() {
               />
             </svg>
           </div>
-          <h3>Real-Time Sync</h3>
+          <h3>{{ $t('homePage.realTimeSync') }}</h3>
           <p>Collaborate seamlessly. See changes as they happen with live cursors and presence.</p>
         </div>
         <div class="feature-card">
@@ -207,7 +210,7 @@ function goToLogin() {
               />
             </svg>
           </div>
-          <h3>Self-Hosted</h3>
+          <h3>{{ $t('homePage.selfHosted') }}</h3>
           <p>Your data stays yours. Deploy on your infrastructure with full control and privacy.</p>
         </div>
         <div class="feature-card">
@@ -251,7 +254,7 @@ function goToLogin() {
               />
             </svg>
           </div>
-          <h3>Databases</h3>
+          <h3>{{ $t('homePage.databaseFeature') }}</h3>
           <p>Tables, kanbans, calendars. Multiple views for the same data, however you need it.</p>
         </div>
       </div>
@@ -287,12 +290,12 @@ function goToLogin() {
           <span>LibreDiary</span>
         </div>
         <p class="footer-attribution">
-          Developed by
+          {{ $t('homePage.developedBy') }}
           <a :href="DEVELOPER_INFO.website" target="_blank" rel="noopener">
             {{ DEVELOPER_INFO.name }}
           </a>
         </p>
-        <p class="footer-license">Licensed under AGPLv3</p>
+        <p class="footer-license">{{ $t('homePage.licensedUnder') }}</p>
       </div>
     </footer>
   </div>

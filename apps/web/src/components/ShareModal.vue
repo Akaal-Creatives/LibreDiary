@@ -226,10 +226,10 @@ function close() {
           <!-- Header -->
           <header class="modal-header">
             <div class="header-content">
-              <h2 class="modal-title">Share</h2>
+              <h2 class="modal-title">{{ $t('share.title') }}</h2>
               <p class="modal-subtitle">{{ pageTitle }}</p>
             </div>
-            <button class="close-btn" aria-label="Close" @click="close">
+            <button class="close-btn" :aria-label="$t('common.close')" @click="close">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M15 5L5 15M5 5L15 15"
@@ -244,7 +244,7 @@ function close() {
           <!-- Loading -->
           <div v-if="loading" class="modal-loading">
             <div class="loading-dot"></div>
-            <span>Loading sharing settings...</span>
+            <span>{{ $t('share.loadingSettings') }}</span>
           </div>
 
           <div v-else class="modal-body">
@@ -269,8 +269,8 @@ function close() {
                   </svg>
                 </div>
                 <div class="section-info">
-                  <h3 class="section-title">Public Access</h3>
-                  <p class="section-desc">Anyone with the link can view this page</p>
+                  <h3 class="section-title">{{ $t('share.publicAccess') }}</h3>
+                  <p class="section-desc">{{ $t('share.publicAccessDescription') }}</p>
                 </div>
                 <label class="toggle" :class="{ active: pageInfo.isPublic, saving }">
                   <input
@@ -316,7 +316,7 @@ function close() {
                         stroke-linejoin="round"
                       />
                     </svg>
-                    {{ copied ? 'Copied!' : 'Copy' }}
+                    {{ copied ? $t('common.copied') : $t('common.copy') }}
                   </button>
                 </div>
               </Transition>
@@ -327,7 +327,7 @@ function close() {
 
             <!-- People with Access -->
             <section class="share-section">
-              <h3 class="section-label">People with access</h3>
+              <h3 class="section-label">{{ $t('share.peopleWithAccess') }}</h3>
 
               <!-- Add Person Form -->
               <div class="add-person-form">
@@ -335,21 +335,21 @@ function close() {
                   <input
                     v-model="newEmail"
                     type="email"
-                    placeholder="Enter email or user ID..."
+                    :placeholder="$t('share.addPeoplePlaceholder')"
                     class="email-input"
                     @keyup.enter="addPermission"
                   />
                   <select v-model="newLevel" class="level-select">
-                    <option value="VIEW">Can view</option>
-                    <option value="EDIT">Can edit</option>
-                    <option value="FULL_ACCESS">Full access</option>
+                    <option value="VIEW">{{ $t('share.canView') }}</option>
+                    <option value="EDIT">{{ $t('share.canEdit') }}</option>
+                    <option value="FULL_ACCESS">{{ $t('share.fullAccess') }}</option>
                   </select>
                   <button
                     class="add-btn"
                     :disabled="!newEmail.trim() || saving"
                     @click="addPermission"
                   >
-                    Add
+                    {{ $t('common.add') }}
                   </button>
                 </div>
                 <p v-if="addError" class="form-error">{{ addError }}</p>
@@ -358,7 +358,7 @@ function close() {
               <!-- Permission List -->
               <div class="permission-list">
                 <div v-if="permissions.length === 0" class="empty-state">
-                  <p>No one else has access yet</p>
+                  <p>{{ $t('share.noOneElse') }}</p>
                 </div>
 
                 <TransitionGroup name="list" tag="div">
@@ -384,13 +384,13 @@ function close() {
                           )
                       "
                     >
-                      <option value="VIEW">Can view</option>
-                      <option value="EDIT">Can edit</option>
-                      <option value="FULL_ACCESS">Full access</option>
+                      <option value="VIEW">{{ $t('share.canView') }}</option>
+                      <option value="EDIT">{{ $t('share.canEdit') }}</option>
+                      <option value="FULL_ACCESS">{{ $t('share.fullAccess') }}</option>
                     </select>
                     <button
                       class="remove-btn"
-                      title="Remove access"
+                      :title="$t('share.removeAccess')"
                       @click="removePermission(perm.id)"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { versionsService, type PageVersion } from '@/services';
 import { useOrganizationsStore } from '@/stores';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   pageId: string;
@@ -46,7 +49,7 @@ async function loadVersions() {
     versions.value = await versionsService.getVersions(orgId.value, props.pageId);
   } catch (e) {
     console.error('Failed to load versions:', e);
-    error.value = 'Failed to load version history';
+    error.value = t('versionHistory.failedToLoad');
   } finally {
     loading.value = false;
   }
@@ -69,7 +72,7 @@ async function restoreVersion() {
     close();
   } catch (e) {
     console.error('Failed to restore version:', e);
-    error.value = 'Failed to restore version';
+    error.value = t('versionHistory.failedToRestore');
   } finally {
     restoring.value = false;
   }
@@ -82,11 +85,11 @@ function formatDate(dateString: string): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return `Today at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+    return `${t('time.today')} at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
   } else if (diffDays === 1) {
-    return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+    return `${t('time.yesterday')} at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
   } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
+    return t('time.daysAgo', { count: diffDays });
   } else {
     return date.toLocaleDateString(undefined, {
       month: 'short',
@@ -122,11 +125,11 @@ function close() {
                 </svg>
               </div>
               <div>
-                <h2 class="modal-title">Version History</h2>
+                <h2 class="modal-title">{{ $t('versionHistory.title') }}</h2>
                 <p class="modal-subtitle">{{ pageTitle }}</p>
               </div>
             </div>
-            <button class="close-btn" aria-label="Close" @click="close">
+            <button class="close-btn" :aria-label="$t('common.close')" @click="close">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M15 5L5 15M5 5L15 15"
@@ -166,7 +169,7 @@ function close() {
               </svg>
             </div>
             <p>{{ error }}</p>
-            <button class="retry-btn" @click="loadVersions">Try Again</button>
+            <button class="retry-btn" @click="loadVersions">{{ $t('common.tryAgain') }}</button>
           </div>
 
           <!-- Empty State -->
@@ -190,8 +193,8 @@ function close() {
                 />
               </svg>
             </div>
-            <h3>No versions yet</h3>
-            <p>Version snapshots will appear here as you edit this page.</p>
+            <h3>{{ $t('versionHistory.noVersions') }}</h3>
+            <p>{{ $t('versionHistory.noVersionsDescription') }}</p>
           </div>
 
           <!-- Version List -->
@@ -205,7 +208,7 @@ function close() {
                 @click="selectVersion(version)"
               >
                 <div class="version-badge" :class="{ current: index === 0 }">
-                  <span v-if="index === 0">Current</span>
+                  <span v-if="index === 0">{{ $t('versionHistory.current') }}</span>
                   <span v-else>v{{ version.version }}</span>
                 </div>
                 <div class="version-content">
@@ -240,10 +243,10 @@ function close() {
   <!-- Restore Confirmation Dialog -->
   <ConfirmDialog
     :open="showConfirmDialog"
-    title="Restore Version"
-    :message="`Are you sure you want to restore to version ${selectedVersion?.version}? This will replace the current content with the content from this version.`"
-    confirm-text="Restore"
-    cancel-text="Cancel"
+    :title="$t('versionHistory.restoreVersion')"
+    :message="$t('versionHistory.restoreVersionConfirm', { version: selectedVersion?.version })"
+    :confirm-text="$t('common.restore')"
+    :cancel-text="$t('common.cancel')"
     variant="default"
     :loading="restoring"
     @confirm="restoreVersion"

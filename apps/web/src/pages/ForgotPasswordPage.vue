@@ -119,19 +119,21 @@ function goToLogin() {
               stroke-linejoin="round"
             />
           </svg>
-          <h2>Check your email</h2>
+          <h2>{{ $t('auth.checkYourEmail') }}</h2>
           <p>
-            We've sent a password reset link to <strong>{{ email }}</strong>
+            {{ $t('auth.resetLinkSent') }} <strong>{{ email }}</strong>
           </p>
-          <p class="muted">If you don't see it, check your spam folder.</p>
-          <button type="button" class="secondary-btn" @click="goToLogin">Back to Login</button>
+          <p class="muted">{{ $t('auth.checkSpamFolder') }}</p>
+          <button type="button" class="secondary-btn" @click="goToLogin">
+            {{ $t('auth.backToLogin') }}
+          </button>
         </div>
 
         <!-- Form State -->
         <template v-else>
           <div class="forgot-header">
-            <h1>Forgot password?</h1>
-            <p>Enter your email and we'll send you a reset link</p>
+            <h1>{{ $t('auth.forgotPasswordTitle') }}</h1>
+            <p>{{ $t('auth.forgotPasswordDescription') }}</p>
           </div>
 
           <form class="forgot-form" @submit.prevent="handleSubmit">
@@ -149,12 +151,12 @@ function goToLogin() {
             </div>
 
             <div class="form-field">
-              <label for="email">Email</label>
+              <label for="email">{{ $t('auth.email') }}</label>
               <input
                 id="email"
                 v-model="email"
                 type="email"
-                placeholder="you@example.com"
+                :placeholder="$t('auth.emailPlaceholder')"
                 required
                 autocomplete="email"
               />
@@ -162,7 +164,7 @@ function goToLogin() {
 
             <button type="submit" class="submit-btn" :disabled="loading">
               <span v-if="loading" class="loading-spinner"></span>
-              <span v-else>Send Reset Link</span>
+              <span v-else>{{ $t('auth.sendResetLink') }}</span>
             </button>
           </form>
 
@@ -177,7 +179,7 @@ function goToLogin() {
                   stroke-linejoin="round"
                 />
               </svg>
-              Back to Login
+              {{ $t('auth.backToLogin') }}
             </button>
           </div>
         </template>
@@ -194,7 +196,7 @@ function goToLogin() {
             stroke-linejoin="round"
           />
         </svg>
-        Back to home
+        {{ $t('auth.backToHome') }}
       </button>
     </div>
   </div>

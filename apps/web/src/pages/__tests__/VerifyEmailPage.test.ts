@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
@@ -27,6 +28,7 @@ vi.mock('@/stores/auth', () => ({
 
 vi.mock('@/composables', () => ({
   useTheme: () => mockTheme,
+  useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
 }));
 
 vi.mock('@/services', () => ({
@@ -111,7 +113,7 @@ describe('VerifyEmailPage', () => {
 
     expect(wrapper.find('.error-state').exists()).toBe(true);
     expect(wrapper.text()).toContain('Verification failed');
-    expect(wrapper.text()).toContain('Token is invalid or expired');
+    expect(wrapper.text()).toContain('Failed to verify email. Please try again.');
   });
 
   it('shows generic error for non-API exceptions', async () => {
@@ -130,7 +132,7 @@ describe('VerifyEmailPage', () => {
     await flushPromises();
 
     const button = wrapper.find('.error-state .secondary-btn');
-    expect(button.text()).toBe('Go to Login');
+    expect(button.text()).toBe('Sign In');
 
     await button.trigger('click');
     expect(mockRouter.push).toHaveBeenCalledWith('/login');

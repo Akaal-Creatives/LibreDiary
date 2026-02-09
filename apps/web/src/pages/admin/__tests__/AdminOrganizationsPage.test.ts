@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
@@ -19,6 +20,7 @@ vi.mock('@/services', () => ({
 
 vi.mock('@/composables', () => ({
   useToast: () => mockToast,
+  useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
 }));
 
 vi.mock('@/components/ui/ConfirmDialog.vue', () => ({
@@ -82,8 +84,8 @@ describe('AdminOrganizationsPage', () => {
 
   it('renders the page header with title and description', () => {
     const wrapper = mountPage();
-    expect(wrapper.find('.page-title').text()).toBe('Organizations');
-    expect(wrapper.find('.page-description').text()).toBe('Manage all organizations in the system');
+    expect(wrapper.find('.page-title').text()).toBe('Organisations');
+    expect(wrapper.find('.page-description').text()).toBe('Manage all organisations in the system');
   });
 
   it('shows loading skeleton rows whilst data is being fetched', () => {
@@ -137,7 +139,7 @@ describe('AdminOrganizationsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('.stats-text').text()).toContain('2 organizations total');
+    expect(wrapper.find('.stats-text').text()).toContain('2 organisations total');
   });
 
   it('shows empty state when no organisations are returned', async () => {
@@ -150,7 +152,7 @@ describe('AdminOrganizationsPage', () => {
     await flushPromises();
 
     expect(wrapper.find('.empty-state').exists()).toBe(true);
-    expect(wrapper.text()).toContain('No organizations found');
+    expect(wrapper.text()).toContain('No organisations found');
   });
 
   it('shows restore button for deleted organisations', async () => {
@@ -182,7 +184,7 @@ describe('AdminOrganizationsPage', () => {
     await flushPromises();
 
     expect(mockAdminService.restoreOrganization).toHaveBeenCalledWith('org-2');
-    expect(mockToast.success).toHaveBeenCalledWith('Organization restored successfully');
+    expect(mockToast.success).toHaveBeenCalledWith('Organisation restored successfully');
   });
 
   it('shows toast on restore error', async () => {
@@ -196,7 +198,7 @@ describe('AdminOrganizationsPage', () => {
     await restoreBtn.trigger('click');
     await flushPromises();
 
-    expect(mockToast.error).toHaveBeenCalledWith('Failed to restore organization');
+    expect(mockToast.error).toHaveBeenCalledWith('Failed to restore organisation');
     consoleSpy.mockRestore();
   });
 
@@ -207,7 +209,7 @@ describe('AdminOrganizationsPage', () => {
     mountPage();
     await flushPromises();
 
-    expect(mockToast.error).toHaveBeenCalledWith('Failed to load organizations');
+    expect(mockToast.error).toHaveBeenCalledWith('Failed to load organisations');
     consoleSpy.mockRestore();
   });
 
@@ -217,7 +219,7 @@ describe('AdminOrganizationsPage', () => {
 
     const searchInput = wrapper.find('.search-input');
     expect(searchInput.exists()).toBe(true);
-    expect(searchInput.attributes('placeholder')).toBe('Search organizations by name or slug...');
+    expect(searchInput.attributes('placeholder')).toBe('Search organisations by name or slug...');
   });
 
   it('does not show pagination when totalPages is 1', async () => {

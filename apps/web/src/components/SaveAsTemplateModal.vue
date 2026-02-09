@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useTemplatesStore } from '@/stores/templates';
 import { useToast } from '@/composables/useToast';
 
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
+const { t } = useI18n();
 const templatesStore = useTemplatesStore();
 const toast = useToast();
 
@@ -55,7 +57,7 @@ async function handleSubmit() {
       category: category.value || undefined,
     });
 
-    toast.success('Template saved successfully');
+    toast.success(t('templates.saveAsTemplate'));
     emit('saved');
     emit('close');
   } catch (e) {
@@ -72,7 +74,7 @@ async function handleSubmit() {
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal" role="dialog" aria-labelledby="save-template-title">
         <div class="modal-header">
-          <h2 id="save-template-title" class="modal-title">Save as Template</h2>
+          <h2 id="save-template-title" class="modal-title">{{ $t('templates.saveAsTemplate') }}</h2>
           <button class="close-btn" aria-label="Close" @click="$emit('close')">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
@@ -122,9 +124,11 @@ async function handleSubmit() {
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+            <button type="button" class="btn btn-secondary" @click="$emit('close')">
+              {{ $t('common.cancel') }}
+            </button>
             <button type="submit" class="btn btn-primary" :disabled="submitting">
-              {{ submitting ? 'Saving...' : 'Save Template' }}
+              {{ submitting ? 'Saving...' : $t('templates.saveAsTemplate') }}
             </button>
           </div>
         </form>

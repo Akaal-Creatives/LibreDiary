@@ -221,8 +221,8 @@ function goToLogin() {
             />
           </svg>
         </div>
-        <h1 class="title">Welcome to LibreDiary</h1>
-        <p class="subtitle">Let's set up your workspace in just a few steps</p>
+        <h1 class="title">{{ $t('setup.welcomeToLibreDiary') }}</h1>
+        <p class="subtitle">{{ $t('setup.setupDescription') }}</p>
       </div>
 
       <!-- Progress Indicator -->
@@ -255,7 +255,9 @@ function goToLogin() {
               </svg>
               <span v-else>{{ step }}</span>
             </div>
-            <span class="step-label">{{ ['Site', 'Admin', 'Organization'][step - 1] }}</span>
+            <span class="step-label">{{
+              [$t('setup.stepSite'), $t('setup.stepAdmin'), $t('setup.stepOrganisation')][step - 1]
+            }}</span>
           </div>
         </div>
       </div>
@@ -301,13 +303,13 @@ function goToLogin() {
                 <circle cx="16" cy="10" r="2" stroke="currentColor" stroke-width="1.5" />
               </svg>
             </div>
-            <h2>Name your workspace</h2>
+            <h2>{{ $t('setup.nameYourWorkspace') }}</h2>
             <p class="step-description">
               Choose a name that represents your team or project. You can change this later.
             </p>
 
             <div class="form-field">
-              <label for="siteName">Site Name</label>
+              <label for="siteName">{{ $t('setup.siteName') }}</label>
               <input
                 id="siteName"
                 v-model="siteName"
@@ -316,7 +318,7 @@ function goToLogin() {
                 maxlength="255"
                 autofocus
               />
-              <span class="field-hint">This will appear in the browser tab and emails</span>
+              <span class="field-hint">{{ $t('setup.siteNameHelp') }}</span>
             </div>
           </div>
 
@@ -340,7 +342,7 @@ function goToLogin() {
                 />
               </svg>
             </div>
-            <h2>Create your admin account</h2>
+            <h2>{{ $t('setup.createAdminAccount') }}</h2>
             <p class="step-description">
               This account will have full administrative access to manage your workspace.
             </p>
@@ -359,24 +361,24 @@ function goToLogin() {
               </div>
 
               <div class="form-field">
-                <label for="adminEmail">Email</label>
+                <label for="adminEmail">{{ $t('auth.email') }}</label>
                 <input
                   id="adminEmail"
                   v-model="adminEmail"
                   type="email"
-                  placeholder="admin@example.com"
+                  :placeholder="$t('auth.emailPlaceholder')"
                   required
                   autocomplete="email"
                 />
               </div>
 
               <div class="form-field">
-                <label for="adminPassword">Password</label>
+                <label for="adminPassword">{{ $t('auth.password') }}</label>
                 <input
                   id="adminPassword"
                   v-model="adminPassword"
                   type="password"
-                  placeholder="At least 8 characters"
+                  :placeholder="$t('auth.newPasswordPlaceholder')"
                   required
                   minlength="8"
                   autocomplete="new-password"
@@ -392,12 +394,12 @@ function goToLogin() {
               </div>
 
               <div class="form-field">
-                <label for="adminPasswordConfirm">Confirm Password</label>
+                <label for="adminPasswordConfirm">{{ $t('auth.confirmPassword') }}</label>
                 <input
                   id="adminPasswordConfirm"
                   v-model="adminPasswordConfirm"
                   type="password"
-                  placeholder="Confirm your password"
+                  :placeholder="$t('auth.confirmPasswordPlaceholder')"
                   required
                   autocomplete="new-password"
                 />
@@ -446,7 +448,7 @@ function goToLogin() {
                 />
               </svg>
             </div>
-            <h2>Create your first organization</h2>
+            <h2>{{ $t('setup.createFirstOrganisation') }}</h2>
             <p class="step-description">
               Organizations help you separate different teams or projects. You can create more
               later.
@@ -454,7 +456,7 @@ function goToLogin() {
 
             <div class="form-grid">
               <div class="form-field">
-                <label for="orgName">Organization Name</label>
+                <label for="orgName">{{ $t('setup.organisationName') }}</label>
                 <input
                   id="orgName"
                   v-model="orgName"
@@ -466,7 +468,7 @@ function goToLogin() {
               </div>
 
               <div class="form-field">
-                <label for="orgSlug">URL Slug</label>
+                <label for="orgSlug">{{ $t('setup.urlSlug') }}</label>
                 <div class="slug-input-wrapper">
                   <span class="slug-prefix">librediary.app/</span>
                   <input
@@ -479,7 +481,7 @@ function goToLogin() {
                     pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
                   />
                 </div>
-                <span class="field-hint">Lowercase letters, numbers, and hyphens only</span>
+                <span class="field-hint">{{ $t('setup.urlSlugHelp') }}</span>
               </div>
             </div>
           </div>
@@ -505,7 +507,7 @@ function goToLogin() {
                 <div class="ring ring-3"></div>
               </div>
             </div>
-            <h2>You're all set!</h2>
+            <h2>{{ $t('setup.allSet') }}</h2>
             <p class="step-description">
               Your workspace <strong>{{ siteName }}</strong> is ready. Sign in with your admin
               account to get started.
@@ -564,7 +566,7 @@ function goToLogin() {
               stroke-linejoin="round"
             />
           </svg>
-          Back
+          {{ $t('common.back') }}
         </button>
         <div v-else class="spacer"></div>
 
@@ -574,7 +576,7 @@ function goToLogin() {
           :disabled="!canProceed"
           @click="nextStep"
         >
-          Continue
+          {{ $t('common.continue') }}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
               d="M6 4L10 8L6 12"
@@ -594,7 +596,7 @@ function goToLogin() {
         >
           <span v-if="loading" class="loading-spinner"></span>
           <template v-else>
-            Complete Setup
+            {{ $t('setup.completeSetup') }}
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 d="M3 8L6 11L13 4"

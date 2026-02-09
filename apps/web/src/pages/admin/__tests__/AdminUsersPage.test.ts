@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
@@ -20,6 +21,7 @@ vi.mock('@/services', () => ({
 
 vi.mock('@/composables', () => ({
   useToast: () => mockToast,
+  useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
 }));
 
 vi.mock('@/components/ui/ConfirmDialog.vue', () => ({

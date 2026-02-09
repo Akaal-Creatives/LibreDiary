@@ -211,7 +211,11 @@ function isDescendant(page: PageWithChildren, targetId: string): boolean {
         class="expand-btn"
         :class="{ expanded: isExpanded }"
         :aria-expanded="isExpanded"
-        :aria-label="isExpanded ? `Collapse ${page.title}` : `Expand ${page.title}`"
+        :aria-label="
+          isExpanded
+            ? $t('pages.collapse', { title: page.title })
+            : $t('pages.expand', { title: page.title })
+        "
         @click="toggleExpanded"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createApp, type App } from 'vue';
 import { useDialog } from '../useDialog';
+import { i18n } from '@/i18n';
 
 function withSetup<T>(fn: () => T): { result: T; app: App } {
   let result!: T;
@@ -10,6 +11,7 @@ function withSetup<T>(fn: () => T): { result: T; app: App } {
       return () => {};
     },
   });
+  app.use(i18n);
   app.mount(document.createElement('div'));
   return { result, app };
 }

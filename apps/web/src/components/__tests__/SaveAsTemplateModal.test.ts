@@ -108,7 +108,7 @@ describe('SaveAsTemplateModal', () => {
       description: 'A weekly standup template',
       category: 'Meeting',
     });
-    expect(mockToast.success).toHaveBeenCalledWith('Template saved successfully');
+    expect(mockToast.success).toHaveBeenCalledWith('Save as Template');
     expect(wrapper.emitted('saved')).toHaveLength(1);
     expect(wrapper.emitted('close')).toHaveLength(1);
   });

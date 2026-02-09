@@ -74,7 +74,7 @@ const currentRole = computed(() => authStore.currentUserRole);
       class="switcher-button"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      aria-label="Switch organization"
+      :aria-label="$t('organisation.switchOrganisation')"
       @click="toggleDropdown"
     >
       <!-- Org Logo or Avatar -->
@@ -182,7 +182,7 @@ const currentRole = computed(() => authStore.currentUserRole);
 
           <!-- Organizations List -->
           <div v-if="organizations.length > 1" class="dropdown-section">
-            <div class="section-label">Switch Organization</div>
+            <div class="section-label">{{ $t('organisation.switchOrganisation') }}</div>
             <button
               v-for="org in organizations"
               :key="org.id"
@@ -242,7 +242,7 @@ const currentRole = computed(() => authStore.currentUserRole);
                   stroke-linecap="round"
                 />
               </svg>
-              <span>Create Organization</span>
+              <span>{{ $t('organisation.createOrganisation') }}</span>
             </button>
           </div>
         </div>

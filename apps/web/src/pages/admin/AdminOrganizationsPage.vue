@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useToast } from '@/composables';
 import { adminService, type AdminOrganization, type Pagination } from '@/services';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 
 // State
@@ -40,7 +42,7 @@ async function loadOrganizations() {
     pagination.value = response.pagination;
   } catch (error) {
     console.error('Failed to load organizations:', error);
-    toast.error('Failed to load organizations');
+    toast.error(t('admin.failedToLoadOrganisations'));
   } finally {
     loading.value = false;
   }
@@ -67,18 +69,18 @@ function goToPage(page: number) {
 // Delete organization
 function confirmDeleteOrg(org: AdminOrganization) {
   confirmDialogConfig.value = {
-    title: 'Delete Organization',
-    message: `Are you sure you want to delete "${org.name}"? This will affect ${org.memberCount} member(s). This action can be undone by restoring the organization.`,
-    confirmText: 'Delete Organization',
+    title: t('admin.deleteOrganisation'),
+    message: t('admin.deleteOrganisationConfirm', { name: org.name, count: org.memberCount }),
+    confirmText: t('admin.deleteOrganisation'),
     variant: 'destructive',
     onConfirm: async () => {
       try {
         await adminService.deleteOrganization(org.id);
-        toast.success('Organization deleted successfully');
+        toast.success(t('admin.organisationDeleted'));
         await loadOrganizations();
       } catch (error) {
         console.error('Failed to delete organization:', error);
-        toast.error('Failed to delete organization');
+        toast.error(t('admin.failedToDeleteOrganisation'));
       }
     },
   };
@@ -89,11 +91,11 @@ function confirmDeleteOrg(org: AdminOrganization) {
 async function restoreOrg(org: AdminOrganization) {
   try {
     await adminService.restoreOrganization(org.id);
-    toast.success('Organization restored successfully');
+    toast.success(t('admin.organisationRestored'));
     await loadOrganizations();
   } catch (error) {
     console.error('Failed to restore organization:', error);
-    toast.error('Failed to restore organization');
+    toast.error(t('admin.failedToRestoreOrganisation'));
   }
 }
 
@@ -115,8 +117,8 @@ onMounted(() => {
   <div class="admin-organizations">
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">Organizations</h1>
-        <p class="page-description">Manage all organizations in the system</p>
+        <h1 class="page-title">{{ $t('admin.organisations') }}</h1>
+        <p class="page-description">{{ $t('admin.manageAllOrganisations') }}</p>
       </div>
     </div>
 
@@ -142,14 +144,14 @@ onMounted(() => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search organizations by name or slug..."
+          :placeholder="$t('admin.searchOrganisationsPlaceholder')"
           class="search-input"
         />
       </div>
 
       <div class="toolbar-stats">
         <span v-if="pagination" class="stats-text">
-          {{ pagination.total }} organizations total
+          {{ pagination.total }} {{ $t('admin.organisationsTotal') }}
         </span>
       </div>
     </div>
@@ -159,11 +161,11 @@ onMounted(() => {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Organization</th>
-            <th>Status</th>
-            <th>Members</th>
-            <th>Created</th>
-            <th class="actions-col">Actions</th>
+            <th>{{ $t('admin.organisation') }}</th>
+            <th>{{ $t('admin.status') }}</th>
+            <th>{{ $t('admin.members') }}</th>
+            <th>{{ $t('admin.created') }}</th>
+            <th class="actions-col">{{ $t('admin.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -220,7 +222,7 @@ onMounted(() => {
                     stroke-width="2"
                   />
                 </svg>
-                <span>No organizations found</span>
+                <span>{{ $t('admin.noOrganisationsFound') }}</span>
               </div>
             </td>
           </tr>
@@ -240,8 +242,10 @@ onMounted(() => {
             </td>
             <td>
               <div class="status-badges">
-                <span v-if="org.deletedAt" class="badge badge-deleted">Deleted</span>
-                <span v-else class="badge badge-active">Active</span>
+                <span v-if="org.deletedAt" class="badge badge-deleted">{{
+                  $t('common.deleted')
+                }}</span>
+                <span v-else class="badge badge-active">{{ $t('common.active') }}</span>
               </div>
             </td>
             <td>
@@ -255,7 +259,7 @@ onMounted(() => {
                 <button
                   v-if="org.deletedAt"
                   class="action-btn restore"
-                  title="Restore organization"
+                  :title="$t('admin.restoreOrganisation')"
                   @click="restoreOrg(org)"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -277,7 +281,7 @@ onMounted(() => {
                 <template v-else>
                   <button
                     class="action-btn danger"
-                    title="Delete organization"
+                    :title="$t('admin.deleteOrganisationTooltip')"
                     @click="confirmDeleteOrg(org)"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -323,7 +327,9 @@ onMounted(() => {
         </svg>
       </button>
 
-      <span class="page-info"> Page {{ currentPage }} of {{ totalPages }} </span>
+      <span class="page-info">
+        {{ $t('admin.pageOf', { current: currentPage, total: totalPages }) }}
+      </span>
 
       <button
         class="page-btn"

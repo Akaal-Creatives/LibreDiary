@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { notificationsService } from '@/services/notifications.service';
 import type { NotificationPreferences } from '@/services/notifications.service';
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -22,7 +25,7 @@ async function loadPreferences() {
   try {
     preferences.value = await notificationsService.getPreferences();
   } catch {
-    error.value = 'Failed to load notification preferences';
+    error.value = t('notifications.failedToLoad');
   } finally {
     loading.value = false;
   }
@@ -40,14 +43,14 @@ async function handleToggle(key: keyof NotificationPreferences) {
     preferences.value = await notificationsService.updatePreferences({
       [key]: !previousValue,
     });
-    success.value = 'Preferences updated';
+    success.value = t('notifications.preferencesUpdated');
     setTimeout(() => {
       success.value = null;
     }, 3000);
   } catch {
     // Revert on failure
     preferences.value[key] = previousValue;
-    error.value = 'Failed to update preferences';
+    error.value = t('notifications.failedToUpdate');
   } finally {
     saving.value = false;
   }
@@ -61,9 +64,9 @@ onMounted(loadPreferences);
     <!-- Page Header -->
     <header class="page-header">
       <div class="header-content">
-        <h1 class="page-title">Notifications</h1>
+        <h1 class="page-title">{{ $t('notifications.title') }}</h1>
         <p class="page-description">
-          Choose which events trigger email notifications. In-app notifications are always enabled.
+          {{ $t('notifications.description') }}
         </p>
       </div>
     </header>
@@ -101,7 +104,7 @@ onMounted(loadPreferences);
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <span>Loading preferences...</span>
+      <span>{{ $t('notifications.loadingPreferences') }}</span>
     </div>
 
     <!-- Preferences Form -->
@@ -130,16 +133,18 @@ onMounted(loadPreferences);
             </svg>
           </div>
           <div class="section-header-text">
-            <h2 class="section-title">Email notifications</h2>
-            <p class="section-description">Receive email alerts for activity that involves you</p>
+            <h2 class="section-title">{{ $t('notifications.emailNotifications') }}</h2>
+            <p class="section-description">
+              {{ $t('notifications.emailNotificationsDescription') }}
+            </p>
           </div>
         </div>
 
         <div class="section-content">
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-label">Mentions</div>
-              <p class="toggle-description">When someone mentions you in a comment with @</p>
+              <div class="toggle-label">{{ $t('notifications.mentions') }}</div>
+              <p class="toggle-description">{{ $t('notifications.mentionsDescription') }}</p>
             </div>
             <label class="toggle">
               <input
@@ -158,8 +163,8 @@ onMounted(loadPreferences);
 
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-label">Comment replies</div>
-              <p class="toggle-description">When someone replies to one of your comments</p>
+              <div class="toggle-label">{{ $t('notifications.commentReplies') }}</div>
+              <p class="toggle-description">{{ $t('notifications.commentRepliesDescription') }}</p>
             </div>
             <label class="toggle">
               <input
@@ -178,8 +183,8 @@ onMounted(loadPreferences);
 
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-label">Page sharing</div>
-              <p class="toggle-description">When someone shares a page with you</p>
+              <div class="toggle-label">{{ $t('notifications.pageSharing') }}</div>
+              <p class="toggle-description">{{ $t('notifications.pageSharingDescription') }}</p>
             </div>
             <label class="toggle">
               <input
@@ -198,8 +203,8 @@ onMounted(loadPreferences);
 
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-label">Comment resolved</div>
-              <p class="toggle-description">When someone resolves a comment you authored</p>
+              <div class="toggle-label">{{ $t('notifications.commentResolved') }}</div>
+              <p class="toggle-description">{{ $t('notifications.commentResolvedDescription') }}</p>
             </div>
             <label class="toggle">
               <input
@@ -218,8 +223,8 @@ onMounted(loadPreferences);
 
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-label">Invitations</div>
-              <p class="toggle-description">When you are invited to join an organisation</p>
+              <div class="toggle-label">{{ $t('notifications.invitations') }}</div>
+              <p class="toggle-description">{{ $t('notifications.invitationsDescription') }}</p>
             </div>
             <label class="toggle">
               <input

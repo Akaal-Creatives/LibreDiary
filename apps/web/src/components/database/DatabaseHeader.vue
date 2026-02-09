@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDatabasesStore } from '@/stores';
 import type { ViewType } from '@librediary/shared';
 
+const { t } = useI18n();
 const databasesStore = useDatabasesStore();
 
 const isEditingName = ref(false);
@@ -40,12 +42,12 @@ async function addView(type: ViewType) {
   showNewViewMenu.value = false;
   const name =
     type === 'TABLE'
-      ? 'Table view'
+      ? t('databases.tableView')
       : type === 'KANBAN'
-        ? 'Kanban view'
+        ? t('databases.kanbanView')
         : type === 'CALENDAR'
-          ? 'Calendar view'
-          : 'Gallery view';
+          ? t('databases.calendarView')
+          : t('databases.galleryView');
   const view = await databasesStore.createView({ name, type });
   databasesStore.setActiveView(view.id);
 }
@@ -70,7 +72,7 @@ async function deleteView(viewId: string) {
         @keydown="handleNameKeydown"
       />
       <h1 v-else class="database-name" @click="startEditing">
-        {{ databasesStore.currentDatabase?.name ?? 'Untitled' }}
+        {{ databasesStore.currentDatabase?.name ?? $t('pages.untitled') }}
       </h1>
     </div>
 
@@ -218,7 +220,11 @@ async function deleteView(viewId: string) {
 
       <!-- Add View Button -->
       <div class="add-view-wrapper">
-        <button class="add-view-btn" title="Add view" @click="showNewViewMenu = !showNewViewMenu">
+        <button
+          class="add-view-btn"
+          :title="$t('databases.addView')"
+          @click="showNewViewMenu = !showNewViewMenu"
+        >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 2.5V11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             <path d="M2.5 7H11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -239,7 +245,7 @@ async function deleteView(viewId: string) {
               <line x1="1" y1="4.5" x2="13" y2="4.5" stroke="currentColor" stroke-width="1.2" />
               <line x1="5" y1="4.5" x2="5" y2="13" stroke="currentColor" stroke-width="1.2" />
             </svg>
-            Table
+            {{ $t('databases.table') }}
           </button>
           <button class="new-view-option" @click="addView('KANBAN')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -271,7 +277,7 @@ async function deleteView(viewId: string) {
                 stroke-width="1.2"
               />
             </svg>
-            Kanban
+            {{ $t('databases.kanban') }}
           </button>
           <button class="new-view-option" @click="addView('CALENDAR')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -304,7 +310,7 @@ async function deleteView(viewId: string) {
                 stroke-linecap="round"
               />
             </svg>
-            Calendar
+            {{ $t('databases.calendar') }}
           </button>
           <button class="new-view-option" @click="addView('GALLERY')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -345,7 +351,7 @@ async function deleteView(viewId: string) {
                 stroke-width="1.2"
               />
             </svg>
-            Gallery
+            {{ $t('databases.gallery') }}
           </button>
         </div>
       </div>

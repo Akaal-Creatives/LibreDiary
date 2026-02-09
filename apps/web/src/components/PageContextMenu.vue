@@ -133,7 +133,7 @@ onUnmounted(() => {
         <path d="M8 3.5V12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
         <path d="M3.5 8H12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
       </svg>
-      <span>Add subpage</span>
+      <span>{{ $t('contextMenu.addSubpage') }}</span>
     </button>
 
     <button class="menu-item" role="menuitem" @click="handleAction('duplicate')">
@@ -153,7 +153,7 @@ onUnmounted(() => {
           stroke-width="1.25"
         />
       </svg>
-      <span>Duplicate</span>
+      <span>{{ $t('contextMenu.duplicate') }}</span>
     </button>
 
     <button class="menu-item" role="menuitem" @click="handleAction('rename')">
@@ -166,7 +166,7 @@ onUnmounted(() => {
           stroke-linejoin="round"
         />
       </svg>
-      <span>Rename</span>
+      <span>{{ $t('contextMenu.rename') }}</span>
     </button>
 
     <div class="menu-separator" />
@@ -181,7 +181,7 @@ onUnmounted(() => {
           stroke-linejoin="round"
         />
       </svg>
-      <span>Add to favorites</span>
+      <span>{{ $t('contextMenu.addToFavourites') }}</span>
     </button>
 
     <button class="menu-item" role="menuitem" @click="handleAction('saveAsTemplate')">
@@ -198,7 +198,7 @@ onUnmounted(() => {
         <path d="M2.5 6.5H13.5" stroke="currentColor" stroke-width="1.25" />
         <path d="M6.5 6.5V13.5" stroke="currentColor" stroke-width="1.25" />
       </svg>
-      <span>Save as template</span>
+      <span>{{ $t('contextMenu.saveAsTemplate') }}</span>
     </button>
 
     <div class="menu-separator" />
@@ -219,7 +219,7 @@ onUnmounted(() => {
         <path d="M6.5 7V10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
         <path d="M9.5 7V10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
       </svg>
-      <span>Move to trash</span>
+      <span>{{ $t('contextMenu.moveToTrash') }}</span>
     </button>
   </div>
 </template>

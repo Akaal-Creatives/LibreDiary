@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore, usePagesStore, useTemplatesStore } from '@/stores';
 import { useDialog, useToast } from '@/composables';
 import type { Template } from '@librediary/shared';
 import TemplateLibrary from '@/components/TemplateLibrary.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
 const templatesStore = useTemplatesStore();
@@ -59,7 +61,7 @@ async function handleUseTemplate(template: Template) {
 
 function showComingSoon(feature: string) {
   alert({
-    title: 'Coming Soon',
+    title: t('dashboard.comingSoon'),
     message: `${feature} is coming soon! We're working hard to bring you this feature.`,
     variant: 'info',
     confirmText: 'Got it',
@@ -73,22 +75,21 @@ function showComingSoon(feature: string) {
     <section class="welcome-section">
       <div class="welcome-content">
         <h1 class="welcome-title">
-          Good
           {{
             new Date().getHours() < 12
-              ? 'morning'
+              ? $t('dashboard.goodMorning')
               : new Date().getHours() < 17
-                ? 'afternoon'
-                : 'evening'
+                ? $t('dashboard.goodAfternoon')
+                : $t('dashboard.goodEvening')
           }}{{ authStore.user?.name ? `, ${authStore.user.name}` : '' }}
         </h1>
-        <p class="welcome-subtitle">What would you like to work on today?</p>
+        <p class="welcome-subtitle">{{ $t('dashboard.whatToWorkOn') }}</p>
       </div>
     </section>
 
     <!-- Quick Actions -->
     <section class="quick-actions">
-      <h2 class="section-title">Get Started</h2>
+      <h2 class="section-title">{{ $t('dashboard.getStarted') }}</h2>
       <div class="actions-grid">
         <button type="button" class="action-card" @click="createNewPage">
           <div class="action-icon-wrapper">
@@ -109,8 +110,8 @@ function showComingSoon(feature: string) {
             </svg>
           </div>
           <div class="action-content">
-            <h3>New Page</h3>
-            <p>Create a blank page to start writing</p>
+            <h3>{{ $t('dashboard.newPage') }}</h3>
+            <p>{{ $t('dashboard.newPageDescription') }}</p>
           </div>
           <span class="action-arrow">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -142,8 +143,8 @@ function showComingSoon(feature: string) {
             </svg>
           </div>
           <div class="action-content">
-            <h3>Templates</h3>
-            <p>Start with a pre-built template</p>
+            <h3>{{ $t('dashboard.templates') }}</h3>
+            <p>{{ $t('dashboard.templatesDescription') }}</p>
           </div>
           <span class="action-arrow">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -178,10 +179,10 @@ function showComingSoon(feature: string) {
             </svg>
           </div>
           <div class="action-content">
-            <h3>Import</h3>
-            <p>Import from Notion or Markdown</p>
+            <h3>{{ $t('dashboard.import') }}</h3>
+            <p>{{ $t('dashboard.importDescription') }}</p>
           </div>
-          <span class="action-badge">Soon</span>
+          <span class="action-badge">{{ $t('common.soon') }}</span>
         </button>
       </div>
     </section>
@@ -189,8 +190,8 @@ function showComingSoon(feature: string) {
     <!-- Recent Pages -->
     <section v-if="pagesStore.rootPages.length > 0" class="recent-section">
       <div class="section-header">
-        <h2 class="section-title">Recent Pages</h2>
-        <button type="button" class="view-all-btn">View all</button>
+        <h2 class="section-title">{{ $t('dashboard.recentPages') }}</h2>
+        <button type="button" class="view-all-btn">{{ $t('common.viewAll') }}</button>
       </div>
       <div class="pages-grid">
         <button
@@ -220,7 +221,7 @@ function showComingSoon(feature: string) {
           </div>
           <div class="page-card-content">
             <h4 class="page-card-title">{{ page.title }}</h4>
-            <p class="page-card-meta">Edited recently</p>
+            <p class="page-card-meta">{{ $t('dashboard.editedRecently') }}</p>
           </div>
         </button>
       </div>
@@ -253,9 +254,9 @@ function showComingSoon(feature: string) {
             />
           </svg>
         </div>
-        <h3 class="empty-title">Your workspace is empty</h3>
+        <h3 class="empty-title">{{ $t('dashboard.emptyWorkspace') }}</h3>
         <p class="empty-description">
-          Create your first page to start organizing your thoughts, notes, and ideas.
+          {{ $t('dashboard.emptyWorkspaceDescription') }}
         </p>
         <button type="button" class="empty-action" @click="createNewPage">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -272,7 +273,7 @@ function showComingSoon(feature: string) {
               stroke-linecap="round"
             />
           </svg>
-          <span>Create your first page</span>
+          <span>{{ $t('pages.createPage') }}</span>
         </button>
       </div>
     </section>

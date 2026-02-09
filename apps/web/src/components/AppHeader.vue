@@ -13,7 +13,7 @@ const syncStore = useSyncStore();
         <span class="breadcrumb-icon">{{ pagesStore.currentPage.icon ?? '📄' }}</span>
         <span class="breadcrumb-title">{{ pagesStore.currentPage.title }}</span>
       </nav>
-      <span v-else class="header-title">Dashboard</span>
+      <span v-else class="header-title">{{ $t('nav.dashboard') }}</span>
     </div>
 
     <!-- Sync Status Indicator -->
@@ -71,7 +71,12 @@ const syncStore = useSyncStore();
     <div class="header-right">
       <!-- Page Actions -->
       <div class="header-actions">
-        <button class="action-btn" type="button" title="View history" aria-label="View history">
+        <button
+          class="action-btn"
+          type="button"
+          :title="$t('header.viewHistory')"
+          :aria-label="$t('header.viewHistory')"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="6.75" stroke="currentColor" stroke-width="1.5" />
             <path
@@ -83,7 +88,12 @@ const syncStore = useSyncStore();
             />
           </svg>
         </button>
-        <button class="action-btn" type="button" title="Comments" aria-label="Comments">
+        <button
+          class="action-btn"
+          type="button"
+          :title="$t('header.comments')"
+          :aria-label="$t('header.comments')"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M15.75 8.625C15.7526 9.59369 15.5139 10.5479 15.0562 11.3973C14.5985 12.2467 13.9367 12.9633 13.1306 13.4833C12.3245 14.0033 11.4001 14.3097 10.4428 14.3732C9.48557 14.4367 8.52754 14.2552 7.6575 13.845L3 15L4.155 10.3425C3.74481 9.47245 3.56334 8.51442 3.62683 7.55719C3.69032 6.59996 3.99675 5.67551 4.51674 4.86941C5.03673 4.06331 5.75327 3.40154 6.60266 2.94383C7.45204 2.48611 8.40631 2.24742 9.375 2.25C10.6304 2.25 11.8568 2.62378 12.893 3.32101C13.9293 4.01825 14.7274 5.0065 15.1861 6.16031C15.6448 7.31411 15.7432 8.58012 15.4686 9.79124"
@@ -94,7 +104,12 @@ const syncStore = useSyncStore();
             />
           </svg>
         </button>
-        <button class="action-btn" type="button" title="Favorite" aria-label="Favourite">
+        <button
+          class="action-btn"
+          type="button"
+          :title="$t('header.favourite')"
+          :aria-label="$t('header.favourite')"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 2.25L11.0962 6.50074L15.75 7.18125L12.375 10.4693L13.1925 15.1013L9 12.8925L4.8075 15.1013L5.625 10.4693L2.25 7.18125L6.90375 6.50074L9 2.25Z"
@@ -148,11 +163,16 @@ const syncStore = useSyncStore();
             stroke-linejoin="round"
           />
         </svg>
-        <span>Share</span>
+        <span>{{ $t('header.share') }}</span>
       </button>
 
       <!-- More Options -->
-      <button class="more-btn" type="button" title="More options" aria-label="More options">
+      <button
+        class="more-btn"
+        type="button"
+        :title="$t('header.moreOptions')"
+        :aria-label="$t('header.moreOptions')"
+      >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="1.5" fill="currentColor" />
           <circle cx="9" cy="4.5" r="1.5" fill="currentColor" />

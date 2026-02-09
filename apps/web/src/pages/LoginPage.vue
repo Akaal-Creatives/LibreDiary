@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useTheme } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
 import { ApiError, oauthService } from '@/services';
@@ -10,6 +11,7 @@ import type { OAuthProvider } from '@librediary/shared';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
 
@@ -52,7 +54,7 @@ async function handleSubmit() {
   } catch (err) {
     if (err instanceof ApiError) {
       if (err.code === 'LOGIN_ERROR') {
-        error.value = 'Invalid email or password';
+        error.value = t('auth.invalidCredentials');
       } else if (err.code === 'VALIDATION_ERROR' && err.details) {
         // Show specific validation errors
         const fieldErrors = err.details as Record<string, string[]>;
@@ -165,8 +167,8 @@ async function handleOAuthClick(provider: OAuthProvider) {
       <!-- Login Card -->
       <div class="login-card">
         <div class="login-header">
-          <h1>Welcome back</h1>
-          <p>Sign in to continue to your workspace</p>
+          <h1>{{ $t('auth.welcomeBack') }}</h1>
+          <p>{{ $t('auth.signInToContinue') }}</p>
         </div>
 
         <!-- OAuth Buttons -->
@@ -178,7 +180,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
           @click="handleOAuthClick"
         />
 
-        <AuthDivider v-if="configuredProviders.length > 0" text="or continue with email" />
+        <AuthDivider v-if="configuredProviders.length > 0" :text="$t('auth.continueWithEmail')" />
 
         <form class="login-form" @submit.prevent="handleSubmit">
           <div v-if="error" class="error-message" role="alert" aria-live="polite">
@@ -195,12 +197,12 @@ async function handleOAuthClick(provider: OAuthProvider) {
           </div>
 
           <div class="form-field">
-            <label for="email">Email</label>
+            <label for="email">{{ $t('auth.email') }}</label>
             <input
               id="email"
               v-model="email"
               type="email"
-              placeholder="you@example.com"
+              :placeholder="$t('auth.emailPlaceholder')"
               required
               autocomplete="email"
               :aria-invalid="!!error"
@@ -208,13 +210,13 @@ async function handleOAuthClick(provider: OAuthProvider) {
           </div>
 
           <div class="form-field">
-            <label for="password">Password</label>
+            <label for="password">{{ $t('auth.password') }}</label>
             <div class="input-group">
               <input
                 id="password"
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="Enter your password"
+                :placeholder="$t('auth.passwordPlaceholder')"
                 required
                 autocomplete="current-password"
                 :aria-invalid="!!error"
@@ -222,7 +224,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
               <button
                 type="button"
                 class="password-toggle-btn"
-                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
                 @click="showPassword = !showPassword"
               >
                 <!-- Eye open icon (password is hidden, click to show) -->
@@ -265,13 +267,13 @@ async function handleOAuthClick(provider: OAuthProvider) {
 
           <button type="submit" class="submit-btn" :disabled="loading">
             <span v-if="loading" class="loading-spinner"></span>
-            <span v-else>Sign In</span>
+            <span v-else>{{ $t('auth.signIn') }}</span>
           </button>
         </form>
 
         <div class="login-footer">
           <button type="button" class="forgot-link" @click="goToForgotPassword">
-            Forgot your password?
+            {{ $t('auth.forgotPassword') }}
           </button>
         </div>
       </div>
@@ -287,7 +289,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
             stroke-linejoin="round"
           />
         </svg>
-        Back to home
+        {{ $t('auth.backToHome') }}
       </button>
     </div>
   </div>

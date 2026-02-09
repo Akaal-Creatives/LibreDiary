@@ -1,0 +1,81 @@
+{
+  "nav": {
+    "favourites": "Favorites"
+  },
+  "sidebar": {
+    "collapseFavourites": "Collapse favorites",
+    "expandFavourites": "Expand favorites"
+  },
+  "header": {
+    "favourite": "Favorite"
+  },
+  "auth": {
+    "joinOrganisation": "Join {organisationName}"
+  },
+  "setup": {
+    "stepOrganisation": "Organization",
+    "createFirstOrganisation": "Create your first organization",
+    "organisationName": "Organization Name"
+  },
+  "settings": {
+    "organisationSettings": "Organization Settings",
+    "organisationName": "Organization name",
+    "organisationSlug": "Organization slug",
+    "organisationLogo": "Organization logo",
+    "organisationCover": "Cover image",
+    "removeMemberConfirm": "Are you sure you want to remove {name} from this organization?",
+    "deleteOrganisation": "Delete organization"
+  },
+  "notifications": {
+    "invitationsDescription": "When you are invited to join an organization"
+  },
+  "pages": {
+    "createPageDescription": "Create your first page to start organizing your thoughts, notes, and ideas.",
+    "addToFavourites": "Added to favorites",
+    "removeFromFavourites": "Removed from favorites",
+    "failedToUpdateFavourites": "Failed to update favorites"
+  },
+  "admin": {
+    "organisations": "Organizations",
+    "manageAllOrganisations": "Manage all organizations in the system",
+    "searchOrganisationsPlaceholder": "Search organizations by name or slug...",
+    "organisationsTotal": "organizations total",
+    "noOrganisationsFound": "No organizations found",
+    "organisations_column": "Organizations",
+    "organisation": "Organization",
+    "deleteOrganisation": "Delete Organization",
+    "deleteOrganisationConfirm": "Are you sure you want to delete {name}? This will affect {count} member(s). This action can be undone by restoring the organization.",
+    "organisationDeleted": "Organization deleted successfully",
+    "organisationRestored": "Organization restored successfully",
+    "restoreOrganisation": "Restore organization",
+    "deleteOrganisationTooltip": "Delete organization",
+    "failedToLoadOrganisations": "Failed to load organizations",
+    "failedToDeleteOrganisation": "Failed to delete organization",
+    "failedToRestoreOrganisation": "Failed to restore organization"
+  },
+  "errors": {
+    "unauthorised": "Unauthorized"
+  },
+  "dashboard": {
+    "emptyWorkspaceDescription": "Create your first page to start organizing your thoughts, notes, and ideas."
+  },
+  "invites": {
+    "noPendingInvitesDescription": "Send an invite to add new members to your organization.",
+    "memberDescription": "Members can view and contribute to the organization.",
+    "adminDescription": "Admins can manage members and organization settings."
+  },
+  "contextMenu": {
+    "addToFavourites": "Add to favorites",
+    "removeFromFavourites": "Remove from favorites"
+  },
+  "organisation": {
+    "createOrganisation": "Create Organization",
+    "createDescription": "Create a new organization to collaborate with your team.",
+    "organisationName": "Organization name",
+    "switchOrganisation": "Switch organization"
+  },
+  "language": {
+    "enGB": "English (UK)",
+    "enUS": "English (US)"
+  }
+}

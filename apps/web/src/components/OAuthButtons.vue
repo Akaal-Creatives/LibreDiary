@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { OAuthProvider } from '@librediary/shared';
 
 const props = withDefaults(
@@ -21,14 +22,16 @@ const emit = defineEmits<{
   click: [provider: OAuthProvider];
 }>();
 
+const { t } = useI18n();
+
 const buttonText = computed(() => {
   switch (props.mode) {
     case 'register':
-      return { github: 'Sign up with GitHub', google: 'Sign up with Google' };
+      return { github: t('auth.signUpWithGitHub'), google: t('auth.signUpWithGoogle') };
     case 'link':
-      return { github: 'Link GitHub', google: 'Link Google' };
+      return { github: t('auth.linkGitHub'), google: t('auth.linkGoogle') };
     default:
-      return { github: 'Continue with GitHub', google: 'Continue with Google' };
+      return { github: t('auth.continueWithGitHub'), google: t('auth.continueWithGoogle') };
   }
 });
 

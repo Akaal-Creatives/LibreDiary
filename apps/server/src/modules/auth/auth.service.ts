@@ -502,6 +502,19 @@ export async function createInvite(input: InviteInput): Promise<string> {
 }
 
 /**
+ * Update user profile (name, locale)
+ */
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; locale?: string }
+): Promise<User> {
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+}
+
+/**
  * Get invite by token
  */
 export async function getInviteByToken(token: string): Promise<{

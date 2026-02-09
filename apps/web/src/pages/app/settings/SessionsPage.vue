@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { authService } from '@/services/auth.service';
 import type { SessionInfo } from '@/services/auth.service';
 import { useToast } from '@/composables/useToast';
 
+const { t } = useI18n();
 const toast = useToast();
 
 const sessions = ref<SessionInfo[]>([]);
@@ -45,36 +47,36 @@ async function revokeSession(sessionId: string) {
 
 function parseUserAgent(userAgent: string | null): { device: string; browser: string } {
   if (!userAgent) {
-    return { device: 'Unknown device', browser: 'Unknown browser' };
+    return { device: t('devices.unknownDevice'), browser: t('devices.unknownBrowser') };
   }
 
-  let device = 'Unknown device';
-  let browser = 'Unknown browser';
+  let device = t('devices.unknownDevice');
+  let browser = t('devices.unknownBrowser');
 
   // Parse device
   if (userAgent.includes('iPhone')) {
-    device = 'iPhone';
+    device = t('devices.iphone');
   } else if (userAgent.includes('iPad')) {
-    device = 'iPad';
+    device = t('devices.ipad');
   } else if (userAgent.includes('Android')) {
-    device = 'Android';
+    device = t('devices.android');
   } else if (userAgent.includes('Macintosh') || userAgent.includes('Mac OS')) {
-    device = 'Mac';
+    device = t('devices.mac');
   } else if (userAgent.includes('Windows')) {
-    device = 'Windows';
+    device = t('devices.windows');
   } else if (userAgent.includes('Linux')) {
-    device = 'Linux';
+    device = t('devices.linux');
   }
 
   // Parse browser
   if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
-    browser = 'Chrome';
+    browser = t('devices.chrome');
   } else if (userAgent.includes('Firefox')) {
-    browser = 'Firefox';
+    browser = t('devices.firefox');
   } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
-    browser = 'Safari';
+    browser = t('devices.safari');
   } else if (userAgent.includes('Edg')) {
-    browser = 'Edge';
+    browser = t('devices.edge');
   }
 
   return { device, browser };
@@ -90,13 +92,13 @@ function formatRelativeTime(dateString: string): string {
   const diffDay = Math.floor(diffHour / 24);
 
   if (diffSec < 60) {
-    return 'just now';
+    return t('time.justNow');
   } else if (diffMin < 60) {
-    return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+    return t('time.minuteAgo', { count: diffMin });
   } else if (diffHour < 24) {
-    return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+    return t('time.hourAgo', { count: diffHour });
   } else if (diffDay < 7) {
-    return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    return t('time.dayAgo', { count: diffDay });
   } else {
     return date.toLocaleDateString();
   }
@@ -117,16 +119,16 @@ function getDeviceIcon(userAgent: string | null): string {
 <template>
   <div class="sessions-page">
     <header class="page-header">
-      <h1 class="page-title">Sessions</h1>
+      <h1 class="page-title">{{ $t('settings.sessions') }}</h1>
       <p class="page-description">
-        View and manage your active sessions. You can sign out of other devices if needed.
+        {{ $t('settings.sessionsDescription') }}
       </p>
     </header>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <span>Loading sessions...</span>
+      <span>{{ $t('settings.loadingSessions') }}</span>
     </div>
 
     <!-- Error State -->
@@ -137,7 +139,7 @@ function getDeviceIcon(userAgent: string | null): string {
         <circle cx="24" cy="32" r="2" fill="currentColor" />
       </svg>
       <p class="error-text">{{ error }}</p>
-      <button class="retry-btn" @click="loadSessions">Try again</button>
+      <button class="retry-btn" @click="loadSessions">{{ $t('common.tryAgain') }}</button>
     </div>
 
     <!-- Empty State -->
@@ -148,7 +150,7 @@ function getDeviceIcon(userAgent: string | null): string {
         <path d="M20 38H28" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         <path d="M24 34V38" stroke="currentColor" stroke-width="2" />
       </svg>
-      <p class="empty-text">No active sessions</p>
+      <p class="empty-text">{{ $t('settings.noActiveSessions') }}</p>
     </div>
 
     <!-- Sessions List -->
@@ -215,11 +217,15 @@ function getDeviceIcon(userAgent: string | null): string {
           <div class="session-header">
             <span class="session-device">
               {{ parseUserAgent(session.userAgent).device }}
-              <template v-if="parseUserAgent(session.userAgent).browser !== 'Unknown browser'">
+              <template
+                v-if="parseUserAgent(session.userAgent).browser !== t('devices.unknownBrowser')"
+              >
                 &middot; {{ parseUserAgent(session.userAgent).browser }}
               </template>
             </span>
-            <span v-if="session.isCurrent" class="current-badge">Current session</span>
+            <span v-if="session.isCurrent" class="current-badge">{{
+              $t('settings.currentSession')
+            }}</span>
           </div>
           <div class="session-details">
             <span class="detail-item">
@@ -255,7 +261,7 @@ function getDeviceIcon(userAgent: string | null): string {
           :disabled="revokingId === session.id"
           @click="revokeSession(session.id)"
         >
-          {{ revokingId === session.id ? 'Revoking...' : 'Sign out' }}
+          {{ revokingId === session.id ? $t('auth.revoking') : $t('auth.signOut') }}
         </button>
       </div>
     </div>

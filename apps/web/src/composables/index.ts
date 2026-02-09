@@ -1,4 +1,5 @@
 export { useTheme, type Theme } from './useTheme';
+export { useLocale } from './useLocale';
 export {
   useDialog,
   alert,

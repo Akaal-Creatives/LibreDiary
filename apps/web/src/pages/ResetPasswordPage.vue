@@ -135,16 +135,18 @@ function goToLogin() {
               stroke-linejoin="round"
             />
           </svg>
-          <h2>Password reset!</h2>
-          <p>Your password has been successfully changed.</p>
-          <button type="button" class="submit-btn" @click="goToLogin">Sign In</button>
+          <h2>{{ $t('auth.passwordResetSuccess') }}</h2>
+          <p>{{ $t('auth.passwordResetSuccessMessage') }}</p>
+          <button type="button" class="submit-btn" @click="goToLogin">
+            {{ $t('auth.signIn') }}
+          </button>
         </div>
 
         <!-- Form State -->
         <template v-else>
           <div class="reset-header">
-            <h1>Reset password</h1>
-            <p>Enter your new password</p>
+            <h1>{{ $t('auth.resetPasswordTitle') }}</h1>
+            <p>{{ $t('auth.resetPasswordDescription') }}</p>
           </div>
 
           <form class="reset-form" @submit.prevent="handleSubmit">
@@ -162,24 +164,24 @@ function goToLogin() {
             </div>
 
             <div class="form-field">
-              <label for="password">New Password</label>
+              <label for="password">{{ $t('auth.newPassword') }}</label>
               <input
                 id="password"
                 v-model="password"
                 type="password"
-                placeholder="At least 8 characters"
+                :placeholder="$t('auth.newPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
               />
             </div>
 
             <div class="form-field">
-              <label for="confirm-password">Confirm Password</label>
+              <label for="confirm-password">{{ $t('auth.confirmPassword') }}</label>
               <input
                 id="confirm-password"
                 v-model="confirmPassword"
                 type="password"
-                placeholder="Confirm your password"
+                :placeholder="$t('auth.confirmPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
               />
@@ -187,7 +189,7 @@ function goToLogin() {
 
             <button type="submit" class="submit-btn" :disabled="loading">
               <span v-if="loading" class="loading-spinner"></span>
-              <span v-else>Reset Password</span>
+              <span v-else>{{ $t('auth.resetPassword') }}</span>
             </button>
           </form>
 
@@ -202,7 +204,7 @@ function goToLogin() {
                   stroke-linejoin="round"
                 />
               </svg>
-              Back to Login
+              {{ $t('auth.backToLogin') }}
             </button>
           </div>
         </template>
@@ -219,7 +221,7 @@ function goToLogin() {
             stroke-linejoin="round"
           />
         </svg>
-        Back to home
+        {{ $t('auth.backToHome') }}
       </button>
     </div>
   </div>

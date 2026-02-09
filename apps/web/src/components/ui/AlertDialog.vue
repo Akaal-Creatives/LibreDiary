@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseModal from './BaseModal.vue';
 
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error';
+
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
@@ -14,7 +17,6 @@ const props = withDefaults(
   }>(),
   {
     variant: 'info',
-    confirmText: 'OK',
   }
 );
 
@@ -55,7 +57,7 @@ function handleConfirm() {
       <!-- Actions -->
       <div class="alert-actions">
         <button class="btn btn-primary" @click="handleConfirm">
-          {{ confirmText }}
+          {{ confirmText || t('common.ok') }}
         </button>
       </div>
     </div>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
   modelValue?: string | null;
@@ -14,9 +17,9 @@ const pickerRef = ref<HTMLElement>();
 const searchQuery = ref('');
 
 // Common emoji categories
-const emojiCategories = [
+const emojiCategories = computed(() => [
   {
-    name: 'Smileys',
+    name: t('emoji.smileys'),
     emojis: [
       '😀',
       '😃',
@@ -36,7 +39,7 @@ const emojiCategories = [
     ],
   },
   {
-    name: 'Objects',
+    name: t('emoji.objects'),
     emojis: [
       '📄',
       '📝',
@@ -56,7 +59,7 @@ const emojiCategories = [
     ],
   },
   {
-    name: 'Symbols',
+    name: t('emoji.symbols'),
     emojis: [
       '✅',
       '❌',
@@ -76,7 +79,7 @@ const emojiCategories = [
     ],
   },
   {
-    name: 'Nature',
+    name: t('emoji.nature'),
     emojis: [
       '🌸',
       '🌺',
@@ -96,7 +99,7 @@ const emojiCategories = [
     ],
   },
   {
-    name: 'Tech',
+    name: t('emoji.tech'),
     emojis: [
       '💻',
       '🖥️',
@@ -115,14 +118,14 @@ const emojiCategories = [
       '💿',
     ],
   },
-];
+]);
 
 const filteredCategories = computed(() => {
   if (!searchQuery.value) {
-    return emojiCategories;
+    return emojiCategories.value;
   }
   // For now, just return all - could add emoji names for search
-  return emojiCategories;
+  return emojiCategories.value;
 });
 
 function selectEmoji(emoji: string) {
@@ -160,12 +163,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="pickerRef" class="emoji-picker" role="dialog" aria-label="Emoji picker">
+  <div ref="pickerRef" class="emoji-picker" role="dialog" :aria-label="$t('emoji.pickerLabel')">
     <div class="picker-header">
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="Search emoji..."
+        :placeholder="$t('emoji.searchPlaceholder')"
         class="picker-search"
       />
     </div>
@@ -199,7 +202,7 @@ onUnmounted(() => {
             stroke-linecap="round"
           />
         </svg>
-        Remove icon
+        {{ $t('emoji.removeIcon') }}
       </button>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 
 const mockRouter = vi.hoisted(() => ({
@@ -22,6 +23,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/composables', () => ({
   useTheme: () => mockTheme,
+  useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
 }));
 
 vi.mock('@/services', () => ({
@@ -71,7 +73,7 @@ describe('SetupWizardPage', () => {
     const wrapper = mountPage();
 
     const stepLabels = wrapper.findAll('.step-label');
-    expect(stepLabels.map((s) => s.text())).toEqual(['Site', 'Admin', 'Organization']);
+    expect(stepLabels.map((s) => s.text())).toEqual(['Site', 'Admin', 'Organisation']);
   });
 
   it('disables Continue button when site name is empty', async () => {
@@ -178,7 +180,7 @@ describe('SetupWizardPage', () => {
     // Step 2 -> 3
     await wrapper.find('.btn-primary').trigger('click');
 
-    expect(wrapper.find('h2').text()).toContain('Create your first organization');
+    expect(wrapper.find('h2').text()).toContain('Create your first organisation');
     expect(wrapper.find('#orgName').exists()).toBe(true);
     expect(wrapper.find('#orgSlug').exists()).toBe(true);
   });

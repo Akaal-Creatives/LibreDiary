@@ -116,7 +116,7 @@ function goToLogin() {
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner large"></div>
-          <p>Verifying your email...</p>
+          <p>{{ $t('auth.verifyingEmail') }}</p>
         </div>
 
         <!-- Success State -->
@@ -131,12 +131,12 @@ function goToLogin() {
               stroke-linejoin="round"
             />
           </svg>
-          <h2>Email verified!</h2>
-          <p>Your email has been successfully verified.</p>
+          <h2>{{ $t('auth.emailVerified') }}</h2>
+          <p>{{ $t('auth.emailVerifiedMessage') }}</p>
           <button v-if="authStore.isAuthenticated" class="submit-btn" @click="goToApp">
-            Go to App
+            {{ $t('auth.goToApp') }}
           </button>
-          <button v-else class="submit-btn" @click="goToLogin">Sign In</button>
+          <button v-else class="submit-btn" @click="goToLogin">{{ $t('auth.signIn') }}</button>
         </div>
 
         <!-- Error State -->
@@ -150,12 +150,12 @@ function goToLogin() {
               stroke-linecap="round"
             />
           </svg>
-          <h2>Verification failed</h2>
-          <p>{{ error }}</p>
+          <h2>{{ $t('auth.verificationFailed') }}</h2>
+          <p>{{ $t('auth.verificationFailedMessage') }}</p>
           <button v-if="authStore.isAuthenticated" class="secondary-btn" @click="goToApp">
-            Go to App
+            {{ $t('auth.goToApp') }}
           </button>
-          <button v-else class="secondary-btn" @click="goToLogin">Go to Login</button>
+          <button v-else class="secondary-btn" @click="goToLogin">{{ $t('auth.signIn') }}</button>
         </div>
       </div>
 
@@ -170,7 +170,7 @@ function goToLogin() {
             stroke-linejoin="round"
           />
         </svg>
-        Back to home
+        {{ $t('auth.backToHome') }}
       </button>
     </div>
   </div>

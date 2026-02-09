@@ -161,6 +161,31 @@ describe('Auth Service', () => {
   });
 
   // ===========================================
+  // PROFILE UPDATE
+  // ===========================================
+
+  describe('updateProfile', () => {
+    it('should PATCH to correct endpoint with data', async () => {
+      mockApi.patch.mockResolvedValue({ user: { id: 'u-1', locale: 'en-GB' } });
+
+      await authService.updateProfile({ locale: 'en-GB' });
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/auth/profile', { locale: 'en-GB' });
+    });
+
+    it('should send name and locale together', async () => {
+      mockApi.patch.mockResolvedValue({ user: { id: 'u-1', name: 'New', locale: 'en-US' } });
+
+      await authService.updateProfile({ name: 'New', locale: 'en-US' });
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/auth/profile', {
+        name: 'New',
+        locale: 'en-US',
+      });
+    });
+  });
+
+  // ===========================================
   // INVITES
   // ===========================================
 

@@ -113,6 +113,13 @@ export const authService = {
   },
 
   /**
+   * Update current user's profile
+   */
+  async updateProfile(data: { name?: string; locale?: string }): Promise<{ user: User }> {
+    return api.patch<{ user: User }>('/auth/profile', data);
+  },
+
+  /**
    * Get invite info by token
    */
   async getInvite(token: string): Promise<InviteInfo> {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { notificationsService } from '@/services';
 import type { Notification, NotificationType } from '@librediary/shared';
 import { useRouter } from 'vue-router';
@@ -9,6 +10,7 @@ const props = defineProps<{
   pollInterval?: number;
 }>();
 
+const { t } = useI18n();
 const router = useRouter();
 
 // State
@@ -69,7 +71,7 @@ async function fetchNotifications() {
     error.value = null;
   } catch (e) {
     console.error('Failed to fetch notifications:', e);
-    error.value = 'Failed to load notifications';
+    error.value = t('notifications.failedToLoadNotifications');
   } finally {
     loading.value = false;
   }
@@ -175,10 +177,10 @@ function formatTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
+  if (diffMins < 1) return t('time.justNow');
+  if (diffMins < 60) return t('time.minuteAgo', { count: diffMins });
+  if (diffHours < 24) return t('time.hourAgo', { count: diffHours });
+  if (diffDays < 7) return t('time.dayAgo', { count: diffDays });
 
   return date.toLocaleDateString(undefined, {
     month: 'short',
@@ -224,7 +226,11 @@ watch(isOpen, (open) => {
       type="button"
       class="bell-button"
       :class="{ active: isOpen, 'has-unread': hasUnread }"
-      :aria-label="hasUnread ? `Notifications (${unreadCount} unread)` : 'Notifications'"
+      :aria-label="
+        hasUnread
+          ? `${$t('notifications.title')} (${$t('notifications.unread', { count: unreadCount })})`
+          : $t('notifications.title')
+      "
       :aria-expanded="isOpen"
       @click="togglePanel"
     >
@@ -260,15 +266,17 @@ watch(isOpen, (open) => {
         <!-- Panel Header -->
         <header class="panel-header">
           <div class="header-left">
-            <h3 class="panel-title">Notifications</h3>
-            <span v-if="hasUnread" class="unread-indicator">{{ unreadCount }} new</span>
+            <h3 class="panel-title">{{ $t('notifications.title') }}</h3>
+            <span v-if="hasUnread" class="unread-indicator">{{
+              $t('notifications.new', { count: unreadCount })
+            }}</span>
           </div>
           <div class="header-actions">
             <button
               v-if="hasUnread"
               type="button"
               class="mark-all-btn"
-              title="Mark all as read"
+              :title="$t('notifications.markAllAsRead')"
               @click="markAllAsRead"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -280,12 +288,12 @@ watch(isOpen, (open) => {
                   stroke-linejoin="round"
                 />
               </svg>
-              <span>Mark all read</span>
+              <span>{{ $t('notifications.markAllRead') }}</span>
             </button>
             <button
               type="button"
               class="settings-btn"
-              title="Notification settings"
+              :title="$t('notifications.notificationSettings')"
               @click="
                 isOpen = false;
                 router.push({ name: 'notification-settings' });
@@ -337,7 +345,9 @@ watch(isOpen, (open) => {
               </svg>
             </div>
             <p>{{ error }}</p>
-            <button type="button" class="retry-btn" @click="fetchNotifications">Try again</button>
+            <button type="button" class="retry-btn" @click="fetchNotifications">
+              {{ $t('common.tryAgain') }}
+            </button>
           </div>
 
           <!-- Empty State -->
@@ -369,8 +379,8 @@ watch(isOpen, (open) => {
                 />
               </svg>
             </div>
-            <h4>All caught up!</h4>
-            <p>No notifications to show</p>
+            <h4>{{ $t('notifications.allCaughtUp') }}</h4>
+            <p>{{ $t('notifications.noNotifications') }}</p>
           </div>
 
           <!-- Notifications List -->
@@ -493,7 +503,7 @@ watch(isOpen, (open) => {
                 <button
                   type="button"
                   class="delete-btn"
-                  title="Delete notification"
+                  :title="$t('notifications.deleteNotification')"
                   @click="deleteNotification(notification.id, $event)"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

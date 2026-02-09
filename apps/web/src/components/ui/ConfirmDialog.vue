@@ -3,6 +3,10 @@ import BaseModal from './BaseModal.vue';
 
 export type ConfirmVariant = 'default' | 'destructive';
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 withDefaults(
   defineProps<{
     open: boolean;
@@ -14,8 +18,6 @@ withDefaults(
   }>(),
   {
     variant: 'default',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
   }
 );
 
@@ -66,14 +68,14 @@ function handleCancel() {
       <!-- Actions -->
       <div class="confirm-actions">
         <button class="btn btn-secondary" @click="handleCancel">
-          {{ cancelText }}
+          {{ cancelText || t('common.cancel') }}
         </button>
         <button
           class="btn"
           :class="variant === 'destructive' ? 'btn-danger' : 'btn-primary'"
           @click="handleConfirm"
         >
-          {{ confirmText }}
+          {{ confirmText || t('common.confirm') }}
         </button>
       </div>
     </div>

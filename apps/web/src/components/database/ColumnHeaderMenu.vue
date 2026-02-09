@@ -108,7 +108,7 @@ const isFirstProperty = props.property.position === 0;
             stroke-linejoin="round"
           />
         </svg>
-        Sort A to Z
+        {{ $t('databases.sortAToZ') }}
       </button>
       <button class="menu-item" @click="sortDesc">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -121,7 +121,7 @@ const isFirstProperty = props.property.position === 0;
             stroke-linejoin="round"
           />
         </svg>
-        Sort Z to A
+        {{ $t('databases.sortZToA') }}
       </button>
       <div class="menu-separator"></div>
       <button class="menu-item" @click="startRename">
@@ -134,7 +134,7 @@ const isFirstProperty = props.property.position === 0;
             stroke-linejoin="round"
           />
         </svg>
-        Rename
+        {{ $t('databases.rename') }}
       </button>
       <button class="menu-item menu-item-configure" @click="emit('configure')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -144,7 +144,7 @@ const isFirstProperty = props.property.position === 0;
           <path d="M1.5 7H3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
           <path d="M11 7H12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
         </svg>
-        Configure
+        {{ $t('databases.configure') }}
       </button>
       <button class="menu-item danger" :disabled="isFirstProperty" @click="deleteProperty">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -160,7 +160,7 @@ const isFirstProperty = props.property.position === 0;
             stroke-width="1.2"
           />
         </svg>
-        Delete
+        {{ $t('common.delete') }}
       </button>
     </template>
   </div>

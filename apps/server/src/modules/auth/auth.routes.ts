@@ -29,6 +29,15 @@ const verifyEmailSchema = z.object({
   token: z.string().min(1),
 });
 
+const updateProfileSchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    locale: z.string().min(2).max(10).optional(),
+  })
+  .refine((data) => data.name !== undefined || data.locale !== undefined, {
+    message: 'At least one field must be provided',
+  });
+
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
 });
@@ -197,6 +206,57 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           error: {
             code: 'USER_NOT_FOUND',
             message: 'User not found',
+          },
+        });
+      }
+    }
+  );
+
+  /**
+   * PATCH /auth/profile
+   * Update current user's profile
+   */
+  fastify.patch(
+    '/profile',
+    { preHandler: [requireAuth] },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = updateProfileSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        const user = getAuthUser(request);
+        const updated = await authService.updateUserProfile(user.id, body.data);
+
+        logAudit({
+          action: 'USER_PROFILE_UPDATED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+          metadata: body.data,
+        });
+
+        return {
+          success: true,
+          data: {
+            user: sanitizeUser(updated),
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Profile update failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'PROFILE_UPDATE_ERROR',
+            message,
           },
         });
       }

@@ -212,7 +212,7 @@ function isExpiringSoon(expiresAt: string): boolean {
   <div class="members-page">
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">Members</h1>
+        <h1 class="page-title">{{ $t('settings.members') }}</h1>
         <p class="page-subtitle">
           Manage who has access to {{ authStore.currentOrganization?.name }}
         </p>
@@ -230,7 +230,7 @@ function isExpiringSoon(expiresAt: string): boolean {
             stroke-linecap="round"
           />
         </svg>
-        <span>Invite Member</span>
+        <span>{{ $t('settings.inviteMember') }}</span>
       </button>
     </div>
 
@@ -240,7 +240,7 @@ function isExpiringSoon(expiresAt: string): boolean {
 
     <div v-if="loading" class="loading-state">
       <div class="loading-spinner"></div>
-      <p>Loading members...</p>
+      <p>{{ $t('settings.loadingMembers') }}</p>
     </div>
 
     <template v-else>
@@ -269,7 +269,7 @@ function isExpiringSoon(expiresAt: string): boolean {
                 stroke-width="1.5"
               />
             </svg>
-            <h2 class="section-title">Pending Invitations</h2>
+            <h2 class="section-title">{{ $t('settings.pendingInvitations') }}</h2>
             <span class="invite-count">{{ pendingInvites.length }}</span>
           </div>
         </div>
@@ -292,17 +292,19 @@ function isExpiringSoon(expiresAt: string): boolean {
               <div class="invite-meta">
                 <MemberRoleBadge :role="invite.role" />
                 <span class="invite-separator">·</span>
-                <span class="invite-date">Invited {{ formatRelativeTime(invite.createdAt) }}</span>
+                <span class="invite-date"
+                  >{{ $t('settings.invited') }} {{ formatRelativeTime(invite.createdAt) }}</span
+                >
                 <template v-if="isExpiringSoon(invite.expiresAt)">
                   <span class="invite-separator">·</span>
-                  <span class="invite-expiring">Expires soon</span>
+                  <span class="invite-expiring">{{ $t('settings.expiresSoon') }}</span>
                 </template>
               </div>
             </div>
             <div class="invite-actions">
               <button
                 class="action-btn"
-                title="Resend invitation"
+                :title="$t('settings.resendInvitation')"
                 :disabled="inviteActionLoading === invite.id"
                 @click="handleResendInvite(invite.id)"
               >
@@ -342,7 +344,7 @@ function isExpiringSoon(expiresAt: string): boolean {
               </button>
               <button
                 class="action-btn action-danger"
-                title="Cancel invitation"
+                :title="$t('settings.cancelInvitation')"
                 :disabled="inviteActionLoading === invite.id"
                 @click="handleCancelInvite(invite.id)"
               >
@@ -380,7 +382,7 @@ function isExpiringSoon(expiresAt: string): boolean {
                 stroke-linecap="round"
               />
             </svg>
-            <h2 class="section-title">Members</h2>
+            <h2 class="section-title">{{ $t('settings.members') }}</h2>
             <span class="member-count">{{ orgsStore.members.length }}</span>
           </div>
         </div>
@@ -396,7 +398,9 @@ function isExpiringSoon(expiresAt: string): boolean {
             <div class="member-info">
               <div class="member-name">
                 {{ member.user.name || member.user.email }}
-                <span v-if="member.userId === authStore.user?.id" class="you-badge">(You)</span>
+                <span v-if="member.userId === authStore.user?.id" class="you-badge">{{
+                  $t('settings.you')
+                }}</span>
               </div>
               <div class="member-email">{{ member.user.email }}</div>
             </div>
@@ -404,7 +408,7 @@ function isExpiringSoon(expiresAt: string): boolean {
             <div v-if="canModifyMember(member.role, member.userId)" class="member-actions">
               <button
                 class="action-btn"
-                title="Change role"
+                :title="$t('settings.changeRole')"
                 @click="openRoleChange(member.id, member.role)"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -419,7 +423,7 @@ function isExpiringSoon(expiresAt: string): boolean {
               </button>
               <button
                 class="action-btn action-danger"
-                title="Remove member"
+                :title="$t('settings.removeMember')"
                 @click="openRemoveConfirm(member.id)"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -459,7 +463,7 @@ function isExpiringSoon(expiresAt: string): boolean {
         >
           <div class="modal">
             <div class="modal-header">
-              <h2 class="modal-title">Change Role</h2>
+              <h2 class="modal-title">{{ $t('settings.changeRoleTitle') }}</h2>
             </div>
             <div class="modal-body">
               <p class="modal-text">
@@ -484,10 +488,10 @@ function isExpiringSoon(expiresAt: string): boolean {
             </div>
             <div class="modal-actions">
               <button class="btn btn-secondary" :disabled="actionLoading" @click="closeActionModal">
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button class="btn btn-primary" :disabled="actionLoading" @click="handleRoleChange">
-                {{ actionLoading ? 'Updating...' : 'Update Role' }}
+                {{ actionLoading ? $t('common.update') + '...' : $t('settings.updateRole') }}
               </button>
             </div>
           </div>
@@ -505,23 +509,23 @@ function isExpiringSoon(expiresAt: string): boolean {
         >
           <div class="modal danger-modal">
             <div class="modal-header">
-              <h2 class="modal-title">Remove Member</h2>
+              <h2 class="modal-title">{{ $t('settings.removeMemberTitle') }}</h2>
             </div>
             <div class="modal-body">
               <p class="modal-text">
-                Are you sure you want to remove
-                <strong>{{
-                  selectedMemberInfo?.user.name || selectedMemberInfo?.user.email
-                }}</strong>
-                from this organization? They will lose access to all organization content.
+                {{
+                  $t('settings.removeMemberConfirm', {
+                    name: selectedMemberInfo?.user.name || selectedMemberInfo?.user.email,
+                  })
+                }}
               </p>
             </div>
             <div class="modal-actions">
               <button class="btn btn-secondary" :disabled="actionLoading" @click="closeActionModal">
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button class="btn btn-danger" :disabled="actionLoading" @click="handleRemoveMember">
-                {{ actionLoading ? 'Removing...' : 'Remove Member' }}
+                {{ actionLoading ? $t('common.remove') + '...' : $t('settings.removeMember') }}
               </button>
             </div>
           </div>
