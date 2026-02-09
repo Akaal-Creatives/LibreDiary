@@ -842,6 +842,7 @@ enum AuditAction {
   WEBHOOK_DELETED
   TEMPLATE_CREATED
   TEMPLATE_DELETED
+  AI_TRANSLATION
 }
 
 // No foreign keys — audit logs must persist as immutable records even after entity deletion
