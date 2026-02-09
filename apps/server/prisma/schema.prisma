@@ -765,3 +765,93 @@ model WebhookDelivery {
   @@index([nextRetryAt])
   @@index([createdAt])
 }
+
+// ============================================
+// AUDIT LOGGING
+// ============================================
+
+enum AuditAction {
+  // Auth
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  AUTH_REGISTER
+  AUTH_PASSWORD_RESET
+  AUTH_EMAIL_VERIFIED
+
+  // Pages
+  PAGE_CREATED
+  PAGE_UPDATED
+  PAGE_TRASHED
+  PAGE_RESTORED
+  PAGE_DELETED_PERMANENTLY
+  PAGE_MADE_PUBLIC
+  PAGE_MADE_PRIVATE
+
+  // Comments
+  COMMENT_CREATED
+  COMMENT_UPDATED
+  COMMENT_DELETED
+  COMMENT_RESOLVED
+  COMMENT_UNRESOLVED
+
+  // Permissions
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+  PERMISSION_UPDATED
+  SHARE_LINK_CREATED
+  SHARE_LINK_DELETED
+
+  // Organisation
+  ORG_CREATED
+  ORG_UPDATED
+  ORG_DELETED
+  ORG_RESTORED
+  MEMBER_INVITED
+  MEMBER_ROLE_CHANGED
+  MEMBER_REMOVED
+  MEMBER_LEFT
+
+  // Admin
+  ADMIN_USER_UPDATED
+  ADMIN_USER_DELETED
+  ADMIN_USER_RESTORED
+  ADMIN_ORG_UPDATED
+  ADMIN_ORG_DELETED
+  ADMIN_ORG_RESTORED
+
+  // Resources
+  DATABASE_CREATED
+  DATABASE_DELETED
+  BACKUP_CREATED
+  BACKUP_DOWNLOADED
+  BACKUP_DELETED
+  API_TOKEN_CREATED
+  API_TOKEN_DELETED
+  WEBHOOK_CREATED
+  WEBHOOK_UPDATED
+  WEBHOOK_DELETED
+  TEMPLATE_CREATED
+  TEMPLATE_DELETED
+}
+
+// No foreign keys — audit logs must persist as immutable records even after entity deletion
+model AuditLog {
+  id             String      @id @default(cuid())
+  action         AuditAction
+  userId         String?     // null for system actions
+  organizationId String?     // null for system-level
+  resourceType   String?     // "page", "user", "organization", etc.
+  resourceId     String?     // ID of affected resource
+  metadata       Json?       // extra context (old/new values)
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime    @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([action, createdAt])
+}
