@@ -1,5 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { User, Organization, Prisma } from '../../generated/prisma/client.js';
+import * as filesService from '../files/files.service.js';
+import { getHocuspocusServer } from '../collaboration/hocuspocus.js';
 
 export interface PaginationParams {
   page?: number;
@@ -523,4 +525,77 @@ export async function getStats(): Promise<AdminStats> {
     templates,
     backups,
   };
+}
+
+// ============================================
+// SYSTEM HEALTH
+// ============================================
+
+export interface SystemHealth {
+  database: {
+    status: 'connected' | 'disconnected';
+    error?: string;
+  };
+  storage: {
+    status: 'connected' | 'disconnected';
+    error?: string;
+  };
+  collaboration: {
+    status: 'connected' | 'disconnected';
+  };
+  server: {
+    uptime: number;
+    nodeVersion: string;
+    memory: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+    };
+  };
+}
+
+export async function getSystemHealth(): Promise<SystemHealth> {
+  const [dbResult, storageResult] = await Promise.allSettled([
+    prisma.user.count({ take: 1 }),
+    filesService.testStorageConnection(),
+  ]);
+
+  // Database
+  const database: SystemHealth['database'] =
+    dbResult.status === 'fulfilled'
+      ? { status: 'connected' }
+      : { status: 'disconnected', error: dbResult.reason?.message ?? 'Unknown error' };
+
+  // Storage
+  let storage: SystemHealth['storage'];
+  if (storageResult.status === 'fulfilled') {
+    storage = storageResult.value.success
+      ? { status: 'connected' }
+      : { status: 'disconnected', error: storageResult.value.message };
+  } else {
+    storage = { status: 'disconnected', error: storageResult.reason?.message ?? 'Unknown error' };
+  }
+
+  // Collaboration
+  let collaboration: SystemHealth['collaboration'];
+  try {
+    const server = getHocuspocusServer();
+    collaboration = server ? { status: 'connected' } : { status: 'disconnected' };
+  } catch {
+    collaboration = { status: 'disconnected' };
+  }
+
+  // Server
+  const mem = process.memoryUsage();
+  const server: SystemHealth['server'] = {
+    uptime: process.uptime(),
+    nodeVersion: process.version,
+    memory: {
+      rss: mem.rss,
+      heapTotal: mem.heapTotal,
+      heapUsed: mem.heapUsed,
+    },
+  };
+
+  return { database, storage, collaboration, server };
 }
