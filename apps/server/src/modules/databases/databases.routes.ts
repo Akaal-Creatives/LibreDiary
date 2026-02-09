@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as databasesService from './databases.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -106,59 +107,41 @@ interface ViewParams extends DatabaseParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    DATABASE_NOT_FOUND: {
-      status: 404,
-      code: 'DATABASE_NOT_FOUND',
-      message: 'Database not found',
-    },
-    PROPERTY_NOT_FOUND: {
-      status: 404,
-      code: 'PROPERTY_NOT_FOUND',
-      message: 'Property not found',
-    },
-    ROW_NOT_FOUND: {
-      status: 404,
-      code: 'ROW_NOT_FOUND',
-      message: 'Row not found',
-    },
-    VIEW_NOT_FOUND: {
-      status: 404,
-      code: 'VIEW_NOT_FOUND',
-      message: 'View not found',
-    },
-    CANNOT_DELETE_TITLE_PROPERTY: {
-      status: 400,
-      code: 'CANNOT_DELETE_TITLE_PROPERTY',
-      message: 'Cannot delete the Title property',
-    },
-    CANNOT_DELETE_LAST_VIEW: {
-      status: 400,
-      code: 'CANNOT_DELETE_LAST_VIEW',
-      message: 'Cannot delete the last remaining view',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  DATABASE_NOT_FOUND: {
+    status: 404,
+    code: 'DATABASE_NOT_FOUND',
+    message: 'Database not found',
+  },
+  PROPERTY_NOT_FOUND: {
+    status: 404,
+    code: 'PROPERTY_NOT_FOUND',
+    message: 'Property not found',
+  },
+  ROW_NOT_FOUND: {
+    status: 404,
+    code: 'ROW_NOT_FOUND',
+    message: 'Row not found',
+  },
+  VIEW_NOT_FOUND: {
+    status: 404,
+    code: 'VIEW_NOT_FOUND',
+    message: 'View not found',
+  },
+  CANNOT_DELETE_TITLE_PROPERTY: {
+    status: 400,
+    code: 'CANNOT_DELETE_TITLE_PROPERTY',
+    message: 'Cannot delete the Title property',
+  },
+  CANNOT_DELETE_LAST_VIEW: {
+    status: 400,
+    code: 'CANNOT_DELETE_LAST_VIEW',
+    message: 'Cannot delete the last remaining view',
+  },
+};
 
 // ===========================================
 // DATABASE ROUTES
@@ -198,7 +181,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { database },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -227,7 +210,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { database },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -258,7 +241,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { database },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -273,7 +256,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Database deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -306,7 +289,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { property },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -338,7 +321,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { property },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -357,7 +340,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Property deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -388,7 +371,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Properties reordered' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -422,7 +405,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { row },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -454,7 +437,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { row },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -473,7 +456,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Row deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -504,7 +487,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Rows reordered' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -535,7 +518,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { count, message: `${count} rows deleted` },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -568,7 +551,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { view },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -600,7 +583,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { view },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -619,7 +602,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'View deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -650,7 +633,7 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Views reordered' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

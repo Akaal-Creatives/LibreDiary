@@ -1,7 +1,8 @@
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import * as commentsService from './comments.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -38,59 +39,41 @@ interface ResolveCommentBody {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    PAGE_NOT_FOUND: {
-      status: 404,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    },
-    PAGE_IN_TRASH: {
-      status: 400,
-      code: 'PAGE_IN_TRASH',
-      message: 'Cannot add comments to a trashed page',
-    },
-    COMMENT_NOT_FOUND: {
-      status: 404,
-      code: 'COMMENT_NOT_FOUND',
-      message: 'Comment not found',
-    },
-    PARENT_COMMENT_NOT_FOUND: {
-      status: 404,
-      code: 'PARENT_COMMENT_NOT_FOUND',
-      message: 'Parent comment not found',
-    },
-    NOT_COMMENT_AUTHOR: {
-      status: 403,
-      code: 'NOT_COMMENT_AUTHOR',
-      message: 'You can only modify your own comments',
-    },
-    CANNOT_RESOLVE_REPLY: {
-      status: 400,
-      code: 'CANNOT_RESOLVE_REPLY',
-      message: 'Only top-level comments can be resolved',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  PAGE_NOT_FOUND: {
+    status: 404,
+    code: 'PAGE_NOT_FOUND',
+    message: 'Page not found',
+  },
+  PAGE_IN_TRASH: {
+    status: 400,
+    code: 'PAGE_IN_TRASH',
+    message: 'Cannot add comments to a trashed page',
+  },
+  COMMENT_NOT_FOUND: {
+    status: 404,
+    code: 'COMMENT_NOT_FOUND',
+    message: 'Comment not found',
+  },
+  PARENT_COMMENT_NOT_FOUND: {
+    status: 404,
+    code: 'PARENT_COMMENT_NOT_FOUND',
+    message: 'Parent comment not found',
+  },
+  NOT_COMMENT_AUTHOR: {
+    status: 403,
+    code: 'NOT_COMMENT_AUTHOR',
+    message: 'You can only modify your own comments',
+  },
+  CANNOT_RESOLVE_REPLY: {
+    status: 400,
+    code: 'CANNOT_RESOLVE_REPLY',
+    message: 'Only top-level comments can be resolved',
+  },
+};
 
 // ===========================================
 // COMMENTS ROUTES
@@ -119,7 +102,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
           data: { comments },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -142,7 +125,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
           data: { count },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -186,7 +169,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
           data: { comment },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -221,7 +204,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
           data: { comment },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -242,7 +225,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
         data: { deleted: true },
       };
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 
@@ -276,7 +259,7 @@ export default async function commentsRoutes(fastify: FastifyInstance): Promise<
           data: { comment },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

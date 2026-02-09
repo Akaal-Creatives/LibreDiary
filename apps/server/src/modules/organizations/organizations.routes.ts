@@ -4,6 +4,7 @@ import * as orgService from './organizations.service.js';
 import { requireOrgAccess, requireOrgRole } from './organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import type { OrgRole } from '@prisma/client';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -79,87 +80,69 @@ interface InviteParams extends OrgParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    ORG_NOT_FOUND: { status: 404, code: 'ORG_NOT_FOUND', message: 'Organization not found' },
-    NOT_ORG_MEMBER: {
-      status: 403,
-      code: 'NOT_ORG_MEMBER',
-      message: 'You are not a member of this organization',
-    },
-    INSUFFICIENT_ROLE: {
-      status: 403,
-      code: 'INSUFFICIENT_ROLE',
-      message: 'You do not have permission to perform this action',
-    },
-    CANNOT_MODIFY_OWNER: {
-      status: 403,
-      code: 'CANNOT_MODIFY_OWNER',
-      message: 'Cannot modify organization owner',
-    },
-    CANNOT_MODIFY_HIGHER_ROLE: {
-      status: 403,
-      code: 'CANNOT_MODIFY_HIGHER_ROLE',
-      message: 'Cannot modify users with equal or higher role',
-    },
-    LAST_OWNER: {
-      status: 400,
-      code: 'LAST_OWNER',
-      message: 'Cannot remove or demote the only owner',
-    },
-    DOMAIN_NOT_ALLOWED: {
-      status: 400,
-      code: 'DOMAIN_NOT_ALLOWED',
-      message: 'Email domain not allowed for this organization',
-    },
-    INVITE_ALREADY_EXISTS: {
-      status: 400,
-      code: 'INVITE_ALREADY_EXISTS',
-      message: 'An invite has already been sent to this email',
-    },
-    MEMBER_ALREADY_EXISTS: {
-      status: 400,
-      code: 'MEMBER_ALREADY_EXISTS',
-      message: 'User is already a member of this organization',
-    },
-    MEMBER_NOT_FOUND: { status: 404, code: 'MEMBER_NOT_FOUND', message: 'Member not found' },
-    INVITE_NOT_FOUND: { status: 404, code: 'INVITE_NOT_FOUND', message: 'Invite not found' },
-    INVITE_ALREADY_ACCEPTED: {
-      status: 400,
-      code: 'INVITE_ALREADY_ACCEPTED',
-      message: 'Invite has already been accepted',
-    },
-    USE_LEAVE_ENDPOINT: {
-      status: 400,
-      code: 'USE_LEAVE_ENDPOINT',
-      message: 'Use the leave endpoint to remove yourself',
-    },
-    INVALID_SLUG: {
-      status: 400,
-      code: 'INVALID_SLUG',
-      message: 'Slug is invalid or already taken',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  ORG_NOT_FOUND: { status: 404, code: 'ORG_NOT_FOUND', message: 'Organization not found' },
+  NOT_ORG_MEMBER: {
+    status: 403,
+    code: 'NOT_ORG_MEMBER',
+    message: 'You are not a member of this organization',
+  },
+  INSUFFICIENT_ROLE: {
+    status: 403,
+    code: 'INSUFFICIENT_ROLE',
+    message: 'You do not have permission to perform this action',
+  },
+  CANNOT_MODIFY_OWNER: {
+    status: 403,
+    code: 'CANNOT_MODIFY_OWNER',
+    message: 'Cannot modify organization owner',
+  },
+  CANNOT_MODIFY_HIGHER_ROLE: {
+    status: 403,
+    code: 'CANNOT_MODIFY_HIGHER_ROLE',
+    message: 'Cannot modify users with equal or higher role',
+  },
+  LAST_OWNER: {
+    status: 400,
+    code: 'LAST_OWNER',
+    message: 'Cannot remove or demote the only owner',
+  },
+  DOMAIN_NOT_ALLOWED: {
+    status: 400,
+    code: 'DOMAIN_NOT_ALLOWED',
+    message: 'Email domain not allowed for this organization',
+  },
+  INVITE_ALREADY_EXISTS: {
+    status: 400,
+    code: 'INVITE_ALREADY_EXISTS',
+    message: 'An invite has already been sent to this email',
+  },
+  MEMBER_ALREADY_EXISTS: {
+    status: 400,
+    code: 'MEMBER_ALREADY_EXISTS',
+    message: 'User is already a member of this organization',
+  },
+  MEMBER_NOT_FOUND: { status: 404, code: 'MEMBER_NOT_FOUND', message: 'Member not found' },
+  INVITE_NOT_FOUND: { status: 404, code: 'INVITE_NOT_FOUND', message: 'Invite not found' },
+  INVITE_ALREADY_ACCEPTED: {
+    status: 400,
+    code: 'INVITE_ALREADY_ACCEPTED',
+    message: 'Invite has already been accepted',
+  },
+  USE_LEAVE_ENDPOINT: {
+    status: 400,
+    code: 'USE_LEAVE_ENDPOINT',
+    message: 'Use the leave endpoint to remove yourself',
+  },
+  INVALID_SLUG: {
+    status: 400,
+    code: 'INVALID_SLUG',
+    message: 'Slug is invalid or already taken',
+  },
+};
 
 // ===========================================
 // ROUTES
@@ -208,7 +191,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         },
       });
     } catch (error) {
-      return mapServiceError(error, reply);
+      return mapServiceError(error, reply, errorMap);
     }
   });
 
@@ -282,7 +265,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { organization },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -303,7 +286,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { message: 'Organization deleted successfully' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -362,7 +345,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { member },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -388,7 +371,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { message: 'Member removed successfully' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -409,7 +392,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { message: 'Left organization successfully' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -446,7 +429,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { message: 'Ownership transferred successfully' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -488,7 +471,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { invite },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -532,7 +515,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           data: { message: 'Invite cancelled successfully' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -556,7 +539,7 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
           },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
