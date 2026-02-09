@@ -24,9 +24,10 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 - Block-based editor powered by Tiptap
 - Real-time collaboration with CRDT sync
-- Multi-tenant organization support
+- Multi-tenant organisation support
 - Polymorphic storage (local, S3, MinIO)
 - Enterprise SSO with domain lockdown
+- AI-powered content translation (31 languages via OpenRouter)
 
 ## Tech Stack
 
@@ -68,8 +69,8 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 ### Platform
 
 - [x] **Phase 14: API & Webhooks** — API tokens, Bearer auth, webhook delivery with HMAC signatures and retries
-- [ ] **Phase 15: Admin Features** — Audit logging (done), system settings, admin dashboard
-- [ ] **Phase 16: AI Features** — Content translation via OpenRouter
+- [x] **Phase 15: Admin Features** — Audit logging, system settings, admin dashboard
+- [x] **Phase 16: AI Features** — OpenRouter integration, content translation (31 languages)
 - [ ] **Phase 17: Internationalization** — Multi-language UI support
 
 ### Compliance & Polish
