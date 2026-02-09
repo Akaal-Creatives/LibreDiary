@@ -35,8 +35,8 @@ async function handleFileSelect(event: Event) {
   uploadProgress.value = 0;
 
   try {
-    const result = await filesService.uploadFile(props.orgId, file, {}, (progress) => {
-      uploadProgress.value = progress;
+    const result = await filesService.uploadFile(props.orgId, file, {}, (loaded, total) => {
+      uploadProgress.value = Math.round((loaded / total) * 100);
     });
 
     try {

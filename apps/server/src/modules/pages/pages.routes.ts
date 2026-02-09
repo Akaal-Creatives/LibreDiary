@@ -18,7 +18,7 @@ const createPageSchema = z.object({
 const updatePageSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   icon: z.string().max(50).nullish(),
-  coverUrl: z.string().url().nullish(),
+  coverUrl: z.string().nullish(),
   isPublic: z.boolean().optional(),
   publicSlug: z
     .string()

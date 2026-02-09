@@ -121,8 +121,8 @@ async function handleLogoSelect(event: Event) {
       authStore.currentOrganizationId,
       file,
       {},
-      (progress) => {
-        logoProgress.value = progress;
+      (loaded, total) => {
+        logoProgress.value = Math.round((loaded / total) * 100);
       }
     );
     await orgsStore.updateOrganization({ logoUrl: result.file.url });

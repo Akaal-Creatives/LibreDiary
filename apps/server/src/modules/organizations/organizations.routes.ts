@@ -23,7 +23,7 @@ const createOrganizationSchema = z.object({
     .max(50)
     .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens')
     .optional(),
-  logoUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(),
   accentColor: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
@@ -40,7 +40,7 @@ const updateOrganizationSchema = z.object({
     .max(50)
     .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens')
     .optional(),
-  logoUrl: z.string().url().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
   accentColor: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
