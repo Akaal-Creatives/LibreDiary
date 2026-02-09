@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/auth.middleware.js';
 import { requireSuperAdmin } from './admin.middleware.js';
 import * as adminService from './admin.service.js';
 import * as filesService from '../files/files.service.js';
+import { logAudit } from '../audit/audit.service.js';
 import { z } from 'zod';
 
 // Query schemas
@@ -115,6 +116,14 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    logAudit({
+      action: 'ADMIN_USER_UPDATED',
+      userId: request.user?.id,
+      resourceType: 'user',
+      resourceId: userId,
+      metadata: data,
+    });
+
     return reply.send({
       success: true,
       data: {
@@ -156,6 +165,13 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    logAudit({
+      action: 'ADMIN_USER_DELETED',
+      userId: request.user?.id,
+      resourceType: 'user',
+      resourceId: userId,
+    });
+
     return reply.send({
       success: true,
       data: { message: 'User deleted successfully' },
@@ -177,6 +193,13 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         },
       });
     }
+
+    logAudit({
+      action: 'ADMIN_USER_RESTORED',
+      userId: request.user?.id,
+      resourceType: 'user',
+      resourceId: userId,
+    });
 
     return reply.send({
       success: true,
@@ -246,6 +269,15 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    logAudit({
+      action: 'ADMIN_ORG_UPDATED',
+      userId: request.user?.id,
+      organizationId: orgId,
+      resourceType: 'organization',
+      resourceId: orgId,
+      metadata: data,
+    });
+
     return reply.send({
       success: true,
       data: {
@@ -275,6 +307,14 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    logAudit({
+      action: 'ADMIN_ORG_DELETED',
+      userId: request.user?.id,
+      organizationId: orgId,
+      resourceType: 'organization',
+      resourceId: orgId,
+    });
+
     return reply.send({
       success: true,
       data: { message: 'Organization deleted successfully' },
@@ -298,6 +338,14 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
           },
         });
       }
+
+      logAudit({
+        action: 'ADMIN_ORG_RESTORED',
+        userId: request.user?.id,
+        organizationId: orgId,
+        resourceType: 'organization',
+        resourceId: orgId,
+      });
 
       return reply.send({
         success: true,

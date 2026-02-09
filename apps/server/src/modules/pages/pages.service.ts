@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma.js';
 import type { Page, Favorite } from '@prisma/client';
 import { generatePublicSlug } from '../public/public.service.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPES
@@ -96,6 +97,15 @@ export async function createPage(
   triggerWebhooks(orgId, 'page.created', { pageId: page.id, title: page.title }).catch((err) =>
     console.error('[webhook] delivery failed:', err)
   );
+
+  logAudit({
+    action: 'PAGE_CREATED',
+    userId,
+    organizationId: orgId,
+    resourceType: 'page',
+    resourceId: page.id,
+    metadata: { title: page.title },
+  });
 
   return page;
 }
@@ -231,6 +241,33 @@ export async function updatePage(
     () => {}
   );
 
+  // Log public/private changes specifically, otherwise general update
+  if (input.isPublic === true && !page.isPublic) {
+    logAudit({
+      action: 'PAGE_MADE_PUBLIC',
+      userId,
+      organizationId: orgId,
+      resourceType: 'page',
+      resourceId: pageId,
+    });
+  } else if (input.isPublic === false && page.isPublic) {
+    logAudit({
+      action: 'PAGE_MADE_PRIVATE',
+      userId,
+      organizationId: orgId,
+      resourceType: 'page',
+      resourceId: pageId,
+    });
+  } else {
+    logAudit({
+      action: 'PAGE_UPDATED',
+      userId,
+      organizationId: orgId,
+      resourceType: 'page',
+      resourceId: pageId,
+    });
+  }
+
   return updated;
 }
 
@@ -259,6 +296,14 @@ export async function trashPage(orgId: string, pageId: string): Promise<void> {
   triggerWebhooks(orgId, 'page.deleted', { pageId, title: page.title }).catch((err) =>
     console.error('[webhook] delivery failed:', err)
   );
+
+  logAudit({
+    action: 'PAGE_TRASHED',
+    organizationId: orgId,
+    resourceType: 'page',
+    resourceId: pageId,
+    metadata: { title: page.title },
+  });
 }
 
 /**
@@ -551,7 +596,7 @@ export async function restorePage(orgId: string, pageId: string): Promise<Page> 
   const position = await getNextPosition(orgId, parentId);
 
   // Restore the page (but not descendants - they remain in trash)
-  return prisma.page.update({
+  const restored = await prisma.page.update({
     where: { id: pageId },
     data: {
       trashedAt: null,
@@ -559,6 +604,16 @@ export async function restorePage(orgId: string, pageId: string): Promise<Page> 
       position,
     },
   });
+
+  logAudit({
+    action: 'PAGE_RESTORED',
+    organizationId: orgId,
+    resourceType: 'page',
+    resourceId: pageId,
+    metadata: { title: restored.title },
+  });
+
+  return restored;
 }
 
 /**
@@ -583,6 +638,14 @@ export async function permanentlyDeletePage(orgId: string, pageId: string): Prom
   // Delete the page (Prisma will cascade to favorites)
   await prisma.page.delete({
     where: { id: pageId },
+  });
+
+  logAudit({
+    action: 'PAGE_DELETED_PERMANENTLY',
+    organizationId: orgId,
+    resourceType: 'page',
+    resourceId: pageId,
+    metadata: { title: page.title },
   });
 }
 

@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import type { CreateWebhookInput, UpdateWebhookInput } from '@librediary/shared';
+import { logAudit } from '../audit/audit.service.js';
 
 function generateSecret(): string {
   return `whsec_${randomBytes(24).toString('base64url')}`;
@@ -23,6 +24,15 @@ export async function createWebhook(orgId: string, userId: string, input: Create
       events: input.events,
       secret,
     },
+  });
+
+  logAudit({
+    action: 'WEBHOOK_CREATED',
+    userId,
+    organizationId: orgId,
+    resourceType: 'webhook',
+    resourceId: webhook.id,
+    metadata: { name: input.name, url: input.url },
   });
 
   // Return with unmasked secret on creation only
@@ -66,7 +76,7 @@ export async function updateWebhook(webhookId: string, orgId: string, input: Upd
     throw new Error('Webhook not found');
   }
 
-  return prisma.webhook.update({
+  const updated = await prisma.webhook.update({
     where: { id: webhookId },
     data: {
       ...(input.name !== undefined && { name: input.name }),
@@ -75,6 +85,15 @@ export async function updateWebhook(webhookId: string, orgId: string, input: Upd
       ...(input.isActive !== undefined && { isActive: input.isActive }),
     },
   });
+
+  logAudit({
+    action: 'WEBHOOK_UPDATED',
+    organizationId: orgId,
+    resourceType: 'webhook',
+    resourceId: webhookId,
+  });
+
+  return updated;
 }
 
 export async function deleteWebhook(webhookId: string, orgId: string) {
@@ -87,4 +106,12 @@ export async function deleteWebhook(webhookId: string, orgId: string) {
   }
 
   await prisma.webhook.delete({ where: { id: webhookId } });
+
+  logAudit({
+    action: 'WEBHOOK_DELETED',
+    organizationId: orgId,
+    resourceType: 'webhook',
+    resourceId: webhookId,
+    metadata: { name: webhook.name },
+  });
 }

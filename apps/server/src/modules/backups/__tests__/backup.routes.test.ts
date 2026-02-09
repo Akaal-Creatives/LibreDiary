@@ -44,6 +44,7 @@ const { mockBackupService, mockSystemBackupService, mockPrisma, mockEnvRef, rese
 
     const mockPrisma = {
       backup: mockPrismaBackup,
+      auditLog: { create: vi.fn().mockResolvedValue({}) },
     };
 
     const mockEnvRef = {

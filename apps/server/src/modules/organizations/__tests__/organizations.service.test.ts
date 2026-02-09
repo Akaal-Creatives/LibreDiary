@@ -50,6 +50,7 @@ vi.mock('../organizations.middleware.js', () => ({
   canModifyMember: vi.fn(),
   canAssignRole: vi.fn(),
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 import {
   createOrganization,

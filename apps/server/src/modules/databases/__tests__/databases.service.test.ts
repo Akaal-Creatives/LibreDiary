@@ -59,6 +59,7 @@ const { mockPrisma, resetMocks } = vi.hoisted(() => {
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 import {
   createDatabase,

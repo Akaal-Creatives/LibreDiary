@@ -10,6 +10,7 @@ import {
 import { EXPIRATION, generateWsToken } from '../../utils/tokens.js';
 import { env } from '../../config/index.js';
 import { getAuthUser } from '../../utils/errors.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // Request schemas
 const registerSchema = z.object({
@@ -63,6 +64,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
       setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
 
+      logAudit({
+        action: 'AUTH_REGISTER',
+        userId: result.user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+        metadata: { email: result.user.email },
+      });
+
       return {
         success: true,
         data: {
@@ -108,6 +117,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
       setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
 
+      logAudit({
+        action: 'AUTH_LOGIN',
+        userId: result.user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+        metadata: { email: result.user.email },
+      });
+
       return {
         success: true,
         data: {
@@ -140,6 +157,13 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         await authService.logout(request.sessionToken);
       }
       clearSessionCookie(reply);
+
+      logAudit({
+        action: 'AUTH_LOGOUT',
+        userId: request.user?.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
 
       return {
         success: true,
@@ -197,6 +221,13 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
     try {
       const user = await authService.verifyEmail(body.data.token);
+
+      logAudit({
+        action: 'AUTH_EMAIL_VERIFIED',
+        userId: user.id,
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
 
       return {
         success: true,
@@ -289,6 +320,12 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
     try {
       await authService.resetPassword(body.data.token, body.data.password);
+
+      logAudit({
+        action: 'AUTH_PASSWORD_RESET',
+        ipAddress: getClientIp(request),
+        userAgent: request.headers['user-agent'],
+      });
 
       return {
         success: true,

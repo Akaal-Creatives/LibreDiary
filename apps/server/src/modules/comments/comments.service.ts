@@ -4,6 +4,7 @@ import {
   createCommentResolvedNotification,
 } from '../notifications/notifications.service.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logAudit } from '../audit/audit.service.js';
 
 interface CreateCommentOptions {
   parentId?: string;
@@ -118,6 +119,15 @@ export async function createComment(
     () => {}
   );
 
+  logAudit({
+    action: 'COMMENT_CREATED',
+    userId,
+    organizationId,
+    resourceType: 'comment',
+    resourceId: comment.id,
+    metadata: { pageId },
+  });
+
   return comment;
 }
 
@@ -181,6 +191,13 @@ export async function updateComment(commentId: string, userId: string, content: 
     include: commentInclude,
   });
 
+  logAudit({
+    action: 'COMMENT_UPDATED',
+    userId,
+    resourceType: 'comment',
+    resourceId: commentId,
+  });
+
   return updatedComment;
 }
 
@@ -202,6 +219,13 @@ export async function deleteComment(commentId: string, userId: string) {
 
   await prisma.comment.delete({
     where: { id: commentId },
+  });
+
+  logAudit({
+    action: 'COMMENT_DELETED',
+    userId,
+    resourceType: 'comment',
+    resourceId: commentId,
   });
 }
 
@@ -270,6 +294,15 @@ export async function resolveComment(commentId: string, userId: string, resolve:
       pageId: comment.page.id,
     }).catch((err) => console.error('[webhook] delivery failed:', err));
   }
+
+  logAudit({
+    action: resolve ? 'COMMENT_RESOLVED' : 'COMMENT_UNRESOLVED',
+    userId,
+    organizationId: comment.page.organizationId,
+    resourceType: 'comment',
+    resourceId: commentId,
+    metadata: { pageId: comment.page.id },
+  });
 
   return updatedComment;
 }

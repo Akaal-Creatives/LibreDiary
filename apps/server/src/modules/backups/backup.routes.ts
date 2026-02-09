@@ -7,6 +7,7 @@ import * as backupService from './backup.service.js';
 import * as systemBackupService from './system-backup.service.js';
 import { createOrgBackupSchema, createSystemBackupSchema } from '@librediary/shared';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -133,6 +134,13 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
       try {
         const result = await backupService.downloadBackup(request.params.backupId);
 
+        logAudit({
+          action: 'BACKUP_DOWNLOADED',
+          userId: getAuthUser(request).id,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
+
         return reply
           .header('content-type', 'application/octet-stream')
           .header(
@@ -152,6 +160,13 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: BackupParams }>, reply) => {
       try {
         await backupService.deleteBackup(request.params.backupId);
+
+        logAudit({
+          action: 'BACKUP_DELETED',
+          userId: getAuthUser(request).id,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
 
         return reply.send({
           success: true,
@@ -234,6 +249,14 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
           request.params.orgId
         );
 
+        logAudit({
+          action: 'BACKUP_DOWNLOADED',
+          userId: getAuthUser(request).id,
+          organizationId: request.params.orgId,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
+
         return reply
           .header('content-type', 'application/octet-stream')
           .header(
@@ -253,6 +276,14 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: OrgBackupParams }>, reply) => {
       try {
         await backupService.deleteBackup(request.params.backupId, request.params.orgId);
+
+        logAudit({
+          action: 'BACKUP_DELETED',
+          userId: getAuthUser(request).id,
+          organizationId: request.params.orgId,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
 
         return reply.send({
           success: true,

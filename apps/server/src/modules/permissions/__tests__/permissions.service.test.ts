@@ -98,6 +98,7 @@ vi.mock('../../../lib/prisma.js', () => ({
 vi.mock('../../notifications/notifications.service.js', () => ({
   createPageSharedNotification: mockCreatePageSharedNotification,
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 // Import service AFTER mocking
 import * as permissionsService from '../permissions.service.js';

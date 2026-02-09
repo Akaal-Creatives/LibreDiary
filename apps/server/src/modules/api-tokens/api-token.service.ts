@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
+import { logAudit } from '../audit/audit.service.js';
 
 const TOKEN_PREFIX_LENGTH = 8;
 
@@ -24,6 +25,14 @@ export async function createToken(userId: string, name: string, expiresAt?: stri
       tokenPrefix,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     },
+  });
+
+  logAudit({
+    action: 'API_TOKEN_CREATED',
+    userId,
+    resourceType: 'api_token',
+    resourceId: apiToken.id,
+    metadata: { name },
   });
 
   return { rawToken, apiToken };
@@ -55,6 +64,14 @@ export async function deleteToken(tokenId: string, userId: string) {
   }
 
   await prisma.apiToken.delete({ where: { id: tokenId } });
+
+  logAudit({
+    action: 'API_TOKEN_DELETED',
+    userId,
+    resourceType: 'api_token',
+    resourceId: tokenId,
+    metadata: { name: token.name },
+  });
 }
 
 export async function validateToken(rawToken: string) {

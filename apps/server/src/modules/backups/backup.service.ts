@@ -4,6 +4,7 @@ import { getBackupStorageProvider } from './storage/index.js';
 import { createTarGz } from './utils/compress.js';
 import { encryptBuffer } from './utils/encrypt.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logAudit } from '../audit/audit.service.js';
 import type { TarEntry } from './utils/compress.js';
 
 export interface CreateBackupOptions {
@@ -32,6 +33,14 @@ export async function createOrgBackup(
   // Execute asynchronously — don't await
   executeOrgBackup(backup.id, options?.password).catch((error) => {
     console.error(`Backup ${backup.id} failed:`, error);
+  });
+
+  logAudit({
+    action: 'BACKUP_CREATED',
+    userId: triggeredById,
+    organizationId: orgId,
+    resourceType: 'backup',
+    resourceId: backup.id,
   });
 
   return backup;

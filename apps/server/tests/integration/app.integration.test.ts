@@ -100,6 +100,7 @@ const {
     organization: mockPrismaOrganization,
     organizationMember: mockPrismaOrganizationMember,
     page: mockPrismaPage,
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
     $transaction: vi.fn(),
   };
 

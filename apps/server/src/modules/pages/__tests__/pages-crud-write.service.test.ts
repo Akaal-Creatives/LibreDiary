@@ -63,6 +63,7 @@ const { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } = vi.hoisted(() 
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 // Import service AFTER mocking
 import * as pagesService from '../pages.service.js';

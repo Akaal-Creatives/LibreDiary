@@ -4,6 +4,7 @@ import { generateInviteToken, expiresIn, isExpired, EXPIRATION } from '../../uti
 import type { Organization, OrganizationMember, OrgRole, User, Invite } from '@prisma/client';
 import { canModifyMember, canAssignRole } from './organizations.middleware.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPES
@@ -117,6 +118,15 @@ export async function createOrganization(
     return { organization, membership };
   });
 
+  logAudit({
+    action: 'ORG_CREATED',
+    userId,
+    organizationId: result.organization.id,
+    resourceType: 'organization',
+    resourceId: result.organization.id,
+    metadata: { name: result.organization.name, slug: result.organization.slug },
+  });
+
   return result;
 }
 
@@ -162,7 +172,7 @@ export async function updateOrganization(
     slug = await ensureUniqueSlug(baseSlug, orgId);
   }
 
-  return prisma.organization.update({
+  const updated = await prisma.organization.update({
     where: { id: orgId },
     data: {
       ...(input.name !== undefined && { name: input.name }),
@@ -173,6 +183,15 @@ export async function updateOrganization(
       ...(input.aiEnabled !== undefined && { aiEnabled: input.aiEnabled }),
     },
   });
+
+  logAudit({
+    action: 'ORG_UPDATED',
+    organizationId: orgId,
+    resourceType: 'organization',
+    resourceId: orgId,
+  });
+
+  return updated;
 }
 
 /**
@@ -182,6 +201,13 @@ export async function deleteOrganization(orgId: string): Promise<void> {
   await prisma.organization.update({
     where: { id: orgId },
     data: { deletedAt: new Date() },
+  });
+
+  logAudit({
+    action: 'ORG_DELETED',
+    organizationId: orgId,
+    resourceType: 'organization',
+    resourceId: orgId,
   });
 }
 
@@ -271,10 +297,20 @@ export async function updateMemberRole(
     throw new Error('INSUFFICIENT_ROLE');
   }
 
-  return prisma.organizationMember.update({
+  const updated = await prisma.organizationMember.update({
     where: { id: memberId },
     data: { role: newRole },
   });
+
+  logAudit({
+    action: 'MEMBER_ROLE_CHANGED',
+    organizationId: orgId,
+    resourceType: 'member',
+    resourceId: memberId,
+    metadata: { userId: targetMember.userId, oldRole: targetMember.role, newRole },
+  });
+
+  return updated;
 }
 
 /**
@@ -319,6 +355,15 @@ export async function removeMember(
   triggerWebhooks(orgId, 'member.removed', { userId: targetMember.userId }).catch((err) =>
     console.error('[webhook] delivery failed:', err)
   );
+
+  logAudit({
+    action: 'MEMBER_REMOVED',
+    userId: actorId,
+    organizationId: orgId,
+    resourceType: 'member',
+    resourceId: memberId,
+    metadata: { removedUserId: targetMember.userId },
+  });
 }
 
 /**
@@ -351,6 +396,14 @@ export async function leaveOrganization(orgId: string, userId: string): Promise<
 
   await prisma.organizationMember.delete({
     where: { id: membership.id },
+  });
+
+  logAudit({
+    action: 'MEMBER_LEFT',
+    userId,
+    organizationId: orgId,
+    resourceType: 'organization',
+    resourceId: orgId,
   });
 }
 
@@ -499,6 +552,15 @@ export async function createInvite(
 
   // Send invite email
   await sendInviteEmail(email, token, organization.name, inviter.name ?? inviter.email);
+
+  logAudit({
+    action: 'MEMBER_INVITED',
+    userId: invitedById,
+    organizationId: orgId,
+    resourceType: 'invite',
+    resourceId: invite.id,
+    metadata: { email, role: input.role },
+  });
 
   return invite;
 }

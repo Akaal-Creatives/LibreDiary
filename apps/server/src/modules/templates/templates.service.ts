@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPES
@@ -36,7 +37,7 @@ export interface CreatePageFromTemplateInput {
  * Create a new template
  */
 export async function createTemplate(orgId: string, userId: string, input: CreateTemplateInput) {
-  return prisma.template.create({
+  const template = await prisma.template.create({
     data: {
       organizationId: orgId,
       createdById: userId,
@@ -46,6 +47,17 @@ export async function createTemplate(orgId: string, userId: string, input: Creat
       category: input.category,
     },
   });
+
+  logAudit({
+    action: 'TEMPLATE_CREATED',
+    userId,
+    organizationId: orgId,
+    resourceType: 'template',
+    resourceId: template.id,
+    metadata: { name: input.name },
+  });
+
+  return template;
 }
 
 /**
@@ -182,6 +194,14 @@ export async function deleteTemplate(orgId: string, templateId: string) {
 
   await prisma.template.delete({
     where: { id: templateId },
+  });
+
+  logAudit({
+    action: 'TEMPLATE_DELETED',
+    organizationId: orgId,
+    resourceType: 'template',
+    resourceId: templateId,
+    metadata: { name: template.name },
   });
 }
 

@@ -94,6 +94,7 @@ vi.mock('../utils/compress.js', () => ({
 vi.mock('../utils/encrypt.js', () => ({
   encryptBuffer: vi.fn().mockReturnValue(Buffer.from('encrypted-data')),
 }));
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
 import {
   createOrgBackup,

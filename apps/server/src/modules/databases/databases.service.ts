@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { PropertyType, ViewType } from '../../generated/prisma/client.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logAudit } from '../audit/audit.service.js';
 
 // ===========================================
 // TYPES
@@ -125,6 +126,15 @@ export async function createDatabase(orgId: string, userId: string, input: Creat
       () => {}
     );
 
+    logAudit({
+      action: 'DATABASE_CREATED',
+      userId,
+      organizationId: orgId,
+      resourceType: 'database',
+      resourceId: result.id,
+      metadata: { name: result.name },
+    });
+
     return result;
   });
 }
@@ -195,6 +205,14 @@ export async function deleteDatabase(orgId: string, databaseId: string) {
   triggerWebhooks(orgId, 'database.deleted', { databaseId, name: database.name }).catch((err) =>
     console.error('[webhook] delivery failed:', err)
   );
+
+  logAudit({
+    action: 'DATABASE_DELETED',
+    organizationId: orgId,
+    resourceType: 'database',
+    resourceId: databaseId,
+    metadata: { name: database.name },
+  });
 }
 
 // ===========================================
