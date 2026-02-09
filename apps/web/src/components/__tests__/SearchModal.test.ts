@@ -695,10 +695,10 @@ describe('SearchModal', () => {
       expect(overlay.attributes('aria-modal')).toBe('true');
     });
 
-    it('should have aria-label for search', () => {
+    it('should have aria-labelledby for search', () => {
       const wrapper = mountModal();
       const overlay = wrapper.find('.search-modal-overlay');
-      expect(overlay.attributes('aria-label')).toBe('Search pages');
+      expect(overlay.attributes('aria-labelledby')).toBe('search-modal-input');
     });
 
     it('should have aria-label on clear button', async () => {
