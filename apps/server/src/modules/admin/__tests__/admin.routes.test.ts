@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vites
 import type { FastifyInstance } from 'fastify';
 
 // Use vi.hoisted() to ensure mock variables are available when vi.mock is hoisted
-const { mockPrismaUser, mockPrisma } = vi.hoisted(() => {
+const { mockPrismaUser, mockPrismaSystemSettings, mockPrisma } = vi.hoisted(() => {
   const mockPrismaUser = {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -22,10 +22,16 @@ const { mockPrismaUser, mockPrisma } = vi.hoisted(() => {
     count: vi.fn(),
   };
 
+  const mockPrismaSystemSettings = {
+    findUnique: vi.fn(),
+    upsert: vi.fn(),
+  };
+
   const mockPrisma = {
     user: mockPrismaUser,
     organization: mockPrismaOrganization,
     organizationMember: mockPrismaOrganizationMember,
+    systemSettings: mockPrismaSystemSettings,
     auditLog: { create: vi.fn().mockResolvedValue({}) },
   };
 
@@ -33,6 +39,7 @@ const { mockPrismaUser, mockPrisma } = vi.hoisted(() => {
     mockPrismaUser,
     mockPrismaOrganization,
     mockPrismaOrganizationMember,
+    mockPrismaSystemSettings,
     mockPrisma,
   };
 });
@@ -347,6 +354,222 @@ describe('Admin Routes', () => {
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('CANNOT_DELETE_SELF');
+    });
+  });
+
+  // ============================================
+  // SETTINGS
+  // ============================================
+
+  const sampleSettings = {
+    id: 'system',
+    setupCompleted: true,
+    setupCompletedAt: new Date('2025-01-01'),
+    setupCompletedBy: 'admin-1',
+    siteName: 'LibreDiary',
+    allowSignups: false,
+    requireEmailVerification: true,
+    sessionMaxAge: 604800000,
+    maxOrganisationsPerUser: 0,
+    defaultUserLocale: 'en',
+    createdAt: new Date('2025-01-01'),
+    updatedAt: new Date('2025-06-01'),
+  };
+
+  describe('GET /api/v1/admin/settings', () => {
+    it('should return 401 without authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/settings',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 403 for non-super-admin users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'regular-user-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+    });
+
+    it('should return settings for super admin', async () => {
+      mockPrismaSystemSettings.findUnique.mockResolvedValue(sampleSettings);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.settings.siteName).toBe('LibreDiary');
+      expect(body.data.settings.allowSignups).toBe(false);
+      expect(body.data.settings.requireEmailVerification).toBe(true);
+      expect(body.data.settings.sessionMaxAge).toBe(604800000);
+      expect(body.data.settings.maxOrganisationsPerUser).toBe(0);
+      expect(body.data.settings.defaultUserLocale).toBe('en');
+      // Should not include setup fields
+      expect(body.data.settings).not.toHaveProperty('setupCompleted');
+      expect(body.data.settings).not.toHaveProperty('id');
+    });
+
+    it('should return 404 when no settings exist', async () => {
+      mockPrismaSystemSettings.findUnique.mockResolvedValue(null);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('SETTINGS_NOT_FOUND');
+    });
+  });
+
+  describe('PATCH /api/v1/admin/settings', () => {
+    it('should return 401 without authentication', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        payload: { siteName: 'New Name' },
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 403 for non-super-admin users', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'regular-user-token',
+        },
+        payload: { siteName: 'New Name' },
+      });
+
+      expect(response.statusCode).toBe(403);
+    });
+
+    it('should update settings with valid data', async () => {
+      const updatedSettings = { ...sampleSettings, siteName: 'My Diary' };
+      mockPrismaSystemSettings.upsert.mockResolvedValue(updatedSettings);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { siteName: 'My Diary' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.settings.siteName).toBe('My Diary');
+    });
+
+    it('should reject empty siteName', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { siteName: '' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject negative sessionMaxAge', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { sessionMaxAge: -1 },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject sessionMaxAge below minimum (5 min)', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { sessionMaxAge: 100000 },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject sessionMaxAge above maximum (30 days)', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { sessionMaxAge: 3000000000 },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject unknown fields (strict schema)', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { unknownField: 'value' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should trigger audit log on successful update', async () => {
+      mockPrismaSystemSettings.upsert.mockResolvedValue(sampleSettings);
+
+      await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { allowSignups: true },
+      });
+
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'ADMIN_SETTINGS_UPDATED',
+            userId: 'admin-1',
+            resourceType: 'system_settings',
+          }),
+        })
+      );
     });
   });
 });
