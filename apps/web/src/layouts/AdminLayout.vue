@@ -19,6 +19,8 @@ const navItems: NavItem[] = [
   { name: 'admin-dashboard', label: 'Dashboard', icon: 'dashboard' },
   { name: 'admin-users', label: 'Users', icon: 'users' },
   { name: 'admin-organizations', label: 'Organizations', icon: 'organizations' },
+  { name: 'admin-backups', label: 'Backups', icon: 'backups' },
+  { name: 'admin-audit-logs', label: 'Audit Logs', icon: 'audit' },
   { name: 'admin-settings', label: 'System Settings', icon: 'settings' },
 ];
 
@@ -179,6 +181,53 @@ async function handleLogout() {
                 d="M6 4V2.5C6 2.22386 6.22386 2 6.5 2H11.5C11.7761 2 12 2.22386 12 2.5V4"
                 stroke="currentColor"
                 stroke-width="1.5"
+              />
+            </svg>
+            <!-- Backups Icon -->
+            <svg
+              v-else-if="item.icon === 'backups'"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+            >
+              <path
+                d="M3 6V5C3 3.89543 3.89543 3 5 3H13C14.1046 3 15 3.89543 15 5V6M3 6V13C3 14.1046 3.89543 15 5 15H13C14.1046 15 15 14.1046 15 13V6M3 6H15"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M7 10L8.5 11.5L11.5 8.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <!-- Audit Icon -->
+            <svg
+              v-else-if="item.icon === 'audit'"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+            >
+              <rect
+                x="3"
+                y="2"
+                width="12"
+                height="14"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M6 6H12M6 9H10M6 12H8"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
               />
             </svg>
             <!-- Settings Icon -->
