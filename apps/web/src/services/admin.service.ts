@@ -11,6 +11,37 @@ export interface AdminStats {
     total: number;
     active: number;
   };
+  pages: number;
+  databases: number;
+  files: {
+    total: number;
+    totalSize: number;
+  };
+  templates: number;
+  backups: number;
+}
+
+export interface SystemHealth {
+  database: {
+    status: 'connected' | 'disconnected';
+    error?: string;
+  };
+  storage: {
+    status: 'connected' | 'disconnected';
+    error?: string;
+  };
+  collaboration: {
+    status: 'connected' | 'disconnected';
+  };
+  server: {
+    uptime: number;
+    nodeVersion: string;
+    memory: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+    };
+  };
 }
 
 export interface Pagination {
@@ -93,6 +124,11 @@ export interface AdminOrgDetail {
 export async function getStats(): Promise<AdminStats> {
   const response = await api.get<{ stats: AdminStats }>('/admin/stats');
   return response.stats;
+}
+
+export async function getSystemHealth(): Promise<SystemHealth> {
+  const response = await api.get<{ health: SystemHealth }>('/admin/health');
+  return response.health;
 }
 
 // Users
