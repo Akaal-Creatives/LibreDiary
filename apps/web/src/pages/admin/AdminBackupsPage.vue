@@ -758,124 +758,6 @@ function statusClass(status: string): string {
   border-color: var(--color-error);
 }
 
-/* Create Modal — :deep() required because BaseModal uses Teleport */
-:deep(.create-modal) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-:deep(.modal-title) {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-:deep(.modal-description) {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  margin-top: calc(-1 * var(--space-2));
-}
-
-:deep(.create-modal .form-field) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-:deep(.checkbox-label) {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-  cursor: pointer;
-}
-
-:deep(.checkbox) {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--admin-accent);
-}
-
-:deep(.field-hint) {
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-}
-
-:deep(.field-label) {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-:deep(.field-input) {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-:deep(.field-input:focus) {
-  border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
-}
-
-:deep(.field-error) {
-  font-size: var(--text-xs);
-  color: var(--color-error);
-}
-
-:deep(.modal-actions) {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  padding-top: var(--space-2);
-}
-
-:deep(.btn) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-width: 100px;
-  padding: var(--space-2) var(--space-5);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  line-height: 1.5;
-  cursor: pointer;
-  border: none;
-  border-radius: var(--radius-lg);
-  transition: all 0.15s ease;
-}
-
-:deep(.modal-actions .btn-secondary) {
-  color: var(--color-text-secondary);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-}
-
-:deep(.modal-actions .btn-secondary:hover) {
-  color: var(--color-text-primary);
-  background: var(--color-hover);
-  border-color: var(--color-border-strong);
-}
-
-:deep(.modal-actions .btn-primary) {
-  min-width: 100px;
-  padding: var(--space-2) var(--space-5);
-  color: var(--color-text-inverse);
-  background: var(--admin-accent);
-}
-
 /* Empty State */
 .empty-cell {
   padding: var(--space-12) !important;
@@ -960,5 +842,127 @@ function statusClass(status: string): string {
   .page-header {
     flex-direction: column;
   }
+}
+</style>
+
+<!-- Non-scoped styles for teleported modal content -->
+<style>
+.create-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.create-modal .modal-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.create-modal .modal-description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.create-modal .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.create-modal .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.create-modal .checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--admin-accent);
+}
+
+.create-modal .field-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.create-modal .field-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.create-modal .field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.create-modal .field-input:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.create-modal .field-error {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+.create-modal .modal-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}
+
+.create-modal .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 100px;
+  padding: var(--space-2) var(--space-5);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-lg);
+  transition: all 0.15s ease;
+}
+
+.create-modal .btn-secondary {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+}
+
+.create-modal .btn-secondary:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+  border-color: var(--color-border-strong);
+}
+
+.create-modal .btn-primary {
+  color: var(--color-text-inverse);
+  background: var(--admin-accent);
+}
+
+.create-modal .btn-primary:hover {
+  opacity: 0.9;
 }
 </style>
