@@ -4,15 +4,23 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
+import { filesService } from '@/services/files.service';
+import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const orgsStore = useOrganizationsStore();
+const toast = useToast();
 
 const loading = ref(true);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const success = ref<string | null>(null);
+
+// Logo upload
+const logoUploading = ref(false);
+const logoProgress = ref(0);
+const logoFileInputRef = ref<HTMLInputElement | null>(null);
 
 // Form data
 const form = ref({
@@ -95,6 +103,46 @@ async function handleSave() {
   }
 }
 
+// Logo upload
+function openLogoFileDialog() {
+  logoFileInputRef.value?.click();
+}
+
+async function handleLogoSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file || !authStore.currentOrganizationId) return;
+
+  logoUploading.value = true;
+  logoProgress.value = 0;
+
+  try {
+    const result = await filesService.uploadFile(
+      authStore.currentOrganizationId,
+      file,
+      {},
+      (progress) => {
+        logoProgress.value = progress;
+      }
+    );
+    await orgsStore.updateOrganization({ logoUrl: result.file.url });
+  } catch {
+    toast.error('Failed to upload logo');
+  } finally {
+    logoUploading.value = false;
+    logoProgress.value = 0;
+    if (input) input.value = '';
+  }
+}
+
+async function removeLogo() {
+  try {
+    await orgsStore.updateOrganization({ logoUrl: null });
+  } catch {
+    toast.error('Failed to remove logo');
+  }
+}
+
 // Delete confirmation
 const showDeleteConfirm = ref(false);
 const deleteConfirmText = ref('');
@@ -142,9 +190,19 @@ async function handleDelete() {
       <div v-if="currentOrg" class="org-badge">
         <span
           class="org-avatar"
-          :style="{ backgroundColor: currentOrg.accentColor || 'var(--color-accent)' }"
+          :style="{
+            backgroundColor: currentOrg.logoUrl
+              ? 'transparent'
+              : currentOrg.accentColor || 'var(--color-accent)',
+          }"
         >
-          {{ currentOrg.name.charAt(0).toUpperCase() }}
+          <img
+            v-if="currentOrg.logoUrl"
+            :src="currentOrg.logoUrl"
+            :alt="currentOrg.name"
+            class="org-avatar-img"
+          />
+          <template v-else>{{ currentOrg.name.charAt(0).toUpperCase() }}</template>
         </span>
         <span class="org-name">{{ currentOrg.name }}</span>
       </div>
@@ -239,6 +297,52 @@ async function handleDelete() {
                 placeholder="Acme Inc."
                 :disabled="saving || !orgsStore.canManageSettings"
               />
+            </div>
+
+            <!-- Logo Upload -->
+            <div class="field logo-upload">
+              <span class="field-label">Logo</span>
+              <div class="logo-row">
+                <div class="logo-preview">
+                  <img
+                    v-if="currentOrg?.logoUrl"
+                    :src="currentOrg.logoUrl"
+                    :alt="currentOrg.name"
+                    class="logo-image"
+                  />
+                  <span
+                    v-else
+                    class="logo-placeholder"
+                    :style="{ backgroundColor: currentOrg?.accentColor || 'var(--color-accent)' }"
+                  >
+                    {{ currentOrg?.name.charAt(0).toUpperCase() }}
+                  </span>
+                </div>
+                <div v-if="logoUploading" class="logo-progress">
+                  <div class="logo-progress-bar" :style="{ width: `${logoProgress}%` }"></div>
+                  <span class="logo-progress-text">Uploading...</span>
+                </div>
+                <div v-else-if="orgsStore.canManageSettings" class="logo-actions">
+                  <input
+                    ref="logoFileInputRef"
+                    type="file"
+                    accept="image/*"
+                    class="sr-only"
+                    @change="handleLogoSelect"
+                  />
+                  <button type="button" class="logo-upload-btn" @click="openLogoFileDialog">
+                    Upload logo
+                  </button>
+                  <button
+                    v-if="currentOrg?.logoUrl"
+                    type="button"
+                    class="logo-remove-btn"
+                    @click="removeLogo"
+                  >
+                    Remove logo
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="field">
@@ -547,9 +651,124 @@ async function handleDelete() {
   border-radius: var(--radius-sm);
 }
 
+.org-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
 .org-name {
   font-size: var(--text-sm);
   font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* Visually hidden file input */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Logo Upload */
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.logo-preview {
+  flex-shrink: 0;
+}
+
+.logo-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.logo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: white;
+  border-radius: var(--radius-md);
+}
+
+.logo-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.logo-upload-btn,
+.logo-remove-btn {
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.logo-upload-btn {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border: 1px solid transparent;
+}
+
+.logo-upload-btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.logo-remove-btn {
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+.logo-remove-btn:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.logo-progress {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 160px;
+  height: 32px;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.logo-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-accent);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: width 0.2s ease;
+}
+
+.logo-progress-text {
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
 }
 

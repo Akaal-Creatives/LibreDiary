@@ -7,6 +7,25 @@ const mockRouter = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
+const mockToast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+}));
+
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => mockToast,
+}));
+
+const mockFilesService = vi.hoisted(() => ({
+  uploadFile: vi.fn(),
+}));
+
+vi.mock('@/services/files.service', () => ({
+  filesService: mockFilesService,
+}));
+
 vi.mock('vue-router', () => ({
   useRouter: () => mockRouter,
 }));
@@ -75,6 +94,7 @@ describe('OrganizationSettingsPage', () => {
       id: 'org-1',
       name: 'Test Org',
       slug: 'test-org',
+      logoUrl: null,
       allowedDomains: ['example.com'],
       aiEnabled: true,
       accentColor: '#3b82f6',
@@ -87,6 +107,8 @@ describe('OrganizationSettingsPage', () => {
     mockOrgsStore.fetchOrganization.mockResolvedValue(undefined);
     mockOrgsStore.updateOrganization.mockResolvedValue(undefined);
     mockOrgsStore.deleteOrganization.mockResolvedValue(undefined);
+
+    mockFilesService.uploadFile.mockReset();
   });
 
   // ---- Page Header ----
@@ -113,8 +135,21 @@ describe('OrganizationSettingsPage', () => {
       await flushPromises();
 
       expect(wrapper.find('.org-badge').exists()).toBe(true);
-      expect(wrapper.find('.org-avatar').text()).toBe('T');
+      expect(wrapper.find('.org-avatar').text()).toContain('T');
       expect(wrapper.find('.org-name').text()).toBe('Test Org');
+    });
+
+    it('shows logo image in org badge when logoUrl exists', async () => {
+      mockAuthStore.currentOrganization = {
+        ...mockAuthStore.currentOrganization,
+        logoUrl: 'https://example.com/badge-logo.png',
+      };
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const badgeLogo = wrapper.find('.org-avatar img');
+      expect(badgeLogo.exists()).toBe(true);
+      expect(badgeLogo.attributes('src')).toBe('https://example.com/badge-logo.png');
     });
   });
 
@@ -325,6 +360,187 @@ describe('OrganizationSettingsPage', () => {
           allowedDomains: ['example.com', 'company.org', 'test.io'],
         })
       );
+    });
+  });
+
+  // ---- Logo Upload ----
+
+  describe('logo upload', () => {
+    it('shows "Logo" subsection in General settings', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Logo');
+    });
+
+    it('shows letter avatar placeholder when no logoUrl', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.logo-placeholder').exists()).toBe(true);
+      expect(wrapper.find('.logo-placeholder').text()).toBe('T');
+    });
+
+    it('shows current logo image when org has logoUrl', async () => {
+      mockAuthStore.currentOrganization = {
+        ...mockAuthStore.currentOrganization,
+        logoUrl: 'https://example.com/logo.png',
+      };
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const logoImg = wrapper.find('.logo-preview img');
+      expect(logoImg.exists()).toBe(true);
+      expect(logoImg.attributes('src')).toBe('https://example.com/logo.png');
+    });
+
+    it('shows "Upload logo" button', async () => {
+      mockOrgsStore.canManageSettings = true;
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.logo-upload-btn').exists()).toBe(true);
+      expect(wrapper.find('.logo-upload-btn').text()).toContain('Upload logo');
+    });
+
+    it('file input accepts image/*', async () => {
+      mockOrgsStore.canManageSettings = true;
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const fileInput = wrapper.find('.logo-upload input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      expect(fileInput.attributes('accept')).toBe('image/*');
+    });
+
+    it('calls filesService.uploadFile with selected file', async () => {
+      mockOrgsStore.canManageSettings = true;
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/logo.png' },
+      });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const testFile = new File(['logo-data'], 'logo.png', { type: 'image/png' });
+      const fileInput = wrapper.find('.logo-upload input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockFilesService.uploadFile).toHaveBeenCalledWith(
+        'org-1',
+        testFile,
+        {},
+        expect.any(Function)
+      );
+    });
+
+    it('calls orgsStore.updateOrganization with logoUrl after upload', async () => {
+      mockOrgsStore.canManageSettings = true;
+      mockFilesService.uploadFile.mockResolvedValue({
+        file: { url: 'https://cdn.example.com/logo.png' },
+      });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const testFile = new File(['logo-data'], 'logo.png', { type: 'image/png' });
+      const fileInput = wrapper.find('.logo-upload input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockOrgsStore.updateOrganization).toHaveBeenCalledWith({
+        logoUrl: 'https://cdn.example.com/logo.png',
+      });
+    });
+
+    it('shows progress indicator during upload', async () => {
+      let resolveUpload: (value: { file: { url: string } }) => void;
+      mockFilesService.uploadFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveUpload = resolve;
+          })
+      );
+      mockOrgsStore.canManageSettings = true;
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const testFile = new File(['logo-data'], 'logo.png', { type: 'image/png' });
+      const fileInput = wrapper.find('.logo-upload input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(wrapper.find('.logo-progress').exists()).toBe(true);
+
+      resolveUpload!({ file: { url: 'https://cdn.example.com/logo.png' } });
+      await flushPromises();
+    });
+
+    it('shows "Remove logo" button when logo exists', async () => {
+      mockOrgsStore.canManageSettings = true;
+      mockAuthStore.currentOrganization = {
+        ...mockAuthStore.currentOrganization,
+        logoUrl: 'https://example.com/logo.png',
+      };
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.logo-remove-btn').exists()).toBe(true);
+      expect(wrapper.find('.logo-remove-btn').text()).toContain('Remove logo');
+    });
+
+    it('calls orgsStore.updateOrganization with null logoUrl when removing', async () => {
+      mockOrgsStore.canManageSettings = true;
+      mockAuthStore.currentOrganization = {
+        ...mockAuthStore.currentOrganization,
+        logoUrl: 'https://example.com/logo.png',
+      };
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.logo-remove-btn').trigger('click');
+      await flushPromises();
+
+      expect(mockOrgsStore.updateOrganization).toHaveBeenCalledWith({
+        logoUrl: null,
+      });
+    });
+
+    it('shows error notification on upload failure', async () => {
+      mockOrgsStore.canManageSettings = true;
+      mockFilesService.uploadFile.mockRejectedValue(new Error('Upload failed'));
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const testFile = new File(['logo-data'], 'logo.png', { type: 'image/png' });
+      const fileInput = wrapper.find('.logo-upload input[type="file"]');
+      Object.defineProperty(fileInput.element, 'files', {
+        value: [testFile],
+        writable: false,
+      });
+      await fileInput.trigger('change');
+      await flushPromises();
+
+      expect(mockToast.error).toHaveBeenCalledWith('Failed to upload logo');
+    });
+
+    it('disables upload when cannot manage settings', async () => {
+      mockOrgsStore.canManageSettings = false;
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.logo-upload-btn').exists()).toBe(false);
     });
   });
 
