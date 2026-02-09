@@ -130,6 +130,13 @@
   /* Shadows for Light Mode */
   --shadow-card: 0 1px 3px rgba(44, 47, 44, 0.04), 0 1px 2px rgba(44, 47, 44, 0.02);
   --shadow-dropdown: 0 4px 16px rgba(44, 47, 44, 0.1), 0 2px 4px rgba(44, 47, 44, 0.04);
+
+  /* Admin Accent — Terracotta/Coral (global for Teleport access) */
+  --admin-accent: #c4725c;
+  --admin-accent-hover: #b5634d;
+  --admin-accent-active: #a65540;
+  --admin-accent-subtle: rgba(196, 114, 92, 0.08);
+  --admin-accent-muted: rgba(196, 114, 92, 0.15);
 }
 
 /* ============================================
@@ -196,6 +203,13 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.35);
+
+  /* Admin Accent — dark variant */
+  --admin-accent: #d4897a;
+  --admin-accent-hover: #e09a8c;
+  --admin-accent-active: #c47a6b;
+  --admin-accent-subtle: rgba(212, 137, 122, 0.1);
+  --admin-accent-muted: rgba(212, 137, 122, 0.18);
 }
 
 /* ============================================
