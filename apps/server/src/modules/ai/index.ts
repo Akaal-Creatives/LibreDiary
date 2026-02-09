@@ -13,3 +13,13 @@ export { translateText, type TranslateInput, type TranslateResult } from './tran
 
 export { default as translationRoutes } from './translation.routes.js';
 export { SUPPORTED_LANGUAGES } from './translation.routes.js';
+
+export {
+  writeText,
+  type WritingAction,
+  type WriteTextInput,
+  type WriteTextResult,
+} from './writing.service.js';
+
+export { default as writingRoutes } from './writing.routes.js';
+export { WRITING_ACTIONS } from './writing.routes.js';
