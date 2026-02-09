@@ -38,7 +38,7 @@
     "argon2": "^0.44.0",
     "fastify": "^5.2.0",
     "fastify-plugin": "^5.1.0",
-    "nodemailer": "^8.0.0",
+    "nodemailer": "^8.0.1",
     "pino": "^10.3.0",
     "pino-pretty": "^13.0.0",
     "yjs": "^13.6.29",
