@@ -46,29 +46,29 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Core Features
 
-- [x] **Phase 2: Authentication** — Email/password, session management, invite-only registration
-- [ ] **Phase 3: Multi-Tenancy** — Organizations, roles, invitations, domain lockdown
-- [ ] **Phase 4: Page System** — CRUD, hierarchy, sidebar, favorites, trash
-- [ ] **Phase 5: Real-Time Collaboration** — Hocuspocus, Yjs, presence, cursors
+- [x] **Phase 2: Authentication** — Email/password, OAuth (GitHub, Google), session management, password reset
+- [x] **Phase 3: Multi-Tenancy** — Organisations, roles, invitations, domain lockdown, workspace switcher, super admin, setup wizard
+- [x] **Phase 4: Page System** — CRUD, hierarchy, sidebar, breadcrumbs, icons, favourites, trash & restore
+- [x] **Phase 5: Real-Time Collaboration** — Hocuspocus, Yjs, presence, cursors, page version history
 
 ### Advanced Features
 
-- [ ] **Phase 6: Sharing & Permissions** — Page-level permissions, public pages, guest access
-- [ ] **Phase 7: Comments & Mentions** — Threaded comments, @mentions
-- [ ] **Phase 8: Notifications** — In-app and email notifications
-- [ ] **Phase 9: Search** — Full-text search with PostgreSQL
+- [x] **Phase 6: Sharing & Permissions** — Page-level permissions, public pages, share links with expiration
+- [x] **Phase 7: Comments & Mentions** — Threaded comments, inline markers, @mentions with autocomplete
+- [x] **Phase 8: Notifications** — In-app and email notifications with user preferences
+- [x] **Phase 9: Search** — PostgreSQL full-text search, filters, highlighting, recent searches, Cmd+K
 
 ### Data Management
 
-- [ ] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views
-- [ ] **Phase 11: Templates** — Template library and quick-start templates
-- [ ] **Phase 12: File Storage** — Local, MinIO, S3 storage providers
-- [ ] **Phase 13: Backup System** — Automated encrypted backups
+- [x] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views, relations, rollups, formulas
+- [x] **Phase 11: Templates** — Template library, create from page, categories, quick-start templates
+- [x] **Phase 12: File Storage** — Local, MinIO, S3 storage providers, file type validation
+- [x] **Phase 13: Backup System** — Per-org and system backups, encryption, scheduled backups, retention
 
 ### Platform
 
-- [ ] **Phase 14: API & Webhooks** — Public API, tokens, webhook system
-- [ ] **Phase 15: Admin Features** — Audit logs, system settings, dashboard
+- [x] **Phase 14: API & Webhooks** — API tokens, Bearer auth, webhook delivery with HMAC signatures and retries
+- [ ] **Phase 15: Admin Features** — Audit logging (done), system settings, admin dashboard
 - [ ] **Phase 16: AI Features** — Content translation via OpenRouter
 - [ ] **Phase 17: Internationalization** — Multi-language UI support
 
