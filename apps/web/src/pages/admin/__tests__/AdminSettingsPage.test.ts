@@ -18,6 +18,11 @@ const mockBackupsStore = vi.hoisted(() => ({
   fetchSettings: vi.fn(),
 }));
 
+const mockAdminService = vi.hoisted(() => ({
+  getSystemSettings: vi.fn(),
+  updateSystemSettings: vi.fn(),
+}));
+
 vi.mock('vue-router', () => ({
   useRouter: () => mockRouter,
 }));
@@ -29,6 +34,8 @@ vi.mock('@/stores/files', () => ({
 vi.mock('@/stores/backups', () => ({
   useBackupsStore: () => mockBackupsStore,
 }));
+
+vi.mock('@/services/admin.service', () => mockAdminService);
 
 import AdminSettingsPage from '../AdminSettingsPage.vue';
 
@@ -45,6 +52,16 @@ const sampleBackupSettings = {
   retentionDays: 30,
   maxSizeMb: 500,
   pgDumpAvailable: true,
+};
+
+const sampleSystemSettings = {
+  siteName: 'LibreDiary',
+  allowSignups: false,
+  requireEmailVerification: true,
+  sessionMaxAge: 604800000,
+  maxOrganisationsPerUser: 0,
+  defaultUserLocale: 'en',
+  updatedAt: '2025-06-01T00:00:00.000Z',
 };
 
 function mountPage() {
@@ -66,6 +83,9 @@ describe('AdminSettingsPage', () => {
 
     mockBackupsStore.settings = null;
     mockBackupsStore.fetchSettings.mockResolvedValue(undefined);
+
+    mockAdminService.getSystemSettings.mockResolvedValue(sampleSystemSettings);
+    mockAdminService.updateSystemSettings.mockResolvedValue(sampleSystemSettings);
   });
 
   it('renders the page header with title and description', () => {
@@ -224,5 +244,145 @@ describe('AdminSettingsPage', () => {
 
     expect(mockFilesStore.fetchStorageInfo).toHaveBeenCalledTimes(1);
     expect(mockBackupsStore.fetchSettings).toHaveBeenCalledTimes(1);
+  });
+
+  // ===========================================
+  // General Settings Section
+  // ===========================================
+
+  describe('General Settings', () => {
+    it('displays "General" section heading', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('General');
+    });
+
+    it('fetches system settings on mount', async () => {
+      mountPage();
+      await flushPromises();
+
+      expect(mockAdminService.getSystemSettings).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows site name input with current value', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.general-settings input[data-field="siteName"]');
+      expect(input.exists()).toBe(true);
+      expect((input.element as HTMLInputElement).value).toBe('LibreDiary');
+    });
+
+    it('shows allow signups toggle', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const toggle = wrapper.find('.general-settings input[data-field="allowSignups"]');
+      expect(toggle.exists()).toBe(true);
+    });
+
+    it('shows require email verification toggle', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const toggle = wrapper.find('.general-settings input[data-field="requireEmailVerification"]');
+      expect(toggle.exists()).toBe(true);
+    });
+
+    it('shows session duration input', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.general-settings input[data-field="sessionMaxAge"]');
+      expect(input.exists()).toBe(true);
+    });
+
+    it('shows max organisations per user input', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.general-settings input[data-field="maxOrganisationsPerUser"]');
+      expect(input.exists()).toBe(true);
+    });
+
+    it('shows default locale input', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const input = wrapper.find('.general-settings input[data-field="defaultUserLocale"]');
+      expect(input.exists()).toBe(true);
+    });
+
+    it('shows save button', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const saveBtn = wrapper.find('.general-settings .save-button');
+      expect(saveBtn.exists()).toBe(true);
+    });
+
+    it('calls updateSystemSettings on save click', async () => {
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.general-settings .save-button').trigger('click');
+      await flushPromises();
+
+      expect(mockAdminService.updateSystemSettings).toHaveBeenCalled();
+    });
+
+    it('shows success message after save', async () => {
+      mockAdminService.updateSystemSettings.mockResolvedValue(sampleSystemSettings);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.general-settings .save-button').trigger('click');
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Settings saved');
+    });
+
+    it('shows error on save failure', async () => {
+      mockAdminService.updateSystemSettings.mockRejectedValue(new Error('Save failed'));
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.general-settings .save-button').trigger('click');
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Save failed');
+    });
+
+    it('disables save button while saving', async () => {
+      mockAdminService.updateSystemSettings.mockReturnValue(new Promise(() => {}));
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      await wrapper.find('.general-settings .save-button').trigger('click');
+
+      const saveBtn = wrapper.find('.general-settings .save-button');
+      expect((saveBtn.element as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('shows loading skeleton while fetching settings', () => {
+      mockAdminService.getSystemSettings.mockReturnValue(new Promise(() => {}));
+
+      const wrapper = mountPage();
+
+      expect(wrapper.find('.general-settings .settings-skeleton').exists()).toBe(true);
+    });
+
+    it('shows error state if fetch fails', async () => {
+      mockAdminService.getSystemSettings.mockRejectedValue(new Error('Network error'));
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.general-settings .settings-error').exists()).toBe(true);
+    });
   });
 });
