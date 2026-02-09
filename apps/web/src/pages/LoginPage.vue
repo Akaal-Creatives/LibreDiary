@@ -15,6 +15,7 @@ const { theme, toggleTheme } = useTheme();
 
 const email = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const loading = ref(false);
 const error = ref('');
 const oauthLoading = ref<OAuthProvider | null>(null);
@@ -208,15 +209,58 @@ async function handleOAuthClick(provider: OAuthProvider) {
 
           <div class="form-field">
             <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="Enter your password"
-              required
-              autocomplete="current-password"
-              :aria-invalid="!!error"
-            />
+            <div class="input-group">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+                :aria-invalid="!!error"
+              />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                @click="showPassword = !showPassword"
+              >
+                <!-- Eye open icon (password is hidden, click to show) -->
+                <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M2.5 10C2.5 10 5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 15 15.5 10 15.5C5 15.5 2.5 10 2.5 10Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                <!-- Eye closed icon (password is visible, click to hide) -->
+                <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M3 3L17 17"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M8.5 4.8C9 4.6 9.5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 16.8 11.3 15.5 12.7"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M4.5 7.3C3.2 8.7 2.5 10 2.5 10C2.5 10 5 15.5 10 15.5C10.5 15.5 11 15.4 11.5 15.2"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="submit-btn" :disabled="loading">
@@ -390,6 +434,38 @@ async function handleOAuthClick(provider: OAuthProvider) {
 .form-field input:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-group input {
+  padding-right: calc(var(--space-4) + 40px);
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+  transform: translateY(-50%);
+}
+
+.password-toggle-btn:hover {
+  opacity: 0.7;
 }
 
 .submit-btn {
