@@ -292,6 +292,14 @@ export interface FileInfo {
   createdAt: string;
 }
 
+export interface FilesCellItem {
+  id: string;
+  name: string;
+  url: string;
+  mimeType: string;
+  size: number;
+}
+
 export interface StorageInfo {
   type: StorageType;
   totalFiles: number;

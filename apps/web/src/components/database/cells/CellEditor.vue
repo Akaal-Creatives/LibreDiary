@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
-import type { PropertyType } from '@librediary/shared';
+import type { PropertyType, FilesCellItem } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
+import { useFilesStore } from '@/stores/files';
 
 const props = defineProps<{
   value: unknown;
@@ -20,9 +21,25 @@ const inputRef = ref<HTMLInputElement | null>(null);
 const showSelectDropdown = ref(false);
 const showPersonDropdown = ref(false);
 const showRelationDropdown = ref(false);
+const showFilesDropdown = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const localUploading = ref(false);
+const localUploadProgress = ref(0);
 
 const organizationsStore = useOrganizationsStore();
 const databasesStore = useDatabasesStore();
+const filesStore = useFilesStore();
+
+const currentFiles = computed<FilesCellItem[]>(() => {
+  if (!Array.isArray(props.value)) return [];
+  return props.value as FilesCellItem[];
+});
+
+const acceptAttribute = computed(() => {
+  const allowed = props.config?.allowedMimeTypes as string[] | undefined;
+  if (!allowed || allowed.length === 0) return undefined;
+  return allowed.join(',');
+});
 
 const personMembers = computed(() => {
   return organizationsStore.members.map((m) => ({
@@ -78,6 +95,41 @@ function toggleRelation(rowId: string) {
   emit('save', current);
 }
 
+function triggerUpload() {
+  fileInputRef.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  localUploading.value = true;
+  localUploadProgress.value = 0;
+  try {
+    const fileInfo = await filesStore.uploadFile(file);
+    const newItem: FilesCellItem = {
+      id: fileInfo.id,
+      name: fileInfo.originalName,
+      url: fileInfo.url ?? fileInfo.storagePath,
+      mimeType: fileInfo.mimeType,
+      size: fileInfo.size,
+    };
+    emit('save', [...currentFiles.value, newItem]);
+  } catch {
+    // Upload failed — error is already set in filesStore
+  } finally {
+    localUploading.value = false;
+    localUploadProgress.value = 0;
+    input.value = '';
+  }
+}
+
+function removeFile(fileId: string) {
+  const updated = currentFiles.value.filter((f) => f.id !== fileId);
+  emit('save', updated);
+}
+
 onMounted(async () => {
   if (props.type === 'CHECKBOX') {
     emit('save', props.value !== true);
@@ -95,6 +147,11 @@ onMounted(async () => {
     if (targetDbId) {
       databasesStore.fetchRelatedDatabase(targetDbId);
     }
+    return;
+  }
+
+  if (props.type === 'FILES') {
+    showFilesDropdown.value = true;
     return;
   }
 
@@ -236,6 +293,41 @@ function getInputType(): string {
       </button>
       <div v-if="relationRows.length === 0" class="select-empty">No rows found</div>
       <button class="relation-done" @mousedown.prevent="emit('save', value)">Done</button>
+    </div>
+
+    <!-- Files dropdown -->
+    <div v-if="type === 'FILES' && showFilesDropdown" class="files-dropdown">
+      <div v-if="currentFiles.length > 0" class="files-list">
+        <div v-for="file in currentFiles" :key="file.id" class="file-item">
+          <span class="file-item-name">{{ file.name }}</span>
+          <button class="file-remove-btn" @mousedown.prevent="removeFile(file.id)">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M3 3L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+              <path d="M9 3L3 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div v-if="localUploading" class="files-progress">Uploading…</div>
+      <input
+        ref="fileInputRef"
+        type="file"
+        style="display: none"
+        :accept="acceptAttribute"
+        @change="handleFileUpload"
+      />
+      <button
+        class="files-upload-btn"
+        :disabled="localUploading"
+        @mousedown.prevent="triggerUpload"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 2V10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M2 6H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+        </svg>
+        Upload file
+      </button>
+      <button class="files-done-btn" @mousedown.prevent="emit('save', currentFiles)">Done</button>
     </div>
 
     <!-- Select / Multi-select dropdown -->
@@ -537,5 +629,119 @@ function getInputType(): string {
 
 .relation-done:hover {
   background: var(--color-hover);
+}
+
+/* Files Dropdown */
+.files-dropdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.file-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.file-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.file-remove-btn:hover {
+  color: var(--color-error);
+  background: var(--color-hover);
+}
+
+.files-upload-btn {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.files-upload-btn:hover {
+  background: var(--color-hover);
+}
+
+.files-upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.files-done-btn {
+  padding: var(--space-2);
+  margin-top: var(--space-1);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.files-done-btn:hover {
+  background: var(--color-hover);
+}
+
+.files-progress {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { PropertyType } from '@librediary/shared';
+import type { PropertyType, FilesCellItem } from '@librediary/shared';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
 
@@ -47,6 +47,21 @@ const relationItems = computed(() => {
     return { id: rowId, title: String(cells[firstPropId] ?? rowId) };
   });
 });
+
+const filesItems = computed<FilesCellItem[]>(() => {
+  if (props.type !== 'FILES' || !Array.isArray(props.value) || props.value.length === 0) return [];
+  return props.value as FilesCellItem[];
+});
+
+function getFileIconType(mimeType: string): string {
+  return mimeType.startsWith('image/') ? 'image' : 'file';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const rollupValue = computed<string>(() => {
   if (props.type !== 'ROLLUP' || !props.rowCells || !props.config) return '';
@@ -258,6 +273,63 @@ function getSelectColour(val: string): string {
       </span>
     </template>
 
+    <!-- Files pills -->
+    <template v-else-if="type === 'FILES' && filesItems.length > 0">
+      <a
+        v-for="file in filesItems"
+        :key="file.id"
+        class="file-pill"
+        :href="file.url"
+        target="_blank"
+        rel="noopener"
+        :title="`${file.name} (${formatFileSize(file.size)})`"
+        @click.stop
+      >
+        <span
+          class="file-icon"
+          :class="{ 'file-icon--image': getFileIconType(file.mimeType) === 'image' }"
+        >
+          <!-- Image icon -->
+          <svg
+            v-if="getFileIconType(file.mimeType) === 'image'"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+          >
+            <rect
+              x="1"
+              y="2"
+              width="10"
+              height="8"
+              rx="1"
+              stroke="currentColor"
+              stroke-width="1.2"
+            />
+            <circle cx="4" cy="5" r="1" fill="currentColor" />
+            <path
+              d="M1 9L4 6L6 8L8 5.5L11 9"
+              stroke="currentColor"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <!-- Generic file icon -->
+          <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M3 1H7.5L10 3.5V11H3V1Z"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linejoin="round"
+            />
+            <path d="M7 1V4H10" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span class="file-pill-name">{{ file.name }}</span>
+      </a>
+    </template>
+
     <!-- Rollup -->
     <template v-else-if="type === 'ROLLUP' && rollupValue">
       {{ rollupValue }}
@@ -368,6 +440,44 @@ function getSelectColour(val: string): string {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   border-radius: var(--radius-sm);
   white-space: nowrap;
+}
+
+/* Files */
+.file-pill {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  padding: 1px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.file-pill:hover {
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-accent);
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.file-icon--image {
+  color: var(--color-accent);
+}
+
+.file-pill-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .url-link,

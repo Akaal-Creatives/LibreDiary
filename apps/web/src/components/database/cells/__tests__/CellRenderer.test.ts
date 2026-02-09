@@ -485,6 +485,104 @@ describe('CellRenderer', () => {
     });
   });
 
+  // Files property type
+  describe('FILES type', () => {
+    it('renders nothing for null FILES value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: null, type: 'FILES' },
+      });
+      expect(wrapper.find('.file-pill').exists()).toBe(false);
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders nothing for empty FILES array', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: [], type: 'FILES' },
+      });
+      expect(wrapper.findAll('.file-pill')).toHaveLength(0);
+    });
+
+    it('renders file pills with correct names and links', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+        {
+          id: 'f2',
+          name: 'photo.jpg',
+          url: '/uploads/photo.jpg',
+          mimeType: 'image/jpeg',
+          size: 2048,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pills = wrapper.findAll('.file-pill');
+      expect(pills).toHaveLength(2);
+      expect(pills[0]!.text()).toContain('report.pdf');
+      expect(pills[1]!.text()).toContain('photo.jpg');
+    });
+
+    it('shows image icon for image/* mimeTypes', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'photo.png',
+          url: '/uploads/photo.png',
+          mimeType: 'image/png',
+          size: 512,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const icon = wrapper.find('.file-icon');
+      expect(icon.exists()).toBe(true);
+      expect(icon.classes()).toContain('file-icon--image');
+    });
+
+    it('shows generic file icon for non-image mimeTypes', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'doc.pdf',
+          url: '/uploads/doc.pdf',
+          mimeType: 'application/pdf',
+          size: 4096,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const icon = wrapper.find('.file-icon');
+      expect(icon.exists()).toBe(true);
+      expect(icon.classes()).not.toContain('file-icon--image');
+    });
+
+    it('title attribute contains name and formatted size', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1536,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pill = wrapper.find('.file-pill');
+      expect(pill.attributes('title')).toContain('report.pdf');
+      expect(pill.attributes('title')).toContain('1.5 KB');
+    });
+  });
+
   // Formula property type
   describe('FORMULA type', () => {
     it('renders result of simple addition', () => {

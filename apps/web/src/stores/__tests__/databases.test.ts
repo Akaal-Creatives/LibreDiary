@@ -739,6 +739,81 @@ describe('useDatabasesStore', () => {
     });
   });
 
+  describe('updateRowCell with FILES array', () => {
+    it('should update a cell with a FILES array value', async () => {
+      const filesValue = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const updatedRow = {
+        id: 'row-1',
+        databaseId: 'db-1',
+        position: 0,
+        cells: { 'prop-files': filesValue },
+        createdById: 'u-1',
+        createdAt: '',
+        updatedAt: '',
+      };
+      mockedService.updateRow.mockResolvedValue({ row: updatedRow });
+      mockedService.getDatabase.mockResolvedValue({
+        database: {
+          id: 'db-1',
+          name: 'T',
+          organizationId: 'org-1',
+          pageId: null,
+          createdAt: '',
+          updatedAt: '',
+          properties: [
+            {
+              id: 'prop-files',
+              databaseId: 'db-1',
+              name: 'Attachments',
+              type: 'FILES' as const,
+              position: 0,
+              config: null,
+            },
+          ],
+          views: [
+            {
+              id: 'v-1',
+              databaseId: 'db-1',
+              name: 'T',
+              type: 'TABLE' as const,
+              position: 0,
+              config: null,
+            },
+          ],
+          rows: [
+            {
+              id: 'row-1',
+              databaseId: 'db-1',
+              position: 0,
+              cells: {},
+              createdById: 'u-1',
+              createdAt: '',
+              updatedAt: '',
+            },
+          ],
+        },
+      });
+
+      const store = useDatabasesStore();
+      await store.fetchDatabase('db-1');
+      await store.updateRowCell('row-1', 'prop-files', filesValue);
+
+      expect(mockedService.updateRow).toHaveBeenCalledWith('org-1', 'db-1', 'row-1', {
+        cells: { 'prop-files': filesValue },
+      });
+      const cells = store.rows[0]!.cells as Record<string, unknown>;
+      expect(cells['prop-files']).toEqual(filesValue);
+    });
+  });
+
   describe('bulkDeleteRows', () => {
     it('should remove multiple rows from local state', async () => {
       mockedService.bulkDeleteRows.mockResolvedValue({ count: 2, message: '2 deleted' });

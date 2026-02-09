@@ -37,6 +37,27 @@ const isSelectType = computed(
   () => localType.value === 'SELECT' || localType.value === 'MULTI_SELECT'
 );
 const isNumberType = computed(() => localType.value === 'NUMBER');
+const isFilesType = computed(() => localType.value === 'FILES');
+
+const localAllowedMimeTypes = ref(getInitialAllowedMimeTypes());
+
+function getInitialAllowedMimeTypes(): string {
+  const config = props.property.config as Record<string, unknown> | null;
+  const types = (config?.allowedMimeTypes as string[] | undefined) ?? [];
+  return types.join(', ');
+}
+
+async function saveAllowedMimeTypes() {
+  const types = localAllowedMimeTypes.value
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const config = {
+    ...((props.property.config as Record<string, unknown>) ?? {}),
+    allowedMimeTypes: types.length > 0 ? types : undefined,
+  };
+  await databasesStore.updateProperty(props.property.id, { config });
+}
 
 watch(
   () => props.property,
@@ -45,6 +66,7 @@ watch(
     localType.value = props.property.type;
     localOptions.value = getInitialOptions();
     localNumberFormat.value = getInitialNumberFormat();
+    localAllowedMimeTypes.value = getInitialAllowedMimeTypes();
   }
 );
 
@@ -93,6 +115,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'URL', label: 'URL' },
   { value: 'EMAIL', label: 'Email' },
   { value: 'PHONE', label: 'Phone' },
+  { value: 'FILES', label: 'Files' },
 ];
 </script>
 
@@ -169,6 +192,20 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
         <option value="percent">Percent</option>
         <option value="currency">Currency</option>
       </select>
+    </div>
+
+    <!-- FILES Allowed MIME Types -->
+    <div v-if="isFilesType" class="config-field">
+      <label class="config-label">Allowed file types</label>
+      <input
+        v-model="localAllowedMimeTypes"
+        class="config-name-input"
+        type="text"
+        placeholder="e.g. image/*, application/pdf"
+        @blur="saveAllowedMimeTypes"
+        @keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
+      />
+      <span class="config-hint">Comma-separated MIME types. Leave empty to allow all.</span>
     </div>
   </div>
 </template>
@@ -332,5 +369,11 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
 
 .add-option-btn:hover {
   background: var(--color-hover);
+}
+
+.config-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.3;
 }
 </style>

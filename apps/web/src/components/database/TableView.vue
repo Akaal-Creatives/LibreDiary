@@ -304,6 +304,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'EMAIL', label: 'Email' },
   { value: 'PHONE', label: 'Phone' },
   { value: 'PERSON', label: 'Person' },
+  { value: 'FILES', label: 'Files' },
   { value: 'RELATION', label: 'Relation' },
   { value: 'ROLLUP', label: 'Rollup' },
   { value: 'FORMULA', label: 'Formula' },

@@ -79,6 +79,22 @@ vi.mock('@/stores/databases', () => ({
   }),
 }));
 
+const mockUploadFile = vi.fn();
+
+vi.mock('@/stores/files', () => ({
+  useFilesStore: () => ({
+    uploadFile: mockUploadFile,
+    uploading: false,
+    uploadProgress: 0,
+  }),
+}));
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({
+    currentOrganizationId: 'org-1',
+  }),
+}));
+
 import CellEditor from '../CellEditor.vue';
 
 describe('CellEditor', () => {
@@ -396,6 +412,99 @@ describe('CellEditor', () => {
       });
       await flushPromises();
       expect(wrapper.text()).toContain('No rows');
+    });
+  });
+
+  // Files property type
+  describe('FILES type', () => {
+    it('shows files dropdown on mount when type is FILES', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const dropdown = wrapper.find('.files-dropdown');
+      expect(dropdown.exists()).toBe(true);
+    });
+
+    it('displays current files from value prop', async () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const wrapper = mount(CellEditor, {
+        props: { value: files, type: 'FILES' },
+      });
+      await flushPromises();
+      expect(wrapper.text()).toContain('report.pdf');
+    });
+
+    it('remove button emits save with file removed', async () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+        {
+          id: 'f2',
+          name: 'photo.jpg',
+          url: '/uploads/photo.jpg',
+          mimeType: 'image/jpeg',
+          size: 2048,
+        },
+      ];
+      const wrapper = mount(CellEditor, {
+        props: { value: files, type: 'FILES' },
+      });
+      await flushPromises();
+      const removeBtns = wrapper.findAll('.file-remove-btn');
+      expect(removeBtns).toHaveLength(2);
+      await removeBtns[0]!.trigger('mousedown');
+      expect(wrapper.emitted('save')).toBeTruthy();
+      const emitted = wrapper.emitted('save')![0]![0] as Array<{ id: string }>;
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0]!.id).toBe('f2');
+    });
+
+    it('done button emits save with current value', async () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const wrapper = mount(CellEditor, {
+        props: { value: files, type: 'FILES' },
+      });
+      await flushPromises();
+      const doneBtn = wrapper.find('.files-done-btn');
+      expect(doneBtn.exists()).toBe(true);
+      await doneBtn.trigger('mousedown');
+      expect(wrapper.emitted('save')).toBeTruthy();
+    });
+
+    it('accept attribute set from config.allowedMimeTypes', async () => {
+      const wrapper = mount(CellEditor, {
+        props: {
+          value: [],
+          type: 'FILES',
+          config: { allowedMimeTypes: ['image/*', 'application/pdf'] },
+        },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      expect(fileInput.attributes('accept')).toBe('image/*,application/pdf');
     });
   });
 });
