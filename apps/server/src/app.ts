@@ -30,6 +30,7 @@ import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
 import { apiTokenRoutes } from './modules/api-tokens/index.js';
 import { webhookRoutes } from './modules/webhooks/index.js';
 import { auditRoutes } from './modules/audit/index.js';
+import { translationRoutes } from './modules/ai/index.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -154,6 +155,11 @@ export async function buildApp() {
       // Backup routes (org-scoped)
       await api.register(orgBackupRoutes, {
         prefix: '/organizations/:orgId/backups',
+      });
+
+      // AI translation routes (org-scoped)
+      await api.register(translationRoutes, {
+        prefix: '/organizations/:orgId/ai/translate',
       });
 
       // Admin routes (super admin only)
