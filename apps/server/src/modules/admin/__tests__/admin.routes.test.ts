@@ -396,6 +396,9 @@ describe('Admin Routes', () => {
     sessionMaxAge: 604800000,
     maxOrganisationsPerUser: 0,
     defaultUserLocale: 'en',
+    aiEnabled: false,
+    openrouterApiKey: 'sk-or-v1-abcdefg12345',
+    openrouterModel: 'openai/gpt-4o-mini',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-06-01'),
   };
@@ -442,6 +445,10 @@ describe('Admin Routes', () => {
       expect(body.data.settings.sessionMaxAge).toBe(604800000);
       expect(body.data.settings.maxOrganisationsPerUser).toBe(0);
       expect(body.data.settings.defaultUserLocale).toBe('en');
+      // AI fields
+      expect(body.data.settings.aiEnabled).toBe(false);
+      expect(body.data.settings.openrouterApiKey).toBe('****2345');
+      expect(body.data.settings.openrouterModel).toBe('openai/gpt-4o-mini');
       // Should not include setup fields
       expect(body.data.settings).not.toHaveProperty('setupCompleted');
       expect(body.data.settings).not.toHaveProperty('id');
@@ -594,6 +601,64 @@ describe('Admin Routes', () => {
           }),
         })
       );
+    });
+
+    it('should update AI enabled setting', async () => {
+      mockPrismaSystemSettings.upsert.mockResolvedValue({
+        ...sampleSettings,
+        aiEnabled: true,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { aiEnabled: true },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.data.settings.aiEnabled).toBe(true);
+    });
+
+    it('should accept openrouterApiKey as nullable string', async () => {
+      mockPrismaSystemSettings.upsert.mockResolvedValue({
+        ...sampleSettings,
+        openrouterApiKey: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { openrouterApiKey: null },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('should accept openrouterModel as string', async () => {
+      mockPrismaSystemSettings.upsert.mockResolvedValue({
+        ...sampleSettings,
+        openrouterModel: 'anthropic/claude-3-haiku',
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/admin/settings',
+        cookies: {
+          session_token: 'super-admin-token',
+        },
+        payload: { openrouterModel: 'anthropic/claude-3-haiku' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.data.settings.openrouterModel).toBe('anthropic/claude-3-haiku');
     });
   });
 
