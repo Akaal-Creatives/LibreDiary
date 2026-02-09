@@ -1,4 +1,6 @@
+import * as path from 'node:path';
 import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import multipart from '@fastify/multipart';
 import { env } from './config/index.js';
 import {
@@ -64,6 +66,15 @@ export async function buildApp() {
       fileSize: env.STORAGE_MAX_FILE_SIZE,
     },
   });
+
+  // Serve uploaded files when using local storage
+  if (env.STORAGE_TYPE === 'LOCAL') {
+    await fastify.register(fastifyStatic, {
+      root: path.resolve(env.STORAGE_LOCAL_PATH),
+      prefix: '/uploads/',
+      decorateReply: false,
+    });
+  }
 
   // Register routes
   await fastify.register(healthRoutes);
