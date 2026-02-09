@@ -61,16 +61,16 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Data Management
 
-- [x] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views, relations, rollups, formulas
+- [x] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views, relations, rollups, formulas, file attachments
 - [x] **Phase 11: Templates** — Template library, create from page, categories, quick-start templates
 - [x] **Phase 12: File Storage** — Local, MinIO, S3 storage providers, file type validation
 - [x] **Phase 13: Backup System** — Per-org and system backups, encryption, scheduled backups, retention
 
 ### Platform
 
-- [x] **Phase 14: API & Webhooks** — API tokens, Bearer auth, webhook delivery with HMAC signatures and retries
+- [x] **Phase 14: API & Webhooks** — API tokens, Bearer auth, rate limiting, webhook delivery with HMAC signatures and retries
 - [x] **Phase 15: Admin Features** — Audit logging, system settings, admin dashboard
-- [x] **Phase 16: AI Features** — OpenRouter integration, content translation (31 languages)
+- [x] **Phase 16: AI Features** — OpenRouter integration, content translation (31 languages), AI note writing, per-org and system-wide AI toggle
 - [ ] **Phase 17: Internationalization** — Multi-language UI support
 
 ### Compliance & Polish

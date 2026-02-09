@@ -572,7 +572,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement token generation (cryptographically secure, shown once)
 - [x] Create API authentication middleware (Bearer token with session fallback)
 - [ ] Document API endpoints (future enhancement)
-- [ ] Add rate limiting per token (future enhancement)
+- [x] Add rate limiting per token
 
 ### 14.2 API Token Management
 
@@ -646,13 +646,13 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] AI database creation (generate schema and sample rows from description)
 - [ ] AI schedule generation (create schedules from natural language input)
 - [ ] AI to-do creation (generate task lists from goals or descriptions)
-- [ ] Gated behind OpenRouter API key configuration and AI enabled toggle
+- [x] Gated behind OpenRouter API key configuration and AI enabled toggle
 
 ### 16.4 AI Toggle
 
-- [ ] Add aiEnabled to Organization
-- [ ] Add global AI disable in SystemSettings
-- [ ] Hide AI features when disabled
+- [x] Add aiEnabled to Organization
+- [x] Add global AI disable in SystemSettings
+- [x] Hide AI features when disabled
 
 ---
 
