@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/auth.middleware.js';
 import { requireSuperAdmin } from './admin.middleware.js';
 import * as adminService from './admin.service.js';
 import * as filesService from '../files/files.service.js';
+import * as aiService from '../ai/ai.service.js';
 import { logAudit } from '../audit/audit.service.js';
 import { z } from 'zod';
 
@@ -429,6 +430,27 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({
       success: true,
       data: { settings },
+    });
+  });
+
+  // ============================================
+  // AI
+  // ============================================
+
+  // Test AI connection
+  app.post('/ai/test', async (request, reply) => {
+    const result = await aiService.testConnection();
+
+    logAudit({
+      action: 'ADMIN_SETTINGS_UPDATED',
+      userId: request.user?.id,
+      resourceType: 'system_settings',
+      metadata: { subAction: 'AI_TEST_CONNECTION', result: result.success },
+    });
+
+    return reply.send({
+      success: true,
+      data: { result },
     });
   });
 
