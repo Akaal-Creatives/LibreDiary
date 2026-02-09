@@ -217,13 +217,14 @@ const syncStore = useSyncStore();
   align-items: center;
 }
 
+/* Touch target: 36px visible + 4px padding each side = 44px effective area (WCAG 2.5.5) */
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;
@@ -264,13 +265,14 @@ const syncStore = useSyncStore();
   background: var(--color-accent-hover);
 }
 
+/* Touch target: 36px visible + 4px padding each side = 44px effective area (WCAG 2.5.5) */
 .more-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;

@@ -663,14 +663,16 @@ onUnmounted(() => {
   color: var(--color-text-tertiary);
 }
 
+/* Touch target: 36px minimum clickable area with padding (WCAG 2.5.5) */
 .remove-recent-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  min-width: 36px;
+  min-height: 36px;
   flex-shrink: 0;
-  padding: 0;
+  padding: 8px;
+  margin: -8px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;

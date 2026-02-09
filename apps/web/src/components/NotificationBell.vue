@@ -941,13 +941,14 @@ watch(isOpen, (open) => {
   opacity: 1;
 }
 
+/* Touch target: 36px minimum with padding for accessibility (WCAG 2.5.5) */
 .delete-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: var(--color-bg-primary);

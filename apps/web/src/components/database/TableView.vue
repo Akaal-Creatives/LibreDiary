@@ -698,13 +698,15 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   text-overflow: ellipsis;
 }
 
+/* Touch target: 36px minimum clickable area with padding (WCAG 2.5.5) */
 .col-menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 9px;
+  margin: -9px;
   color: var(--color-text-tertiary);
   cursor: pointer;
   background: transparent;
