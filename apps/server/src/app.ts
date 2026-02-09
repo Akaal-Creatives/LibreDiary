@@ -7,6 +7,7 @@ import {
   cookiePlugin,
   sensiblePlugin,
   errorHandlerPlugin,
+  rateLimitPlugin,
   websocketPlugin,
 } from './plugins/index.js';
 import { healthRoutes, devRoutes } from './routes/index.js';
@@ -54,6 +55,7 @@ export async function buildApp() {
   await fastify.register(cookiePlugin);
   await fastify.register(sensiblePlugin);
   await fastify.register(errorHandlerPlugin);
+  await fastify.register(rateLimitPlugin);
   await fastify.register(websocketPlugin);
   await fastify.register(multipart, {
     limits: {
