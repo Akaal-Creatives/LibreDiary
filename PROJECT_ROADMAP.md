@@ -19,7 +19,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 | **Backend**  | Node.js, Fastify, Hocuspocus, Prisma, Better Auth       |
 | **Database** | PostgreSQL (FTS), Meilisearch (Phase 2)                 |
 | **Storage**  | Local/MinIO/S3, Backblaze B2 (backups)                  |
-| **AI**       | OpenRouter (content translation)                        |
+| **AI**       | OpenRouter (translation, content creation, scheduling)  |
 | **Infra**    | pnpm, Turborepo, Docker                                 |
 
 ---
@@ -639,7 +639,15 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Support multiple target languages
 - [ ] Cache translations (optional)
 
-### 16.3 AI Toggle
+### 16.3 AI-Assisted Content Creation
+
+- [ ] AI note writing (generate, expand, summarise, improve text)
+- [ ] AI database creation (generate schema and sample rows from description)
+- [ ] AI schedule generation (create schedules from natural language input)
+- [ ] AI to-do creation (generate task lists from goals or descriptions)
+- [ ] Gated behind OpenRouter API key configuration and AI enabled toggle
+
+### 16.4 AI Toggle
 
 - [ ] Add aiEnabled to Organization
 - [ ] Add global AI disable in SystemSettings
