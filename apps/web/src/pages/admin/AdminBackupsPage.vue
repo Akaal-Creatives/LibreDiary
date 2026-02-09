@@ -758,32 +758,32 @@ function statusClass(status: string): string {
   border-color: var(--color-error);
 }
 
-/* Create Modal */
-.create-modal {
+/* Create Modal — :deep() required because BaseModal uses Teleport */
+:deep(.create-modal) {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.modal-title {
+:deep(.modal-title) {
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.modal-description {
+:deep(.modal-description) {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   margin-top: calc(-1 * var(--space-2));
 }
 
-.form-field {
+:deep(.create-modal .form-field) {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-.checkbox-label {
+:deep(.checkbox-label) {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -793,24 +793,24 @@ function statusClass(status: string): string {
   cursor: pointer;
 }
 
-.checkbox {
+:deep(.checkbox) {
   width: 16px;
   height: 16px;
   accent-color: var(--admin-accent);
 }
 
-.field-hint {
+:deep(.field-hint) {
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
 }
 
-.field-label {
+:deep(.field-label) {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.field-input {
+:deep(.field-input) {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   font-family: inherit;
@@ -823,24 +823,24 @@ function statusClass(status: string): string {
   transition: all var(--transition-fast);
 }
 
-.field-input:focus {
+:deep(.field-input:focus) {
   border-color: var(--admin-accent);
   box-shadow: 0 0 0 3px var(--admin-accent-subtle);
 }
 
-.field-error {
+:deep(.field-error) {
   font-size: var(--text-xs);
   color: var(--color-error);
 }
 
-.modal-actions {
+:deep(.modal-actions) {
   display: flex;
   gap: var(--space-3);
   justify-content: flex-end;
   padding-top: var(--space-2);
 }
 
-.btn {
+:deep(.btn) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -857,19 +857,19 @@ function statusClass(status: string): string {
   transition: all 0.15s ease;
 }
 
-.modal-actions .btn-secondary {
+:deep(.modal-actions .btn-secondary) {
   color: var(--color-text-secondary);
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border);
 }
 
-.modal-actions .btn-secondary:hover {
+:deep(.modal-actions .btn-secondary:hover) {
   color: var(--color-text-primary);
   background: var(--color-hover);
   border-color: var(--color-border-strong);
 }
 
-.modal-actions .btn-primary {
+:deep(.modal-actions .btn-primary) {
   min-width: 100px;
   padding: var(--space-2) var(--space-5);
   color: var(--color-text-inverse);
