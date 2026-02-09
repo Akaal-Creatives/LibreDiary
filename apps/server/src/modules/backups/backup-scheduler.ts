@@ -1,9 +1,9 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { env } from '../../config/index.js';
 import { createSystemBackup } from './system-backup.service.js';
 import { cleanupOldBackups } from './backup.service.js';
 
-let scheduledTask: cron.ScheduledTask | null = null;
+let scheduledTask: ScheduledTask | null = null;
 
 /**
  * Starts the backup scheduler if BACKUP_ENABLED is true.

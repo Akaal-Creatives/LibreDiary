@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import type { AuditAction } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 // ===========================================
 // TYPES
@@ -59,7 +60,7 @@ export function logAudit(input: AuditLogInput): void {
         organizationId: input.organizationId ?? null,
         resourceType: input.resourceType ?? null,
         resourceId: input.resourceId ?? null,
-        metadata: input.metadata ?? null,
+        metadata: (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
         ipAddress: input.ipAddress ?? null,
         userAgent: input.userAgent ?? null,
       },

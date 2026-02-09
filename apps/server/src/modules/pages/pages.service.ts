@@ -28,13 +28,13 @@ export interface MovePageInput {
   position?: number;
 }
 
-export interface PageWithChildren extends Page {
+export type PageWithChildren = Page & {
   children: PageWithChildren[];
-}
+};
 
-export interface FavoriteWithPage extends Favorite {
+export type FavoriteWithPage = Favorite & {
   page: Page;
-}
+};
 
 // ===========================================
 // PAGE CRUD

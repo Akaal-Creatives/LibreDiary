@@ -373,10 +373,10 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * DELETE /auth/sessions/:id
    * Revoke a session
    */
-  fastify.delete(
+  fastify.delete<{ Params: { id: string } }>(
     '/sessions/:id',
     { preHandler: [requireAuth] },
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    async (request, reply) => {
       try {
         await authService.revokeSession(request.params.id, getAuthUser(request).id);
 

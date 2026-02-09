@@ -66,7 +66,8 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
         const buffer = await data.toBuffer();
         const pageId = data.fields.pageId
           ? String(
-              (data.fields.pageId as { value?: string }).value ?? (data.fields.pageId as string)
+              (data.fields.pageId as { value?: string }).value ??
+                (data.fields.pageId as unknown as string)
             )
           : undefined;
 

@@ -22,7 +22,7 @@ const envSchema = z.object({
   RATE_LIMIT_ENABLED: z
     .string()
     .transform((v) => v === 'true')
-    .default('true'),
+    .default(true),
   RATE_LIMIT_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().default(60), // seconds
 
@@ -32,7 +32,7 @@ const envSchema = z.object({
   SMTP_SECURE: z
     .string()
     .transform((v) => v === 'true')
-    .default('false'),
+    .default(false),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().email().default('noreply@librediary.local'),
@@ -59,7 +59,7 @@ const envSchema = z.object({
   MINIO_USE_SSL: z
     .string()
     .transform((v) => v === 'true')
-    .default('false'),
+    .default(false),
 
   // S3
   S3_REGION: z.string().optional(),
@@ -71,7 +71,7 @@ const envSchema = z.object({
   BACKUP_ENABLED: z
     .string()
     .transform((v) => v === 'true')
-    .default('false'),
+    .default(false),
   BACKUP_STORAGE_TYPE: z.enum(['LOCAL', 'S3']).default('LOCAL'),
   BACKUP_LOCAL_PATH: z.string().default('./backups'),
   BACKUP_S3_ENDPOINT: z.string().optional(),

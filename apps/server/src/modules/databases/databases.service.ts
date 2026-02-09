@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import type { PropertyType, ViewType } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
 
@@ -240,7 +241,7 @@ export async function createProperty(
       name: input.name,
       type: input.type,
       position,
-      config: input.config ?? undefined,
+      config: (input.config ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
 }
@@ -272,7 +273,9 @@ export async function updateProperty(
     data: {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.type !== undefined && { type: input.type }),
-      ...(input.config !== undefined && { config: input.config }),
+      ...(input.config !== undefined && {
+        config: input.config as Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput,
+      }),
     },
   });
 }
@@ -313,7 +316,7 @@ export async function deleteProperty(orgId: string, databaseId: string, property
         const { [propertyId]: _, ...remainingCells } = cells;
         await tx.databaseRow.update({
           where: { id: row.id },
-          data: { cells: remainingCells },
+          data: { cells: remainingCells as Prisma.InputJsonValue },
         });
       }
     }
@@ -378,7 +381,7 @@ export async function createRow(
       databaseId,
       createdById: userId,
       position,
-      cells: input.cells ?? {},
+      cells: (input.cells ?? {}) as Prisma.InputJsonValue,
     },
   });
 }
@@ -431,7 +434,7 @@ export async function updateRow(
 
   return prisma.databaseRow.update({
     where: { id: rowId },
-    data: { cells: mergedCells },
+    data: { cells: mergedCells as Prisma.InputJsonValue },
   });
 }
 
@@ -526,7 +529,7 @@ export async function createView(orgId: string, databaseId: string, input: Creat
       name: input.name,
       type: input.type,
       position,
-      config: input.config ?? undefined,
+      config: (input.config ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
 }
@@ -558,7 +561,9 @@ export async function updateView(
     data: {
       ...(input.name !== undefined && { name: input.name }),
       ...(input.type !== undefined && { type: input.type }),
-      ...(input.config !== undefined && { config: input.config }),
+      ...(input.config !== undefined && {
+        config: input.config as Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput,
+      }),
     },
   });
 }

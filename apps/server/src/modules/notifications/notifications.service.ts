@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import type { Notification, NotificationType } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { env } from '../../config/index.js';
 import {
   sendMentionNotificationEmail,
@@ -85,7 +86,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
       type: input.type,
       title: input.title,
       message: input.message ?? null,
-      data: input.data ?? null,
+      data: (input.data ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
 }

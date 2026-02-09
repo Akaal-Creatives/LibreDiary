@@ -38,7 +38,7 @@ export async function loadDocument(organizationId: string, pageId: string): Prom
     throw new Error('PAGE_NOT_FOUND');
   }
 
-  return page.yjsState;
+  return page.yjsState as Buffer | null;
 }
 
 /**
@@ -70,7 +70,7 @@ export async function storeDocument(
   await prisma.page.update({
     where: { id: pageId },
     data: {
-      yjsState,
+      yjsState: yjsState as unknown as Uint8Array<ArrayBuffer>,
       updatedById: userId,
     },
   });

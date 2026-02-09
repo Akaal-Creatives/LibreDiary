@@ -197,7 +197,7 @@ export function createHocuspocusServer(): Hocuspocus {
 
       // Add user info to awareness for cursor display
       if (context?.userName) {
-        data.connection.awareness?.setLocalStateField('user', {
+        (data as any).connection?.awareness?.setLocalStateField('user', {
           name: context.userName,
           color: generateUserColor(context.userId),
         });

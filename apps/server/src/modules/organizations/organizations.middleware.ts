@@ -120,7 +120,7 @@ export function requireOrgRole(
       });
     }
 
-    const userRoleLevel = ROLE_HIERARCHY[request.membership.role];
+    const userRoleLevel = ROLE_HIERARCHY[request.membership.role as OrgRole];
     const requiredRoleLevel = ROLE_HIERARCHY[minRole];
 
     if (userRoleLevel < requiredRoleLevel) {

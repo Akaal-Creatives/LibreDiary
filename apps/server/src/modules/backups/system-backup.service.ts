@@ -97,7 +97,7 @@ export async function executeSystemBackup(backupId: string, password?: string): 
     });
 
     // Compress the dump
-    let archiveData = gzipSync(stdout);
+    let archiveData: Buffer = gzipSync(stdout);
 
     // Encrypt if requested
     if (backup.isEncrypted && password) {

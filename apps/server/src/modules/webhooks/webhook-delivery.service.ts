@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [0, 5 * 60 * 1000, 30 * 60 * 1000]; // immediate, 5min, 30min
@@ -32,7 +33,7 @@ export async function triggerWebhooks(orgId: string, event: string, data: Record
       data: {
         webhookId: webhook.id,
         event,
-        payload,
+        payload: payload as unknown as Prisma.InputJsonValue,
         status: 'PENDING',
         attempts: 0,
       },
@@ -104,7 +105,7 @@ async function handleFailure(
   responseBody: string
 ) {
   const shouldRetry = attempt < MAX_ATTEMPTS;
-  const nextRetryAt = shouldRetry ? new Date(Date.now() + RETRY_DELAYS_MS[attempt]) : null;
+  const nextRetryAt = shouldRetry ? new Date(Date.now() + RETRY_DELAYS_MS[attempt]!) : null;
 
   await prisma.webhookDelivery.update({
     where: { id: deliveryId },

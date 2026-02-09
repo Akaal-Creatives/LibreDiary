@@ -8,9 +8,9 @@ export interface CreateSessionOptions {
   ipAddress?: string;
 }
 
-export interface SessionWithUser extends Session {
+export type SessionWithUser = Session & {
   user: User;
-}
+};
 
 /**
  * Create a new session for a user
