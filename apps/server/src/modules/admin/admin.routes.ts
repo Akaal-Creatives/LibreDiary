@@ -26,6 +26,18 @@ const updateOrgSchema = z.object({
   aiEnabled: z.boolean().optional(),
 });
 
+// Settings update schema
+const updateSettingsSchema = z
+  .object({
+    siteName: z.string().min(1).max(255).optional(),
+    allowSignups: z.boolean().optional(),
+    requireEmailVerification: z.boolean().optional(),
+    sessionMaxAge: z.number().int().min(300000).max(2592000000).optional(),
+    maxOrganisationsPerUser: z.number().int().min(0).max(1000).optional(),
+    defaultUserLocale: z.string().min(2).max(10).optional(),
+  })
+  .strict();
+
 export async function adminRoutes(app: FastifyInstance): Promise<void> {
   // Apply auth and super admin middleware to all routes
   app.addHook('preHandler', requireAuth);
@@ -353,6 +365,61 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       });
     }
   );
+
+  // ============================================
+  // SYSTEM SETTINGS
+  // ============================================
+
+  // Get system settings
+  app.get('/settings', async (_request, reply) => {
+    const settings = await adminService.getSettings();
+
+    if (!settings) {
+      return reply.status(404).send({
+        success: false,
+        error: {
+          code: 'SETTINGS_NOT_FOUND',
+          message: 'System settings not found',
+        },
+      });
+    }
+
+    return reply.send({
+      success: true,
+      data: { settings },
+    });
+  });
+
+  // Update system settings
+  app.patch('/settings', async (request, reply) => {
+    const result = updateSettingsSchema.safeParse(request.body);
+
+    if (!result.success) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          details: result.error.flatten().fieldErrors,
+        },
+      });
+    }
+
+    const data = result.data;
+    const settings = await adminService.updateSettings(data);
+
+    logAudit({
+      action: 'ADMIN_SETTINGS_UPDATED',
+      userId: request.user?.id,
+      resourceType: 'system_settings',
+      metadata: data,
+    });
+
+    return reply.send({
+      success: true,
+      data: { settings },
+    });
+  });
 
   // ============================================
   // STORAGE MANAGEMENT
