@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as publicService from './public.service.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -14,49 +15,31 @@ interface TokenParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    PAGE_NOT_FOUND: {
-      status: 404,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    },
-    PAGE_NOT_PUBLIC: {
-      status: 403,
-      code: 'PAGE_NOT_PUBLIC',
-      message: 'This page is not publicly accessible',
-    },
-    INVALID_SHARE_TOKEN: {
-      status: 404,
-      code: 'INVALID_SHARE_TOKEN',
-      message: 'Share link is invalid or does not exist',
-    },
-    SHARE_TOKEN_EXPIRED: {
-      status: 410,
-      code: 'SHARE_TOKEN_EXPIRED',
-      message: 'This share link has expired',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  PAGE_NOT_FOUND: {
+    status: 404,
+    code: 'PAGE_NOT_FOUND',
+    message: 'Page not found',
+  },
+  PAGE_NOT_PUBLIC: {
+    status: 403,
+    code: 'PAGE_NOT_PUBLIC',
+    message: 'This page is not publicly accessible',
+  },
+  INVALID_SHARE_TOKEN: {
+    status: 404,
+    code: 'INVALID_SHARE_TOKEN',
+    message: 'Share link is invalid or does not exist',
+  },
+  SHARE_TOKEN_EXPIRED: {
+    status: 410,
+    code: 'SHARE_TOKEN_EXPIRED',
+    message: 'This share link has expired',
+  },
+};
 
 // ===========================================
 // PUBLIC ROUTES (No authentication required)
@@ -78,7 +61,7 @@ export default async function publicRoutes(fastify: FastifyInstance): Promise<vo
           data: { page },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -98,7 +81,7 @@ export default async function publicRoutes(fastify: FastifyInstance): Promise<vo
           data: { page },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

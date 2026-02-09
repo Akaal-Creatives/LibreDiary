@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as filesService from './files.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -20,39 +21,21 @@ interface ListQuery {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    FILE_NOT_FOUND: {
-      status: 404,
-      code: 'FILE_NOT_FOUND',
-      message: 'File not found',
-    },
-    FILE_TOO_LARGE: {
-      status: 413,
-      code: 'FILE_TOO_LARGE',
-      message: 'File exceeds maximum size limit',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  FILE_NOT_FOUND: {
+    status: 404,
+    code: 'FILE_NOT_FOUND',
+    message: 'File not found',
+  },
+  FILE_TOO_LARGE: {
+    status: 413,
+    code: 'FILE_TOO_LARGE',
+    message: 'File exceeds maximum size limit',
+  },
+};
 
 // ===========================================
 // FILE ROUTES
@@ -104,7 +87,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { file },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -140,7 +123,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { file },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -161,7 +144,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
           )
           .send(result.buffer);
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -179,7 +162,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'File deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as templatesService from './templates.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -53,44 +54,26 @@ interface ListQuery {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    TEMPLATE_NOT_FOUND: {
-      status: 404,
-      code: 'TEMPLATE_NOT_FOUND',
-      message: 'Template not found',
-    },
-    PAGE_NOT_FOUND: {
-      status: 404,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    },
-    CANNOT_DELETE_BUILTIN: {
-      status: 400,
-      code: 'CANNOT_DELETE_BUILTIN',
-      message: 'Cannot delete a built-in template',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  TEMPLATE_NOT_FOUND: {
+    status: 404,
+    code: 'TEMPLATE_NOT_FOUND',
+    message: 'Template not found',
+  },
+  PAGE_NOT_FOUND: {
+    status: 404,
+    code: 'PAGE_NOT_FOUND',
+    message: 'Page not found',
+  },
+  CANNOT_DELETE_BUILTIN: {
+    status: 400,
+    code: 'CANNOT_DELETE_BUILTIN',
+    message: 'Cannot delete a built-in template',
+  },
+};
 
 // ===========================================
 // TEMPLATE ROUTES
@@ -130,7 +113,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { template },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -166,7 +149,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { template },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -205,7 +188,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { template },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -239,7 +222,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { template },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -257,7 +240,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { message: 'Template deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -292,7 +275,7 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           data: { page },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );

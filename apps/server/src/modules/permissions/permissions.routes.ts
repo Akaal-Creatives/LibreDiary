@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as permissionsService from './permissions.service.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
+import { mapServiceError, type ErrorMap } from '../../utils/errors.js';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -36,54 +37,36 @@ interface PermissionParams extends OrgPageParams {
 }
 
 // ===========================================
-// ERROR RESPONSE HELPER
+// ERROR MAP
 // ===========================================
 
-function mapServiceError(error: unknown, reply: FastifyReply): FastifyReply {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
-  const errorMap: Record<string, { status: number; code: string; message: string }> = {
-    PAGE_NOT_FOUND: {
-      status: 404,
-      code: 'PAGE_NOT_FOUND',
-      message: 'Page not found',
-    },
-    PERMISSION_NOT_FOUND: {
-      status: 404,
-      code: 'PERMISSION_NOT_FOUND',
-      message: 'Permission not found',
-    },
-    PERMISSION_EXISTS: {
-      status: 400,
-      code: 'PERMISSION_EXISTS',
-      message: 'User already has permission for this page',
-    },
-    SHARE_LINK_NOT_FOUND: {
-      status: 404,
-      code: 'SHARE_LINK_NOT_FOUND',
-      message: 'Share link not found',
-    },
-    ACCESS_DENIED: {
-      status: 403,
-      code: 'ACCESS_DENIED',
-      message: 'You do not have permission to perform this action',
-    },
-  };
-
-  const errorInfo = errorMap[message] || {
-    status: 500,
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  };
-
-  return reply.status(errorInfo.status).send({
-    success: false,
-    error: {
-      code: errorInfo.code,
-      message: errorInfo.message,
-    },
-  });
-}
+const errorMap: ErrorMap = {
+  PAGE_NOT_FOUND: {
+    status: 404,
+    code: 'PAGE_NOT_FOUND',
+    message: 'Page not found',
+  },
+  PERMISSION_NOT_FOUND: {
+    status: 404,
+    code: 'PERMISSION_NOT_FOUND',
+    message: 'Permission not found',
+  },
+  PERMISSION_EXISTS: {
+    status: 400,
+    code: 'PERMISSION_EXISTS',
+    message: 'User already has permission for this page',
+  },
+  SHARE_LINK_NOT_FOUND: {
+    status: 404,
+    code: 'SHARE_LINK_NOT_FOUND',
+    message: 'Share link not found',
+  },
+  ACCESS_DENIED: {
+    status: 403,
+    code: 'ACCESS_DENIED',
+    message: 'You do not have permission to perform this action',
+  },
+};
 
 // ===========================================
 // PERMISSION ROUTES
@@ -109,7 +92,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { permissions },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -146,7 +129,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { permission },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -181,7 +164,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { permission },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -201,7 +184,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { message: 'Permission revoked' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -244,7 +227,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { shareLink },
         });
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
@@ -280,7 +263,7 @@ export default async function permissionsRoutes(fastify: FastifyInstance): Promi
           data: { message: 'Share link deleted' },
         };
       } catch (error) {
-        return mapServiceError(error, reply);
+        return mapServiceError(error, reply, errorMap);
       }
     }
   );
