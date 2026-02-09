@@ -82,6 +82,11 @@ const envSchema = z.object({
   BACKUP_SCHEDULE: z.string().default('0 2 * * *'),
   BACKUP_RETENTION_DAYS: z.coerce.number().default(30),
   BACKUP_MAX_SIZE_MB: z.coerce.number().default(500),
+
+  // AI (OpenRouter)
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_BASE_URL: z.string().url().default('https://openrouter.ai/api/v1'),
+  AI_DEFAULT_MODEL: z.string().default('openai/gpt-4o-mini'),
 });
 
 export type Env = z.infer<typeof envSchema>;
