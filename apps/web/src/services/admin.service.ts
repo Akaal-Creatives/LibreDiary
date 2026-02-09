@@ -227,3 +227,35 @@ export async function getAuditLogActions(): Promise<string[]> {
   const response = await api.get<{ data: { actions: string[] } }>('/admin/audit-logs/actions');
   return response.data.actions;
 }
+
+// System Settings
+export interface SystemSettings {
+  siteName: string;
+  allowSignups: boolean;
+  requireEmailVerification: boolean;
+  sessionMaxAge: number;
+  maxOrganisationsPerUser: number;
+  defaultUserLocale: string;
+  updatedAt: string;
+}
+
+export interface UpdateSystemSettingsData {
+  siteName?: string;
+  allowSignups?: boolean;
+  requireEmailVerification?: boolean;
+  sessionMaxAge?: number;
+  maxOrganisationsPerUser?: number;
+  defaultUserLocale?: string;
+}
+
+export async function getSystemSettings(): Promise<SystemSettings> {
+  const response = await api.get<{ settings: SystemSettings }>('/admin/settings');
+  return response.settings;
+}
+
+export async function updateSystemSettings(
+  data: UpdateSystemSettingsData
+): Promise<SystemSettings> {
+  const response = await api.patch<{ settings: SystemSettings }>('/admin/settings', data);
+  return response.settings;
+}
