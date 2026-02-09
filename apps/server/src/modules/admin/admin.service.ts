@@ -391,6 +391,69 @@ export async function restoreOrganization(orgId: string): Promise<Organization |
 }
 
 // ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+export interface SystemSettingsResponse {
+  siteName: string;
+  allowSignups: boolean;
+  requireEmailVerification: boolean;
+  sessionMaxAge: number;
+  maxOrganisationsPerUser: number;
+  defaultUserLocale: string;
+  updatedAt: Date;
+}
+
+function curateSettings(settings: {
+  siteName: string;
+  allowSignups: boolean;
+  requireEmailVerification: boolean;
+  sessionMaxAge: number;
+  maxOrganisationsPerUser: number;
+  defaultUserLocale: string;
+  updatedAt: Date;
+}): SystemSettingsResponse {
+  return {
+    siteName: settings.siteName,
+    allowSignups: settings.allowSignups,
+    requireEmailVerification: settings.requireEmailVerification,
+    sessionMaxAge: settings.sessionMaxAge,
+    maxOrganisationsPerUser: settings.maxOrganisationsPerUser,
+    defaultUserLocale: settings.defaultUserLocale,
+    updatedAt: settings.updatedAt,
+  };
+}
+
+export async function getSettings(): Promise<SystemSettingsResponse | null> {
+  const settings = await prisma.systemSettings.findUnique({
+    where: { id: 'system' },
+  });
+
+  if (!settings) return null;
+
+  return curateSettings(settings);
+}
+
+export interface UpdateSettingsData {
+  siteName?: string;
+  allowSignups?: boolean;
+  requireEmailVerification?: boolean;
+  sessionMaxAge?: number;
+  maxOrganisationsPerUser?: number;
+  defaultUserLocale?: string;
+}
+
+export async function updateSettings(data: UpdateSettingsData): Promise<SystemSettingsResponse> {
+  const settings = await prisma.systemSettings.upsert({
+    where: { id: 'system' },
+    update: data,
+    create: { id: 'system', ...data },
+  });
+
+  return curateSettings(settings);
+}
+
+// ============================================
 // STATISTICS
 // ============================================
 
