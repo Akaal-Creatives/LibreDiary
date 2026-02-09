@@ -506,5 +506,126 @@ describe('CellEditor', () => {
       expect(fileInput.exists()).toBe(true);
       expect(fileInput.attributes('accept')).toBe('image/*,application/pdf');
     });
+
+    it('shows upload button with correct text', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const uploadBtn = wrapper.find('.files-upload-btn');
+      expect(uploadBtn.exists()).toBe(true);
+      expect(uploadBtn.text()).toContain('Upload file');
+    });
+
+    it('has hidden file input element', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      expect(fileInput.attributes('style')).toContain('display: none');
+    });
+
+    it('no accept attribute when config has no allowedMimeTypes', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      expect(fileInput.exists()).toBe(true);
+      expect(fileInput.attributes('accept')).toBeUndefined();
+    });
+
+    it('defaults to empty files list for non-array value', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: null, type: 'FILES' },
+      });
+      await flushPromises();
+      expect(wrapper.find('.files-dropdown').exists()).toBe(true);
+      expect(wrapper.find('.files-list').exists()).toBe(false);
+    });
+
+    it('does not render files-list when no files', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      expect(wrapper.find('.files-list').exists()).toBe(false);
+    });
+
+    it('emits save with new file after successful upload', async () => {
+      mockUploadFile.mockResolvedValue({
+        id: 'new-f1',
+        originalName: 'uploaded.pdf',
+        url: '/uploads/uploaded.pdf',
+        storagePath: '/storage/uploaded.pdf',
+        mimeType: 'application/pdf',
+        size: 4096,
+      });
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      const file = new File(['content'], 'uploaded.pdf', { type: 'application/pdf' });
+      Object.defineProperty(fileInput.element, 'files', { value: [file] });
+      await fileInput.trigger('change');
+      await flushPromises();
+      expect(mockUploadFile).toHaveBeenCalledWith(file);
+      expect(wrapper.emitted('save')).toBeTruthy();
+      const emitted = wrapper.emitted('save')![0]![0] as Array<{ id: string; name: string }>;
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0]!.id).toBe('new-f1');
+      expect(emitted[0]!.name).toBe('uploaded.pdf');
+    });
+
+    it('does not emit save when upload fails', async () => {
+      mockUploadFile.mockRejectedValue(new Error('Upload failed'));
+      const wrapper = mount(CellEditor, {
+        props: { value: [], type: 'FILES' },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      const file = new File(['content'], 'fail.pdf', { type: 'application/pdf' });
+      Object.defineProperty(fileInput.element, 'files', { value: [file] });
+      await fileInput.trigger('change');
+      await flushPromises();
+      expect(mockUploadFile).toHaveBeenCalled();
+      expect(wrapper.emitted('save')).toBeFalsy();
+    });
+
+    it('appends uploaded file to existing files', async () => {
+      mockUploadFile.mockResolvedValue({
+        id: 'new-f2',
+        originalName: 'second.pdf',
+        url: '/uploads/second.pdf',
+        storagePath: '/storage/second.pdf',
+        mimeType: 'application/pdf',
+        size: 2048,
+      });
+      const existingFiles = [
+        {
+          id: 'f1',
+          name: 'first.pdf',
+          url: '/uploads/first.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const wrapper = mount(CellEditor, {
+        props: { value: existingFiles, type: 'FILES' },
+      });
+      await flushPromises();
+      const fileInput = wrapper.find('input[type="file"]');
+      const file = new File(['content'], 'second.pdf', { type: 'application/pdf' });
+      Object.defineProperty(fileInput.element, 'files', { value: [file] });
+      await fileInput.trigger('change');
+      await flushPromises();
+      const emitted = wrapper.emitted('save')![0]![0] as Array<{ id: string }>;
+      expect(emitted).toHaveLength(2);
+      expect(emitted[0]!.id).toBe('f1');
+      expect(emitted[1]!.id).toBe('new-f2');
+    });
   });
 });

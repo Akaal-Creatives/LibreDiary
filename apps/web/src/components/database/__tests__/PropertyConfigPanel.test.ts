@@ -212,4 +212,100 @@ describe('PropertyConfigPanel', () => {
     });
     expect(wrapper.find('.number-format-select').exists()).toBe(false);
   });
+
+  // FILES property type
+  describe('FILES type', () => {
+    const filesProperty = {
+      id: 'prop-4',
+      databaseId: 'db-1',
+      name: 'Attachments',
+      type: 'FILES' as const,
+      position: 3,
+      config: null,
+    };
+
+    const filesPropertyWithMimeTypes = {
+      id: 'prop-4',
+      databaseId: 'db-1',
+      name: 'Attachments',
+      type: 'FILES' as const,
+      position: 3,
+      config: { allowedMimeTypes: ['image/*', 'application/pdf'] },
+    };
+
+    it('includes FILES in property type selector', () => {
+      setupStore();
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesProperty },
+      });
+      const select = wrapper.find('.config-type-select');
+      const options = select.findAll('option');
+      const values = options.map((o) => o.attributes('value'));
+      expect(values).toContain('FILES');
+    });
+
+    it('shows allowed file types input for FILES type', () => {
+      setupStore();
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesProperty },
+      });
+      expect(wrapper.text()).toContain('Allowed file types');
+      expect(wrapper.find('.config-hint').exists()).toBe(true);
+      expect(wrapper.find('.config-hint').text()).toContain('MIME types');
+    });
+
+    it('does not show select options editor for FILES type', () => {
+      setupStore();
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesProperty },
+      });
+      expect(wrapper.find('.select-options-editor').exists()).toBe(false);
+    });
+
+    it('does not show number format for FILES type', () => {
+      setupStore();
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesProperty },
+      });
+      expect(wrapper.find('.number-format-select').exists()).toBe(false);
+    });
+
+    it('populates allowed MIME types from config', () => {
+      setupStore();
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesPropertyWithMimeTypes },
+      });
+      const inputs = wrapper.findAll('.config-name-input');
+      // Second config-name-input is the MIME types input (first is the name)
+      const mimeInput = inputs[1]!;
+      expect((mimeInput.element as HTMLInputElement).value).toBe('image/*, application/pdf');
+    });
+
+    it('saves allowed MIME types on blur', async () => {
+      const store = setupStore();
+      store.properties = [{ ...filesProperty }];
+      mockDatabasesService.updateProperty.mockResolvedValue({
+        property: { ...filesProperty, config: { allowedMimeTypes: ['image/*'] } },
+      });
+
+      const wrapper = mount(PropertyConfigPanel, {
+        props: { property: filesProperty },
+      });
+
+      const inputs = wrapper.findAll('.config-name-input');
+      const mimeInput = inputs[1]!;
+      await mimeInput.setValue('image/*');
+      await mimeInput.trigger('blur');
+      await flushPromises();
+
+      expect(mockDatabasesService.updateProperty).toHaveBeenCalledWith(
+        'org-1',
+        'db-1',
+        'prop-4',
+        expect.objectContaining({
+          config: expect.objectContaining({ allowedMimeTypes: ['image/*'] }),
+        })
+      );
+    });
+  });
 });

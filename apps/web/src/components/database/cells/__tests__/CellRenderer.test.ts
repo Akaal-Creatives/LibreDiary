@@ -581,6 +581,93 @@ describe('CellRenderer', () => {
       expect(pill.attributes('title')).toContain('report.pdf');
       expect(pill.attributes('title')).toContain('1.5 KB');
     });
+
+    it('file pill href points to file URL', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pill = wrapper.find('.file-pill');
+      expect(pill.attributes('href')).toBe('/uploads/report.pdf');
+    });
+
+    it('renders single file pill', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'single.txt',
+          url: '/uploads/single.txt',
+          mimeType: 'text/plain',
+          size: 256,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pills = wrapper.findAll('.file-pill');
+      expect(pills).toHaveLength(1);
+      expect(pills[0]!.text()).toContain('single.txt');
+    });
+
+    it('formats size in bytes when under 1024', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'tiny.txt',
+          url: '/uploads/tiny.txt',
+          mimeType: 'text/plain',
+          size: 512,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pill = wrapper.find('.file-pill');
+      expect(pill.attributes('title')).toContain('512 B');
+    });
+
+    it('formats size in MB when over 1 MB', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'large.zip',
+          url: '/uploads/large.zip',
+          mimeType: 'application/zip',
+          size: 2621440,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pill = wrapper.find('.file-pill');
+      expect(pill.attributes('title')).toContain('2.5 MB');
+    });
+
+    it('opens file in new tab', () => {
+      const files = [
+        {
+          id: 'f1',
+          name: 'report.pdf',
+          url: '/uploads/report.pdf',
+          mimeType: 'application/pdf',
+          size: 1024,
+        },
+      ];
+      const wrapper = mount(CellRenderer, {
+        props: { value: files, type: 'FILES' },
+      });
+      const pill = wrapper.find('.file-pill');
+      expect(pill.attributes('target')).toBe('_blank');
+      expect(pill.attributes('rel')).toBe('noopener');
+    });
   });
 
   // Formula property type
