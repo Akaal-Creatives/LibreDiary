@@ -25,6 +25,8 @@ import {
   updateOrganization,
   deleteOrganization,
   restoreOrganization,
+  getSystemSettings,
+  updateSystemSettings,
 } from '../admin.service';
 
 describe('Admin Service', () => {
@@ -503,6 +505,65 @@ describe('Admin Service', () => {
       mockApi.post.mockRejectedValue(new Error('Not found'));
 
       await expect(restoreOrganization('bad-id')).rejects.toThrow('Not found');
+    });
+  });
+
+  // ===========================================
+  // System Settings
+  // ===========================================
+
+  describe('getSystemSettings', () => {
+    const mockSettings = {
+      siteName: 'LibreDiary',
+      allowSignups: false,
+      requireEmailVerification: true,
+      sessionMaxAge: 604800000,
+      maxOrganisationsPerUser: 0,
+      defaultUserLocale: 'en',
+      updatedAt: '2025-06-01T00:00:00.000Z',
+    };
+
+    it('should call GET /admin/settings and return response.settings', async () => {
+      mockApi.get.mockResolvedValue({ settings: mockSettings });
+
+      const result = await getSystemSettings();
+
+      expect(mockApi.get).toHaveBeenCalledWith('/admin/settings');
+      expect(result).toEqual(mockSettings);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApi.get.mockRejectedValue(new Error('Forbidden'));
+
+      await expect(getSystemSettings()).rejects.toThrow('Forbidden');
+    });
+  });
+
+  describe('updateSystemSettings', () => {
+    const mockSettings = {
+      siteName: 'My Diary',
+      allowSignups: true,
+      requireEmailVerification: true,
+      sessionMaxAge: 604800000,
+      maxOrganisationsPerUser: 0,
+      defaultUserLocale: 'en',
+      updatedAt: '2025-06-01T00:00:00.000Z',
+    };
+
+    it('should call PATCH /admin/settings with body and return response.settings', async () => {
+      const data = { siteName: 'My Diary', allowSignups: true };
+      mockApi.patch.mockResolvedValue({ settings: mockSettings });
+
+      const result = await updateSystemSettings(data);
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/admin/settings', data);
+      expect(result).toEqual(mockSettings);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApi.patch.mockRejectedValue(new Error('Bad request'));
+
+      await expect(updateSystemSettings({ siteName: '' })).rejects.toThrow('Bad request');
     });
   });
 });
