@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import * as path from 'node:path';
+import { fileTypeFromBuffer } from 'file-type';
 import { prisma } from '../../lib/prisma.js';
 import { env } from '../../config/index.js';
 import { getStorageProvider } from './storage/index.js';
@@ -55,9 +56,15 @@ export async function uploadFile(
     throw error;
   }
 
+  // Detect actual MIME type from file magic bytes.
+  // For text-based files (e.g. .css, .json, .csv) file-type returns undefined,
+  // so we fall back to the client-provided MIME type.
+  const detected = await fileTypeFromBuffer(data.buffer);
+  const mimeType = detected?.mime ?? data.mimeType;
+
   const provider = getStorageProvider();
   const key = generateStorageKey(orgId, data.originalName);
-  const storagePath = await provider.upload(key, data.buffer, data.mimeType);
+  const storagePath = await provider.upload(key, data.buffer, mimeType);
   const url = await provider.getUrl(storagePath);
 
   const file = await prisma.file.create({
@@ -66,7 +73,7 @@ export async function uploadFile(
       pageId: options?.pageId ?? null,
       name: path.basename(key),
       originalName: data.originalName,
-      mimeType: data.mimeType,
+      mimeType,
       size: data.size,
       storageType: env.STORAGE_TYPE as StorageType,
       storagePath,
