@@ -27,6 +27,7 @@ import {
   restoreOrganization,
   getSystemSettings,
   updateSystemSettings,
+  getSystemHealth,
 } from '../admin.service';
 
 describe('Admin Service', () => {
@@ -42,6 +43,11 @@ describe('Admin Service', () => {
     const mockStats = {
       users: { total: 100, verified: 85, superAdmins: 3 },
       organizations: { total: 12, active: 10 },
+      pages: 50,
+      databases: 5,
+      files: { total: 30, totalSize: 52428800 },
+      templates: 7,
+      backups: 2,
     };
 
     it('should call GET /admin/stats', async () => {
@@ -53,12 +59,17 @@ describe('Admin Service', () => {
       expect(result).toEqual(mockStats);
     });
 
-    it('should return response.stats', async () => {
+    it('should return response.stats with extended fields', async () => {
       mockApi.get.mockResolvedValue({ stats: mockStats });
 
       const result = await getStats();
 
-      expect(result).toEqual(mockStats);
+      expect(result.pages).toBe(50);
+      expect(result.databases).toBe(5);
+      expect(result.files.total).toBe(30);
+      expect(result.files.totalSize).toBe(52428800);
+      expect(result.templates).toBe(7);
+      expect(result.backups).toBe(2);
     });
 
     it('should propagate API errors', async () => {
@@ -564,6 +575,38 @@ describe('Admin Service', () => {
       mockApi.patch.mockRejectedValue(new Error('Bad request'));
 
       await expect(updateSystemSettings({ siteName: '' })).rejects.toThrow('Bad request');
+    });
+  });
+
+  // ===========================================
+  // System Health
+  // ===========================================
+
+  describe('getSystemHealth', () => {
+    const mockHealth = {
+      database: { status: 'connected' },
+      storage: { status: 'connected' },
+      collaboration: { status: 'connected' },
+      server: {
+        uptime: 12345,
+        nodeVersion: 'v20.0.0',
+        memory: { rss: 100000, heapTotal: 80000, heapUsed: 60000 },
+      },
+    };
+
+    it('should call GET /admin/health and return response.health', async () => {
+      mockApi.get.mockResolvedValue({ health: mockHealth });
+
+      const result = await getSystemHealth();
+
+      expect(mockApi.get).toHaveBeenCalledWith('/admin/health');
+      expect(result).toEqual(mockHealth);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApi.get.mockRejectedValue(new Error('Forbidden'));
+
+      await expect(getSystemHealth()).rejects.toThrow('Forbidden');
     });
   });
 });
