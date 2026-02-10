@@ -4,6 +4,9 @@ import * as collaborationService from './collaboration.service.js';
 import { getSessionByToken } from '../../services/session.service.js';
 import { validateWsToken } from '../../utils/tokens.js';
 import { env } from '../../config/index.js';
+import { yjsDocToText } from '../../utils/yjs-to-text.js';
+import { prisma } from '../../lib/prisma.js';
+import { indexPage } from '../search/meilisearch.service.js';
 
 const SESSION_COOKIE_NAME = 'session_token';
 
@@ -183,6 +186,27 @@ export function createHocuspocusServer(): Hocuspocus {
           yjsState,
           context.userId
         );
+
+        // Extract plain text from Yjs doc for search indexing
+        const plainContent = yjsDocToText(document);
+
+        // Update plainContent in PostgreSQL (triggers search_vector update)
+        const page = await prisma.page.update({
+          where: { id: parsed.pageId },
+          data: { plainContent },
+          select: { id: true, title: true, createdById: true, createdAt: true, updatedAt: true },
+        });
+
+        // Index to Meilisearch (fire-and-forget)
+        indexPage({
+          id: page.id,
+          title: page.title,
+          plainContent,
+          orgId: parsed.organizationId,
+          createdById: page.createdById,
+          createdAt: Math.floor(page.createdAt.getTime() / 1000),
+          updatedAt: Math.floor(page.updatedAt.getTime() / 1000),
+        }).catch(() => {});
       } catch (error) {
         console.error('Error storing document:', error);
         // Don't throw - this would disconnect all users
