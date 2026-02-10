@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { name: 'admin-organizations', label: t('admin.organisations'), icon: 'organizations' },
   { name: 'admin-backups', label: t('admin.backups'), icon: 'backups' },
   { name: 'admin-audit-logs', label: t('admin.auditLog'), icon: 'audit' },
+  { name: 'admin-translations', label: t('admin.translations'), icon: 'translations' },
   { name: 'admin-settings', label: t('admin.settings'), icon: 'settings' },
 ];
 
@@ -236,6 +237,34 @@ async function handleLogout() {
               />
               <path
                 d="M6 6H12M6 9H10M6 12H8"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <!-- Translations Icon -->
+            <svg
+              v-else-if="item.icon === 'translations'"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+            >
+              <circle cx="9" cy="9" r="6.75" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M2.25 9H15.75"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M9 2.25C10.6569 4.03568 11.6046 6.46263 11.625 9C11.6046 11.5374 10.6569 13.9643 9 15.75"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M9 2.25C7.34315 4.03568 6.39543 6.46263 6.375 9C6.39543 11.5374 7.34315 13.9643 9 15.75"
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"

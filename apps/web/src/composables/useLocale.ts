@@ -1,6 +1,6 @@
 import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { type LocaleCode, SUPPORTED_LOCALES, DEFAULT_LOCALE } from '../i18n';
+import { type LocaleCode, SUPPORTED_LOCALES, DEFAULT_LOCALE, loadLocaleMessages } from '../i18n';
 import { authService } from '../services/auth.service';
 import { useAuthStore } from '../stores';
 
@@ -14,7 +14,7 @@ export function useLocale() {
   const { locale: i18nLocale } = useI18n();
   const authStore = useAuthStore();
 
-  onMounted(() => {
+  onMounted(async () => {
     // Priority: user.locale > localStorage > DEFAULT_LOCALE
     const userLocale = authStore.isAuthenticated && authStore.user?.locale;
     if (userLocale && isValidLocale(userLocale)) {
@@ -26,15 +26,26 @@ export function useLocale() {
       }
     }
 
+    // Load messages for initial locale if not en-GB
+    if (currentLocale.value !== 'en-GB') {
+      await loadLocaleMessages(currentLocale.value);
+    }
+
     // Apply initial locale
     i18nLocale.value = currentLocale.value;
     document.documentElement.lang = currentLocale.value;
+    document.documentElement.dir = SUPPORTED_LOCALES[currentLocale.value].dir;
   });
 
-  watch(currentLocale, (newLocale) => {
+  watch(currentLocale, async (newLocale) => {
     localStorage.setItem('locale', newLocale);
+
+    // Load messages before switching
+    await loadLocaleMessages(newLocale);
+
     i18nLocale.value = newLocale;
     document.documentElement.lang = newLocale;
+    document.documentElement.dir = SUPPORTED_LOCALES[newLocale].dir;
 
     // Sync to backend if authenticated
     if (authStore.isAuthenticated) {
@@ -44,7 +55,7 @@ export function useLocale() {
     }
   });
 
-  function setLocale(locale: LocaleCode) {
+  async function setLocale(locale: LocaleCode): Promise<void> {
     if (!isValidLocale(locale)) return;
     currentLocale.value = locale;
   }

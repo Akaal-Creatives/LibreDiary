@@ -27,6 +27,20 @@ vi.mock('@/stores', () => ({
   useAuthStore: () => mockAuthStoreState,
 }));
 
+// Mock loadLocaleMessages
+const { mockLoadLocaleMessages } = vi.hoisted(() => ({
+  mockLoadLocaleMessages: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/i18n', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const actual = await importOriginal<typeof import('@/i18n')>();
+  return {
+    ...actual,
+    loadLocaleMessages: mockLoadLocaleMessages,
+  };
+});
+
 import { useLocale } from '../useLocale';
 
 // Helper to run a composable inside a mounted component context
@@ -67,16 +81,19 @@ describe('useLocale', () => {
       clear: vi.fn(),
     });
 
-    // Reset document lang
+    // Reset document attributes
     document.documentElement.removeAttribute('lang');
+    document.documentElement.removeAttribute('dir');
 
     // Default: user is not authenticated
     mockAuthStoreState.user = null;
     mockAuthStoreState.isAuthenticated = false;
 
-    // Reset mock — always return a resolved promise
+    // Reset mocks — always return resolved promises
     mockAuthService.updateProfile.mockReset();
     mockAuthService.updateProfile.mockResolvedValue({ user: {} });
+    mockLoadLocaleMessages.mockReset();
+    mockLoadLocaleMessages.mockResolvedValue(undefined);
 
     // Pinia for the test
     setActivePinia(createPinia());
@@ -289,6 +306,84 @@ describe('useLocale', () => {
 
       // Locale should still be updated locally despite backend failure
       expect(result.currentLocale.value).toBe('en-US');
+
+      unmount();
+    });
+  });
+
+  // ===========================================
+  // LAZY LOADING
+  // ===========================================
+
+  describe('lazy loading', () => {
+    it('should call loadLocaleMessages when switching to a new locale', async () => {
+      const { result, unmount } = withSetup(() => useLocale());
+      await nextTick();
+
+      mockLoadLocaleMessages.mockClear();
+      result.setLocale('fr' as 'en-GB');
+      await nextTick();
+
+      expect(mockLoadLocaleMessages).toHaveBeenCalledWith('fr');
+
+      unmount();
+    });
+
+    it('should not call loadLocaleMessages for en-GB on mount', async () => {
+      mockLoadLocaleMessages.mockClear();
+
+      const { unmount } = withSetup(() => useLocale());
+      await nextTick();
+
+      // en-GB is the default locale and already loaded statically
+      expect(mockLoadLocaleMessages).not.toHaveBeenCalledWith('en-GB');
+
+      unmount();
+    });
+  });
+
+  // ===========================================
+  // RTL SUPPORT
+  // ===========================================
+
+  describe('RTL support', () => {
+    it('should set dir to rtl when switching to Arabic', async () => {
+      const { result, unmount } = withSetup(() => useLocale());
+      await nextTick();
+
+      result.setLocale('ar' as 'en-GB');
+      await nextTick();
+
+      expect(document.documentElement.dir).toBe('rtl');
+
+      unmount();
+    });
+
+    it('should set dir to ltr when switching to en-GB', async () => {
+      const { result, unmount } = withSetup(() => useLocale());
+      await nextTick();
+
+      // First switch to Arabic
+      result.setLocale('ar' as 'en-GB');
+      await nextTick();
+      expect(document.documentElement.dir).toBe('rtl');
+
+      // Then back to en-GB
+      result.setLocale('en-GB');
+      await nextTick();
+      expect(document.documentElement.dir).toBe('ltr');
+
+      unmount();
+    });
+
+    it('should set dir to ltr for French', async () => {
+      const { result, unmount } = withSetup(() => useLocale());
+      await nextTick();
+
+      result.setLocale('fr' as 'en-GB');
+      await nextTick();
+
+      expect(document.documentElement.dir).toBe('ltr');
 
       unmount();
     });

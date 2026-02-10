@@ -29,6 +29,8 @@ function handleClickOutside(event: MouseEvent) {
       class="language-toggle"
       :title="$t('language.selectLanguage')"
       :aria-label="$t('language.selectLanguage')"
+      aria-haspopup="listbox"
+      :aria-expanded="isOpen"
       @click="toggleMenu"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -49,15 +51,27 @@ function handleClickOutside(event: MouseEvent) {
       </svg>
     </button>
 
-    <div v-if="isOpen" class="language-menu">
+    <div
+      v-if="isOpen"
+      class="language-menu"
+      role="listbox"
+      :aria-label="$t('language.selectLanguage')"
+    >
       <button
         v-for="(meta, code) in SUPPORTED_LOCALES"
         :key="code"
         class="language-option"
+        role="option"
         :class="{ active: currentLocale === code }"
+        :aria-selected="currentLocale === code"
         @click="selectLocale(code as LocaleCode)"
       >
-        <span class="locale-name">{{ meta.name }}</span>
+        <span class="locale-names">
+          <span class="locale-native-name">{{ meta.nativeName }}</span>
+          <span v-if="meta.nativeName !== meta.name" class="locale-english-name">{{
+            meta.name
+          }}</span>
+        </span>
         <svg
           v-if="currentLocale === code"
           class="check-icon"
@@ -110,13 +124,28 @@ function handleClickOutside(event: MouseEvent) {
   right: 0;
   bottom: 100%;
   z-index: 50;
-  min-width: 160px;
+  min-width: 200px;
+  max-height: 280px;
   margin-bottom: var(--space-2);
   padding: var(--space-1);
+  overflow-y: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+}
+
+.language-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.language-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.language-menu::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
 }
 
 .language-option {
@@ -147,8 +176,21 @@ function handleClickOutside(event: MouseEvent) {
   font-weight: 500;
 }
 
-.locale-name {
+.locale-names {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.locale-native-name {
+  line-height: 1.3;
+}
+
+.locale-english-name {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.2;
 }
 
 .check-icon {

@@ -74,15 +74,51 @@ describe('LanguageSwitcher', () => {
       expect(wrapper.find('.language-menu').exists()).toBe(true);
     });
 
-    it('should display all supported locales', async () => {
+    it('should display all 17 supported locales', async () => {
       const wrapper = mountComponent();
 
       await wrapper.find('.language-toggle').trigger('click');
 
       const items = wrapper.findAll('.language-option');
-      expect(items.length).toBe(2);
-      expect(items[0].text()).toContain('English (UK)');
-      expect(items[1].text()).toContain('English (US)');
+      expect(items.length).toBe(17);
+    });
+
+    it('should show native names', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      const nativeNames = wrapper.findAll('.locale-native-name');
+      const nativeTexts = nativeNames.map((n) => n.text());
+
+      expect(nativeTexts).toContain('English (UK)');
+      expect(nativeTexts).toContain('Deutsch');
+      expect(nativeTexts).toContain('Français');
+      expect(nativeTexts).toContain('日本語');
+      expect(nativeTexts).toContain('العربية');
+    });
+
+    it('should show English name as secondary label for non-English locales', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      const englishNames = wrapper.findAll('.locale-english-name');
+      const englishTexts = englishNames.map((n) => n.text());
+
+      expect(englishTexts).toContain('French');
+      expect(englishTexts).toContain('German');
+      expect(englishTexts).toContain('Japanese');
+    });
+
+    it('should not show secondary English name when native and English are the same', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      // English (UK) has nativeName === name, so no secondary label
+      const firstOption = wrapper.findAll('.language-option')[0];
+      expect(firstOption.find('.locale-english-name').exists()).toBe(false);
     });
 
     it('should highlight current locale with active class', async () => {
@@ -116,6 +152,48 @@ describe('LanguageSwitcher', () => {
       await items[1].trigger('click');
 
       expect(wrapper.find('.language-menu').exists()).toBe(false);
+    });
+  });
+
+  // ===========================================
+  // ACCESSIBILITY
+  // ===========================================
+
+  describe('accessibility', () => {
+    it('should have role="listbox" on menu', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      const menu = wrapper.find('.language-menu');
+      expect(menu.attributes('role')).toBe('listbox');
+    });
+
+    it('should have role="option" on items', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      const items = wrapper.findAll('.language-option');
+      items.forEach((item) => {
+        expect(item.attributes('role')).toBe('option');
+      });
+    });
+
+    it('should have aria-selected on active item', async () => {
+      const wrapper = mountComponent();
+
+      await wrapper.find('.language-toggle').trigger('click');
+
+      const activeItem = wrapper.find('.language-option.active');
+      expect(activeItem.attributes('aria-selected')).toBe('true');
+    });
+
+    it('should have aria-haspopup on toggle button', () => {
+      const wrapper = mountComponent();
+
+      const toggle = wrapper.find('.language-toggle');
+      expect(toggle.attributes('aria-haspopup')).toBe('listbox');
     });
   });
 });

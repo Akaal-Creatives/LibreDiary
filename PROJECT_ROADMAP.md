@@ -668,9 +668,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 17.2 Community Translations
 
-- [ ] Document translation contribution process
-- [ ] Add locale files for common languages
-- [ ] Create translation status page
+- [x] Document translation contribution process
+- [x] Add locale files for common languages
+- [x] Create translation status page
 
 ---
 
