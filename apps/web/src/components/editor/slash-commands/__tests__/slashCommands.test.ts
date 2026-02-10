@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 9 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(9);
+  it('has 15 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(15);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -24,7 +24,7 @@ describe('SLASH_COMMANDS', () => {
     expect(typeof command.action).toBe('function');
   });
 
-  it('contains the expected command IDs in visual order (basic then lists)', () => {
+  it('contains the expected command IDs in visual order (basic, lists, advanced)', () => {
     const ids = SLASH_COMMANDS.map((c) => c.id);
     expect(ids).toEqual([
       'paragraph',
@@ -36,6 +36,12 @@ describe('SLASH_COMMANDS', () => {
       'divider',
       'bulletList',
       'orderedList',
+      'calloutInfo',
+      'calloutWarning',
+      'calloutError',
+      'calloutSuccess',
+      'tableOfContents',
+      'toggle',
     ]);
   });
 
@@ -48,6 +54,12 @@ describe('SLASH_COMMANDS', () => {
     expect(groups.blockquote).toBe('basic');
     expect(groups.codeBlock).toBe('basic');
     expect(groups.divider).toBe('basic');
+    expect(groups.calloutInfo).toBe('advanced');
+    expect(groups.calloutWarning).toBe('advanced');
+    expect(groups.calloutError).toBe('advanced');
+    expect(groups.calloutSuccess).toBe('advanced');
+    expect(groups.tableOfContents).toBe('advanced');
+    expect(groups.toggle).toBe('advanced');
   });
 
   it('has unique IDs for every command', () => {
@@ -74,20 +86,26 @@ describe('SLASH_COMMANDS', () => {
     }
   });
 
-  it('only uses "basic" and "lists" as group values', () => {
-    const validGroups = new Set(['basic', 'lists']);
+  it('only uses "basic", "lists", and "advanced" as group values', () => {
+    const validGroups = new Set(['basic', 'lists', 'advanced']);
     for (const cmd of SLASH_COMMANDS) {
       expect(validGroups.has(cmd.group)).toBe(true);
     }
   });
 
-  it('is ordered so all basic commands come before all lists commands (matching visual group order)', () => {
+  it('is ordered so all basic commands come before lists, and lists before advanced (matching visual group order)', () => {
     const groups = SLASH_COMMANDS.map((c) => c.group);
     const lastBasicIndex = groups.lastIndexOf('basic');
     const firstListsIndex = groups.indexOf('lists');
-    // If there are lists items, every basic must come before every lists
+    const lastListsIndex = groups.lastIndexOf('lists');
+    const firstAdvancedIndex = groups.indexOf('advanced');
+    // basic before lists
     if (firstListsIndex !== -1) {
       expect(lastBasicIndex).toBeLessThan(firstListsIndex);
+    }
+    // lists before advanced
+    if (firstAdvancedIndex !== -1) {
+      expect(lastListsIndex).toBeLessThan(firstAdvancedIndex);
     }
   });
 });
@@ -95,7 +113,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(9);
+    expect(result).toHaveLength(15);
   });
 
   it('filters by id match', () => {
@@ -164,6 +182,24 @@ describe('filterCommands', () => {
     const result = filterCommands('list');
     expect(result.some((c) => c.id === 'bulletList')).toBe(true);
     expect(result.some((c) => c.id === 'orderedList')).toBe(true);
+  });
+
+  it('matches "callout" keyword across all callout variants', () => {
+    const result = filterCommands('callout');
+    expect(result.some((c) => c.id === 'calloutInfo')).toBe(true);
+    expect(result.some((c) => c.id === 'calloutWarning')).toBe(true);
+    expect(result.some((c) => c.id === 'calloutError')).toBe(true);
+    expect(result.some((c) => c.id === 'calloutSuccess')).toBe(true);
+  });
+
+  it('matches "toc" keyword for table of contents', () => {
+    const result = filterCommands('toc');
+    expect(result.some((c) => c.id === 'tableOfContents')).toBe(true);
+  });
+
+  it('matches "toggle" keyword for toggle block', () => {
+    const result = filterCommands('toggle');
+    expect(result.some((c) => c.id === 'toggle')).toBe(true);
   });
 
   it('returns the original SLASH_COMMANDS array reference when query is empty', () => {
@@ -269,6 +305,54 @@ describe('command actions', () => {
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'divider')!;
     cmd.action(editor as any);
     expect(chainMethods['setHorizontalRule']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('calloutInfo action calls setCallout with "info"', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutInfo')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setCallout']).toHaveBeenCalledWith('info');
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('calloutWarning action calls setCallout with "warning"', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutWarning')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setCallout']).toHaveBeenCalledWith('warning');
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('calloutError action calls setCallout with "error"', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutError')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setCallout']).toHaveBeenCalledWith('error');
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('calloutSuccess action calls setCallout with "success"', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutSuccess')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setCallout']).toHaveBeenCalledWith('success');
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('tableOfContents action calls setTableOfContents', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'tableOfContents')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setTableOfContents']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('toggle action calls setToggle', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'toggle')!;
+    cmd.action(editor as any);
+    expect(chainMethods['setToggle']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
 

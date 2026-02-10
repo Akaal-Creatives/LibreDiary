@@ -110,6 +110,73 @@ export const SLASH_COMMANDS: SlashCommand[] = [
       editor.chain().focus().toggleOrderedList().run();
     },
   },
+  // Advanced blocks
+  {
+    id: 'calloutInfo',
+    labelKey: 'slashCommands.calloutInfo',
+    descriptionKey: 'slashCommands.calloutInfoDescription',
+    icon: 'M12 16v-4M12 8h.01M22 12a10 10 0 11-20 0 10 10 0 0120 0z',
+    group: 'advanced',
+    keywords: ['callout', 'info', 'note', 'tip'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setCallout('info').run();
+    },
+  },
+  {
+    id: 'calloutWarning',
+    labelKey: 'slashCommands.calloutWarning',
+    descriptionKey: 'slashCommands.calloutWarningDescription',
+    icon: 'M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',
+    group: 'advanced',
+    keywords: ['callout', 'warning', 'caution', 'alert'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setCallout('warning').run();
+    },
+  },
+  {
+    id: 'calloutError',
+    labelKey: 'slashCommands.calloutError',
+    descriptionKey: 'slashCommands.calloutErrorDescription',
+    icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+    group: 'advanced',
+    keywords: ['callout', 'error', 'danger', 'important'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setCallout('error').run();
+    },
+  },
+  {
+    id: 'calloutSuccess',
+    labelKey: 'slashCommands.calloutSuccess',
+    descriptionKey: 'slashCommands.calloutSuccessDescription',
+    icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    group: 'advanced',
+    keywords: ['callout', 'success', 'done', 'check'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setCallout('success').run();
+    },
+  },
+  {
+    id: 'tableOfContents',
+    labelKey: 'slashCommands.tableOfContents',
+    descriptionKey: 'slashCommands.tableOfContentsDescription',
+    icon: 'M4 6h16M4 12h10M4 18h14',
+    group: 'advanced',
+    keywords: ['toc', 'table of contents', 'outline', 'navigation'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setTableOfContents().run();
+    },
+  },
+  {
+    id: 'toggle',
+    labelKey: 'slashCommands.toggle',
+    descriptionKey: 'slashCommands.toggleDescription',
+    icon: 'M9 5l7 7-7 7',
+    group: 'advanced',
+    keywords: ['toggle', 'collapsible', 'accordion', 'details', 'expand'],
+    action: (editor) => {
+      (editor.chain().focus() as any).setToggle().run();
+    },
+  },
 ];
 
 export function filterCommands(

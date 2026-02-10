@@ -9,6 +9,11 @@ import { SlashCommandExtension } from './slash-commands/SlashCommandExtension';
 import { SLASH_COMMANDS, filterCommands } from './slash-commands/slashCommands';
 import type { SlashCommand } from './slash-commands/slashCommands';
 import SlashCommandMenu from './slash-commands/SlashCommandMenu.vue';
+import { CodeBlockLowlightExtension } from './extensions/CodeBlockLowlight';
+import { CalloutExtension } from './extensions/CalloutExtension';
+import { ToggleNode, ToggleSummaryNode, ToggleContentNode } from './extensions/ToggleExtension';
+import { TableOfContentsExtension } from './extensions/TableOfContentsExtension';
+import { DragHandleExtension } from './extensions/DragHandleExtension';
 // Use yCursorPlugin from @tiptap/y-tiptap (same package as Collaboration) to ensure
 // the ySyncPluginKey matches. The standalone @tiptap/extension-collaboration-cursor
 // imports from y-prosemirror which creates a different PluginKey instance, causing a
@@ -181,10 +186,19 @@ function buildExtensions(
         keepMarks: true,
         keepAttributes: false,
       },
+      // Disable built-in code block — replaced by CodeBlockLowlight with syntax highlighting
+      codeBlock: false,
       // Disable history in collaborative mode - Yjs handles undo/redo
       // @ts-expect-error — StarterKit types don't expose history option but it works at runtime
       history: forCollaborative ? false : undefined,
     }),
+    CodeBlockLowlightExtension,
+    CalloutExtension,
+    ToggleNode,
+    ToggleSummaryNode,
+    ToggleContentNode,
+    TableOfContentsExtension,
+    DragHandleExtension,
     Placeholder.configure({
       placeholder: props.placeholder,
       emptyEditorClass: 'is-editor-empty',
@@ -725,5 +739,194 @@ defineExpose({
   white-space: nowrap;
   border-radius: 3px 3px 3px 0;
   user-select: none;
+}
+
+/* ==========================================================================
+   Syntax-highlighted Code Blocks (lowlight)
+   ========================================================================== */
+
+.editor-content .ProseMirror pre code .hljs-comment,
+.editor-content .ProseMirror pre code .hljs-quote {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.editor-content .ProseMirror pre code .hljs-keyword,
+.editor-content .ProseMirror pre code .hljs-selector-tag,
+.editor-content .ProseMirror pre code .hljs-built_in {
+  color: var(--color-error);
+}
+
+.editor-content .ProseMirror pre code .hljs-string,
+.editor-content .ProseMirror pre code .hljs-attr,
+.editor-content .ProseMirror pre code .hljs-template-tag {
+  color: var(--color-success);
+}
+
+.editor-content .ProseMirror pre code .hljs-number,
+.editor-content .ProseMirror pre code .hljs-literal {
+  color: var(--color-warning);
+}
+
+.editor-content .ProseMirror pre code .hljs-title,
+.editor-content .ProseMirror pre code .hljs-section,
+.editor-content .ProseMirror pre code .hljs-type {
+  color: var(--color-accent);
+}
+
+.editor-content .ProseMirror pre code .hljs-variable,
+.editor-content .ProseMirror pre code .hljs-params {
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Callout Blocks
+   ========================================================================== */
+
+.editor-content .ProseMirror .callout {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
+  border-left: 3px solid;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.editor-content .ProseMirror .callout[data-callout-type='info'] {
+  border-left-color: var(--color-info);
+  background: var(--color-info-subtle);
+}
+
+.editor-content .ProseMirror .callout[data-callout-type='warning'] {
+  border-left-color: var(--color-warning);
+  background: var(--color-warning-subtle);
+}
+
+.editor-content .ProseMirror .callout[data-callout-type='error'] {
+  border-left-color: var(--color-error);
+  background: var(--color-error-subtle);
+}
+
+.editor-content .ProseMirror .callout[data-callout-type='success'] {
+  border-left-color: var(--color-success);
+  background: var(--color-success-subtle);
+}
+
+.editor-content .ProseMirror .callout p:first-child {
+  margin-top: 0;
+}
+
+.editor-content .ProseMirror .callout p:last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Toggle / Collapsible Blocks
+   ========================================================================== */
+
+.editor-content .ProseMirror details.toggle-block {
+  margin: var(--space-4) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.editor-content .ProseMirror details.toggle-block summary.toggle-summary {
+  padding: var(--space-3) var(--space-4);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.editor-content .ProseMirror details.toggle-block summary.toggle-summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor-content .ProseMirror details.toggle-block summary.toggle-summary::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: var(--space-2);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 6px solid var(--color-text-tertiary);
+  transition: transform var(--transition-fast);
+  vertical-align: middle;
+}
+
+.editor-content .ProseMirror details.toggle-block[open] summary.toggle-summary::before {
+  transform: rotate(90deg);
+}
+
+.editor-content .ProseMirror details.toggle-block .toggle-content {
+  padding: 0 var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Table of Contents
+   ========================================================================== */
+
+.editor-content .ProseMirror .toc-block {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-lg);
+}
+
+.editor-content .ProseMirror .toc-block .toc-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.editor-content .ProseMirror .toc-block .toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.editor-content .ProseMirror .toc-block .toc-item {
+  padding: var(--space-1) 0;
+}
+
+.editor-content .ProseMirror .toc-block .toc-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.editor-content .ProseMirror .toc-block .toc-link:hover {
+  color: var(--color-accent);
+}
+
+.editor-content .ProseMirror .toc-block .toc-level-2 {
+  padding-left: var(--space-4);
+}
+
+.editor-content .ProseMirror .toc-block .toc-level-3 {
+  padding-left: var(--space-8);
+}
+
+.editor-content .ProseMirror .toc-block .toc-empty {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Drag Handle
+   ========================================================================== */
+
+.editor-content .drag-handle:hover {
+  color: var(--color-text-secondary);
+}
+
+.editor-content .drop-indicator {
+  background-color: var(--color-accent);
 }
 </style>

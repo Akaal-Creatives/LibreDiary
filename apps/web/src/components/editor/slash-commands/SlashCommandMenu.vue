@@ -17,7 +17,13 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const listboxRef = ref<HTMLElement>();
 
-const GROUP_ORDER = ['basic', 'lists'] as const;
+const GROUP_ORDER = ['basic', 'lists', 'advanced'] as const;
+
+const GROUP_LABEL_KEYS: Record<string, string> = {
+  basic: 'slashCommands.groupBasic',
+  lists: 'slashCommands.groupLists',
+  advanced: 'slashCommands.groupAdvanced',
+};
 
 const groupedCommands = computed(() => {
   const groups: { key: string; label: string; commands: SlashCommand[] }[] = [];
@@ -25,8 +31,7 @@ const groupedCommands = computed(() => {
   for (const groupKey of GROUP_ORDER) {
     const cmds = props.commands.filter((c) => c.group === groupKey);
     if (cmds.length > 0) {
-      const labelKey =
-        groupKey === 'basic' ? 'slashCommands.groupBasic' : 'slashCommands.groupLists';
+      const labelKey = GROUP_LABEL_KEYS[groupKey] || `slashCommands.group${groupKey}`;
       groups.push({ key: groupKey, label: t(labelKey), commands: cmds });
     }
   }
@@ -48,12 +53,14 @@ function handleKeydown(event: KeyboardEvent) {
       event.preventDefault();
       emit('navigate', (props.selectedIndex - 1 + props.commands.length) % props.commands.length);
       break;
-    case 'Enter':
+    case 'Enter': {
       event.preventDefault();
-      if (props.commands[props.selectedIndex]) {
-        emit('select', props.commands[props.selectedIndex]);
+      const cmd = props.commands[props.selectedIndex];
+      if (cmd) {
+        emit('select', cmd);
       }
       break;
+    }
     case 'Escape':
       event.preventDefault();
       emit('close');

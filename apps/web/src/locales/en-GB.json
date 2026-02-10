@@ -292,7 +292,20 @@
     "dividerDescription": "Horizontal separator line",
     "noResults": "No matching commands",
     "groupBasic": "Basic Blocks",
-    "groupLists": "Lists"
+    "groupLists": "Lists",
+    "groupAdvanced": "Advanced Blocks",
+    "calloutInfo": "Info Callout",
+    "calloutInfoDescription": "Highlighted information block",
+    "calloutWarning": "Warning Callout",
+    "calloutWarningDescription": "Warning or caution notice",
+    "calloutError": "Error Callout",
+    "calloutErrorDescription": "Error or danger notice",
+    "calloutSuccess": "Success Callout",
+    "calloutSuccessDescription": "Success or completion notice",
+    "tableOfContents": "Table of Contents",
+    "tableOfContentsDescription": "Auto-generated heading outline",
+    "toggle": "Toggle",
+    "toggleDescription": "Collapsible content block"
   },
   "comments": {
     "title": "Comments",

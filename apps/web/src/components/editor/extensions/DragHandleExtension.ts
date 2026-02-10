@@ -107,11 +107,13 @@ export const DragHandleExtension = Extension.create({
           };
 
           // Helper: Find closest block to mouse Y
-          const findClosestBlock = (mouseY: number) => {
+          const findClosestBlock = (
+            mouseY: number
+          ): { node: ProseMirrorNode; pos: number; dom: HTMLElement | null } | null => {
             const blocks = getTopLevelBlocks();
             if (blocks.length === 0) return null;
 
-            let closest = blocks[0];
+            let closest: (typeof blocks)[number] | null = null;
             let minDistance = Infinity;
 
             for (const block of blocks) {
@@ -207,7 +209,7 @@ export const DragHandleExtension = Extension.create({
             let indicatorY: number | null = null;
 
             for (let i = 0; i < blocks.length; i++) {
-              const block = blocks[i];
+              const block = blocks[i]!;
               if (!block.dom) continue;
 
               const rect = block.dom.getBoundingClientRect();
@@ -223,7 +225,7 @@ export const DragHandleExtension = Extension.create({
 
             // If no position found, insert at end
             if (insertPos === null && blocks.length > 0) {
-              const lastBlock = blocks[blocks.length - 1];
+              const lastBlock = blocks[blocks.length - 1]!;
               if (lastBlock.dom) {
                 const rect = lastBlock.dom.getBoundingClientRect();
                 insertPos = lastBlock.pos + lastBlock.node.nodeSize;
@@ -267,12 +269,12 @@ export const DragHandleExtension = Extension.create({
             const sourceIndex = blocks.findIndex((b) => b.pos === state.draggedBlockPos);
             if (sourceIndex === -1) return;
 
-            const sourceBlock = blocks[sourceIndex];
+            const sourceBlock = blocks[sourceIndex]!;
 
             // Find target position
             let targetIndex = blocks.length;
             for (let i = 0; i < blocks.length; i++) {
-              const block = blocks[i];
+              const block = blocks[i]!;
               if (!block.dom) continue;
 
               const rect = block.dom.getBoundingClientRect();
@@ -298,10 +300,11 @@ export const DragHandleExtension = Extension.create({
             let targetPos: number;
             if (targetIndex > sourceIndex) {
               // Moving forward: target is after removal
-              targetPos = blocks[targetIndex - 1].pos + blocks[targetIndex - 1].node.nodeSize;
+              const prevBlock = blocks[targetIndex - 1]!;
+              targetPos = prevBlock.pos + prevBlock.node.nodeSize;
             } else {
               // Moving backward
-              targetPos = blocks[targetIndex].pos;
+              targetPos = blocks[targetIndex]!.pos;
             }
 
             // Perform the move
