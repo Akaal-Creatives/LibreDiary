@@ -41,8 +41,9 @@ const initialContentInserted = ref(false);
 // This is separate from pageContent which tracks live editor content
 const originalHtmlContent = ref('');
 
-// Debounce timers for saving title
+// Debounce timers for saving
 let titleSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let contentSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Collaboration document name (orgId/pageId)
 const documentName = computed(() => {
@@ -168,6 +169,23 @@ onMounted(() => {
 watch(
   () => props.pageId,
   async (_newId, oldId) => {
+    // Flush pending content save before switching pages
+    if (contentSaveTimeout) {
+      clearTimeout(contentSaveTimeout);
+      contentSaveTimeout = null;
+    }
+    if (oldId && hasBeenModified.value && pageContent.value) {
+      const content = pageContent.value;
+      const hasContent =
+        content && content.trim() && content !== '<p></p>' && content !== '<p><br></p>';
+      if (hasContent) {
+        try {
+          await pagesStore.updatePageData(oldId, { htmlContent: content });
+        } catch (e) {
+          console.error('Failed to flush content save on page switch:', e);
+        }
+      }
+    }
     // Cleanup old page if it was empty
     if (oldId) {
       await cleanupEmptyPage(oldId);
@@ -184,6 +202,23 @@ onUnmounted(async () => {
   // Clear any pending save timeouts
   if (titleSaveTimeout) {
     clearTimeout(titleSaveTimeout);
+  }
+  if (contentSaveTimeout) {
+    clearTimeout(contentSaveTimeout);
+  }
+
+  // Flush pending content save before unmounting
+  if (hasBeenModified.value && pageContent.value) {
+    const content = pageContent.value;
+    const hasContent =
+      content && content.trim() && content !== '<p></p>' && content !== '<p><br></p>';
+    if (hasContent) {
+      try {
+        await pagesStore.updatePageData(props.pageId, { htmlContent: content });
+      } catch (e) {
+        console.error('Failed to flush content save on unmount:', e);
+      }
+    }
   }
 
   // Cleanup empty page when leaving
@@ -275,8 +310,28 @@ function onContentUpdate(content: string) {
     hasBeenModified.value = true;
   }
 
-  // In collaborative mode, content is synced via Yjs/Hocuspocus
-  // No need to save manually - Hocuspocus handles persistence
+  // Save htmlContent via REST API (debounced).
+  // In collaborative mode yjsState is the primary save mechanism,
+  // but persisting htmlContent ensures content survives WebSocket failures.
+  if (hasContent) {
+    const opId = `content-${props.pageId}`;
+    syncStore.startOperation(opId, 'content');
+
+    if (contentSaveTimeout) {
+      clearTimeout(contentSaveTimeout);
+    }
+
+    contentSaveTimeout = setTimeout(async () => {
+      syncStore.markSaving(opId);
+      try {
+        await pagesStore.updatePageData(props.pageId, { htmlContent: content });
+        syncStore.markSaved(opId);
+      } catch (e) {
+        console.error('Failed to save content:', e);
+        syncStore.markError(opId, 'Failed to save content');
+      }
+    }, 2000);
+  }
 }
 
 async function selectIcon(icon: string | null) {
