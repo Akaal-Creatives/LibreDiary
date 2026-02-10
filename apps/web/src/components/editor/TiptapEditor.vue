@@ -532,9 +532,14 @@ defineExpose({
 }
 
 /* Lists */
-.editor-content .ProseMirror ul,
+.editor-content .ProseMirror ul:not([data-type='taskList']) {
+  padding-left: 1.5em;
+  list-style-type: disc;
+}
+
 .editor-content .ProseMirror ol {
   padding-left: 1.5em;
+  list-style-type: decimal;
 }
 
 .editor-content .ProseMirror li {
