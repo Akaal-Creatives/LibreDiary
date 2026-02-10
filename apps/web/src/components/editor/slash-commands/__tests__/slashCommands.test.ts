@@ -49,6 +49,37 @@ describe('SLASH_COMMANDS', () => {
     expect(groups.codeBlock).toBe('basic');
     expect(groups.divider).toBe('basic');
   });
+
+  it('has unique IDs for every command', () => {
+    const ids = SLASH_COMMANDS.map((c) => c.id);
+    const uniqueIds = new Set(ids);
+    expect(uniqueIds.size).toBe(ids.length);
+  });
+
+  it('every command has at least one keyword', () => {
+    for (const cmd of SLASH_COMMANDS) {
+      expect(cmd.keywords.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('all labelKeys follow "slashCommands." convention', () => {
+    for (const cmd of SLASH_COMMANDS) {
+      expect(cmd.labelKey).toMatch(/^slashCommands\./);
+    }
+  });
+
+  it('all descriptionKeys follow "slashCommands." convention', () => {
+    for (const cmd of SLASH_COMMANDS) {
+      expect(cmd.descriptionKey).toMatch(/^slashCommands\./);
+    }
+  });
+
+  it('only uses "basic" and "lists" as group values', () => {
+    const validGroups = new Set(['basic', 'lists']);
+    for (const cmd of SLASH_COMMANDS) {
+      expect(validGroups.has(cmd.group)).toBe(true);
+    }
+  });
 });
 
 describe('filterCommands', () => {
@@ -84,6 +115,50 @@ describe('filterCommands', () => {
   it('returns empty array when no matches', () => {
     const result = filterCommands('nonexistentcommand');
     expect(result).toHaveLength(0);
+  });
+
+  it('matches partial id (e.g. "para" matches "paragraph")', () => {
+    const result = filterCommands('para');
+    expect(result.some((c) => c.id === 'paragraph')).toBe(true);
+  });
+
+  it('matches multi-word keywords (e.g. "horizontal" matches divider via "horizontal rule")', () => {
+    const result = filterCommands('horizontal');
+    expect(result.some((c) => c.id === 'divider')).toBe(true);
+  });
+
+  it('resolved label match is case-insensitive', () => {
+    const labels: Record<string, string> = { paragraph: 'Text' };
+    const result = filterCommands('TEXT', labels);
+    expect(result.some((c) => c.id === 'paragraph')).toBe(true);
+  });
+
+  it('falls back to id/keyword match when resolved label is missing for a command', () => {
+    const labels: Record<string, string> = { paragraph: 'Text' };
+    const result = filterCommands('h1', labels);
+    expect(result.some((c) => c.id === 'heading1')).toBe(true);
+  });
+
+  it('returns all commands for whitespace-only query', () => {
+    const result = filterCommands('   ');
+    expect(result).toHaveLength(0);
+  });
+
+  it('does not duplicate results when query matches both id and keyword', () => {
+    const result = filterCommands('blockquote');
+    const blockquoteMatches = result.filter((c) => c.id === 'blockquote');
+    expect(blockquoteMatches).toHaveLength(1);
+  });
+
+  it('matches "list" keyword across both bullet and ordered list', () => {
+    const result = filterCommands('list');
+    expect(result.some((c) => c.id === 'bulletList')).toBe(true);
+    expect(result.some((c) => c.id === 'orderedList')).toBe(true);
+  });
+
+  it('returns the original SLASH_COMMANDS array reference when query is empty', () => {
+    const result = filterCommands('');
+    expect(result).toBe(SLASH_COMMANDS);
   });
 });
 
@@ -185,5 +260,22 @@ describe('command actions', () => {
     cmd.action(editor as any);
     expect(chainMethods['setHorizontalRule']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
+  });
+
+  it('every action calls focus() in the chain', () => {
+    for (const cmd of SLASH_COMMANDS) {
+      const { editor, chainMethods } = createMockEditor();
+      cmd.action(editor as any);
+      expect(chainMethods['focus']).toHaveBeenCalled();
+    }
+  });
+
+  it('every action calls chain() then run()', () => {
+    for (const cmd of SLASH_COMMANDS) {
+      const { editor, run } = createMockEditor();
+      cmd.action(editor as any);
+      expect(editor.chain).toHaveBeenCalledTimes(1);
+      expect(run).toHaveBeenCalledTimes(1);
+    }
   });
 });

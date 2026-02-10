@@ -145,4 +145,128 @@ describe('SlashCommandMenu', () => {
     const wrapper = mountMenu({ commands: [] });
     expect(wrapper.text()).toContain('No matching commands');
   });
+
+  it('does not emit select on Enter when commands is empty', async () => {
+    const wrapper = mountMenu({ commands: [] });
+    // No listbox rendered when empty, so emit nothing
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+    expect(wrapper.emitted('select')).toBeFalsy();
+  });
+
+  it('orders groups correctly: basic items appear before lists items', () => {
+    const wrapper = mountMenu();
+    const headers = wrapper.findAll('.slash-menu-group-header');
+    expect(headers[0].text()).toContain('Basic Blocks');
+    expect(headers[1].text()).toContain('Lists');
+  });
+
+  it('renders translated label text for each command', () => {
+    const wrapper = mountMenu();
+    expect(wrapper.text()).toContain('Text');
+    expect(wrapper.text()).toContain('Heading 1');
+    expect(wrapper.text()).toContain('Bullet List');
+  });
+
+  it('renders translated description text for each command', () => {
+    const wrapper = mountMenu();
+    expect(wrapper.text()).toContain('Plain text block');
+    expect(wrapper.text()).toContain('Large section heading');
+    expect(wrapper.text()).toContain('Unordered list with bullet points');
+  });
+
+  it('renders SVG icons with the command icon path data', () => {
+    const commands = createTestCommands();
+    const wrapper = mountMenu({ commands });
+    const paths = wrapper.findAll('svg path');
+    expect(paths.length).toBe(commands.length);
+    expect(paths[0].attributes('d')).toBe(commands[0].icon);
+  });
+
+  it('applies slash-menu-item--active class to the selected item', () => {
+    const wrapper = mountMenu({ selectedIndex: 1 });
+    const items = wrapper.findAll('.slash-menu-item');
+    expect(items[0].classes()).not.toContain('slash-menu-item--active');
+    expect(items[1].classes()).toContain('slash-menu-item--active');
+    expect(items[2].classes()).not.toContain('slash-menu-item--active');
+  });
+
+  it('listbox has tabindex="0" for keyboard focusability', () => {
+    const wrapper = mountMenu();
+    const listbox = wrapper.find('[role="listbox"]');
+    expect(listbox.attributes('tabindex')).toBe('0');
+  });
+
+  it('does not emit navigate or select on unrecognised keys (Tab)', async () => {
+    const wrapper = mountMenu();
+    await wrapper.find('[role="listbox"]').trigger('keydown', { key: 'Tab' });
+    expect(wrapper.emitted('navigate')).toBeFalsy();
+    expect(wrapper.emitted('select')).toBeFalsy();
+    expect(wrapper.emitted('close')).toBeFalsy();
+  });
+
+  it('does not emit navigate or select on letter key presses', async () => {
+    const wrapper = mountMenu();
+    await wrapper.find('[role="listbox"]').trigger('keydown', { key: 'a' });
+    expect(wrapper.emitted('navigate')).toBeFalsy();
+    expect(wrapper.emitted('select')).toBeFalsy();
+  });
+
+  it('only shows groups that have matching commands', () => {
+    const listsOnly: SlashCommand[] = [
+      {
+        id: 'bulletList',
+        labelKey: 'slashCommands.bulletList',
+        descriptionKey: 'slashCommands.bulletListDescription',
+        icon: 'M4 6h16',
+        group: 'lists',
+        keywords: ['ul'],
+        action: vi.fn(),
+      },
+    ];
+    const wrapper = mountMenu({ commands: listsOnly });
+    const headers = wrapper.findAll('.slash-menu-group-header');
+    expect(headers).toHaveLength(1);
+    expect(headers[0].text()).toContain('Lists');
+  });
+
+  it('hides listbox and shows empty state when no commands match', () => {
+    const wrapper = mountMenu({ commands: [] });
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+    expect(wrapper.find('.slash-menu-empty').exists()).toBe(true);
+  });
+
+  it('emits select with correct command for middle item click', async () => {
+    const commands = createTestCommands();
+    const wrapper = mountMenu({ commands });
+    const items = wrapper.findAll('[role="option"]');
+    await items[2].trigger('click');
+    expect(wrapper.emitted('select')![0]).toEqual([commands[2]]);
+  });
+
+  it('renders correct number of group headers for commands in single group', () => {
+    const basicOnly: SlashCommand[] = [
+      {
+        id: 'paragraph',
+        labelKey: 'slashCommands.paragraph',
+        descriptionKey: 'slashCommands.paragraphDescription',
+        icon: 'M4 6h16',
+        group: 'basic',
+        keywords: ['text'],
+        action: vi.fn(),
+      },
+      {
+        id: 'heading1',
+        labelKey: 'slashCommands.heading1',
+        descriptionKey: 'slashCommands.heading1Description',
+        icon: 'M4 6h16',
+        group: 'basic',
+        keywords: ['h1'],
+        action: vi.fn(),
+      },
+    ];
+    const wrapper = mountMenu({ commands: basicOnly });
+    const headers = wrapper.findAll('.slash-menu-group-header');
+    expect(headers).toHaveLength(1);
+    expect(headers[0].text()).toContain('Basic Blocks');
+  });
 });
