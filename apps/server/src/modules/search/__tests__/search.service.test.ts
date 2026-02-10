@@ -17,12 +17,27 @@ vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
 
+// Mock Meilisearch — default to unavailable so existing PG FTS tests pass unchanged
+const { mockMeiliAvailable } = vi.hoisted(() => {
+  return { mockMeiliAvailable: { value: false } };
+});
+
+vi.mock('../meilisearch.init.js', () => ({
+  isMeilisearchAvailable: () => mockMeiliAvailable.value,
+}));
+
+vi.mock('../../../lib/meilisearch.js', () => ({
+  getMeilisearchClient: () => null,
+  PAGES_INDEX: 'test_pages',
+}));
+
 // Import after mocking
 import { parseSearchQuery, searchPages } from '../search.service.js';
 
 describe('Search Service', () => {
   beforeEach(() => {
     resetMocks();
+    mockMeiliAvailable.value = false; // Default to PG FTS path
   });
 
   // ===========================================
@@ -89,7 +104,7 @@ describe('Search Service', () => {
   });
 
   // ===========================================
-  // searchPages
+  // searchPages (PG FTS path)
   // ===========================================
 
   describe('searchPages', () => {
@@ -362,6 +377,27 @@ describe('Search Service', () => {
       // Both date params should be the same value
       expect(countCall[3]).toBe('2024-06-15');
       expect(countCall[4]).toBe('2024-06-15');
+    });
+  });
+
+  // ===========================================
+  // Hybrid fallback behaviour
+  // ===========================================
+
+  describe('hybrid fallback', () => {
+    it('should use PG FTS when Meilisearch is not available', async () => {
+      mockMeiliAvailable.value = false;
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+
+      await searchPages({ query: 'test', organizationId: 'org-1' });
+
+      // PG FTS was used (at least one raw query)
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalled();
+    });
+
+    it('should return empty results for whitespace-only query', async () => {
+      const result = await searchPages({ query: '   ', organizationId: 'org-1' });
+      expect(result).toEqual({ results: [], total: 0 });
     });
   });
 });
