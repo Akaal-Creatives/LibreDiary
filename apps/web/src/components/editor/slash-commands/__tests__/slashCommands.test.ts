@@ -24,18 +24,18 @@ describe('SLASH_COMMANDS', () => {
     expect(typeof command.action).toBe('function');
   });
 
-  it('contains the expected command IDs', () => {
+  it('contains the expected command IDs in visual order (basic then lists)', () => {
     const ids = SLASH_COMMANDS.map((c) => c.id);
     expect(ids).toEqual([
       'paragraph',
       'heading1',
       'heading2',
       'heading3',
-      'bulletList',
-      'orderedList',
       'blockquote',
       'codeBlock',
       'divider',
+      'bulletList',
+      'orderedList',
     ]);
   });
 
@@ -78,6 +78,16 @@ describe('SLASH_COMMANDS', () => {
     const validGroups = new Set(['basic', 'lists']);
     for (const cmd of SLASH_COMMANDS) {
       expect(validGroups.has(cmd.group)).toBe(true);
+    }
+  });
+
+  it('is ordered so all basic commands come before all lists commands (matching visual group order)', () => {
+    const groups = SLASH_COMMANDS.map((c) => c.group);
+    const lastBasicIndex = groups.lastIndexOf('basic');
+    const firstListsIndex = groups.indexOf('lists');
+    // If there are lists items, every basic must come before every lists
+    if (firstListsIndex !== -1) {
+      expect(lastBasicIndex).toBeLessThan(firstListsIndex);
     }
   });
 });

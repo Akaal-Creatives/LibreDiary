@@ -56,28 +56,6 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
   },
   {
-    id: 'bulletList',
-    labelKey: 'slashCommands.bulletList',
-    descriptionKey: 'slashCommands.bulletListDescription',
-    icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-    group: 'lists',
-    keywords: ['ul', 'unordered', 'bullets', 'list'],
-    action: (editor) => {
-      editor.chain().focus().toggleBulletList().run();
-    },
-  },
-  {
-    id: 'orderedList',
-    labelKey: 'slashCommands.orderedList',
-    descriptionKey: 'slashCommands.orderedListDescription',
-    icon: 'M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1',
-    group: 'lists',
-    keywords: ['ol', 'numbered', 'numbers', 'list'],
-    action: (editor) => {
-      editor.chain().focus().toggleOrderedList().run();
-    },
-  },
-  {
     id: 'blockquote',
     labelKey: 'slashCommands.blockquote',
     descriptionKey: 'slashCommands.blockquoteDescription',
@@ -108,6 +86,28 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     keywords: ['hr', 'horizontal rule', 'separator', 'line'],
     action: (editor) => {
       editor.chain().focus().setHorizontalRule().run();
+    },
+  },
+  {
+    id: 'bulletList',
+    labelKey: 'slashCommands.bulletList',
+    descriptionKey: 'slashCommands.bulletListDescription',
+    icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+    group: 'lists',
+    keywords: ['ul', 'unordered', 'bullets', 'list'],
+    action: (editor) => {
+      editor.chain().focus().toggleBulletList().run();
+    },
+  },
+  {
+    id: 'orderedList',
+    labelKey: 'slashCommands.orderedList',
+    descriptionKey: 'slashCommands.orderedListDescription',
+    icon: 'M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1',
+    group: 'lists',
+    keywords: ['ol', 'numbered', 'numbers', 'list'],
+    action: (editor) => {
+      editor.chain().focus().toggleOrderedList().run();
     },
   },
 ];

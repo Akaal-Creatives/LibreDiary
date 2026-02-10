@@ -243,6 +243,17 @@ describe('SlashCommandMenu', () => {
     expect(wrapper.emitted('select')![0]).toEqual([commands[2]]);
   });
 
+  it('visual item order matches flat array index order for keyboard navigation', () => {
+    const commands = createTestCommands();
+    // The nth visual item should correspond to the nth flat index
+    // i.e. items[0] is selected when selectedIndex=0, items[1] when selectedIndex=1, etc.
+    for (let i = 0; i < commands.length; i++) {
+      const w = mountMenu({ commands, selectedIndex: i });
+      const allItems = w.findAll('[role="option"]');
+      expect(allItems[i].attributes('aria-selected')).toBe('true');
+    }
+  });
+
   it('renders correct number of group headers for commands in single group', () => {
     const basicOnly: SlashCommand[] = [
       {
