@@ -87,6 +87,11 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_BASE_URL: z.string().url().default('https://openrouter.ai/api/v1'),
   AI_DEFAULT_MODEL: z.string().default('openai/gpt-4o-mini'),
+
+  // Search - Meilisearch (optional)
+  MEILISEARCH_HOST: z.string().url().optional(),
+  MEILISEARCH_API_KEY: z.string().optional(),
+  MEILISEARCH_INDEX_PREFIX: z.string().default('librediary'),
 });
 
 export type Env = z.infer<typeof envSchema>;

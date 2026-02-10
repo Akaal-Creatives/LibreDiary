@@ -33,6 +33,7 @@ import { apiTokenRoutes } from './modules/api-tokens/index.js';
 import { webhookRoutes } from './modules/webhooks/index.js';
 import { auditRoutes } from './modules/audit/index.js';
 import { translationRoutes, writingRoutes } from './modules/ai/index.js';
+import { initMeilisearch } from './modules/search/meilisearch.init.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -185,6 +186,11 @@ export async function buildApp() {
     },
     { prefix: '/api/v1' }
   );
+
+  // Initialise Meilisearch (non-blocking; PG FTS fallback if unavailable)
+  initMeilisearch().catch((err) => {
+    console.warn('[meilisearch] Startup init error:', err);
+  });
 
   return fastify;
 }
