@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, watch, shallowRef } from 'vue';
+import { ref, onBeforeUnmount, watch, shallowRef, computed } from 'vue';
 import { Extension, Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Collaboration from '@tiptap/extension-collaboration';
+import { useI18n } from 'vue-i18n';
+import { SlashCommandExtension } from './slash-commands/SlashCommandExtension';
+import { SLASH_COMMANDS, filterCommands } from './slash-commands/slashCommands';
+import type { SlashCommand } from './slash-commands/slashCommands';
+import SlashCommandMenu from './slash-commands/SlashCommandMenu.vue';
 // Use yCursorPlugin from @tiptap/y-tiptap (same package as Collaboration) to ensure
 // the ySyncPluginKey matches. The standalone @tiptap/extension-collaboration-cursor
 // imports from y-prosemirror which creates a different PluginKey instance, causing a
@@ -110,6 +115,52 @@ const editor = shallowRef<Editor | null>(null);
 // Track if we've created a collaborative editor
 const isCollaborativeEditor = ref(false);
 
+// Slash command menu state
+const { t } = useI18n();
+const slashMenuVisible = ref(false);
+const slashMenuSelectedIndex = ref(0);
+const slashMenuCommands = ref<SlashCommand[]>([]);
+const slashMenuClientRect = ref<(() => DOMRect) | null>(null);
+let slashCommandRef: { command: (props: { action: (editor: Editor) => void }) => void } | null =
+  null;
+
+const resolvedLabels = computed(() => {
+  const labels: Record<string, string> = {};
+  for (const cmd of SLASH_COMMANDS) {
+    labels[cmd.id] = t(cmd.labelKey);
+  }
+  return labels;
+});
+
+const slashMenuPosition = computed(() => {
+  if (!slashMenuClientRect.value) return { top: '0px', left: '0px' };
+  const rect = slashMenuClientRect.value();
+  const menuHeight = 320;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+
+  // Flip above if below would overflow
+  const top = rect.bottom + menuHeight > viewportHeight ? rect.top - menuHeight : rect.bottom + 4;
+  const left = rect.left;
+
+  return {
+    position: 'fixed' as const,
+    top: `${top}px`,
+    left: `${left}px`,
+    zIndex: 400,
+  };
+});
+
+function handleSlashSelect(command: SlashCommand) {
+  if (slashCommandRef) {
+    slashCommandRef.command({ action: command.action });
+  }
+  slashMenuVisible.value = false;
+}
+
+function handleSlashNavigate(index: number) {
+  slashMenuSelectedIndex.value = index;
+}
+
 // Build extensions based on mode
 function buildExtensions(
   forCollaborative: boolean,
@@ -138,6 +189,71 @@ function buildExtensions(
       placeholder: props.placeholder,
       emptyEditorClass: 'is-editor-empty',
       emptyNodeClass: 'is-node-empty',
+    }),
+    SlashCommandExtension.configure({
+      suggestion: {
+        char: '/',
+        startOfLine: false,
+        items: ({ query }: { query: string }) => {
+          return filterCommands(query, resolvedLabels.value);
+        },
+        command: ({
+          editor: e,
+          range,
+          props: cmdProps,
+        }: {
+          editor: any;
+          range: any;
+          props: any;
+        }) => {
+          e.chain().focus().deleteRange(range).run();
+          cmdProps.action(e);
+        },
+        render: () => ({
+          onStart: (suggestionProps: any) => {
+            slashMenuCommands.value = suggestionProps.items;
+            slashMenuSelectedIndex.value = 0;
+            slashMenuClientRect.value = suggestionProps.clientRect;
+            slashCommandRef = suggestionProps;
+            slashMenuVisible.value = true;
+          },
+          onUpdate: (suggestionProps: any) => {
+            slashMenuCommands.value = suggestionProps.items;
+            slashMenuSelectedIndex.value = 0;
+            slashMenuClientRect.value = suggestionProps.clientRect;
+            slashCommandRef = suggestionProps;
+          },
+          onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+            if (event.key === 'Escape') {
+              slashMenuVisible.value = false;
+              return true;
+            }
+            if (event.key === 'ArrowDown') {
+              slashMenuSelectedIndex.value =
+                (slashMenuSelectedIndex.value + 1) % slashMenuCommands.value.length;
+              return true;
+            }
+            if (event.key === 'ArrowUp') {
+              slashMenuSelectedIndex.value =
+                (slashMenuSelectedIndex.value - 1 + slashMenuCommands.value.length) %
+                slashMenuCommands.value.length;
+              return true;
+            }
+            if (event.key === 'Enter') {
+              const cmd = slashMenuCommands.value[slashMenuSelectedIndex.value];
+              if (cmd) {
+                handleSlashSelect(cmd);
+              }
+              return true;
+            }
+            return false;
+          },
+          onExit: () => {
+            slashMenuVisible.value = false;
+            slashCommandRef = null;
+          },
+        }),
+      },
     }),
   ];
 
@@ -315,6 +431,22 @@ defineExpose({
     <div v-else class="editor-loading">
       <span>Loading editor...</span>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="slashMenuVisible && slashMenuCommands.length > 0"
+        class="slash-menu-positioner"
+        :style="slashMenuPosition"
+      >
+        <SlashCommandMenu
+          :commands="slashMenuCommands"
+          :selected-index="slashMenuSelectedIndex"
+          @select="handleSlashSelect"
+          @close="slashMenuVisible = false"
+          @navigate="handleSlashNavigate"
+        />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -556,6 +688,12 @@ defineExpose({
 .editor-content .ProseMirror s {
   text-decoration: line-through;
   opacity: 0.7;
+}
+
+/* Slash command menu positioner */
+.slash-menu-positioner {
+  position: fixed;
+  z-index: 400;
 }
 
 /* Collaboration cursor styles */

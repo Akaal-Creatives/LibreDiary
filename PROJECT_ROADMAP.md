@@ -678,10 +678,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 18.1 Slash Commands
 
-- [ ] Create slash command extension
-- [ ] Build command menu component
-- [ ] Add block type commands
-- [ ] Add keyboard navigation
+- [x] Create slash command extension
+- [x] Build command menu component
+- [x] Add block type commands
+- [x] Add keyboard navigation
 
 ### 18.2 Additional Block Types
 
