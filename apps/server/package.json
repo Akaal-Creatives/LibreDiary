@@ -21,7 +21,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:dev": "tsx prisma/seed-dev.ts",
-    "db:migrate:search": "tsx prisma/migrations/run-migrations.ts"
+    "db:migrate:search": "tsx prisma/migrations/run-migrations.ts",
+    "search:reindex": "tsx --env-file=.env src/scripts/reindex-meilisearch.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.985.0",
