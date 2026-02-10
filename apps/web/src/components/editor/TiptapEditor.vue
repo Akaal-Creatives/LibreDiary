@@ -584,6 +584,14 @@ defineExpose({
   color: inherit;
 }
 
+/* Nested blockquotes */
+.editor-content .ProseMirror blockquote blockquote {
+  margin: 0.75em 0;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border-left: 2px solid var(--color-border-strong);
+}
+
 /* Code */
 .editor-content .ProseMirror code {
   padding: 0.2em 0.4em;
@@ -617,6 +625,11 @@ defineExpose({
   margin: var(--space-8) 0;
   border: none;
   border-top: 1px solid var(--color-border);
+}
+
+.editor-content .ProseMirror hr.ProseMirror-selectednode {
+  border-top-color: var(--color-accent);
+  border-top-width: 2px;
 }
 
 /* Strong and emphasis */
