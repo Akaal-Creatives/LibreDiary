@@ -745,10 +745,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 20.4 Production Docker
 
-- [ ] Create production Dockerfile
-- [ ] Create docker-compose.production.yml
-- [ ] Add health checks
-- [ ] Document deployment process
+- [x] Create production Dockerfile
+- [x] Create docker-compose.production.yml
+- [x] Add health checks
+- [x] Document deployment process
 
 ### 20.5 Documentation
 

@@ -1,0 +1,69 @@
+# ===========================================
+# LibreDiary Docker Ignore
+# Excludes unnecessary files from Docker build context
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+# ===========================================
+
+# Dependencies (rebuilt inside container)
+node_modules
+**/node_modules
+
+# Version control
+.git
+.github
+.husky
+.gitignore
+
+# IDE and editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build caches
+.turbo
+**/.turbo
+.tmp
+
+# Build outputs (rebuilt inside container)
+dist
+**/dist
+coverage
+**/coverage
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+**/__mocks__/
+
+# Build artefacts
+**/*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Documentation and assets (not needed in build)
+assets/
+docs/
+uploads/
+backups/
+
+# Project files not needed in build
+LICENSE
+CONTRIBUTING.md
+PROJECT_ROADMAP.md
+README.md

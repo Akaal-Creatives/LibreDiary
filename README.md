@@ -102,6 +102,10 @@ pnpm db:push
 pnpm dev
 ```
 
+## Deployment
+
+For production self-hosted deployment with Docker, see the [Deployment Guide](docs/deployment.md).
+
 ## Project Structure
 
 ```
