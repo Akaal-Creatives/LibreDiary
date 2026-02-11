@@ -53,7 +53,7 @@ export async function loadLocaleMessages(locale: LocaleCode): Promise<void> {
   if (!importFn) return;
 
   const messages = await importFn();
-  i18n.global.setLocaleMessage(locale, messages.default);
+  i18n.global.setLocaleMessage(locale, messages.default as typeof enGB);
   loadedLocales.add(locale);
 }
 

@@ -33,6 +33,7 @@ import { apiTokenRoutes } from './modules/api-tokens/index.js';
 import { webhookRoutes } from './modules/webhooks/index.js';
 import { auditRoutes } from './modules/audit/index.js';
 import { translationRoutes, writingRoutes } from './modules/ai/index.js';
+import { gdprRoutes } from './modules/gdpr/index.js';
 import { initMeilisearch } from './modules/search/meilisearch.init.js';
 
 export async function buildApp() {
@@ -178,6 +179,9 @@ export async function buildApp() {
       await api.register(writingRoutes, {
         prefix: '/organizations/:orgId/ai/write',
       });
+
+      // GDPR routes (user-specific)
+      await api.register(gdprRoutes, { prefix: '/gdpr' });
 
       // Admin routes (super admin only)
       await api.register(adminRoutes, { prefix: '/admin' });

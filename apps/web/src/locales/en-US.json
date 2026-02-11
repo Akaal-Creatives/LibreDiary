@@ -77,5 +77,11 @@
   "language": {
     "enGB": "English (UK)",
     "enUS": "English (US)"
+  },
+  "gdpr": {
+    "deleteAccountDescription": "Once you request deletion, your account will enter a 30-day grace period. After that, your personal data will be permanently removed and your content will be anonymized.",
+    "deleteAccountWarning": "This action cannot be undone after the 30-day grace period. Your pages and comments will be anonymized (attributed to \"Deleted User\") but not removed from shared organizations.",
+    "cancelDeletionSuccess": "Account deletion has been canceled",
+    "soleOwnerError": "You are the sole owner of one or more organizations. Please transfer ownership before deleting your account."
   }
 }

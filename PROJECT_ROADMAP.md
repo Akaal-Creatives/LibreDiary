@@ -705,17 +705,17 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 19.1 GDPR - Data Export
 
-- [ ] Create user data export endpoint
-- [ ] Export user's pages, comments, files
-- [ ] Generate downloadable archive
-- [ ] Create data export UI
+- [x] Create user data export endpoint
+- [x] Export user's pages, comments, files
+- [x] Generate downloadable archive
+- [x] Create data export UI
 
 ### 19.2 GDPR - Account Deletion
 
-- [ ] Create account deletion endpoint
-- [ ] Implement cascading deletes
-- [ ] Add deletion confirmation flow
-- [ ] Remove from all organizations
+- [x] Create account deletion endpoint
+- [x] Implement cascading deletes (anonymise shared content)
+- [x] Add deletion confirmation flow
+- [x] Remove from all organisations (30-day grace period)
 
 ---
 

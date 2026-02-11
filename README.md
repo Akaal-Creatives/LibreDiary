@@ -76,7 +76,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 ### Compliance & Polish
 
 - [ ] **Phase 18: Editor Enhancements** — Slash commands, additional blocks, drag & drop
-- [ ] **Phase 19: GDPR Compliance** — Data export, account deletion
+- [x] **Phase 19: GDPR Compliance** — Data export, account deletion with 30-day grace period
 - [ ] **Phase 20: Production Ready** — Performance, accessibility, Docker deployment
 
 ## Quick Start

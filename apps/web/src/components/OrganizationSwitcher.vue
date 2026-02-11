@@ -42,6 +42,11 @@ function navigateToMembers() {
   router.push({ name: 'organization-members' });
 }
 
+function navigateToDataPrivacy() {
+  closeDropdown();
+  router.push({ name: 'user-data-privacy' });
+}
+
 function createNewOrganization() {
   closeDropdown();
   router.push({ name: 'create-organization' });
@@ -176,6 +181,24 @@ const currentRole = computed(() => authStore.currentUserRole);
                   />
                 </svg>
                 <span>Members</span>
+              </button>
+              <button class="dropdown-item" @click="navigateToDataPrivacy">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1.5L3 4V7.5C3 10.82 5.13 13.91 8 14.75C10.87 13.91 13 10.82 13 7.5V4L8 1.5Z"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M6 8L7.5 9.5L10 6.5"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>{{ $t('gdpr.title') }}</span>
               </button>
             </div>
           </div>

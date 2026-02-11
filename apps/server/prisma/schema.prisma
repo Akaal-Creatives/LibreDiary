@@ -35,7 +35,8 @@ model User {
   // Timestamps
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // Soft delete
+  deletedAt           DateTime? // Soft delete
+  deletionRequestedAt DateTime? // GDPR: when account deletion was requested
 
   // Relations
   memberships        OrganizationMember[]
@@ -59,6 +60,7 @@ model User {
   triggeredBackups   Backup[]             @relation("BackupTriggeredBy")
   apiTokens          ApiToken[]
   createdWebhooks    Webhook[]            @relation("WebhookCreatedBy")
+  dataExports        DataExport[]
 
   @@index([email])
   @@index([deletedAt])
@@ -776,6 +778,46 @@ model WebhookDelivery {
 }
 
 // ============================================
+// GDPR DATA EXPORTS
+// ============================================
+
+enum DataExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+model DataExport {
+  id           String           @id @default(cuid())
+  userId       String
+  status       DataExportStatus @default(PENDING)
+
+  // File metadata
+  fileName     String?
+  fileSize     Int?
+  storagePath  String?
+
+  // Error tracking
+  errorMessage String?
+
+  // Timing
+  requestedAt  DateTime         @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  expiresAt    DateTime?        // When the download link expires
+  downloadedAt DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// ============================================
 // AUDIT LOGGING
 // ============================================
 
@@ -845,6 +887,13 @@ enum AuditAction {
   TEMPLATE_DELETED
   AI_TRANSLATION
   AI_WRITING
+
+  // GDPR
+  GDPR_DATA_EXPORT_REQUESTED
+  GDPR_DATA_EXPORT_DOWNLOADED
+  GDPR_ACCOUNT_DELETION_REQUESTED
+  GDPR_ACCOUNT_DELETION_CANCELLED
+  GDPR_ACCOUNT_DELETED
 }
 
 // No foreign keys — audit logs must persist as immutable records even after entity deletion

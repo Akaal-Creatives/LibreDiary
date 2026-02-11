@@ -1,6 +1,7 @@
 import { env } from './config/index.js';
 import { buildApp } from './app.js';
 import { startBackupScheduler, stopBackupScheduler } from './modules/backups/index.js';
+import { startGdprScheduler, stopGdprScheduler } from './modules/gdpr/index.js';
 
 async function main() {
   const app = await buildApp();
@@ -16,8 +17,9 @@ async function main() {
     app.log.info(`Developer info: http://${env.HOST}:${env.PORT}/dev`);
     app.log.info(`API: http://${env.HOST}:${env.PORT}/api/v1`);
 
-    // Start backup scheduler
+    // Start schedulers
     startBackupScheduler();
+    startGdprScheduler();
   } catch (error) {
     app.log.error(error);
     process.exit(1);
@@ -32,6 +34,7 @@ async function main() {
 
       try {
         stopBackupScheduler();
+        stopGdprScheduler();
         await app.close();
         app.log.info('Server closed');
         process.exit(0);

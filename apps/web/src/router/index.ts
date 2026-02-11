@@ -129,6 +129,11 @@ const routes: RouteRecordRaw[] = [
         name: 'api-tokens',
         component: () => import('@/pages/app/settings/ApiTokensPage.vue'),
       },
+      {
+        path: 'settings/data',
+        name: 'user-data-privacy',
+        component: () => import('@/pages/app/settings/DataPrivacyPage.vue'),
+      },
       // Create Organization
       {
         path: 'create-organization',

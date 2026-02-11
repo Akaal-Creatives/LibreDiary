@@ -598,5 +598,33 @@
   "publicPage": {
     "poweredBy": "Powered by LibreDiary",
     "sharedVia": "Shared via LibreDiary"
+  },
+  "gdpr": {
+    "title": "Data & Privacy",
+    "description": "Manage your personal data and account",
+    "exportData": "Export your data",
+    "exportDataDescription": "Download a copy of all your personal data in a ZIP archive, including your profile, pages, comments, databases, and uploaded files.",
+    "requestExport": "Request export",
+    "exportRequested": "Export requested",
+    "exportProcessing": "Processing...",
+    "exportReady": "Ready to download",
+    "exportFailed": "Export failed",
+    "exportExpired": "Expired",
+    "download": "Download",
+    "noExports": "No exports yet",
+    "recentExports": "Recent exports",
+    "deleteAccount": "Delete account",
+    "deleteAccountTitle": "Delete your account",
+    "deleteAccountDescription": "Once you request deletion, your account will enter a 30-day grace period. After that, your personal data will be permanently removed and your content will be anonymised.",
+    "deleteAccountWarning": "This action cannot be undone after the 30-day grace period. Your pages and comments will be anonymised (attributed to \"Deleted User\") but not removed from shared organisations.",
+    "deleteAccountConfirmation": "Type DELETE MY ACCOUNT to confirm",
+    "deleteAccountButton": "Delete my account",
+    "deletionPending": "Account deletion pending",
+    "deletionScheduled": "Your account is scheduled for permanent deletion on {date}.",
+    "daysRemaining": "{count} day remaining | {count} days remaining",
+    "cancelDeletion": "Cancel deletion",
+    "cancelDeletionSuccess": "Account deletion has been cancelled",
+    "soleOwnerError": "You are the sole owner of one or more organisations. Please transfer ownership before deleting your account.",
+    "exportLimitError": "You have too many pending exports. Please wait for them to complete."
   }
 }
