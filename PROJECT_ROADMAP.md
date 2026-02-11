@@ -685,18 +685,18 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 18.2 Additional Block Types
 
-- [ ] Add Code block with syntax highlighting
-- [ ] Add Quote block
-- [ ] Add Callout/Alert block
-- [ ] Add Divider block
-- [ ] Add Table of Contents block
-- [ ] Add Toggle/Collapsible block
+- [x] Add Code block with syntax highlighting
+- [x] Add Quote block
+- [x] Add Callout/Alert block
+- [x] Add Divider block
+- [x] Add Table of Contents block
+- [x] Add Toggle/Collapsible block
 
 ### 18.3 Drag & Drop
 
-- [ ] Implement block drag handles
-- [ ] Add drop indicators
-- [ ] Reorder blocks via drag
+- [x] Implement block drag handles
+- [x] Add drop indicators
+- [x] Reorder blocks via drag
 - [ ] Move blocks between pages (optional)
 
 ---
