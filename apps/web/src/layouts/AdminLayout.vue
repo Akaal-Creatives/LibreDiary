@@ -4,12 +4,14 @@ import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores';
 import { useTheme } from '@/composables';
+import { useSidebar } from '@/composables/useSidebar';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
+const sidebar = useSidebar();
 
 interface NavItem {
   name: string;
@@ -50,8 +52,23 @@ async function handleLogout() {
 
 <template>
   <div class="admin-layout">
+    <!-- Sidebar backdrop (mobile/tablet overlay) -->
+    <Transition name="backdrop-fade">
+      <div
+        v-if="sidebar.isOverlay.value && sidebar.isOpen.value"
+        class="sidebar-backdrop"
+        @click="sidebar.close()"
+      />
+    </Transition>
+
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
+    <aside
+      class="admin-sidebar"
+      :class="{
+        'is-overlay': sidebar.isOverlay.value,
+        'is-open': sidebar.isOpen.value,
+      }"
+    >
       <!-- Sidebar Header -->
       <div class="sidebar-header">
         <div class="admin-brand">
@@ -325,6 +342,24 @@ async function handleLogout() {
       <!-- Header -->
       <header class="admin-header">
         <div class="header-left">
+          <!-- Hamburger (mobile/tablet) -->
+          <button
+            v-if="sidebar.isOverlay.value"
+            class="hamburger-btn"
+            type="button"
+            :aria-label="t('responsive.openMenu')"
+            @click="sidebar.toggle()"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3 5H17M3 10H17M3 15H17"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+
           <!-- Breadcrumbs -->
           <nav class="breadcrumbs" aria-label="Breadcrumb">
             <ol class="breadcrumb-list">
@@ -452,6 +487,46 @@ async function handleLogout() {
   height: 100%;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
+  transition: transform var(--transition-slow);
+}
+
+.admin-sidebar.is-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: calc(var(--z-modal) + 1);
+  transform: translateX(-100%);
+}
+
+.admin-sidebar.is-overlay.is-open {
+  transform: translateX(0);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
 }
 
 .sidebar-header {
@@ -762,5 +837,23 @@ async function handleLogout() {
 .admin-content::-webkit-scrollbar-thumb:hover,
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-strong);
+}
+
+/* Responsive padding */
+@media (max-width: 767px) {
+  .admin-content {
+    padding: var(--space-4);
+  }
+}
+
+/* Backdrop transition */
+.backdrop-fade-enter-active,
+.backdrop-fade-leave-active {
+  transition: opacity var(--transition-slow);
+}
+
+.backdrop-fade-enter-from,
+.backdrop-fade-leave-to {
+  opacity: 0;
 }
 </style>

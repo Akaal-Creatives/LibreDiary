@@ -119,6 +119,12 @@ vi.mock('@/components/CommentsPanel.vue', () => ({
     emits: ['close', 'commentCountChange'],
   },
 }));
+vi.mock('@/components/skeletons/EditorSkeleton.vue', () => ({
+  default: {
+    name: 'EditorSkeleton',
+    template: '<div class="stub-editor-skeleton" />',
+  },
+}));
 
 import PageView from '../PageView.vue';
 
@@ -181,13 +187,12 @@ describe('PageView', () => {
     expect(wrapper.find('.page-loading').exists()).toBe(true);
   });
 
-  it('shows loading spinner with correct text', () => {
+  it('shows skeleton loader when loading', () => {
     mockPagesStore.fetchPage.mockReturnValue(new Promise(() => {}));
 
     const wrapper = mountPage();
 
-    expect(wrapper.find('.loading-spinner').exists()).toBe(true);
-    expect(wrapper.find('.loading-text').text()).toBe('Loading...');
+    expect(wrapper.find('.stub-editor-skeleton').exists()).toBe(true);
   });
 
   // ---- Error State ----

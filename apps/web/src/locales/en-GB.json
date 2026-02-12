@@ -599,6 +599,48 @@
     "poweredBy": "Powered by LibreDiary",
     "sharedVia": "Shared via LibreDiary"
   },
+  "skeleton": {
+    "loading": "Loading content..."
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "search": "Search",
+    "searchDescription": "Toggle search modal",
+    "newPage": "New Page",
+    "newPageDescription": "Create a new page",
+    "save": "Save",
+    "saveDescription": "Prevent browser save dialogue",
+    "toggleSidebar": "Toggle Sidebar",
+    "toggleSidebarDescription": "Show or hide the sidebar",
+    "help": "Shortcuts Help",
+    "helpDescription": "Show this shortcuts reference",
+    "categoryNavigation": "Navigation",
+    "categoryEditor": "Editor",
+    "categoryGeneral": "General",
+    "close": "Close"
+  },
+  "responsive": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "tour": {
+    "title": "Welcome to LibreDiary",
+    "skip": "Skip tour",
+    "next": "Next",
+    "previous": "Back",
+    "finish": "Get started",
+    "stepIndicator": "{current} of {total}",
+    "sidebarTitle": "Sidebar Navigation",
+    "sidebarDescription": "Browse your pages, databases, and favourites from the sidebar. Everything is organised in a tree structure.",
+    "createPageTitle": "Create a Page",
+    "createPageDescription": "Click here to create a new page. You can also use the keyboard shortcut to quickly add pages.",
+    "searchTitle": "Quick Search",
+    "searchDescription": "Find any page instantly using the search. Press the shortcut key to open it from anywhere.",
+    "editorTitle": "The Editor",
+    "editorDescription": "Write freely with our block editor. Use '/' commands for headings, lists, code blocks, and more.",
+    "settingsTitle": "Your Settings",
+    "settingsDescription": "Manage your profile, theme preferences, and workspace settings from the footer area."
+  },
   "gdpr": {
     "title": "Data & Privacy",
     "description": "Manage your personal data and account",

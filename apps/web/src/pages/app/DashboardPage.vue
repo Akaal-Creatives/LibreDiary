@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore, usePagesStore, useTemplatesStore } from '@/stores';
 import { useDialog, useToast } from '@/composables';
+import { useOnboardingTour } from '@/composables/useOnboardingTour';
 import type { Template } from '@librediary/shared';
 import TemplateLibrary from '@/components/TemplateLibrary.vue';
 
@@ -15,8 +16,19 @@ const templatesStore = useTemplatesStore();
 const { alert } = useDialog();
 const toast = useToast();
 
+const tour = useOnboardingTour();
+
 const creating = ref(false);
 const showTemplateLibrary = ref(false);
+
+// Auto-start tour for first-time users
+onMounted(() => {
+  setTimeout(() => {
+    if (!tour.hasCompleted.value && !tour.isActive.value) {
+      tour.start();
+    }
+  }, 1000);
+});
 
 function navigateToPage(pageId: string) {
   router.push({ name: 'page', params: { pageId } });

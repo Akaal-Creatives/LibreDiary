@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore, usePagesStore, useDatabasesStore } from '@/stores';
 import { useTheme, useToast } from '@/composables';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useSidebar } from '@/composables/useSidebar';
 import type { PageWithChildren, Page } from '@librediary/shared';
 import OrganizationSwitcher from './OrganizationSwitcher.vue';
 import PageTreeItem from './PageTreeItem.vue';
@@ -13,14 +15,34 @@ import FavoritesSection from './FavoritesSection.vue';
 import NotificationBell from './NotificationBell.vue';
 import LanguageSwitcher from './LanguageSwitcher.vue';
 import SearchModal from './SearchModal.vue';
+import SidebarSkeleton from './skeletons/SidebarSkeleton.vue';
+
+const emit = defineEmits<{
+  (e: 'close'): void;
+}>();
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
 const databasesStore = useDatabasesStore();
 const { theme, toggleTheme } = useTheme();
 const toast = useToast();
 const { t } = useI18n();
+
+const { register: registerShortcut } = useKeyboardShortcuts();
+const sidebar = useSidebar();
+
+// Auto-close sidebar on navigation when in overlay mode
+watch(
+  () => route.fullPath,
+  () => {
+    if (sidebar.isOverlay.value && sidebar.isOpen.value) {
+      sidebar.close();
+      emit('close');
+    }
+  }
+);
 
 const showSearchModal = ref(false);
 const saveTemplateModal = ref<{ open: boolean; pageId: string; pageTitle: string }>({
@@ -42,19 +64,29 @@ function handleSearchNavigate(pageId: string) {
   router.push({ name: 'page', params: { pageId } });
 }
 
-function handleGlobalKeydown(event: KeyboardEvent) {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-    event.preventDefault();
+// Register keyboard shortcuts via composable
+registerShortcut({
+  id: 'search',
+  keys: 'mod+k',
+  label: 'shortcuts.search',
+  description: 'shortcuts.searchDescription',
+  handler: () => {
     showSearchModal.value = !showSearchModal.value;
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', handleGlobalKeydown);
+  },
+  global: true,
+  category: 'navigation',
 });
 
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleGlobalKeydown);
+registerShortcut({
+  id: 'new-page',
+  keys: 'mod+n',
+  label: 'shortcuts.newPage',
+  description: 'shortcuts.newPageDescription',
+  handler: () => {
+    createNewPage();
+  },
+  global: false,
+  category: 'navigation',
 });
 const contextMenu = ref<{
   show: boolean;
@@ -305,9 +337,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         </div>
 
         <!-- Loading State -->
-        <div v-if="pagesStore.loading" class="loading-state">
-          <div class="spinner" />
-        </div>
+        <SidebarSkeleton v-if="pagesStore.loading" />
 
         <!-- Empty State -->
         <div v-else-if="pagesStore.rootPages.length === 0" class="empty-state">
@@ -747,27 +777,6 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.loading-state {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-4);
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .empty-state {

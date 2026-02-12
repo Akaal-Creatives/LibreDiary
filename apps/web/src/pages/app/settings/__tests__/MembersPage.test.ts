@@ -63,6 +63,13 @@ vi.mock('@/components/InviteMemberModal.vue', () => ({
   },
 }));
 
+vi.mock('@/components/skeletons/SettingsListSkeleton.vue', () => ({
+  default: {
+    name: 'SettingsListSkeleton',
+    template: '<div class="stub-settings-skeleton" />',
+  },
+}));
+
 import MembersPage from '../MembersPage.vue';
 
 function mountPage() {
@@ -144,15 +151,14 @@ describe('MembersPage', () => {
       );
       const wrapper = mountPage();
 
-      expect(wrapper.find('.loading-state').exists()).toBe(true);
-      expect(wrapper.text()).toContain('Loading members...');
+      expect(wrapper.find('.stub-settings-skeleton').exists()).toBe(true);
     });
 
     it('hides loading state after data loads', async () => {
       const wrapper = mountPage();
       await flushPromises();
 
-      expect(wrapper.find('.loading-state').exists()).toBe(false);
+      expect(wrapper.find('.stub-settings-skeleton').exists()).toBe(false);
     });
   });
 

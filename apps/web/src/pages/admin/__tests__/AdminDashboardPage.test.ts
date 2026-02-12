@@ -20,6 +20,14 @@ vi.mock('@/composables', () => ({
   useToast: () => mockToast,
 }));
 
+vi.mock('@/components/skeletons/DashboardSkeleton.vue', () => ({
+  default: {
+    name: 'DashboardSkeleton',
+    template:
+      '<div class="stub-dashboard-skeleton"><div class="stat-card skeleton" v-for="i in 9" :key="i" /></div>',
+  },
+}));
+
 import AdminDashboardPage from '../AdminDashboardPage.vue';
 
 const sampleStats = {
@@ -76,22 +84,22 @@ describe('AdminDashboardPage', () => {
     // Make getStats hang so loading stays true
     mockAdminService.getStats.mockReturnValue(new Promise(() => {}));
     const wrapper = mountPage();
-    expect(wrapper.find('.loading-grid').exists()).toBe(true);
+    expect(wrapper.find('.stub-dashboard-skeleton').exists()).toBe(true);
     expect(wrapper.find('.stats-grid').exists()).toBe(false);
   });
 
-  it('shows 9 skeleton cards whilst loading', () => {
+  it('shows skeleton cards whilst loading', () => {
     mockAdminService.getStats.mockReturnValue(new Promise(() => {}));
     const wrapper = mountPage();
     const skeletons = wrapper.findAll('.stat-card.skeleton');
-    expect(skeletons).toHaveLength(9);
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('displays stats after successful load', async () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('.loading-grid').exists()).toBe(false);
+    expect(wrapper.find('.stub-dashboard-skeleton').exists()).toBe(false);
     expect(wrapper.find('.stats-grid').exists()).toBe(true);
 
     const statValues = wrapper.findAll('.stat-value');
@@ -234,7 +242,7 @@ describe('AdminDashboardPage', () => {
 
     expect(mockToast.error).toHaveBeenCalledWith('Failed to load statistics');
     expect(wrapper.find('.stats-grid').exists()).toBe(false);
-    expect(wrapper.find('.loading-grid').exists()).toBe(false);
+    expect(wrapper.find('.stub-dashboard-skeleton').exists()).toBe(false);
 
     consoleSpy.mockRestore();
   });

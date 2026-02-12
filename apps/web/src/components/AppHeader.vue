@@ -1,13 +1,34 @@
 <script setup lang="ts">
 import { usePagesStore, useSyncStore } from '@/stores';
+import { useSidebar } from '@/composables/useSidebar';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
+const sidebar = useSidebar();
 </script>
 
 <template>
   <header class="header">
     <div class="header-left">
+      <!-- Hamburger Menu (mobile/tablet) -->
+      <button
+        v-if="sidebar.isOverlay.value"
+        class="hamburger-btn"
+        type="button"
+        :title="$t('responsive.openMenu')"
+        :aria-label="$t('responsive.openMenu')"
+        @click="sidebar.toggle()"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path
+            d="M3 5H17M3 10H17M3 15H17"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+
       <!-- Breadcrumbs -->
       <nav v-if="pagesStore.currentPage" class="breadcrumbs">
         <span class="breadcrumb-icon">{{ pagesStore.currentPage.icon ?? '📄' }}</span>
@@ -194,8 +215,29 @@ const syncStore = useSyncStore();
 
 .header-left {
   display: flex;
+  gap: var(--space-2);
   align-items: center;
   min-width: 0;
+}
+
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
 }
 
 .breadcrumbs {

@@ -71,13 +71,13 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - [x] **Phase 14: API & Webhooks** — API tokens, Bearer auth, rate limiting, webhook delivery with HMAC signatures and retries
 - [x] **Phase 15: Admin Features** — Audit logging, system settings, admin dashboard
 - [x] **Phase 16: AI Features** — OpenRouter integration, content translation (31 languages), AI note writing, per-org and system-wide AI toggle
-- [ ] **Phase 17: Internationalization** — Multi-language UI support
+- [x] **Phase 17: Internationalization** — Multi-language UI support, vue-i18n, language switcher
 
 ### Compliance & Polish
 
-- [ ] **Phase 18: Editor Enhancements** — Slash commands, additional blocks, drag & drop
+- [x] **Phase 18: Editor Enhancements** — Slash commands, code blocks, callouts, toggles, drag & drop
 - [x] **Phase 19: GDPR Compliance** — Data export, account deletion with 30-day grace period
-- [ ] **Phase 20: Production Ready** — Performance, accessibility, Docker deployment
+- [ ] **Phase 20: Production Ready** — UI/UX polish (done), performance, accessibility, Docker deployment
 
 ## Quick Start
 

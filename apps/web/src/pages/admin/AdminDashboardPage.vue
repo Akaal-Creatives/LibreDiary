@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useToast } from '@/composables';
 import { adminService } from '@/services';
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton.vue';
 
 interface Stats {
   users: {
@@ -104,15 +105,7 @@ function formatUptime(seconds: number): string {
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading-grid">
-      <div v-for="i in 9" :key="i" class="stat-card skeleton">
-        <div class="skeleton-icon"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-value"></div>
-          <div class="skeleton-label"></div>
-        </div>
-      </div>
-    </div>
+    <DashboardSkeleton v-if="loading" />
 
     <!-- Stats Grid -->
     <div v-else-if="stats" class="stats-grid">
@@ -571,8 +564,7 @@ function formatUptime(seconds: number): string {
 }
 
 /* Stats Grid */
-.stats-grid,
-.loading-grid {
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-4);
@@ -696,42 +688,6 @@ function formatUptime(seconds: number): string {
 .badge-label {
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
-}
-
-/* Skeleton Loading */
-.stat-card.skeleton {
-  background: var(--color-surface);
-}
-
-.skeleton-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--color-surface-sunken);
-  border-radius: var(--radius-lg);
-  animation: pulse-subtle 1.5s ease-in-out infinite;
-}
-
-.skeleton-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.skeleton-value {
-  width: 60px;
-  height: 28px;
-  background: var(--color-surface-sunken);
-  border-radius: var(--radius-sm);
-  animation: pulse-subtle 1.5s ease-in-out infinite;
-}
-
-.skeleton-label {
-  width: 100px;
-  height: 16px;
-  background: var(--color-surface-sunken);
-  border-radius: var(--radius-sm);
-  animation: pulse-subtle 1.5s ease-in-out infinite;
 }
 
 /* Section */

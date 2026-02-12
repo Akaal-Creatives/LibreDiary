@@ -15,6 +15,9 @@ export {
   type CollaborationUser,
   type UseCollaborationOptions,
 } from './useCollaboration';
+export { useKeyboardShortcuts, type KeyboardShortcut } from './useKeyboardShortcuts';
+export { useSidebar } from './useSidebar';
+export { useOnboardingTour } from './useOnboardingTour';
 
 // Re-export design tokens for convenience
 export * from '@/styles/design-tokens';

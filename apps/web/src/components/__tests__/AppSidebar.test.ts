@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth';
 const mockPush = vi.fn();
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useRoute: () => ({ fullPath: '/', params: {} }),
 }));
 
 // Mock child components as stubs
@@ -45,6 +46,29 @@ vi.mock('@/composables', () => ({
   useLocale: () => ({ currentLocale: ref('en-GB'), setLocale: vi.fn() }),
   useTheme: () => ({ theme: ref('light'), toggleTheme: vi.fn() }),
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+}));
+vi.mock('@/composables/useKeyboardShortcuts', () => ({
+  useKeyboardShortcuts: () => ({
+    shortcuts: ref([]),
+    register: vi.fn(),
+    unregister: vi.fn(),
+    isHelpVisible: ref(false),
+    toggleHelp: vi.fn(),
+    modifierSymbol: ref('Ctrl'),
+  }),
+}));
+vi.mock('@/composables/useSidebar', () => ({
+  useSidebar: () => ({
+    isOpen: ref(true),
+    isOverlay: ref(false),
+    isMobile: ref(false),
+    toggle: vi.fn(),
+    open: vi.fn(),
+    close: vi.fn(),
+  }),
+}));
+vi.mock('../skeletons/SidebarSkeleton.vue', () => ({
+  default: { template: '<div class="sidebar-skeleton-stub" />' },
 }));
 
 // Mock services used by the stores

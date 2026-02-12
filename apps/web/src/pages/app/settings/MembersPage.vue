@@ -6,6 +6,7 @@ import { ApiError } from '@/services';
 import type { OrgRole } from '@librediary/shared';
 import MemberRoleBadge from '@/components/MemberRoleBadge.vue';
 import InviteMemberModal from '@/components/InviteMemberModal.vue';
+import SettingsListSkeleton from '@/components/skeletons/SettingsListSkeleton.vue';
 
 const authStore = useAuthStore();
 const orgsStore = useOrganizationsStore();
@@ -238,10 +239,7 @@ function isExpiringSoon(expiresAt: string): boolean {
       {{ error }}
     </div>
 
-    <div v-if="loading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>{{ $t('settings.loadingMembers') }}</p>
-    </div>
+    <SettingsListSkeleton v-if="loading" />
 
     <template v-else>
       <!-- Pending Invites Section -->
@@ -617,30 +615,6 @@ function isExpiringSoon(expiresAt: string): boolean {
 .alert-error {
   color: var(--color-error);
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-16) 0;
-  color: var(--color-text-tertiary);
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Section Styles */

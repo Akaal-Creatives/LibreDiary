@@ -723,11 +723,11 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 20.1 UI/UX Polish
 
-- [ ] Implement dark/light mode toggle
-- [ ] Add loading skeletons
-- [ ] Add keyboard shortcuts
-- [ ] Improve mobile responsiveness
-- [ ] Add onboarding tour
+- [x] Implement dark/light mode toggle
+- [x] Add loading skeletons
+- [x] Add keyboard shortcuts
+- [x] Improve mobile responsiveness
+- [x] Add onboarding tour
 
 ### 20.2 Performance
 

@@ -9,6 +9,7 @@ import ShareModal from '@/components/ShareModal.vue';
 import VersionHistoryModal from '@/components/VersionHistoryModal.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
 import CommentsPanel from '@/components/CommentsPanel.vue';
+import EditorSkeleton from '@/components/skeletons/EditorSkeleton.vue';
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
@@ -109,7 +110,6 @@ function insertInitialContentIfEmpty() {
 const {
   isConnected,
   isSynced,
-  isConnecting,
   connectionError,
   connectedUsers,
   ydoc,
@@ -387,10 +387,7 @@ function formatDate(dateString: string): string {
 
     <!-- Loading State -->
     <div v-if="loading" class="page-loading">
-      <div class="loading-spinner"></div>
-      <span class="loading-text">
-        {{ isConnecting ? 'Connecting...' : 'Loading...' }}
-      </span>
+      <EditorSkeleton />
     </div>
 
     <!-- Error State -->
@@ -556,32 +553,7 @@ function formatDate(dateString: string): string {
 
 /* Loading State */
 .page-loading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-20);
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  font-size: var(--text-sm);
-  color: var(--color-text-tertiary);
+  padding: var(--space-4);
 }
 
 /* Error State */
