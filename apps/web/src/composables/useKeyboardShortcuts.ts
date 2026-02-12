@@ -52,6 +52,13 @@ function isInputElement(target: EventTarget | null): boolean {
 let listenerAttached = false;
 
 function handleKeydown(event: KeyboardEvent) {
+  // Close help modal on Escape regardless of focus
+  if (event.key === 'Escape' && isHelpVisible.value) {
+    event.preventDefault();
+    isHelpVisible.value = false;
+    return;
+  }
+
   const inInput = isInputElement(event.target);
 
   for (const shortcut of shortcuts.value) {

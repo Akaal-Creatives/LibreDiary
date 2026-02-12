@@ -261,6 +261,52 @@ describe('useKeyboardShortcuts', () => {
       result.toggleHelp();
       expect(result.isHelpVisible.value).toBe(false);
     });
+
+    it('should close help modal when Escape is pressed', async () => {
+      const { result, unmount } = withSetup(() => useKeyboardShortcuts());
+      cleanup.push(unmount);
+      await nextTick();
+
+      result.isHelpVisible.value = true;
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+
+      expect(result.isHelpVisible.value).toBe(false);
+    });
+
+    it('should not close help modal on Escape when modal is not visible', async () => {
+      const { result, unmount } = withSetup(() => useKeyboardShortcuts());
+      cleanup.push(unmount);
+      await nextTick();
+
+      const handler = vi.fn();
+      result.register({
+        id: 'esc-pass',
+        keys: 'mod+k',
+        label: 'Test',
+        description: 'Test',
+        handler,
+        global: true,
+        category: 'general',
+      });
+
+      result.isHelpVisible.value = false;
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+
+      // Modal stays closed, event passes through
+      expect(result.isHelpVisible.value).toBe(false);
+
+      result.unregister('esc-pass');
+    });
   });
 
   describe('modifierSymbol', () => {
