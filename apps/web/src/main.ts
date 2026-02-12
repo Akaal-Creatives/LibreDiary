@@ -2,11 +2,15 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { createVuestic, createIconsConfig } from 'vuestic-ui';
 import 'vuestic-ui/css';
+import { registerSW } from 'virtual:pwa-register';
 
 import App from './App.vue';
 import router from './router';
 import { i18n } from './i18n';
 import './assets/main.css';
+
+// Register service worker for offline support
+registerSW({ immediate: true });
 
 const app = createApp(App);
 

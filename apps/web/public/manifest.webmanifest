@@ -1,0 +1,27 @@
+{
+  "name": "LibreDiary",
+  "short_name": "LibreDiary",
+  "description": "Open-source knowledge management and note-taking platform",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#6B8F71",
+  "background_color": "#F6F8F6",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

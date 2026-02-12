@@ -4,6 +4,7 @@ import AppSidebar from '@/components/AppSidebar.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal.vue';
 import OnboardingTour from '@/components/OnboardingTour.vue';
+import OfflineIndicator from '@/components/OfflineIndicator.vue';
 import { useTheme } from '@/composables';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { useSidebar } from '@/composables/useSidebar';
@@ -75,6 +76,7 @@ function handleBackdropClick() {
 
 <template>
   <div class="app-layout">
+    <OfflineIndicator />
     <!-- Sidebar backdrop (mobile/tablet overlay) -->
     <Transition name="backdrop-fade">
       <div
