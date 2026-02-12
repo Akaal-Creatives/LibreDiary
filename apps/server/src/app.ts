@@ -24,7 +24,7 @@ import { notificationsRoutes } from './modules/notifications/index.js';
 import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
-import { searchRoutes } from './modules/search/index.js';
+import { searchRoutes, searchAdminRoutes } from './modules/search/index.js';
 import { databasesRoutes } from './modules/databases/index.js';
 import { templatesRoutes } from './modules/templates/index.js';
 import { filesRoutes } from './modules/files/index.js';
@@ -187,6 +187,7 @@ export async function buildApp() {
       await api.register(adminRoutes, { prefix: '/admin' });
       await api.register(adminBackupRoutes, { prefix: '/admin/backups' });
       await api.register(auditRoutes, { prefix: '/admin/audit-logs' });
+      await api.register(searchAdminRoutes, { prefix: '/admin/search' });
     },
     { prefix: '/api/v1' }
   );
