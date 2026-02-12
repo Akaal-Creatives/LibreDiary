@@ -110,7 +110,7 @@ watch(
             'slash-menu-item',
             { 'slash-menu-item--active': flatIndex(command) === selectedIndex },
           ]"
-          @click="handleClick(command)"
+          @mousedown.prevent="handleClick(command)"
         >
           <div class="slash-menu-item-icon">
             <svg

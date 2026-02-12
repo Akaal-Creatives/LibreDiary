@@ -112,11 +112,11 @@ describe('SlashCommandMenu', () => {
     expect(wrapper.emitted('navigate')![0]).toEqual([commands.length - 1]);
   });
 
-  it('emits select on item click', async () => {
+  it('emits select on item mousedown', async () => {
     const commands = createTestCommands();
     const wrapper = mountMenu({ commands });
     const items = wrapper.findAll('[role="option"]');
-    await items[1].trigger('click');
+    await items[1].trigger('mousedown');
     expect(wrapper.emitted('select')).toBeTruthy();
     expect(wrapper.emitted('select')![0]).toEqual([commands[1]]);
   });
@@ -235,11 +235,11 @@ describe('SlashCommandMenu', () => {
     expect(wrapper.find('.slash-menu-empty').exists()).toBe(true);
   });
 
-  it('emits select with correct command for middle item click', async () => {
+  it('emits select with correct command for middle item mousedown', async () => {
     const commands = createTestCommands();
     const wrapper = mountMenu({ commands });
     const items = wrapper.findAll('[role="option"]');
-    await items[2].trigger('click');
+    await items[2].trigger('mousedown');
     expect(wrapper.emitted('select')![0]).toEqual([commands[2]]);
   });
 
