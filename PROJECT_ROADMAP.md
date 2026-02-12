@@ -406,14 +406,17 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add recent searches
 - [x] Create global search shortcut (Cmd+K)
 
-### 9.3 Meilisearch Integration (Future)
+### 9.3 Meilisearch Integration
 
-- [ ] Setup Meilisearch Docker service
-- [ ] Create Meilisearch client
-- [ ] Index pages on create/update
-- [ ] Remove from index on delete
-- [ ] Switch search endpoint to Meilisearch
-- [ ] Add typo tolerance and facets
+- [x] Setup Meilisearch Docker service
+- [x] Create Meilisearch client (singleton with env config)
+- [x] Index pages on create/update (fire-and-forget)
+- [x] Remove from index on delete
+- [x] Switch search endpoint to Meilisearch (hybrid with PG FTS fallback)
+- [x] Add typo tolerance and faceted search
+- [x] Add admin reindex API endpoint (POST /api/v1/admin/search/reindex)
+- [x] Add reindex status endpoint (GET /api/v1/admin/search/reindex/status)
+- [x] Comprehensive test coverage (init, service, routes, admin, performance)
 
 ---
 
