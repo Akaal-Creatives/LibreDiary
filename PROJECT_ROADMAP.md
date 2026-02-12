@@ -330,7 +330,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Generate guest access tokens
 - [x] Create share link page (/share/:token)
 - [x] Add expiration for guest links
-- [ ] Track guest last access (optional enhancement)
+- [x] Track guest last access
 
 ---
 

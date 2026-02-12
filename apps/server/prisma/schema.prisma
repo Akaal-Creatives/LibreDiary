@@ -294,8 +294,9 @@ model PagePermission {
   level PermissionLevel @default(VIEW)
 
   // For guest access links
-  shareToken String?   @unique
-  expiresAt  DateTime? // Optional expiration for share links
+  shareToken     String?   @unique
+  expiresAt      DateTime? // Optional expiration for share links
+  lastAccessedAt DateTime? // Last time a guest used this share link
 
   // Audit
   grantedById String

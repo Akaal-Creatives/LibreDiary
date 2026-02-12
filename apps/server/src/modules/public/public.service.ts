@@ -198,6 +198,14 @@ export async function getPageByShareToken(token: string): Promise<SharedPage> {
     throw new Error('PAGE_NOT_FOUND');
   }
 
+  // Track guest access timestamp (fire-and-forget)
+  prisma.pagePermission
+    .update({
+      where: { id: permission.id },
+      data: { lastAccessedAt: new Date() },
+    })
+    .catch(() => {});
+
   return {
     id: permission.page.id,
     title: permission.page.title,

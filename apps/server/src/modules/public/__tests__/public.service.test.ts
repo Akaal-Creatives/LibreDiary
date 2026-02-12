@@ -10,6 +10,7 @@ const { mockPrisma, resetMocks, mockPage, _now } = vi.hoisted(() => {
 
   const mockPrismaPagePermission = {
     findFirst: vi.fn(),
+    update: vi.fn(),
   };
 
   const mockPrisma = {
@@ -20,6 +21,7 @@ const { mockPrisma, resetMocks, mockPage, _now } = vi.hoisted(() => {
   function resetMocks() {
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaPagePermission).forEach((mock) => mock.mockReset());
+    mockPrismaPagePermission.update.mockResolvedValue({});
   }
 
   const now = new Date();
@@ -283,6 +285,54 @@ describe('Public Service', () => {
       await expect(publicService.getPageByShareToken('valid-token')).rejects.toThrow(
         'PAGE_NOT_FOUND'
       );
+    });
+
+    it('should update lastAccessedAt on valid access', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'valid-token',
+        level: 'VIEW',
+        expiresAt: null,
+        page: mockSharedPage,
+      });
+
+      await publicService.getPageByShareToken('valid-token');
+
+      expect(mockPrisma.pagePermission.update).toHaveBeenCalledWith({
+        where: { id: 'perm-123' },
+        data: { lastAccessedAt: expect.any(Date) },
+      });
+    });
+
+    it('should not update lastAccessedAt for expired tokens', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'expired-token',
+        level: 'VIEW',
+        expiresAt: new Date(Date.now() - 1000000),
+        page: mockSharedPage,
+      });
+
+      await expect(publicService.getPageByShareToken('expired-token')).rejects.toThrow(
+        'SHARE_TOKEN_EXPIRED'
+      );
+
+      expect(mockPrisma.pagePermission.update).not.toHaveBeenCalled();
+    });
+
+    it('should not throw if lastAccessedAt update fails', async () => {
+      mockPrisma.pagePermission.findFirst.mockResolvedValue({
+        id: 'perm-123',
+        shareToken: 'valid-token',
+        level: 'VIEW',
+        expiresAt: null,
+        page: mockSharedPage,
+      });
+      mockPrisma.pagePermission.update.mockRejectedValue(new Error('DB error'));
+
+      const result = await publicService.getPageByShareToken('valid-token');
+
+      expect(result.id).toBe('page-456');
     });
   });
 });
