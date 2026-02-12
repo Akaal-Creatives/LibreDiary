@@ -1,5 +1,7 @@
+import crypto from 'crypto';
 import { prisma } from '../../lib/prisma.js';
 import { chatCompletion } from './ai.service.js';
+import { TtlCache } from '../../utils/ttl-cache.js';
 
 export interface TranslateInput {
   text: string;
@@ -9,6 +11,21 @@ export interface TranslateInput {
 
 export interface TranslateResult {
   translatedText: string;
+}
+
+// Cache translations for 1 hour
+const translationCache = new TtlCache<TranslateResult>(60 * 60 * 1000);
+
+function cacheKey(text: string, targetLanguage: string): string {
+  return crypto
+    .createHash('sha256')
+    .update(text + '\0' + targetLanguage)
+    .digest('hex');
+}
+
+/** Clear the translation cache (for testing) */
+export function clearTranslationCache(): void {
+  translationCache.clear();
 }
 
 const SYSTEM_PROMPT_TEMPLATE = `You are a professional translator. Translate the following text to {targetLanguage}. Rules:
@@ -26,6 +43,13 @@ export async function translateText(input: TranslateInput): Promise<TranslateRes
 
   if (!org || !org.aiEnabled) {
     throw new Error('AI_DISABLED');
+  }
+
+  // Check cache first
+  const key = cacheKey(input.text, input.targetLanguage);
+  const cached = translationCache.get(key);
+  if (cached) {
+    return cached;
   }
 
   const systemPrompt = SYSTEM_PROMPT_TEMPLATE.replace('{targetLanguage}', input.targetLanguage);
@@ -55,5 +79,8 @@ export async function translateText(input: TranslateInput): Promise<TranslateRes
     throw new Error('TRANSLATION_FAILED');
   }
 
-  return { translatedText: content };
+  const translateResult: TranslateResult = { translatedText: content };
+  translationCache.set(key, translateResult);
+
+  return translateResult;
 }

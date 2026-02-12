@@ -19,11 +19,12 @@ vi.mock('../ai.service.js', () => ({
   chatCompletion: mockChatCompletion,
 }));
 
-import { translateText } from '../translation.service.js';
+import { translateText, clearTranslationCache } from '../translation.service.js';
 
 describe('Translation Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearTranslationCache();
   });
 
   const validInput = {
@@ -181,5 +182,80 @@ describe('Translation Service', () => {
     });
 
     await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
+  });
+
+  // ===========================================
+  // Translation cache
+  // ===========================================
+
+  describe('translation cache', () => {
+    it('should return cached result for identical request', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+      mockChatCompletion.mockResolvedValue({
+        choices: [{ message: { content: 'Hola, mundo!' } }],
+      });
+
+      // First call — goes to AI
+      const result1 = await translateText(validInput);
+      expect(mockChatCompletion).toHaveBeenCalledTimes(1);
+
+      // Second call — should use cache
+      const result2 = await translateText(validInput);
+      expect(mockChatCompletion).toHaveBeenCalledTimes(1); // Still 1
+      expect(result2.translatedText).toBe(result1.translatedText);
+    });
+
+    it('should not cache across different target languages', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+      mockChatCompletion
+        .mockResolvedValueOnce({ choices: [{ message: { content: 'Hola' } }] })
+        .mockResolvedValueOnce({ choices: [{ message: { content: 'Bonjour' } }] });
+
+      await translateText(validInput);
+      await translateText({ ...validInput, targetLanguage: 'French' });
+
+      expect(mockChatCompletion).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not cache across different text inputs', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+      mockChatCompletion
+        .mockResolvedValueOnce({ choices: [{ message: { content: 'Hola' } }] })
+        .mockResolvedValueOnce({ choices: [{ message: { content: 'Adios' } }] });
+
+      await translateText(validInput);
+      await translateText({ ...validInput, text: 'Goodbye' });
+
+      expect(mockChatCompletion).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not cache failed translations', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+      mockChatCompletion
+        .mockRejectedValueOnce(new Error('API error'))
+        .mockResolvedValueOnce({ choices: [{ message: { content: 'Hola' } }] });
+
+      await expect(translateText(validInput)).rejects.toThrow('TRANSLATION_FAILED');
+
+      // Retry should hit the API again, not return cached error
+      const result = await translateText(validInput);
+      expect(result.translatedText).toBe('Hola');
+      expect(mockChatCompletion).toHaveBeenCalledTimes(2);
+    });
+
+    it('clearTranslationCache should flush the cache', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+      mockChatCompletion.mockResolvedValue({
+        choices: [{ message: { content: 'Hola' } }],
+      });
+
+      await translateText(validInput);
+      expect(mockChatCompletion).toHaveBeenCalledTimes(1);
+
+      clearTranslationCache();
+
+      await translateText(validInput);
+      expect(mockChatCompletion).toHaveBeenCalledTimes(2);
+    });
   });
 });
