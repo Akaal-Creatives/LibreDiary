@@ -52,6 +52,7 @@ async function handleLogout() {
 
 <template>
   <div class="admin-layout">
+    <a href="#admin-main-content" class="skip-to-content">{{ $t('a11y.skipToContent') }}</a>
     <!-- Sidebar backdrop (mobile/tablet overlay) -->
     <Transition name="backdrop-fade">
       <div
@@ -112,6 +113,7 @@ async function handleLogout() {
           :to="{ name: item.name }"
           class="nav-item"
           :class="{ active: route.name === item.name }"
+          :aria-current="route.name === item.name ? 'page' : undefined"
         >
           <span class="nav-icon">
             <!-- Dashboard Icon -->
@@ -371,7 +373,7 @@ async function handleLogout() {
                 >
                   {{ crumb.label }}
                 </RouterLink>
-                <span v-else class="breadcrumb-current">{{ crumb.label }}</span>
+                <span v-else class="breadcrumb-current" aria-current="page">{{ crumb.label }}</span>
                 <span v-if="index < breadcrumbs.length - 1" class="breadcrumb-separator">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path
@@ -390,7 +392,12 @@ async function handleLogout() {
 
         <div class="header-right">
           <!-- Theme Toggle -->
-          <button class="header-btn" :title="`Theme: ${theme}`" @click="toggleTheme">
+          <button
+            class="header-btn"
+            :title="`Theme: ${theme}`"
+            :aria-label="t('a11y.toggleTheme')"
+            @click="toggleTheme"
+          >
             <span v-if="theme === 'light'">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <circle cx="9" cy="9" r="3.75" stroke="currentColor" stroke-width="1.5" />
@@ -424,7 +431,12 @@ async function handleLogout() {
               <span class="user-name">{{ authStore.user?.name ?? 'Admin' }}</span>
               <span class="user-role">Super Admin</span>
             </div>
-            <button class="logout-btn" title="Logout" @click="handleLogout">
+            <button
+              class="logout-btn"
+              title="Logout"
+              :aria-label="t('auth.signOut')"
+              @click="handleLogout"
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
                   d="M11 5L14 8L11 11"
@@ -447,7 +459,7 @@ async function handleLogout() {
       </header>
 
       <!-- Content -->
-      <main class="admin-content">
+      <main id="admin-main-content" class="admin-content">
         <RouterView />
       </main>
     </div>

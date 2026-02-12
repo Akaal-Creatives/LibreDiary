@@ -76,6 +76,7 @@ function handleBackdropClick() {
 
 <template>
   <div class="app-layout">
+    <a href="#main-content" class="skip-to-content">{{ $t('a11y.skipToContent') }}</a>
     <OfflineIndicator />
     <!-- Sidebar backdrop (mobile/tablet overlay) -->
     <Transition name="backdrop-fade">
@@ -96,7 +97,7 @@ function handleBackdropClick() {
     />
     <div class="app-main">
       <AppHeader class="app-header" />
-      <main class="app-content">
+      <main id="main-content" class="app-content">
         <RouterView />
       </main>
     </div>

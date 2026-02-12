@@ -426,3 +426,41 @@ a:hover {
 .animate-scale-in {
   animation: scaleIn var(--transition-slow) ease-out;
 }
+
+/* ============================================
+   Skip to Content
+   ============================================ */
+
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  z-index: 9999;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  background: var(--color-accent);
+  border-radius: var(--radius-md);
+  transition: top var(--transition-fast);
+}
+
+.skip-to-content:focus {
+  top: var(--space-4);
+}
+
+/* ============================================
+   Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -70,7 +70,7 @@ function navigateToHome() {
       <!-- Current Page -->
       <li v-if="currentPage" class="breadcrumb-item current">
         <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-current">
+        <span class="breadcrumb-current" aria-current="page">
           <span v-if="currentPage.icon" class="breadcrumb-icon">{{ currentPage.icon }}</span>
           <span class="breadcrumb-text">{{ currentPage.title }}</span>
         </span>

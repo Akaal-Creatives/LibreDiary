@@ -236,7 +236,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
     <!-- Search -->
     <div class="sidebar-search">
-      <button class="search-wrapper" @click="openSearch">
+      <button class="search-wrapper" :aria-label="$t('common.search')" @click="openSearch">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7C2 9.76142 4.23858 12 7 12Z"
@@ -493,7 +493,12 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <div class="footer-actions">
         <NotificationBell />
         <LanguageSwitcher />
-        <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+        <button
+          class="theme-toggle"
+          :title="`Theme: ${theme}`"
+          :aria-label="$t('a11y.toggleTheme')"
+          @click="toggleTheme"
+        >
           <span v-if="theme === 'light'">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <circle cx="9" cy="9" r="3.75" stroke="currentColor" stroke-width="1.5" />
