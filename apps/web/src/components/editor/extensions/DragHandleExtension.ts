@@ -2,13 +2,15 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
+const dragHandlePluginKey = new PluginKey('dragHandle');
+
 export const DragHandleExtension = Extension.create({
   name: 'dragHandle',
 
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        key: new PluginKey('dragHandle'),
+        key: dragHandlePluginKey,
         state: {
           init() {
             return {
@@ -23,7 +25,7 @@ export const DragHandleExtension = Extension.create({
           },
         },
         view(editorView) {
-          const state = this.getState(editorView.state);
+          const state = dragHandlePluginKey.getState(editorView.state);
           if (!state) return {};
 
           // Create drag handle element
