@@ -54,6 +54,15 @@ describe('ToggleNode', () => {
       expect(typeof commands.setToggle).toBe('function');
     });
 
+    it('exposes unsetToggle command', () => {
+      const addCommands = ToggleNode.config.addCommands;
+      if (typeof addCommands !== 'function') throw new Error('addCommands not a function');
+
+      const commands = addCommands.call(ToggleNode);
+      expect(commands).toHaveProperty('unsetToggle');
+      expect(typeof commands.unsetToggle).toBe('function');
+    });
+
     it('setToggle calls insertContent with correct structure', () => {
       const addCommands = ToggleNode.config.addCommands;
       if (typeof addCommands !== 'function') throw new Error('addCommands not a function');
@@ -86,6 +95,19 @@ describe('ToggleNode', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('keyboard shortcuts', () => {
+    it('registers Backspace shortcut', () => {
+      const addKeyboardShortcuts = ToggleNode.config.addKeyboardShortcuts;
+      if (typeof addKeyboardShortcuts !== 'function') {
+        throw new Error('addKeyboardShortcuts not a function');
+      }
+
+      const shortcuts = addKeyboardShortcuts.call(ToggleNode);
+      expect(shortcuts).toHaveProperty('Backspace');
+      expect(typeof shortcuts.Backspace).toBe('function');
     });
   });
 });
