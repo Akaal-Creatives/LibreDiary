@@ -53,6 +53,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
 
   app.get('/stats', async (_request, reply) => {
     const stats = await adminService.getStats();
+    reply.header('Cache-Control', 'private, max-age=60');
     return reply.send({
       success: true,
       data: { stats },

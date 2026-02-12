@@ -29,10 +29,11 @@ vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
 
-import { getStats } from '../admin.service.js';
+import { getStats, clearStatsCache } from '../admin.service.js';
 
 describe('getStats — extended content counts', () => {
   beforeEach(() => {
+    clearStatsCache();
     vi.clearAllMocks();
   });
 

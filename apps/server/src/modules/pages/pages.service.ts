@@ -5,6 +5,7 @@ import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
 import { htmlToText } from '../../utils/html-to-text.js';
 import { indexPage, removePage as removePageFromSearch } from '../search/meilisearch.service.js';
+import { TtlCache } from '../../utils/ttl-cache.js';
 
 // ===========================================
 // TYPES
@@ -37,6 +38,22 @@ export type PageWithChildren = Page & {
 export type FavoriteWithPage = Favorite & {
   page: Page;
 };
+
+// ===========================================
+// PAGE TREE CACHE
+// ===========================================
+
+// Cache page trees per organisation for 30 seconds
+const pageTreeCache = new TtlCache<PageWithChildren[]>(30_000);
+
+export function invalidatePageTreeCache(orgId: string): void {
+  pageTreeCache.invalidate(`tree:${orgId}`);
+}
+
+/** Clear all page tree caches (for testing) */
+export function clearPageTreeCache(): void {
+  pageTreeCache.clear();
+}
 
 // ===========================================
 // PAGE CRUD
@@ -95,6 +112,8 @@ export async function createPage(
       position,
     },
   });
+
+  invalidatePageTreeCache(orgId);
 
   triggerWebhooks(orgId, 'page.created', { pageId: page.id, title: page.title }).catch((err) =>
     console.error('[webhook] delivery failed:', err)
@@ -157,6 +176,10 @@ export function buildPageTree(pages: Page[]): PageWithChildren[] {
  * Get page tree for an organization
  */
 export async function getPageTree(orgId: string): Promise<PageWithChildren[]> {
+  const cacheKey = `tree:${orgId}`;
+  const cached = pageTreeCache.get(cacheKey);
+  if (cached) return cached;
+
   const pages = (await prisma.page.findMany({
     where: {
       organizationId: orgId,
@@ -181,7 +204,9 @@ export async function getPageTree(orgId: string): Promise<PageWithChildren[]> {
     orderBy: [{ parentId: 'asc' }, { position: 'asc' }],
   })) as unknown as Page[];
 
-  return buildPageTree(pages);
+  const tree = buildPageTree(pages);
+  pageTreeCache.set(cacheKey, tree);
+  return tree;
 }
 
 /**
@@ -326,6 +351,8 @@ export async function trashPage(orgId: string, pageId: string): Promise<void> {
 
   // Trash the page and all its descendants
   await trashPageWithDescendants(orgId, pageId);
+
+  invalidatePageTreeCache(orgId);
 
   // Remove from Meilisearch index (fire-and-forget)
   removePageFromSearch(pageId).catch(() => {});
@@ -493,13 +520,17 @@ export async function movePage(orgId: string, pageId: string, input: MovePageInp
     });
   }
 
-  return prisma.page.update({
+  const movedPage = await prisma.page.update({
     where: { id: pageId },
     data: {
       parentId: newParentId,
       position,
     },
   });
+
+  invalidatePageTreeCache(orgId);
+
+  return movedPage;
 }
 
 /**
@@ -645,6 +676,8 @@ export async function restorePage(orgId: string, pageId: string): Promise<Page> 
     },
   });
 
+  invalidatePageTreeCache(orgId);
+
   // Re-index restored page in Meilisearch (fire-and-forget)
   indexPage({
     id: restored.id,
@@ -693,6 +726,8 @@ export async function permanentlyDeletePage(orgId: string, pageId: string): Prom
   await prisma.page.delete({
     where: { id: pageId },
   });
+
+  invalidatePageTreeCache(orgId);
 
   logAudit({
     action: 'PAGE_DELETED_PERMANENTLY',

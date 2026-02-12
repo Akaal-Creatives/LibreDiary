@@ -12,6 +12,7 @@ import * as pagesService from '../pages.service.js';
 describe('Pages Service - Read Operations', () => {
   beforeEach(() => {
     resetMocks();
+    pagesService.clearPageTreeCache();
   });
 
   afterEach(() => {

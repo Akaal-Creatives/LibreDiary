@@ -3,6 +3,7 @@ import type { User, Organization, Prisma } from '../../generated/prisma/client.j
 import * as filesService from '../files/files.service.js';
 import { getHocuspocusServer } from '../collaboration/hocuspocus.js';
 import { maskApiKey } from '../ai/ai.service.js';
+import { TtlCache } from '../../utils/ttl-cache.js';
 
 export interface PaginationParams {
   page?: number;
@@ -501,7 +502,22 @@ export interface AdminStats {
   backups: number;
 }
 
+// Cache admin stats for 5 minutes
+const statsCache = new TtlCache<AdminStats>(5 * 60 * 1000);
+const STATS_CACHE_KEY = 'admin:stats';
+
+export function invalidateStatsCache(): void {
+  statsCache.invalidate(STATS_CACHE_KEY);
+}
+
+/** Clear all stats caches (for testing) */
+export function clearStatsCache(): void {
+  statsCache.clear();
+}
+
 export async function getStats(): Promise<AdminStats> {
+  const cached = statsCache.get(STATS_CACHE_KEY);
+  if (cached) return cached;
   const [
     totalUsers,
     verifiedUsers,
@@ -528,7 +544,7 @@ export async function getStats(): Promise<AdminStats> {
     prisma.backup.count(),
   ]);
 
-  return {
+  const stats: AdminStats = {
     users: {
       total: totalUsers,
       verified: verifiedUsers,
@@ -547,6 +563,10 @@ export async function getStats(): Promise<AdminStats> {
     templates,
     backups,
   };
+
+  statsCache.set(STATS_CACHE_KEY, stats);
+
+  return stats;
 }
 
 // ============================================

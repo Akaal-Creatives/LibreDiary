@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
+import crypto from 'crypto';
 import * as pagesService from './pages.service.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { requireAuth } from '../auth/auth.middleware.js';
@@ -152,8 +153,10 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.get<{ Params: OrgParams }>(
     '/',
-    async (request: FastifyRequest<{ Params: OrgParams }>, _reply: FastifyReply) => {
+    async (request: FastifyRequest<{ Params: OrgParams }>, reply: FastifyReply) => {
       const pageTree = await pagesService.getPageTree(request.params.orgId);
+
+      reply.header('Cache-Control', 'private, max-age=10');
 
       return {
         success: true,
@@ -180,6 +183,16 @@ export async function pagesRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
       }
+
+      // ETag based on updatedAt for conditional requests
+      const etag = `"${crypto.createHash('md5').update(page.updatedAt.toISOString()).digest('hex')}"`;
+      const ifNoneMatch = request.headers['if-none-match'];
+
+      if (ifNoneMatch === etag) {
+        return reply.status(304).send();
+      }
+
+      reply.header('ETag', etag);
 
       return {
         success: true,
