@@ -14,6 +14,7 @@ export interface SearchOptions {
   dateFrom?: string;
   dateTo?: string;
   createdById?: string;
+  facets?: string[];
 }
 
 export interface SearchResultRow {
@@ -32,6 +33,7 @@ export interface SearchResultRow {
 export interface SearchServiceResult {
   results: SearchResultRow[];
   total: number;
+  facets?: Record<string, Record<string, number>>;
 }
 
 // ===========================================
@@ -74,7 +76,16 @@ export function parseSearchQuery(rawQuery: string): string {
  * Returns results in the same shape as PG FTS for seamless fallback.
  */
 async function searchWithMeilisearch(options: SearchOptions): Promise<SearchServiceResult> {
-  const { query, organizationId, limit = 20, offset = 0, dateFrom, dateTo, createdById } = options;
+  const {
+    query,
+    organizationId,
+    limit = 20,
+    offset = 0,
+    dateFrom,
+    dateTo,
+    createdById,
+    facets,
+  } = options;
 
   const client = getMeilisearchClient();
   if (!client) throw new Error('Meilisearch client not available');
@@ -95,7 +106,7 @@ async function searchWithMeilisearch(options: SearchOptions): Promise<SearchServ
     filters.push(`createdAt <= ${Math.floor(endOfDay.getTime() / 1000)}`);
   }
 
-  const result = await client.index(PAGES_INDEX).search(query, {
+  const searchOptions: Record<string, unknown> = {
     filter: filters,
     limit,
     offset,
@@ -104,7 +115,13 @@ async function searchWithMeilisearch(options: SearchOptions): Promise<SearchServ
     highlightPostTag: '</mark>',
     attributesToCrop: ['plainContent'],
     cropLength: 60,
-  });
+  };
+
+  if (facets && facets.length > 0) {
+    searchOptions.facets = facets;
+  }
+
+  const result = await client.index(PAGES_INDEX).search(query, searchOptions);
 
   // Fetch page metadata (icon, createdByName) from PG for the matching IDs
   const pageIds = result.hits.map((hit) => hit.id as string);
@@ -153,10 +170,16 @@ async function searchWithMeilisearch(options: SearchOptions): Promise<SearchServ
     };
   });
 
-  return {
+  const serviceResult: SearchServiceResult = {
     results,
     total: result.estimatedTotalHits ?? result.hits.length,
   };
+
+  if (result.facetDistribution) {
+    serviceResult.facets = result.facetDistribution;
+  }
+
+  return serviceResult;
 }
 
 // ===========================================

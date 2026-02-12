@@ -22,6 +22,15 @@ const searchQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format')
     .optional(),
   createdById: z.string().optional(),
+  facets: z
+    .string()
+    .transform((v) =>
+      v
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    )
+    .optional(),
 });
 
 // ===========================================
@@ -70,10 +79,10 @@ export default async function searchRoutes(fastify: FastifyInstance): Promise<vo
       });
     }
 
-    const { q, limit, offset, dateFrom, dateTo, createdById } = queryResult.data;
+    const { q, limit, offset, dateFrom, dateTo, createdById, facets } = queryResult.data;
 
     try {
-      const { results, total } = await searchService.searchPages({
+      const searchOptions: searchService.SearchOptions = {
         query: q,
         organizationId: request.params.orgId,
         limit,
@@ -81,7 +90,17 @@ export default async function searchRoutes(fastify: FastifyInstance): Promise<vo
         dateFrom,
         dateTo,
         createdById,
-      });
+      };
+
+      if (facets) {
+        searchOptions.facets = facets;
+      }
+
+      const {
+        results,
+        total,
+        facets: resultFacets,
+      } = await searchService.searchPages(searchOptions);
 
       // Map results to camelCase API response
       const mappedResults = results.map((r) => ({
@@ -97,13 +116,19 @@ export default async function searchRoutes(fastify: FastifyInstance): Promise<vo
         rank: r.rank,
       }));
 
+      const data: Record<string, unknown> = {
+        results: mappedResults,
+        total,
+        query: q,
+      };
+
+      if (resultFacets) {
+        data.facets = resultFacets;
+      }
+
       return {
         success: true,
-        data: {
-          results: mappedResults,
-          total,
-          query: q,
-        },
+        data,
       };
     } catch (error) {
       return mapServiceError(error, reply, errorMap);

@@ -35,6 +35,13 @@ export async function initMeilisearch(): Promise<void> {
     await index.updateFilterableAttributes(['orgId', 'createdById', 'createdAt', 'updatedAt']);
     await index.updateSortableAttributes(['updatedAt', 'createdAt']);
 
+    await index.updateTypoTolerance({
+      enabled: true,
+      minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
+    });
+
+    await index.updateFaceting({ maxValuesPerFacet: 100 });
+
     healthy = true;
     console.log('[meilisearch] Connected and index configured:', PAGES_INDEX);
   } catch (err) {

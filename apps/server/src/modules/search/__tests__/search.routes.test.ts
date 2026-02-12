@@ -311,5 +311,81 @@ describe('Search Routes', () => {
       expect(body.success).toBe(false);
       expect(body.error.code).toBe('VALIDATION_ERROR');
     });
+
+    it('should accept facets query parameter', async () => {
+      mockSearchService.searchPages.mockResolvedValue({
+        results: [],
+        total: 0,
+        facets: { createdById: { 'user-1': 5 } },
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&facets=createdById',
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('should pass facets array to service', async () => {
+      mockSearchService.searchPages.mockResolvedValue({ results: [], total: 0 });
+
+      await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&facets=createdById',
+      });
+
+      expect(mockSearchService.searchPages).toHaveBeenCalledWith(
+        expect.objectContaining({
+          facets: ['createdById'],
+        })
+      );
+    });
+
+    it('should return facets in response', async () => {
+      const facets = { createdById: { 'user-1': 5, 'user-2': 3 } };
+      mockSearchService.searchPages.mockResolvedValue({
+        results: [],
+        total: 0,
+        facets,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&facets=createdById',
+      });
+
+      const body = JSON.parse(response.body);
+      expect(body.data.facets).toEqual(facets);
+    });
+
+    it('should accept multiple facets', async () => {
+      mockSearchService.searchPages.mockResolvedValue({ results: [], total: 0 });
+
+      await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test&facets=createdById,createdAt',
+      });
+
+      expect(mockSearchService.searchPages).toHaveBeenCalledWith(
+        expect.objectContaining({
+          facets: ['createdById', 'createdAt'],
+        })
+      );
+    });
+
+    it('should work without facets', async () => {
+      mockSearchService.searchPages.mockResolvedValue({ results: [], total: 0 });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/organizations/org-123/search?q=test',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockSearchService.searchPages).toHaveBeenCalledWith(
+        expect.not.objectContaining({ facets: expect.anything() })
+      );
+    });
   });
 });

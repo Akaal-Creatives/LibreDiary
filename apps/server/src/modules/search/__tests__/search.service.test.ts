@@ -652,6 +652,46 @@ describe('Search Service', () => {
       );
       warnSpy.mockRestore();
     });
+
+    it('passes facets to Meilisearch when provided', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(
+        makeMeiliResponse({
+          hits: [],
+          facetDistribution: { createdById: { 'user-1': 5 } },
+        })
+      );
+
+      await searchPages({ ...baseOptions, facets: ['createdById'] });
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.facets).toEqual(['createdById']);
+    });
+
+    it('does not pass facets when not provided', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages(baseOptions);
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.facets).toBeUndefined();
+    });
+
+    it('returns facetDistribution in result', async () => {
+      const facetDistribution = { createdById: { 'user-1': 5, 'user-2': 3 } };
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [], facetDistribution }));
+
+      const result = await searchPages({ ...baseOptions, facets: ['createdById'] });
+
+      expect(result.facets).toEqual(facetDistribution);
+    });
+
+    it('returns no facets field when not requested', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.facets).toBeUndefined();
+    });
   });
 
   // ===========================================

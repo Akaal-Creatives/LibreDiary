@@ -6,6 +6,8 @@ const { mockClient, mockIndex, mockConfigured, mockGetClient } = vi.hoisted(() =
     updateSearchableAttributes: vi.fn().mockResolvedValue({ taskUid: 1 }),
     updateFilterableAttributes: vi.fn().mockResolvedValue({ taskUid: 2 }),
     updateSortableAttributes: vi.fn().mockResolvedValue({ taskUid: 3 }),
+    updateTypoTolerance: vi.fn().mockResolvedValue({ taskUid: 4 }),
+    updateFaceting: vi.fn().mockResolvedValue({ taskUid: 5 }),
   };
 
   const mockClient = {
@@ -128,6 +130,21 @@ describe('meilisearch.init', () => {
       await initMeilisearch();
 
       expect(mockIndex.updateSortableAttributes).toHaveBeenCalledWith(['updatedAt', 'createdAt']);
+    });
+
+    it('configures typo tolerance', async () => {
+      await initMeilisearch();
+
+      expect(mockIndex.updateTypoTolerance).toHaveBeenCalledWith({
+        enabled: true,
+        minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
+      });
+    });
+
+    it('configures faceting', async () => {
+      await initMeilisearch();
+
+      expect(mockIndex.updateFaceting).toHaveBeenCalledWith({ maxValuesPerFacet: 100 });
     });
 
     it('sets healthy=false on connection failure', async () => {
