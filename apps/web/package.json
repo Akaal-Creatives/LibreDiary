@@ -46,6 +46,7 @@
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
+    "axe-core": "^4.11.1",
     "happy-dom": "^20.5.3",
     "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "^5.7.0",
