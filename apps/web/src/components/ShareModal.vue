@@ -222,11 +222,16 @@ function close() {
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="isOpen" class="modal-overlay" @click.self="close">
-        <div class="modal-container">
+        <div
+          class="modal-container"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-modal-title"
+        >
           <!-- Header -->
           <header class="modal-header">
             <div class="header-content">
-              <h2 class="modal-title">{{ $t('share.title') }}</h2>
+              <h2 id="share-modal-title" class="modal-title">{{ $t('share.title') }}</h2>
               <p class="modal-subtitle">{{ pageTitle }}</p>
             </div>
             <button class="close-btn" :aria-label="$t('common.close')" @click="close">
@@ -336,10 +341,15 @@ function close() {
                     v-model="newEmail"
                     type="email"
                     :placeholder="$t('share.addPeoplePlaceholder')"
+                    :aria-label="$t('auth.email')"
                     class="email-input"
                     @keyup.enter="addPermission"
                   />
-                  <select v-model="newLevel" class="level-select">
+                  <select
+                    v-model="newLevel"
+                    class="level-select"
+                    :aria-label="$t('share.permissionLevel')"
+                  >
                     <option value="VIEW">{{ $t('share.canView') }}</option>
                     <option value="EDIT">{{ $t('share.canEdit') }}</option>
                     <option value="FULL_ACCESS">{{ $t('share.fullAccess') }}</option>
@@ -352,7 +362,9 @@ function close() {
                     {{ $t('common.add') }}
                   </button>
                 </div>
-                <p v-if="addError" class="form-error">{{ addError }}</p>
+                <p v-if="addError" class="form-error" role="alert" aria-live="polite">
+                  {{ addError }}
+                </p>
               </div>
 
               <!-- Permission List -->
@@ -373,6 +385,7 @@ function close() {
                     <select
                       :value="perm.level"
                       class="level-select compact"
+                      :aria-label="`${$t('share.permissionLevel')}: ${perm.user?.name || perm.user?.email || ''}`"
                       @change="
                         (e: Event) =>
                           updatePermission(

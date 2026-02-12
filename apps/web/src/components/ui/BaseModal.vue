@@ -6,6 +6,8 @@ const props = withDefaults(
     open: boolean;
     closeOnBackdrop?: boolean;
     closeOnEscape?: boolean;
+    ariaLabelledby?: string;
+    ariaLabel?: string;
   }>(),
   {
     closeOnBackdrop: true,
@@ -96,6 +98,8 @@ onUnmounted(() => {
         class="modal-backdrop"
         role="dialog"
         aria-modal="true"
+        :aria-labelledby="ariaLabelledby"
+        :aria-label="ariaLabel"
         @click="handleBackdropClick"
         @keydown="handleKeydown"
       >

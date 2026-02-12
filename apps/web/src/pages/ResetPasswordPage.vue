@@ -58,7 +58,13 @@ function goToLogin() {
 <template>
   <div class="reset-page">
     <!-- Theme Toggle -->
-    <button type="button" class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
+    <button
+      type="button"
+      class="theme-toggle"
+      :title="`Theme: ${theme}`"
+      :aria-label="$t('a11y.toggleTheme')"
+      @click="toggleTheme"
+    >
       <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
         <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
         <path
@@ -150,7 +156,13 @@ function goToLogin() {
           </div>
 
           <form class="reset-form" @submit.prevent="handleSubmit">
-            <div v-if="error" class="error-message" role="alert" aria-live="polite">
+            <div
+              v-if="error"
+              id="reset-password-error"
+              class="error-message"
+              role="alert"
+              aria-live="polite"
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
                 <path
@@ -172,6 +184,8 @@ function goToLogin() {
                 :placeholder="$t('auth.newPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
+                :aria-invalid="!!error"
+                :aria-describedby="error ? 'reset-password-error' : undefined"
               />
             </div>
 
@@ -184,6 +198,8 @@ function goToLogin() {
                 :placeholder="$t('auth.confirmPasswordPlaceholder')"
                 required
                 autocomplete="new-password"
+                :aria-invalid="!!error"
+                :aria-describedby="error ? 'reset-password-error' : undefined"
               />
             </div>
 

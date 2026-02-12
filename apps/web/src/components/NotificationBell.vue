@@ -277,6 +277,7 @@ watch(isOpen, (open) => {
               type="button"
               class="mark-all-btn"
               :title="$t('notifications.markAllAsRead')"
+              :aria-label="$t('notifications.markAllAsRead')"
               @click="markAllAsRead"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -294,6 +295,7 @@ watch(isOpen, (open) => {
               type="button"
               class="settings-btn"
               :title="$t('notifications.notificationSettings')"
+              :aria-label="$t('notifications.notificationSettings')"
               @click="
                 isOpen = false;
                 router.push({ name: 'notification-settings' });
@@ -504,6 +506,7 @@ watch(isOpen, (open) => {
                   type="button"
                   class="delete-btn"
                   :title="$t('notifications.deleteNotification')"
+                  :aria-label="$t('notifications.deleteNotification')"
                   @click="deleteNotification(notification.id, $event)"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

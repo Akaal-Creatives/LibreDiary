@@ -146,7 +146,7 @@ const sidebar = useSidebar();
       <div class="header-divider"></div>
 
       <!-- Share Button -->
-      <button class="share-btn" type="button">
+      <button class="share-btn" type="button" :aria-label="$t('header.share')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M12 5.5C13.1046 5.5 14 4.60457 14 3.5C14 2.39543 13.1046 1.5 12 1.5C10.8954 1.5 10 2.39543 10 3.5C10 4.60457 10.8954 5.5 12 5.5Z"

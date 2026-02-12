@@ -131,7 +131,13 @@ function close() {
           </div>
 
           <form class="modal-body" @submit.prevent="handleSubmit">
-            <div v-if="error" class="error-message">
+            <div
+              v-if="error"
+              id="invite-error"
+              class="error-message"
+              role="alert"
+              aria-live="polite"
+            >
               {{ error }}
             </div>
 
@@ -145,6 +151,8 @@ function close() {
                 placeholder="colleague@example.com"
                 :disabled="submitting"
                 autocomplete="email"
+                :aria-invalid="!!error"
+                :aria-describedby="error ? 'invite-error' : undefined"
               />
               <div v-if="showDomainWarning" class="domain-warning">
                 <svg class="warning-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">

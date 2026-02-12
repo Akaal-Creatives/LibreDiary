@@ -41,7 +41,12 @@ function handleConfirm() {
 </script>
 
 <template>
-  <BaseModal :open="open" :close-on-backdrop="false" @close="$emit('close')">
+  <BaseModal
+    :open="open"
+    :close-on-backdrop="false"
+    aria-labelledby="alert-dialog-title"
+    @close="$emit('close')"
+  >
     <div class="alert-dialog" :class="[`variant-${variant}`]">
       <!-- Icon -->
       <div class="alert-icon" :class="[`icon-${variant}`]">
@@ -50,7 +55,7 @@ function handleConfirm() {
 
       <!-- Content -->
       <div class="alert-content">
-        <h2 v-if="title" class="alert-title">{{ title }}</h2>
+        <h2 v-if="title" id="alert-dialog-title" class="alert-title">{{ title }}</h2>
         <p class="alert-message">{{ message }}</p>
       </div>
 

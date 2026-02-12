@@ -39,7 +39,12 @@ function handleCancel() {
 </script>
 
 <template>
-  <BaseModal :open="open" :close-on-backdrop="false" @close="handleCancel">
+  <BaseModal
+    :open="open"
+    :close-on-backdrop="false"
+    aria-labelledby="confirm-dialog-title"
+    @close="handleCancel"
+  >
     <div class="confirm-dialog">
       <!-- Icon for destructive variant -->
       <div v-if="variant === 'destructive'" class="confirm-icon">
@@ -61,7 +66,7 @@ function handleCancel() {
 
       <!-- Content -->
       <div class="confirm-content">
-        <h2 v-if="title" class="confirm-title">{{ title }}</h2>
+        <h2 v-if="title" id="confirm-dialog-title" class="confirm-title">{{ title }}</h2>
         <p class="confirm-message">{{ message }}</p>
       </div>
 

@@ -339,7 +339,8 @@
     "canEdit": "Can edit",
     "fullAccess": "Full access",
     "noOneElse": "No one else has access yet",
-    "removeAccess": "Remove access"
+    "removeAccess": "Remove access",
+    "permissionLevel": "Permission level"
   },
   "admin": {
     "dashboard": "Dashboard",
