@@ -35,6 +35,11 @@
     "db:studio": "pnpm --filter @librediary/server db:studio",
     "prepare": "husky"
   },
+  "pnpm": {
+    "overrides": {
+      "lodash@>=4.0.0 <4.17.23": "4.17.23"
+    }
+  },
   "devDependencies": {
     "husky": "^9.1.0",
     "lint-staged": "^16.2.7",
