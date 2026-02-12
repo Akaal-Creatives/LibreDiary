@@ -731,17 +731,17 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 20.2 Performance
 
-- [ ] Add API response caching
-- [ ] Implement lazy loading
-- [ ] Optimize database queries
-- [ ] Add service worker for offline viewing
+- [x] Add API response caching
+- [x] Implement lazy loading
+- [x] Optimize database queries
+- [x] Add service worker for offline viewing
 
 ### 20.3 Accessibility
 
-- [ ] Audit for WCAG 2.1 AA
-- [ ] Add ARIA labels
-- [ ] Ensure keyboard navigation
-- [ ] Test with screen readers
+- [x] Audit for WCAG 2.1 AA
+- [x] Add ARIA labels
+- [x] Ensure keyboard navigation
+- [x] Test with screen readers
 
 ### 20.4 Production Docker
 
@@ -781,7 +781,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Create PWA manifest
 - [ ] Implement service worker
 - [ ] Design mobile-optimized views
-- [ ] Plan native app (React Native OR CapacitorJS)
+- [ ] Plan native app (React Native, Flutter OR CapacitorJS)
 
 ---
 
