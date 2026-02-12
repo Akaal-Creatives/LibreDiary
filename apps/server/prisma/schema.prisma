@@ -222,7 +222,9 @@ model Page {
   yjsState Bytes?
 
   // HTML content (for REST-based saving before Yjs integration)
-  htmlContent String?
+  htmlContent  String?
+  // Plain text extracted from htmlContent (for PG FTS search_vector trigger)
+  plainContent String?
 
   // Sharing
   isPublic   Boolean @default(false)
