@@ -40,31 +40,27 @@ function positionTooltip() {
   // Tooltip position
   const tooltipWidth = 320;
   const tooltipHeight = 180;
+  const margin = 8; // Minimum distance from viewport edges
+
+  let top = 0;
+  let left = 0;
 
   switch (stepData.placement) {
     case 'right':
-      tooltipStyle.value = {
-        top: `${rect.top + rect.height / 2 - tooltipHeight / 2}px`,
-        left: `${rect.right + 16}px`,
-      };
+      top = rect.top + rect.height / 2 - tooltipHeight / 2;
+      left = rect.right + 16;
       break;
     case 'left':
-      tooltipStyle.value = {
-        top: `${rect.top + rect.height / 2 - tooltipHeight / 2}px`,
-        left: `${rect.left - tooltipWidth - 16}px`,
-      };
+      top = rect.top + rect.height / 2 - tooltipHeight / 2;
+      left = rect.left - tooltipWidth - 16;
       break;
     case 'top':
-      tooltipStyle.value = {
-        top: `${rect.top - tooltipHeight - 16}px`,
-        left: `${rect.left + rect.width / 2 - tooltipWidth / 2}px`,
-      };
+      top = rect.top - tooltipHeight - 16;
+      left = rect.left + rect.width / 2 - tooltipWidth / 2;
       break;
     case 'bottom':
-      tooltipStyle.value = {
-        top: `${rect.bottom + 16}px`,
-        left: `${rect.left + rect.width / 2 - tooltipWidth / 2}px`,
-      };
+      top = rect.bottom + 16;
+      left = rect.left + rect.width / 2 - tooltipWidth / 2;
       break;
     case 'centre':
     default:
@@ -73,8 +69,17 @@ function positionTooltip() {
         left: '50%',
         transform: 'translate(-50%, -50%)',
       };
-      break;
+      return;
   }
+
+  // Clamp to viewport bounds
+  left = Math.max(margin, Math.min(left, window.innerWidth - tooltipWidth - margin));
+  top = Math.max(margin, Math.min(top, window.innerHeight - tooltipHeight - margin));
+
+  tooltipStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+  };
 }
 
 watch(
