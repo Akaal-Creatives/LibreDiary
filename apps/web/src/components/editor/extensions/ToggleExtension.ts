@@ -22,7 +22,36 @@ export const ToggleNode = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['details', mergeAttributes(HTMLAttributes, { class: 'toggle-block' }), 0];
+    return ['details', mergeAttributes(HTMLAttributes, { class: 'toggle-block', open: true }), 0];
+  },
+
+  addNodeView() {
+    return ({ HTMLAttributes }) => {
+      const details = document.createElement('details');
+      details.classList.add('toggle-block');
+      // Always keep open in the editor so content is editable
+      details.open = true;
+      Object.entries(HTMLAttributes).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          details.setAttribute(key, String(value));
+        }
+      });
+
+      // Prevent native toggle from collapsing — it hides content from ProseMirror
+      details.addEventListener('toggle', () => {
+        if (!details.open) {
+          details.open = true;
+        }
+      });
+
+      const contentDOM = document.createElement('div');
+      details.appendChild(contentDOM);
+
+      return {
+        dom: details,
+        contentDOM,
+      };
+    };
   },
 
   addCommands() {
