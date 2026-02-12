@@ -101,6 +101,38 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
   );
 
   /**
+   * GET /api/v1/organizations/:orgId/pages/:pageId/versions/:versionId/diff
+   * Compare two versions and return a structured diff
+   */
+  fastify.get(
+    '/:versionId/diff',
+    async (
+      request: FastifyRequest<{ Params: VersionParams; Querystring: { compareWith?: string } }>,
+      reply: FastifyReply
+    ) => {
+      const { orgId, pageId, versionId } = request.params;
+      const { compareWith } = request.query;
+
+      if (!compareWith) {
+        return reply.status(400).send({
+          error: 'MISSING_COMPARE_WITH',
+          message: 'Query parameter "compareWith" is required (version ID or "current")',
+        });
+      }
+
+      try {
+        const diff = await versionsService.diffVersions(orgId, pageId, versionId!, compareWith);
+        return reply.send(diff);
+      } catch (error) {
+        const status = getErrorStatus(error as Error);
+        return reply.status(status).send({
+          error: (error as Error).message,
+        });
+      }
+    }
+  );
+
+  /**
    * POST /api/v1/organizations/:orgId/pages/:pageId/versions/:versionId/restore
    * Restore a page to a specific version
    */

@@ -295,7 +295,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create version listing endpoint
 - [x] Create restore version endpoint
 - [x] Create version history UI (frontend)
-- [ ] Implement version diff view (optional)
+- [x] Implement version diff view
 
 ---
 
