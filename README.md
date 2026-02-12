@@ -27,16 +27,22 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - Multi-tenant organisation support
 - Polymorphic storage (local, S3, MinIO)
 - Enterprise SSO with domain lockdown
-- AI-powered content translation (31 languages via OpenRouter)
+- AI-powered content translation (31 languages via OpenRouter) with caching
+- Hybrid search (Meilisearch + PostgreSQL FTS fallback) with faceted filtering
+- Page version history with diff comparison
+- Auto-delete trash after 30 days
+- Guest share links with access tracking
+- PWA support with offline viewing
 
 ## Tech Stack
 
-| Layer          | Technology                            |
-| -------------- | ------------------------------------- |
-| Frontend       | Vue 3, Vuestic UI, Tiptap, Pinia, Yjs |
-| Backend        | Node.js, Fastify, Hocuspocus, Prisma  |
-| Database       | PostgreSQL                            |
-| Infrastructure | pnpm, Turborepo, Docker               |
+| Layer          | Technology                                        |
+| -------------- | ------------------------------------------------- |
+| Frontend       | Vue 3, Vuestic UI, Tiptap, Pinia, Yjs             |
+| Backend        | Node.js, Fastify, Hocuspocus, Prisma              |
+| Database       | PostgreSQL                                        |
+| Search         | Meilisearch (optional) / PostgreSQL FTS (default) |
+| Infrastructure | pnpm, Turborepo, Docker                           |
 
 ## Development Milestones
 
@@ -57,7 +63,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - [x] **Phase 6: Sharing & Permissions** — Page-level permissions, public pages, share links with expiration
 - [x] **Phase 7: Comments & Mentions** — Threaded comments, inline markers, @mentions with autocomplete
 - [x] **Phase 8: Notifications** — In-app and email notifications with user preferences
-- [x] **Phase 9: Search** — PostgreSQL full-text search, filters, highlighting, recent searches, Cmd+K
+- [x] **Phase 9: Search** — Hybrid search (Meilisearch + PG FTS fallback), faceted filtering, typo tolerance, admin reindex
 
 ### Data Management
 
