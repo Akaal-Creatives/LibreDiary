@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted, defineAsyncComponent } from 'vue';
 import { usePagesStore, useSyncStore, useAuthStore } from '@/stores';
 import { useCollaboration } from '@/composables';
 import { TiptapEditor, AiBubbleMenu } from '@/components/editor';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
-import ShareModal from '@/components/ShareModal.vue';
-import VersionHistoryModal from '@/components/VersionHistoryModal.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
-import CommentsPanel from '@/components/CommentsPanel.vue';
 import EditorSkeleton from '@/components/skeletons/EditorSkeleton.vue';
+
+// Lazy-load heavy modals — loaded on-demand when opened
+const ShareModal = defineAsyncComponent(() => import('@/components/ShareModal.vue'));
+const VersionHistoryModal = defineAsyncComponent(
+  () => import('@/components/VersionHistoryModal.vue')
+);
+const CommentsPanel = defineAsyncComponent(() => import('@/components/CommentsPanel.vue'));
 
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();

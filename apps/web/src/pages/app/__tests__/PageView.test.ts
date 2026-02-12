@@ -140,6 +140,9 @@ function mountPage(pageId = 'page-1') {
     global: {
       stubs: {
         Teleport: true,
+        ShareModal: { template: '<div class="stub-share-modal" />' },
+        VersionHistoryModal: { template: '<div class="stub-version-history" />' },
+        CommentsPanel: { template: '<div class="stub-comments-panel" />' },
       },
     },
   });

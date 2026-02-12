@@ -98,6 +98,36 @@ export const usePagesStore = defineStore('pages', () => {
       });
   }
 
+  /**
+   * Insert a page into the tree at the correct position
+   */
+  function insertIntoTree(
+    tree: PageWithChildren[],
+    newPage: Page,
+    parentId: string | null
+  ): PageWithChildren[] {
+    const node: PageWithChildren = { ...newPage, children: [] };
+
+    if (!parentId) {
+      // Insert at root level, sorted by position
+      const result = [...tree, node];
+      result.sort((a, b) => a.position - b.position);
+      return result;
+    }
+
+    return tree.map((item) => {
+      if (item.id === parentId) {
+        const children = [...item.children, node];
+        children.sort((a, b) => a.position - b.position);
+        return { ...item, children };
+      }
+      if (item.children.length > 0) {
+        return { ...item, children: insertIntoTree(item.children, newPage, parentId) };
+      }
+      return item;
+    });
+  }
+
   // ===========================================
   // BASIC ACTIONS
   // ===========================================
@@ -178,8 +208,9 @@ export const usePagesStore = defineStore('pages', () => {
     loading.value = true;
     try {
       const data = await pagesService.createPage(orgId, input);
-      // Refresh tree to get new page in correct position
-      await fetchPageTree();
+      // Optimistic insert into local tree
+      pages.value.set(data.page.id, data.page);
+      pageTree.value = insertIntoTree(pageTree.value, data.page, input.parentId ?? null);
       return data.page;
     } finally {
       loading.value = false;
@@ -201,11 +232,10 @@ export const usePagesStore = defineStore('pages', () => {
   async function trashPage(pageId: string): Promise<void> {
     const orgId = getOrgId();
     await pagesService.trashPage(orgId, pageId);
+    // Optimistic remove from local tree
     removePage(pageId);
     // Remove from favorites
     favorites.value = favorites.value.filter((f) => f.pageId !== pageId);
-    // Refresh tree to update positions
-    await fetchPageTree();
   }
 
   // ===========================================
@@ -215,8 +245,10 @@ export const usePagesStore = defineStore('pages', () => {
   async function movePage(pageId: string, input: MovePageInput): Promise<Page> {
     const orgId = getOrgId();
     const data = await pagesService.movePage(orgId, pageId, input);
-    // Refresh tree to get updated structure
-    await fetchPageTree();
+    // Optimistic: remove from old position, insert at new position
+    pageTree.value = removePageFromTree(pageTree.value, pageId);
+    pages.value.set(data.page.id, data.page);
+    pageTree.value = insertIntoTree(pageTree.value, data.page, input.parentId ?? null);
     return data.page;
   }
 
@@ -232,8 +264,9 @@ export const usePagesStore = defineStore('pages', () => {
     loading.value = true;
     try {
       const data = await pagesService.duplicatePage(orgId, pageId);
-      // Refresh tree to include duplicated page
-      await fetchPageTree();
+      // Optimistic insert into local tree
+      pages.value.set(data.page.id, data.page);
+      pageTree.value = insertIntoTree(pageTree.value, data.page, data.page.parentId);
       return data.page;
     } finally {
       loading.value = false;

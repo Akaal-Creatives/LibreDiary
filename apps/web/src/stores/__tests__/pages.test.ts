@@ -400,18 +400,19 @@ describe('usePagesStore', () => {
     });
 
     describe('createPage', () => {
-      it('should create page and refresh tree', async () => {
+      it('should create page and insert into local tree optimistically', async () => {
         setupAuthStore();
         const store = usePagesStore();
 
         vi.mocked(pagesService.createPage).mockResolvedValue({ page: mockPage });
-        vi.mocked(pagesService.getPageTree).mockResolvedValue({ pages: mockPageTree });
 
         const result = await store.createPage({ title: 'Test Page' });
 
         expect(pagesService.createPage).toHaveBeenCalledWith('org-1', { title: 'Test Page' });
         expect(result).toEqual(mockPage);
-        expect(pagesService.getPageTree).toHaveBeenCalled();
+        // Should insert into local store without refetching tree
+        expect(store.pages.get(mockPage.id)).toEqual(mockPage);
+        expect(pagesService.getPageTree).not.toHaveBeenCalled();
       });
     });
 
@@ -468,13 +469,13 @@ describe('usePagesStore', () => {
 
   describe('API Actions - Hierarchy', () => {
     describe('movePage', () => {
-      it('should move page and refresh tree', async () => {
+      it('should move page and update local tree optimistically', async () => {
         setupAuthStore();
         const store = usePagesStore();
+        store.setPageTree(mockPageTree);
 
         const movedPage = { ...mockPage, parentId: 'page-2' };
         vi.mocked(pagesService.movePage).mockResolvedValue({ page: movedPage });
-        vi.mocked(pagesService.getPageTree).mockResolvedValue({ pages: mockPageTree });
 
         const result = await store.movePage('page-1', { parentId: 'page-2' });
 
@@ -482,6 +483,8 @@ describe('usePagesStore', () => {
           parentId: 'page-2',
         });
         expect(result.parentId).toBe('page-2');
+        expect(store.pages.get('page-1')?.parentId).toBe('page-2');
+        expect(pagesService.getPageTree).not.toHaveBeenCalled();
       });
     });
 
@@ -501,18 +504,20 @@ describe('usePagesStore', () => {
     });
 
     describe('duplicatePage', () => {
-      it('should duplicate page and refresh tree', async () => {
+      it('should duplicate page and insert into local tree optimistically', async () => {
         setupAuthStore();
         const store = usePagesStore();
+        store.setPageTree(mockPageTree);
 
         const duplicatedPage = { ...mockPage, id: 'page-copy', title: 'Test Page (copy)' };
         vi.mocked(pagesService.duplicatePage).mockResolvedValue({ page: duplicatedPage });
-        vi.mocked(pagesService.getPageTree).mockResolvedValue({ pages: mockPageTree });
 
         const result = await store.duplicatePage('page-1');
 
         expect(pagesService.duplicatePage).toHaveBeenCalledWith('org-1', 'page-1');
         expect(result.id).toBe('page-copy');
+        expect(store.pages.get('page-copy')).toEqual(duplicatedPage);
+        expect(pagesService.getPageTree).not.toHaveBeenCalled();
       });
     });
   });
