@@ -46,6 +46,7 @@ const {
     organizationMember: mockPrismaOrganizationMember,
     auditLog: { create: vi.fn().mockResolvedValue({}) },
     $transaction: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
   };
 
   return {
@@ -347,7 +348,7 @@ describe('Page Routes', () => {
   describe('DELETE /api/v1/organizations/:orgId/pages/:pageId', () => {
     it('should trash page', async () => {
       mockPrismaPage.findFirst.mockResolvedValue(mockPage);
-      mockPrismaPage.findMany.mockResolvedValue([]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([]); // CTE returns no descendants
       mockPrismaPage.updateMany.mockResolvedValue({ count: 1 });
 
       const response = await app.inject({
@@ -410,10 +411,10 @@ describe('Page Routes', () => {
       const parent = { ...mockPage, id: 'parent', parentId: 'grandparent' };
       const child = { ...mockPage, id: 'child', parentId: 'parent' };
 
-      mockPrismaPage.findFirst
-        .mockResolvedValueOnce(child)
-        .mockResolvedValueOnce(parent)
-        .mockResolvedValueOnce(grandparent);
+      // findFirst returns the target page (CTE-based ancestor lookup)
+      mockPrismaPage.findFirst.mockResolvedValueOnce(child);
+      // CTE query returns ancestors ordered by depth DESC
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([grandparent, parent]);
 
       const response = await app.inject({
         method: 'GET',

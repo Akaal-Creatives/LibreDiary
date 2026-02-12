@@ -123,8 +123,8 @@ describe('Search Service', () => {
       expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
     });
 
-    it('should return empty results when count is 0', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+    it('should return empty results when query returns no rows', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       const result = await searchPages(baseOptions);
 
@@ -145,12 +145,11 @@ describe('Search Service', () => {
           titleHighlight: '<mark>Test</mark> Page',
           contentHighlight: 'Some <mark>test</mark> content...',
           rank: 0.5,
+          totalCount: 1,
         },
       ];
 
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce([{ total: 1 }]) // count query
-        .mockResolvedValueOnce(mockResults); // search query
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce(mockResults);
 
       const result = await searchPages(baseOptions);
 
@@ -161,17 +160,17 @@ describe('Search Service', () => {
     });
 
     it('should pass correct parameters for basic search', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages(baseOptions);
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      expect(countCall[1]).toBe('org-123'); // organizationId
-      expect(countCall[2]).toBe('test & query:*'); // parsed tsquery
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      expect(call[1]).toBe('org-123'); // organizationId
+      expect(call[2]).toBe('test & query:*'); // parsed tsquery
     });
 
     it('should apply limit and offset', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 50 }]).mockResolvedValueOnce([]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
@@ -179,57 +178,56 @@ describe('Search Service', () => {
         offset: 20,
       });
 
-      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
-      // limit and offset are the last two params
-      const params = searchCall.slice(1);
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const params = call.slice(1);
       expect(params).toContain(10);
       expect(params).toContain(20);
     });
 
     it('should apply dateFrom filter', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
         dateFrom: '2024-01-01',
       });
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"createdAt" >=');
-      expect(countCall[3]).toBe('2024-01-01');
+      expect(call[3]).toBe('2024-01-01');
     });
 
     it('should apply dateTo filter', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
         dateTo: '2024-12-31',
       });
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"createdAt" <=');
-      expect(countCall[3]).toBe('2024-12-31');
+      expect(call[3]).toBe('2024-12-31');
     });
 
     it('should apply createdById filter', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
         createdById: 'user-456',
       });
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"createdById" =');
-      expect(countCall[3]).toBe('user-456');
+      expect(call[3]).toBe('user-456');
     });
 
     it('should apply all filters together', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
@@ -238,55 +236,46 @@ describe('Search Service', () => {
         createdById: 'user-456',
       });
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"createdAt" >=');
       expect(sql).toContain('"createdAt" <=');
       expect(sql).toContain('"createdById" =');
-      expect(countCall[3]).toBe('2024-01-01');
-      expect(countCall[4]).toBe('2024-12-31');
-      expect(countCall[5]).toBe('user-456');
+      expect(call[3]).toBe('2024-01-01');
+      expect(call[4]).toBe('2024-12-31');
+      expect(call[5]).toBe('user-456');
     });
 
     it('should use default limit of 20 and offset of 0', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 1 }]).mockResolvedValueOnce([]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages(baseOptions);
 
-      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
-      const params = searchCall.slice(1);
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const params = call.slice(1);
       expect(params).toContain(20); // default limit
       expect(params).toContain(0); // default offset
     });
 
     it('should exclude trashed pages', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages(baseOptions);
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"trashedAt" IS NULL');
     });
 
-    it('should throw when the database count query fails', async () => {
+    it('should throw when the database query fails', async () => {
       mockPrisma.$queryRawUnsafe.mockRejectedValueOnce(new Error('connection refused'));
 
       await expect(searchPages(baseOptions)).rejects.toThrow('connection refused');
       expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw when count query succeeds but search query fails', async () => {
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce([{ total: 5 }]) // count query succeeds
-        .mockRejectedValueOnce(new Error('query timeout')); // search query fails
-
-      await expect(searchPages(baseOptions)).rejects.toThrow('query timeout');
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(2);
-    });
-
     it('should use COALESCE for plainContent to handle null values', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 1 }]).mockResolvedValueOnce([
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([
         {
           id: 'page-null-content',
           title: 'Untitled',
@@ -298,14 +287,15 @@ describe('Search Service', () => {
           titleHighlight: 'Untitled',
           contentHighlight: '',
           rank: 0.1,
+          totalCount: 1,
         },
       ]);
 
       const result = await searchPages(baseOptions);
 
       // Verify the search SQL contains the COALESCE wrapper for plainContent
-      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
-      const sql = searchCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('COALESCE(p."plainContent"');
       expect(result.results).toHaveLength(1);
       expect(result.results[0].contentHighlight).toBe('');
@@ -324,27 +314,26 @@ describe('Search Service', () => {
           titleHighlight: '<mark>Orphan</mark> Page',
           contentHighlight: 'Some content...',
           rank: 0.3,
+          totalCount: 1,
         },
       ];
 
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce([{ total: 1 }])
-        .mockResolvedValueOnce(mockResults);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce(mockResults);
 
       const result = await searchPages(baseOptions);
 
       expect(result.results).toHaveLength(1);
       expect(result.results[0].createdByName).toBeNull();
       // Verify the query uses LEFT JOIN so missing users do not exclude pages
-      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
-      const sql = searchCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('LEFT JOIN');
     });
 
     it('should return empty results array for large offset beyond total', async () => {
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce([{ total: 5 }]) // only 5 results exist
-        .mockResolvedValueOnce([]); // offset past all results returns nothing
+      // With window function approach, when offset is beyond all results,
+      // the query returns no rows — so total is 0
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       const result = await searchPages({
         ...baseOptions,
@@ -352,17 +341,17 @@ describe('Search Service', () => {
         offset: 1000,
       });
 
-      expect(result.total).toBe(5);
+      expect(result.total).toBe(0);
       expect(result.results).toHaveLength(0);
 
       // Verify the large offset was passed through
-      const searchCall = mockPrisma.$queryRawUnsafe.mock.calls[1];
-      const params = searchCall.slice(1);
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const params = call.slice(1);
       expect(params).toContain(1000);
     });
 
     it('should apply dateFrom and dateTo at exact boundary (same date)', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({
         ...baseOptions,
@@ -370,13 +359,66 @@ describe('Search Service', () => {
         dateTo: '2024-06-15',
       });
 
-      const countCall = mockPrisma.$queryRawUnsafe.mock.calls[0];
-      const sql = countCall[0] as string;
+      const call = mockPrisma.$queryRawUnsafe.mock.calls[0];
+      const sql = call[0] as string;
       expect(sql).toContain('"createdAt" >=');
       expect(sql).toContain('"createdAt" <=');
       // Both date params should be the same value
-      expect(countCall[3]).toBe('2024-06-15');
-      expect(countCall[4]).toBe('2024-06-15');
+      expect(call[3]).toBe('2024-06-15');
+      expect(call[4]).toBe('2024-06-15');
+    });
+
+    it('should extract totalCount from window function and exclude it from results', async () => {
+      const mockResults = [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          icon: null,
+          createdById: 'user-1',
+          createdByName: 'User',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          titleHighlight: 'Page 1',
+          contentHighlight: '',
+          rank: 0.8,
+          totalCount: 25,
+        },
+        {
+          id: 'page-2',
+          title: 'Page 2',
+          icon: null,
+          createdById: 'user-1',
+          createdByName: 'User',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          titleHighlight: 'Page 2',
+          contentHighlight: '',
+          rank: 0.6,
+          totalCount: 25,
+        },
+      ];
+
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce(mockResults);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.total).toBe(25);
+      expect(result.results).toHaveLength(2);
+      // totalCount should not appear in result rows
+      for (const row of result.results) {
+        expect(row).not.toHaveProperty('totalCount');
+      }
+    });
+
+    it('should use a single query with COUNT(*) OVER() window function', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+      await searchPages(baseOptions);
+
+      // Only one query should be made (not two separate COUNT + SELECT)
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
+      const sql = mockPrisma.$queryRawUnsafe.mock.calls[0][0] as string;
+      expect(sql).toContain('COUNT(*)::int OVER()');
     });
   });
 
@@ -387,7 +429,7 @@ describe('Search Service', () => {
   describe('hybrid fallback', () => {
     it('should use PG FTS when Meilisearch is not available', async () => {
       mockMeiliAvailable.value = false;
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ total: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
       await searchPages({ query: 'test', organizationId: 'org-1' });
 

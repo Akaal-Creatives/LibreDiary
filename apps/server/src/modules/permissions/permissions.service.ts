@@ -82,14 +82,24 @@ export async function checkPageAccess(
     };
   }
 
-  // Check for explicit permission
-  const explicitPermission = await prisma.pagePermission.findFirst({
-    where: {
-      pageId,
-      userId,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-    },
-  });
+  // Check explicit permission and org membership in parallel
+  const [explicitPermission, membership] = await Promise.all([
+    prisma.pagePermission.findFirst({
+      where: {
+        pageId,
+        userId,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    }),
+    prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: page.organizationId,
+          userId,
+        },
+      },
+    }),
+  ]);
 
   if (explicitPermission) {
     return {
@@ -97,16 +107,6 @@ export async function checkPageAccess(
       level: explicitPermission.level,
     };
   }
-
-  // Check organization membership (org members inherit VIEW access)
-  const membership = await prisma.organizationMember.findUnique({
-    where: {
-      organizationId_userId: {
-        organizationId: page.organizationId,
-        userId,
-      },
-    },
-  });
 
   if (membership) {
     // Org members get VIEW access by default

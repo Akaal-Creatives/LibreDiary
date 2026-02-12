@@ -204,21 +204,7 @@ async function searchWithPostgres(options: SearchOptions): Promise<SearchService
 
   const whereClause = conditions.join(' AND ');
 
-  // Count total matching results
-  const countQuery = `
-    SELECT COUNT(*)::int as total
-    FROM "Page" p
-    WHERE ${whereClause}
-  `;
-
-  const countResult = await prisma.$queryRawUnsafe<[{ total: number }]>(countQuery, ...params);
-  const total = countResult[0]?.total ?? 0;
-
-  if (total === 0) {
-    return { results: [], total: 0 };
-  }
-
-  // Fetch results with highlights and ranking
+  // Single query with window function for total count
   const searchQuery = `
     SELECT
       p."id",
@@ -234,7 +220,8 @@ async function searchWithPostgres(options: SearchOptions): Promise<SearchService
       ts_headline('english', COALESCE(p."plainContent", ''), to_tsquery('english', $2),
         'StartSel=<mark>, StopSel=</mark>, MaxFragments=2, MaxWords=30, MinWords=15'
       ) as "contentHighlight",
-      ts_rank(p."search_vector", to_tsquery('english', $2)) as "rank"
+      ts_rank(p."search_vector", to_tsquery('english', $2)) as "rank",
+      COUNT(*)::int OVER() as "totalCount"
     FROM "Page" p
     LEFT JOIN "User" u ON u."id" = p."createdById"
     WHERE ${whereClause}
@@ -244,7 +231,17 @@ async function searchWithPostgres(options: SearchOptions): Promise<SearchService
 
   params.push(limit, offset);
 
-  const results = await prisma.$queryRawUnsafe<SearchResultRow[]>(searchQuery, ...params);
+  const rows = await prisma.$queryRawUnsafe<(SearchResultRow & { totalCount: number })[]>(
+    searchQuery,
+    ...params
+  );
+
+  if (rows.length === 0) {
+    return { results: [], total: 0 };
+  }
+
+  const total = rows[0]!.totalCount;
+  const results: SearchResultRow[] = rows.map(({ totalCount: _, ...row }) => row);
 
   return { results, total };
 }

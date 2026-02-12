@@ -75,15 +75,15 @@ describe('Pages Service - Hierarchy Operations', () => {
   });
 
   describe('getPageAncestors', () => {
-    it('should return ancestors in order', async () => {
+    it('should return ancestors in order via CTE', async () => {
       const grandparent = { ...mockPage, id: 'grandparent', parentId: null };
       const parent = { ...mockPage, id: 'parent', parentId: 'grandparent' };
       const child = { ...mockPage, id: 'child', parentId: 'parent' };
 
-      mockPrismaPage.findFirst
-        .mockResolvedValueOnce(child) // target page
-        .mockResolvedValueOnce(parent) // first ancestor
-        .mockResolvedValueOnce(grandparent); // second ancestor
+      // findFirst returns the target page
+      mockPrismaPage.findFirst.mockResolvedValueOnce(child);
+      // CTE returns ancestors ordered by depth DESC
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([grandparent, parent]);
 
       const result = await pagesService.getPageAncestors('org-123', 'child');
 

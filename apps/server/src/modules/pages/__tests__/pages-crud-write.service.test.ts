@@ -27,12 +27,14 @@ const { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } = vi.hoisted(() 
     page: mockPrismaPage,
     favorite: mockPrismaFavorite,
     $transaction: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
   };
 
   function resetMocks() {
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaFavorite).forEach((mock) => mock.mockReset());
     mockPrisma.$transaction.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
   }
 
   const now = new Date();
@@ -156,7 +158,8 @@ describe('Pages Service - Write Operations', () => {
   describe('trashPage', () => {
     it('should trash a page', async () => {
       mockPrismaPage.findFirst.mockResolvedValue(mockPage);
-      mockPrismaPage.findMany.mockResolvedValue([]);
+      // CTE returns no descendants
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
       mockPrismaPage.updateMany.mockResolvedValue({ count: 1 });
 
       await pagesService.trashPage('org-123', 'page-123');
@@ -166,8 +169,8 @@ describe('Pages Service - Write Operations', () => {
 
     it('should trash page with descendants', async () => {
       mockPrismaPage.findFirst.mockResolvedValue(mockPage);
-      // First call returns children, second call (for grandchildren) returns empty
-      mockPrismaPage.findMany.mockResolvedValueOnce([{ id: 'child-1' }]).mockResolvedValueOnce([]); // No grandchildren - prevents infinite recursion
+      // CTE returns descendant IDs
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ id: 'child-1' }]);
       mockPrismaPage.updateMany.mockResolvedValue({ count: 2 });
 
       await pagesService.trashPage('org-123', 'page-123');

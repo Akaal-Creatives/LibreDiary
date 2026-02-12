@@ -26,12 +26,14 @@ export const mockPrisma = {
   page: mockPrismaPage,
   favorite: mockPrismaFavorite,
   $transaction: vi.fn(),
+  $queryRawUnsafe: vi.fn(),
 };
 
 export function resetMocks() {
   Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
   Object.values(mockPrismaFavorite).forEach((mock) => mock.mockReset());
   mockPrisma.$transaction.mockReset();
+  mockPrisma.$queryRawUnsafe.mockReset();
 }
 
 // Shared test data

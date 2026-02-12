@@ -157,13 +157,29 @@ export function buildPageTree(pages: Page[]): PageWithChildren[] {
  * Get page tree for an organization
  */
 export async function getPageTree(orgId: string): Promise<PageWithChildren[]> {
-  const pages = await prisma.page.findMany({
+  const pages = (await prisma.page.findMany({
     where: {
       organizationId: orgId,
       trashedAt: null,
     },
+    select: {
+      id: true,
+      organizationId: true,
+      parentId: true,
+      position: true,
+      title: true,
+      icon: true,
+      coverUrl: true,
+      isPublic: true,
+      publicSlug: true,
+      trashedAt: true,
+      createdById: true,
+      updatedById: true,
+      createdAt: true,
+      updatedAt: true,
+    },
     orderBy: [{ parentId: 'asc' }, { position: 'asc' }],
-  });
+  })) as unknown as Page[];
 
   return buildPageTree(pages);
 }
@@ -350,29 +366,25 @@ async function trashPageWithDescendants(orgId: string, pageId: string): Promise<
 }
 
 /**
- * Get all descendant IDs of a page
+ * Get all descendant IDs of a page using a recursive CTE
+ * to fetch the entire descendant tree in a single query.
  */
 async function getDescendantIds(orgId: string, pageId: string): Promise<string[]> {
-  const descendants: string[] = [];
+  const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+    `WITH RECURSIVE descendant_cte AS (
+      SELECT p."id" FROM "Page" p
+      WHERE p."parentId" = $1 AND p."organizationId" = $2 AND p."trashedAt" IS NULL
+      UNION ALL
+      SELECT child."id" FROM "Page" child
+      INNER JOIN descendant_cte d ON child."parentId" = d."id"
+      WHERE child."organizationId" = $2 AND child."trashedAt" IS NULL
+    )
+    SELECT "id" FROM descendant_cte`,
+    pageId,
+    orgId
+  );
 
-  // Get direct children
-  const children = await prisma.page.findMany({
-    where: {
-      organizationId: orgId,
-      parentId: pageId,
-      trashedAt: null,
-    },
-    select: { id: true },
-  });
-
-  for (const child of children) {
-    descendants.push(child.id);
-    // Recursively get grandchildren
-    const grandchildren = await getDescendantIds(orgId, child.id);
-    descendants.push(...grandchildren);
-  }
-
-  return descendants;
+  return rows.map((row) => row.id);
 }
 
 // ===========================================
@@ -491,7 +503,8 @@ export async function movePage(orgId: string, pageId: string, input: MovePageInp
 }
 
 /**
- * Get ancestors of a page (for breadcrumbs)
+ * Get ancestors of a page (for breadcrumbs) using a recursive CTE
+ * to fetch the entire ancestor chain in a single query.
  */
 export async function getPageAncestors(orgId: string, pageId: string): Promise<Page[]> {
   const page = await prisma.page.findFirst({
@@ -505,23 +518,29 @@ export async function getPageAncestors(orgId: string, pageId: string): Promise<P
     throw new Error('PAGE_NOT_FOUND');
   }
 
-  const ancestors: Page[] = [];
-  let currentParentId = page.parentId;
-
-  // Walk up the tree
-  while (currentParentId) {
-    const parent = await prisma.page.findFirst({
-      where: {
-        id: currentParentId,
-        organizationId: orgId,
-      },
-    });
-
-    if (!parent) break;
-
-    ancestors.unshift(parent); // Add to beginning for correct order
-    currentParentId = parent.parentId;
+  if (!page.parentId) {
+    return [];
   }
+
+  const ancestors = await prisma.$queryRawUnsafe<Page[]>(
+    `WITH RECURSIVE ancestor_cte AS (
+      SELECT p.*, 0 AS depth FROM "Page" p
+      WHERE p."id" = $1 AND p."organizationId" = $2
+      UNION ALL
+      SELECT parent.*, a.depth + 1 FROM "Page" parent
+      INNER JOIN ancestor_cte a ON a."parentId" = parent."id"
+      WHERE parent."organizationId" = $2
+    )
+    SELECT "id", "organizationId", "parentId", "position", "title", "icon",
+           "coverUrl", "yjsState", "htmlContent", "plainContent", "isPublic",
+           "publicSlug", "trashedAt", "createdById", "updatedById",
+           "createdAt", "updatedAt"
+    FROM ancestor_cte
+    WHERE depth > 0
+    ORDER BY depth DESC`,
+    pageId,
+    orgId
+  );
 
   return ancestors;
 }
