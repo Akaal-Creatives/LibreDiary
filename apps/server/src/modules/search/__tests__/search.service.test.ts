@@ -18,8 +18,16 @@ vi.mock('../../../lib/prisma.js', () => ({
 }));
 
 // Mock Meilisearch — default to unavailable so existing PG FTS tests pass unchanged
-const { mockMeiliAvailable } = vi.hoisted(() => {
-  return { mockMeiliAvailable: { value: false } };
+const { mockMeiliAvailable, mockMeiliSearch, mockMeiliClient } = vi.hoisted(() => {
+  const mockMeiliSearch = vi.fn();
+  const mockMeiliClient = {
+    index: vi.fn().mockReturnValue({ search: mockMeiliSearch }),
+  };
+  return {
+    mockMeiliAvailable: { value: false },
+    mockMeiliSearch,
+    mockMeiliClient,
+  };
 });
 
 vi.mock('../meilisearch.init.js', () => ({
@@ -27,7 +35,7 @@ vi.mock('../meilisearch.init.js', () => ({
 }));
 
 vi.mock('../../../lib/meilisearch.js', () => ({
-  getMeilisearchClient: () => null,
+  getMeilisearchClient: () => (mockMeiliAvailable.value ? mockMeiliClient : null),
   PAGES_INDEX: 'test_pages',
 }));
 
@@ -38,6 +46,8 @@ describe('Search Service', () => {
   beforeEach(() => {
     resetMocks();
     mockMeiliAvailable.value = false; // Default to PG FTS path
+    mockMeiliSearch.mockReset();
+    mockMeiliClient.index.mockReturnValue({ search: mockMeiliSearch });
   });
 
   // ===========================================
@@ -419,6 +429,228 @@ describe('Search Service', () => {
       expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
       const sql = mockPrisma.$queryRawUnsafe.mock.calls[0][0] as string;
       expect(sql).toContain('COUNT(*)::int OVER()');
+    });
+  });
+
+  // ===========================================
+  // searchWithMeilisearch path
+  // ===========================================
+
+  describe('searchWithMeilisearch path', () => {
+    const baseOptions = {
+      query: 'test query',
+      organizationId: 'org-123',
+    };
+
+    const makeMeiliResponse = (overrides: Record<string, unknown> = {}) => ({
+      hits: [
+        {
+          id: 'page-1',
+          title: 'Test Page',
+          plainContent: 'Some test content for searching',
+          orgId: 'org-123',
+          createdById: 'user-1',
+          createdAt: 1700000000,
+          updatedAt: 1700001000,
+          _formatted: {
+            title: '<mark>Test</mark> Page',
+            plainContent: 'Some <mark>test</mark> content...',
+          },
+        },
+      ],
+      estimatedTotalHits: 1,
+      ...overrides,
+    });
+
+    beforeEach(() => {
+      mockMeiliAvailable.value = true;
+    });
+
+    it('uses Meilisearch when available', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse());
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([
+        {
+          id: 'page-1',
+          icon: null,
+          createdByName: 'Test User',
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-02'),
+        },
+      ]);
+
+      await searchPages(baseOptions);
+
+      expect(mockMeiliClient.index).toHaveBeenCalledWith('test_pages');
+      expect(mockMeiliSearch).toHaveBeenCalled();
+    });
+
+    it('builds orgId filter', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages(baseOptions);
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.filter).toEqual(
+        expect.arrayContaining([expect.stringContaining('orgId = "org-123"')])
+      );
+    });
+
+    it('builds createdById filter', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages({ ...baseOptions, createdById: 'user-1' });
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.filter).toEqual(
+        expect.arrayContaining([expect.stringContaining('createdById = "user-1"')])
+      );
+    });
+
+    it('builds dateFrom filter as Unix timestamp', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages({ ...baseOptions, dateFrom: '2024-01-01' });
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      const dateFromFilter = searchOpts.filter.find((f: string) => f.includes('createdAt >='));
+      expect(dateFromFilter).toBeDefined();
+      const timestamp = Math.floor(new Date('2024-01-01').getTime() / 1000);
+      expect(dateFromFilter).toContain(`${timestamp}`);
+    });
+
+    it('builds dateTo filter as end-of-day timestamp', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages({ ...baseOptions, dateTo: '2024-12-31' });
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      const dateToFilter = searchOpts.filter.find((f: string) => f.includes('createdAt <='));
+      expect(dateToFilter).toBeDefined();
+      // End of day should be 23:59:59
+      const endOfDay = new Date('2024-12-31');
+      endOfDay.setHours(23, 59, 59, 999);
+      const timestamp = Math.floor(endOfDay.getTime() / 1000);
+      expect(dateToFilter).toContain(`${timestamp}`);
+    });
+
+    it('passes limit and offset', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages({ ...baseOptions, limit: 10, offset: 5 });
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.limit).toBe(10);
+      expect(searchOpts.offset).toBe(5);
+    });
+
+    it('requests highlights for title and plainContent', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages(baseOptions);
+
+      const searchOpts = mockMeiliSearch.mock.calls[0][1];
+      expect(searchOpts.attributesToHighlight).toEqual(['title', 'plainContent']);
+    });
+
+    it('maps hits to SearchResultRow format', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse());
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([
+        {
+          id: 'page-1',
+          icon: 'icon-1',
+          createdByName: 'Test User',
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-02'),
+        },
+      ]);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.results).toHaveLength(1);
+      const row = result.results[0];
+      expect(row.id).toBe('page-1');
+      expect(row.title).toBe('Test Page');
+      expect(row.icon).toBe('icon-1');
+      expect(row.createdById).toBe('user-1');
+      expect(row.createdByName).toBe('Test User');
+      expect(row.titleHighlight).toBe('<mark>Test</mark> Page');
+      expect(row.contentHighlight).toBe('Some <mark>test</mark> content...');
+      expect(typeof row.rank).toBe('number');
+    });
+
+    it('fetches page metadata from PG for matched IDs', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse());
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([
+        {
+          id: 'page-1',
+          icon: null,
+          createdByName: 'User',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      await searchPages(baseOptions);
+
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(expect.stringContaining('SELECT'), [
+        'page-1',
+      ]);
+    });
+
+    it('handles missing metadata gracefully', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse());
+      // PG returns no matching rows
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].icon).toBeNull();
+      expect(result.results[0].createdByName).toBeNull();
+    });
+
+    it('returns estimatedTotalHits as total', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ estimatedTotalHits: 42 }));
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.total).toBe(42);
+    });
+
+    it('returns hits.length when estimatedTotalHits undefined', async () => {
+      const response = makeMeiliResponse();
+      delete (response as any).estimatedTotalHits;
+      mockMeiliSearch.mockResolvedValueOnce(response);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+      const result = await searchPages(baseOptions);
+
+      expect(result.total).toBe(1); // hits.length
+    });
+
+    it('skips metadata fetch when no hits', async () => {
+      mockMeiliSearch.mockResolvedValueOnce(makeMeiliResponse({ hits: [] }));
+
+      await searchPages(baseOptions);
+
+      expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
+    });
+
+    it('falls back to PG FTS when Meilisearch throws', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      mockMeiliSearch.mockRejectedValueOnce(new Error('connection refused'));
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+      await searchPages(baseOptions);
+
+      // PG FTS was used as fallback
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[search] Meilisearch query failed'),
+        expect.anything()
+      );
+      warnSpy.mockRestore();
     });
   });
 
