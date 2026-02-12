@@ -256,7 +256,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add restore endpoint
 - [x] Add permanent delete endpoint
 - [x] Create trash page UI
-- [ ] Implement auto-delete after 30 days (cron job - future enhancement)
+- [x] Implement auto-delete after 30 days (cron job)
 
 ---
 

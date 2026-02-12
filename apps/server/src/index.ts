@@ -2,6 +2,7 @@ import { env } from './config/index.js';
 import { buildApp } from './app.js';
 import { startBackupScheduler, stopBackupScheduler } from './modules/backups/index.js';
 import { startGdprScheduler, stopGdprScheduler } from './modules/gdpr/index.js';
+import { startTrashCleanupScheduler, stopTrashCleanupScheduler } from './modules/pages/index.js';
 
 async function main() {
   const app = await buildApp();
@@ -20,6 +21,7 @@ async function main() {
     // Start schedulers
     startBackupScheduler();
     startGdprScheduler();
+    startTrashCleanupScheduler();
   } catch (error) {
     app.log.error(error);
     process.exit(1);
@@ -35,6 +37,7 @@ async function main() {
       try {
         stopBackupScheduler();
         stopGdprScheduler();
+        stopTrashCleanupScheduler();
         await app.close();
         app.log.info('Server closed');
         process.exit(0);
