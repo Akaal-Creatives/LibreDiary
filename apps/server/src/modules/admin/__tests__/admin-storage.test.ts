@@ -12,26 +12,33 @@ vi.mock('../admin.middleware.js', () => ({
 }));
 
 // Mock files service
-const { mockFilesService, resetMocks } = vi.hoisted(() => {
+const { mockFilesService, mockMigrationService, resetMocks } = vi.hoisted(() => {
   const mockFilesService = {
     getStorageInfo: vi.fn(),
     testStorageConnection: vi.fn(),
   };
 
+  const mockMigrationService = {
+    migrateStorage: vi.fn(),
+  };
+
   function resetMocks() {
     Object.values(mockFilesService).forEach((mock) => mock.mockReset());
+    Object.values(mockMigrationService).forEach((mock) => mock.mockReset());
   }
 
-  return { mockFilesService, resetMocks };
+  return { mockFilesService, mockMigrationService, resetMocks };
 });
 
 vi.mock('../../files/files.service.js', () => mockFilesService);
+vi.mock('../../files/storage-migration.service.js', () => mockMigrationService);
 
-// Need to also mock the prisma imports that admin.service uses
+// Need to also mock the prisma imports that admin.service and audit.service use
 vi.mock('../../../lib/prisma.js', () => ({
   prisma: {
     user: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
     organization: { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+    auditLog: { create: vi.fn().mockResolvedValue({}), findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -101,6 +108,132 @@ describe('Admin Storage Endpoints', () => {
       expect(body.success).toBe(true);
       expect(body.data.result.success).toBe(true);
       expect(body.data.result.message).toContain('accessible');
+    });
+  });
+
+  // ===========================================
+  // POST /admin/storage/migrate
+  // ===========================================
+
+  describe('POST /admin/storage/migrate', () => {
+    it('should trigger migration and return result with 200', async () => {
+      mockMigrationService.migrateStorage.mockResolvedValue({
+        total: 5,
+        migrated: 5,
+        failed: 0,
+        errors: [],
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        headers: { 'content-type': 'application/json' },
+        payload: { targetType: 'S3' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.result.total).toBe(5);
+      expect(body.data.result.migrated).toBe(5);
+      expect(body.data.result.failed).toBe(0);
+    });
+
+    it('should pass targetType to migration service', async () => {
+      mockMigrationService.migrateStorage.mockResolvedValue({
+        total: 0,
+        migrated: 0,
+        failed: 0,
+        errors: [],
+      });
+
+      await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: { targetType: 'MINIO' },
+      });
+
+      expect(mockMigrationService.migrateStorage).toHaveBeenCalledWith(
+        expect.objectContaining({ targetType: 'MINIO' })
+      );
+    });
+
+    it('should support dry-run mode', async () => {
+      mockMigrationService.migrateStorage.mockResolvedValue({
+        total: 10,
+        migrated: 0,
+        failed: 0,
+        errors: [],
+        dryRun: true,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: { targetType: 'S3', dryRun: true },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.data.result.dryRun).toBe(true);
+      expect(mockMigrationService.migrateStorage).toHaveBeenCalledWith(
+        expect.objectContaining({ targetType: 'S3', dryRun: true })
+      );
+    });
+
+    it('should return 400 for missing targetType', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 for invalid targetType', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: { targetType: 'INVALID' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return migration errors in response', async () => {
+      mockMigrationService.migrateStorage.mockResolvedValue({
+        total: 3,
+        migrated: 2,
+        failed: 1,
+        errors: [{ fileId: 'file-3', fileName: 'broken.pdf', error: 'File not found on disk' }],
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: { targetType: 'S3' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.data.result.failed).toBe(1);
+      expect(body.data.result.errors).toHaveLength(1);
+      expect(body.data.result.errors[0].fileId).toBe('file-3');
+    });
+
+    it('should return 500 when migration throws', async () => {
+      mockMigrationService.migrateStorage.mockRejectedValue(
+        new Error('Target storage connection failed: Invalid credentials')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/storage/migrate',
+        payload: { targetType: 'S3' },
+      });
+
+      expect(response.statusCode).toBe(500);
     });
   });
 });

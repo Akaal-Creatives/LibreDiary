@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/auth.middleware.js';
 import { requireSuperAdmin } from './admin.middleware.js';
 import * as adminService from './admin.service.js';
 import * as filesService from '../files/files.service.js';
+import * as storageMigrationService from '../files/storage-migration.service.js';
 import * as aiService from '../ai/ai.service.js';
 import { logAudit } from '../audit/audit.service.js';
 import { z } from 'zod';
@@ -471,6 +472,47 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
   // Test storage connection
   app.post('/storage/test', async (_request, reply) => {
     const result = await filesService.testStorageConnection();
+    return reply.send({
+      success: true,
+      data: { result },
+    });
+  });
+
+  // Migrate storage between providers
+  const migrateSchema = z.object({
+    targetType: z.enum(['LOCAL', 'MINIO', 'S3']),
+    dryRun: z.boolean().optional(),
+  });
+
+  app.post('/storage/migrate', async (request, reply) => {
+    const parsed = migrateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Invalid request body',
+        details: parsed.error.flatten().fieldErrors,
+      });
+    }
+
+    const result = await storageMigrationService.migrateStorage({
+      targetType: parsed.data.targetType,
+      dryRun: parsed.data.dryRun,
+    });
+
+    logAudit({
+      action: 'ADMIN_SETTINGS_UPDATED',
+      userId: request.user?.id,
+      resourceType: 'system_settings',
+      metadata: {
+        subAction: 'STORAGE_MIGRATION',
+        targetType: parsed.data.targetType,
+        dryRun: parsed.data.dryRun ?? false,
+        total: result.total,
+        migrated: result.migrated,
+        failed: result.failed,
+      },
+    });
+
     return reply.send({
       success: true,
       data: { result },

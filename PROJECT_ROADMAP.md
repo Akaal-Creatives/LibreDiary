@@ -533,7 +533,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 - [x] Create storage settings UI
 - [x] Validate storage credentials
-- [ ] Migrate between storage providers (optional)
+- [x] Migrate between storage providers (optional)
 
 ---
 
