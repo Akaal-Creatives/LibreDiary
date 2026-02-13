@@ -22,52 +22,71 @@ vi.mock('../../organizations/organizations.middleware.js', () => ({
   }),
 }));
 
-const { mockBackupService, mockSystemBackupService, mockPrisma, mockEnvRef, resetMocks } =
-  vi.hoisted(() => {
-    const mockBackupService = {
-      listOrgBackups: vi.fn(),
-      createOrgBackup: vi.fn(),
-      getBackup: vi.fn(),
-      downloadBackup: vi.fn(),
-      deleteBackup: vi.fn(),
-    };
+const {
+  mockBackupService,
+  mockSystemBackupService,
+  mockRestoreService,
+  mockPrisma,
+  mockEnvRef,
+  resetMocks,
+} = vi.hoisted(() => {
+  const mockBackupService = {
+    listOrgBackups: vi.fn(),
+    createOrgBackup: vi.fn(),
+    getBackup: vi.fn(),
+    downloadBackup: vi.fn(),
+    deleteBackup: vi.fn(),
+  };
 
-    const mockSystemBackupService = {
-      checkPgDumpAvailable: vi.fn(),
-      createSystemBackup: vi.fn(),
-      listSystemBackups: vi.fn(),
-    };
+  const mockSystemBackupService = {
+    checkPgDumpAvailable: vi.fn(),
+    createSystemBackup: vi.fn(),
+    listSystemBackups: vi.fn(),
+  };
 
-    const mockPrismaBackup = {
-      findMany: vi.fn(),
-    };
+  const mockRestoreService = {
+    restoreOrgBackup: vi.fn(),
+  };
 
-    const mockPrisma = {
-      backup: mockPrismaBackup,
-      auditLog: { create: vi.fn().mockResolvedValue({}) },
-    };
+  const mockPrismaBackup = {
+    findMany: vi.fn(),
+  };
 
-    const mockEnvRef = {
-      value: {
-        BACKUP_ENABLED: true,
-        BACKUP_STORAGE_TYPE: 'LOCAL',
-        BACKUP_SCHEDULE: '0 2 * * *',
-        BACKUP_RETENTION_DAYS: 30,
-        BACKUP_MAX_SIZE_MB: 500,
-      },
-    };
+  const mockPrisma = {
+    backup: mockPrismaBackup,
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
+  };
 
-    function resetMocks() {
-      Object.values(mockBackupService).forEach((m) => m.mockReset());
-      Object.values(mockSystemBackupService).forEach((m) => m.mockReset());
-      Object.values(mockPrismaBackup).forEach((m) => m.mockReset());
-    }
+  const mockEnvRef = {
+    value: {
+      BACKUP_ENABLED: true,
+      BACKUP_STORAGE_TYPE: 'LOCAL',
+      BACKUP_SCHEDULE: '0 2 * * *',
+      BACKUP_RETENTION_DAYS: 30,
+      BACKUP_MAX_SIZE_MB: 500,
+    },
+  };
 
-    return { mockBackupService, mockSystemBackupService, mockPrisma, mockEnvRef, resetMocks };
-  });
+  function resetMocks() {
+    Object.values(mockBackupService).forEach((m) => m.mockReset());
+    Object.values(mockSystemBackupService).forEach((m) => m.mockReset());
+    Object.values(mockRestoreService).forEach((m) => m.mockReset());
+    Object.values(mockPrismaBackup).forEach((m) => m.mockReset());
+  }
+
+  return {
+    mockBackupService,
+    mockSystemBackupService,
+    mockRestoreService,
+    mockPrisma,
+    mockEnvRef,
+    resetMocks,
+  };
+});
 
 vi.mock('../backup.service.js', () => mockBackupService);
 vi.mock('../system-backup.service.js', () => mockSystemBackupService);
+vi.mock('../backup-restore.service.js', () => mockRestoreService);
 vi.mock('../../../lib/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/index.js', () => ({
   get env() {
@@ -80,6 +99,9 @@ vi.mock('@librediary/shared', () => ({
     parse: vi.fn((body: unknown) => body),
   },
   createSystemBackupSchema: {
+    parse: vi.fn((body: unknown) => body),
+  },
+  restoreOrgBackupSchema: {
     parse: vi.fn((body: unknown) => body),
   },
 }));
@@ -298,6 +320,64 @@ describe('Admin Backup Routes', () => {
       expect(response.statusCode).toBe(404);
     });
   });
+
+  // --- POST /admin/backups/system/:backupId/restore ---
+  describe('POST /admin/backups/system/:backupId/restore', () => {
+    it('should restore a backup', async () => {
+      mockRestoreService.restoreOrgBackup.mockResolvedValue({
+        success: true,
+        pagesRestored: 5,
+        databasesRestored: 2,
+        filesRestored: 3,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/backups/system/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.result.pagesRestored).toBe(5);
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', undefined, {});
+    });
+
+    it('should pass password for encrypted backups', async () => {
+      mockRestoreService.restoreOrgBackup.mockResolvedValue({
+        success: true,
+        pagesRestored: 1,
+        databasesRestored: 0,
+        filesRestored: 0,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/backups/system/backup-1/restore',
+        payload: { password: 'securepass' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', undefined, {
+        password: 'securepass',
+      });
+    });
+
+    it('should return error when restore fails', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(new Error('BACKUP_NOT_FOUND'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/backups/system/nonexistent/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_NOT_FOUND');
+    });
+  });
 });
 
 // ===========================================
@@ -472,6 +552,80 @@ describe('Org Backup Routes', () => {
       });
 
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  // --- POST /organizations/:orgId/backups/:backupId/restore ---
+  describe('POST /organizations/:orgId/backups/:backupId/restore', () => {
+    it('should restore a backup for the org', async () => {
+      mockRestoreService.restoreOrgBackup.mockResolvedValue({
+        success: true,
+        pagesRestored: 3,
+        databasesRestored: 1,
+        filesRestored: 2,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-1/backups/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.result.pagesRestored).toBe(3);
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', 'org-1', {});
+    });
+
+    it('should pass password for encrypted backups', async () => {
+      mockRestoreService.restoreOrgBackup.mockResolvedValue({
+        success: true,
+        pagesRestored: 0,
+        databasesRestored: 0,
+        filesRestored: 0,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-1/backups/backup-1/restore',
+        payload: { password: 'mypassword' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', 'org-1', {
+        password: 'mypassword',
+      });
+    });
+
+    it('should return error when password is required', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(
+        new Error('Password required for encrypted backup')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-1/backups/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_PASSWORD_REQUIRED');
+    });
+
+    it('should return 404 when backup not found', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(new Error('BACKUP_NOT_FOUND'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-1/backups/nonexistent/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_NOT_FOUND');
     });
   });
 });

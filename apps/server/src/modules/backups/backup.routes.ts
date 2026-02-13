@@ -5,7 +5,12 @@ import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { env } from '../../config/index.js';
 import * as backupService from './backup.service.js';
 import * as systemBackupService from './system-backup.service.js';
-import { createOrgBackupSchema, createSystemBackupSchema } from '@librediary/shared';
+import * as restoreService from './backup-restore.service.js';
+import {
+  createOrgBackupSchema,
+  createSystemBackupSchema,
+  restoreOrgBackupSchema,
+} from '@librediary/shared';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
 import { logAudit } from '../audit/audit.service.js';
 
@@ -39,6 +44,11 @@ const errorMap: ErrorMap = {
     status: 400,
     code: 'BACKUP_NOT_AVAILABLE',
     message: 'Backup is not available for download',
+  },
+  'Password required for encrypted backup': {
+    status: 400,
+    code: 'BACKUP_PASSWORD_REQUIRED',
+    message: 'Password is required to restore an encrypted backup',
   },
 };
 
@@ -177,6 +187,35 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
       }
     }
   );
+
+  // --- Restore system backup ---
+  app.post<{ Params: BackupParams }>(
+    '/system/:backupId/restore',
+    async (request: FastifyRequest<{ Params: BackupParams }>, reply) => {
+      try {
+        const body = restoreOrgBackupSchema.parse(request.body);
+        const result = await restoreService.restoreOrgBackup(
+          request.params.backupId,
+          undefined as unknown as string,
+          body
+        );
+
+        logAudit({
+          action: 'BACKUP_RESTORED',
+          userId: getAuthUser(request).id,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
+
+        return reply.send({
+          success: true,
+          data: { result },
+        });
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
 }
 
 // ===========================================
@@ -288,6 +327,36 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
         return reply.send({
           success: true,
           data: { message: 'Backup deleted' },
+        });
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
+
+  // --- Restore org backup ---
+  app.post<{ Params: OrgBackupParams }>(
+    '/:backupId/restore',
+    async (request: FastifyRequest<{ Params: OrgBackupParams }>, reply) => {
+      try {
+        const body = restoreOrgBackupSchema.parse(request.body);
+        const result = await restoreService.restoreOrgBackup(
+          request.params.backupId,
+          request.params.orgId,
+          body
+        );
+
+        logAudit({
+          action: 'BACKUP_RESTORED',
+          userId: getAuthUser(request).id,
+          organizationId: request.params.orgId,
+          resourceType: 'backup',
+          resourceId: request.params.backupId,
+        });
+
+        return reply.send({
+          success: true,
+          data: { result },
         });
       } catch (error) {
         return mapServiceError(error, reply, errorMap);

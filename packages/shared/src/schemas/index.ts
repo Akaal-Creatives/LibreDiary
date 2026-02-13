@@ -338,6 +338,10 @@ export const createSystemBackupSchema = z
     path: ['password'],
   });
 
+export const restoreOrgBackupSchema = z.object({
+  password: z.string().optional(),
+});
+
 // ===========================================
 // TYPE EXPORTS
 // ===========================================
@@ -377,3 +381,4 @@ export type FileUploadInput = z.infer<typeof fileUploadSchema>;
 export type FileListQueryInput = z.infer<typeof fileListQuerySchema>;
 export type CreateOrgBackupInput = z.infer<typeof createOrgBackupSchema>;
 export type CreateSystemBackupInput = z.infer<typeof createSystemBackupSchema>;
+export type RestoreOrgBackupInput = z.infer<typeof restoreOrgBackupSchema>;
