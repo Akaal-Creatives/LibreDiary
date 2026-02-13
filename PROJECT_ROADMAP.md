@@ -554,7 +554,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement scheduled backups (node-cron)
 - [x] Create manual backup trigger
 - [x] Implement backup retention cleanup
-- [ ] Implement backup restoration (future enhancement)
+- [x] Implement backup restoration (pages, databases, files with hierarchy mapping)
 
 ### 13.3 Backup Management
 
@@ -574,7 +574,7 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Create API token model (SHA-256 hashed, `ld_` prefix)
 - [x] Implement token generation (cryptographically secure, shown once)
 - [x] Create API authentication middleware (Bearer token with session fallback)
-- [ ] Document API endpoints (future enhancement)
+- [x] Document API endpoints (comprehensive API reference in docs/api-reference.md)
 - [x] Add rate limiting per token
 
 ### 14.2 API Token Management
@@ -755,10 +755,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 
 ### 20.5 Documentation
 
-- [ ] Create user documentation
-- [ ] Create admin documentation
-- [ ] Create API documentation
-- [ ] Create troubleshooting guide
+- [x] Create user documentation (docs/user-guide.md)
+- [x] Create admin documentation (docs/admin-guide.md)
+- [x] Create API documentation (docs/api-reference.md)
+- [x] Create troubleshooting guide (docs/troubleshooting.md)
 
 ---
 

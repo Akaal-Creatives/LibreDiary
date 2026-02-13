@@ -83,7 +83,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 - [x] **Phase 18: Editor Enhancements** — Slash commands, code blocks, callouts, toggles, drag & drop
 - [x] **Phase 19: GDPR Compliance** — Data export, account deletion with 30-day grace period
-- [ ] **Phase 20: Production Ready** — UI/UX polish (done), performance (done), accessibility (done), Docker deployment
+- [ ] **Phase 20: Production Ready** — UI/UX polish (done), performance (done), accessibility (done), documentation (done), Docker deployment
 
 ## Quick Start
 
@@ -107,6 +107,17 @@ pnpm db:push
 # Start development servers
 pnpm dev
 ```
+
+## Documentation
+
+| Guide                                      | Description                                          |
+| ------------------------------------------ | ---------------------------------------------------- |
+| [User Guide](docs/user-guide.md)           | Editor, pages, databases, collaboration, search, AI  |
+| [Admin Guide](docs/admin-guide.md)         | Setup, user management, storage, backups, monitoring |
+| [API Reference](docs/api-reference.md)     | All 95+ REST endpoints with auth and examples        |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions                          |
+| [Deployment](docs/deployment.md)           | Docker production deployment                         |
+| [Translating](docs/TRANSLATING.md)         | Contributing translations                            |
 
 ## Deployment
 
