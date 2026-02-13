@@ -552,4 +552,507 @@ describe('Backup Restore Service', () => {
       );
     });
   });
+
+  // ===========================================
+  // TEMP DIR CLEANUP ON ERROR
+  // ===========================================
+
+  describe('temp directory cleanup', () => {
+    it('should clean up temp directory even when extraction fails', async () => {
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockRejectedValue(new Error('Corrupt archive'));
+
+      await expect(restoreOrgBackup('backup-1', 'org-1')).rejects.toThrow('Corrupt archive');
+
+      expect(mockFs.rmSync).toHaveBeenCalledWith('/tmp/restore-test', {
+        recursive: true,
+        force: true,
+      });
+    });
+
+    it('should clean up temp directory when page restoration fails', async () => {
+      const manifest = createManifest({
+        pages: [
+          {
+            id: 'p1',
+            title: 'Page',
+            icon: null,
+            parentId: null,
+            position: 0,
+            htmlContent: '',
+            isPublic: false,
+            createdAt: '2025-01-10T00:00:00.000Z',
+            updatedAt: '2025-01-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockPrisma.page.create.mockRejectedValue(new Error('DB constraint violation'));
+
+      await expect(restoreOrgBackup('backup-1', 'org-1')).rejects.toThrow(
+        'DB constraint violation'
+      );
+
+      expect(mockFs.rmSync).toHaveBeenCalledWith('/tmp/restore-test', {
+        recursive: true,
+        force: true,
+      });
+    });
+  });
+
+  // ===========================================
+  // BACKUP STATUS VALIDATION
+  // ===========================================
+
+  describe('backup status validation', () => {
+    it('should throw BACKUP_NOT_AVAILABLE for PENDING backups', async () => {
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord({ status: 'PENDING' }));
+
+      await expect(restoreOrgBackup('backup-1', 'org-1')).rejects.toThrow('BACKUP_NOT_AVAILABLE');
+    });
+
+    it('should throw BACKUP_NOT_AVAILABLE for FAILED backups', async () => {
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord({ status: 'FAILED' }));
+
+      await expect(restoreOrgBackup('backup-1', 'org-1')).rejects.toThrow('BACKUP_NOT_AVAILABLE');
+    });
+  });
+
+  // ===========================================
+  // DEEP PAGE HIERARCHY
+  // ===========================================
+
+  describe('deep page hierarchy', () => {
+    it('should correctly map three-level grandparent-parent-child hierarchy', async () => {
+      const manifest = createManifest({
+        pages: [
+          {
+            id: 'gp',
+            title: 'Grandparent',
+            icon: null,
+            parentId: null,
+            position: 0,
+            htmlContent: '',
+            isPublic: false,
+            createdAt: '2025-01-10T00:00:00.000Z',
+            updatedAt: '2025-01-10T00:00:00.000Z',
+          },
+          {
+            id: 'parent',
+            title: 'Parent',
+            icon: null,
+            parentId: 'gp',
+            position: 0,
+            htmlContent: '',
+            isPublic: false,
+            createdAt: '2025-01-10T00:00:00.000Z',
+            updatedAt: '2025-01-10T00:00:00.000Z',
+          },
+          {
+            id: 'child',
+            title: 'Child',
+            icon: null,
+            parentId: 'parent',
+            position: 0,
+            htmlContent: '',
+            isPublic: false,
+            createdAt: '2025-01-10T00:00:00.000Z',
+            updatedAt: '2025-01-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockPrisma.page.create
+        .mockResolvedValueOnce({ id: 'new-gp' })
+        .mockResolvedValueOnce({ id: 'new-parent' })
+        .mockResolvedValueOnce({ id: 'new-child' });
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      // Grandparent has no parent
+      expect(mockPrisma.page.create.mock.calls[0]![0].data.parentId).toBeNull();
+      // Parent references new grandparent ID
+      expect(mockPrisma.page.create.mock.calls[1]![0].data.parentId).toBe('new-gp');
+      // Child references new parent ID
+      expect(mockPrisma.page.create.mock.calls[2]![0].data.parentId).toBe('new-parent');
+    });
+
+    it('should set parentId to null when parent is not in the manifest (orphan)', async () => {
+      const manifest = createManifest({
+        pages: [
+          {
+            id: 'orphan',
+            title: 'Orphan Page',
+            icon: null,
+            parentId: 'nonexistent-parent',
+            position: 0,
+            htmlContent: '',
+            isPublic: false,
+            createdAt: '2025-01-10T00:00:00.000Z',
+            updatedAt: '2025-01-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockPrisma.page.create.mockResolvedValue({ id: 'new-orphan' });
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(mockPrisma.page.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          parentId: null,
+        }),
+      });
+    });
+  });
+
+  // ===========================================
+  // EMPTY MANIFEST
+  // ===========================================
+
+  describe('empty manifest', () => {
+    it('should return zero counts when manifest has no data', async () => {
+      const manifest = createManifest();
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+
+      const result = await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(result).toEqual({
+        success: true,
+        pagesRestored: 0,
+        databasesRestored: 0,
+        filesRestored: 0,
+      });
+      expect(mockPrisma.page.create).not.toHaveBeenCalled();
+      expect(mockPrisma.database.create).not.toHaveBeenCalled();
+      expect(mockFileStorage.upload).not.toHaveBeenCalled();
+    });
+  });
+
+  // ===========================================
+  // NON-ENCRYPTED PATH
+  // ===========================================
+
+  describe('non-encrypted backups', () => {
+    it('should not call decryptBuffer for non-encrypted backups', async () => {
+      const manifest = createManifest();
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord({ isEncrypted: false }));
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(mockDecryptBuffer).not.toHaveBeenCalled();
+    });
+
+    it('should pass raw archive data to extractTarGz when not encrypted', async () => {
+      const manifest = createManifest();
+      const rawArchive = Buffer.from('raw-archive-data');
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord({ isEncrypted: false }));
+      mockBackupStorage.download.mockResolvedValue(rawArchive);
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(mockExtractTarGz).toHaveBeenCalledWith(rawArchive, '/tmp/restore-test');
+    });
+  });
+
+  // ===========================================
+  // DECRYPTION ERROR PROPAGATION
+  // ===========================================
+
+  describe('decryption errors', () => {
+    it('should propagate decryption errors', async () => {
+      const backup = createBackupRecord({ isEncrypted: true });
+      mockPrisma.backup.findFirst.mockResolvedValue(backup);
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('encrypted'));
+      mockDecryptBuffer.mockImplementation(() => {
+        throw new Error('Decryption failed: invalid password');
+      });
+
+      await expect(
+        restoreOrgBackup('backup-1', 'org-1', { password: 'wrongpassword' })
+      ).rejects.toThrow('Decryption failed: invalid password');
+    });
+  });
+
+  // ===========================================
+  // MULTIPLE DATABASES
+  // ===========================================
+
+  describe('multiple databases', () => {
+    it('should restore multiple databases independently', async () => {
+      const manifest = createManifest({
+        databases: [
+          {
+            id: 'db-1',
+            name: 'Tasks',
+            pageId: null,
+            properties: [{ id: 'p1', name: 'Title', type: 'TEXT', position: 0, config: {} }],
+            views: [],
+            rows: [],
+          },
+          {
+            id: 'db-2',
+            name: 'Projects',
+            pageId: null,
+            properties: [],
+            views: [{ id: 'v1', name: 'Board', type: 'KANBAN', position: 0, config: {} }],
+            rows: [
+              {
+                id: 'r1',
+                position: 0,
+                cells: { title: 'Project A' },
+                createdAt: '2025-01-10T00:00:00.000Z',
+              },
+            ],
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockPrisma.database.create
+        .mockResolvedValueOnce({ id: 'new-db-1' })
+        .mockResolvedValueOnce({ id: 'new-db-2' });
+      mockPrisma.databaseProperty.create.mockResolvedValue({ id: 'new-prop' });
+      mockPrisma.databaseView.create.mockResolvedValue({ id: 'new-view' });
+      mockPrisma.databaseRow.create.mockResolvedValue({ id: 'new-row' });
+
+      const result = await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(mockPrisma.database.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.databaseProperty.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.databaseView.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.databaseRow.create).toHaveBeenCalledTimes(1);
+      expect(result.databasesRestored).toBe(2);
+
+      // Verify each database gets the correct new ID for its children
+      expect(mockPrisma.databaseProperty.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ databaseId: 'new-db-1' }),
+      });
+      expect(mockPrisma.databaseView.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ databaseId: 'new-db-2' }),
+      });
+      expect(mockPrisma.databaseRow.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ databaseId: 'new-db-2' }),
+      });
+    });
+  });
+
+  // ===========================================
+  // FILE RESTORATION DETAILS
+  // ===========================================
+
+  describe('file restoration details', () => {
+    it('should upload with correct path and pass all fields to DB record', async () => {
+      const manifest = createManifest({
+        files: [
+          {
+            id: 'file-1',
+            name: 'image.png',
+            originalName: 'my-photo.png',
+            mimeType: 'image/png',
+            size: 2048,
+            pageId: null,
+            archivePath: 'files/image.png',
+            createdAt: '2025-01-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockFs.existsSync.mockReturnValue(true);
+      mockFileStorage.upload.mockResolvedValue('org-1/image.png');
+      mockFileStorage.getUrl.mockResolvedValue('/uploads/org-1/image.png');
+      mockPrisma.file.create.mockResolvedValue({ id: 'new-file-1' });
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      // Verify upload path format
+      expect(mockFileStorage.upload).toHaveBeenCalledWith(
+        'org-1/image.png',
+        expect.any(Buffer),
+        'image/png'
+      );
+
+      // Verify all DB fields
+      expect(mockPrisma.file.create).toHaveBeenCalledWith({
+        data: {
+          organizationId: 'org-1',
+          name: 'image.png',
+          originalName: 'my-photo.png',
+          mimeType: 'image/png',
+          size: 2048,
+          storagePath: 'org-1/image.png',
+          storageType: 'LOCAL',
+          url: '/uploads/org-1/image.png',
+        },
+      });
+    });
+
+    it('should restore multiple files and count correctly', async () => {
+      const manifest = createManifest({
+        files: [
+          {
+            id: 'f1',
+            name: 'a.pdf',
+            originalName: 'a.pdf',
+            mimeType: 'application/pdf',
+            size: 100,
+            pageId: null,
+            archivePath: 'files/a.pdf',
+            createdAt: '2025-01-10T00:00:00.000Z',
+          },
+          {
+            id: 'f2',
+            name: 'b.jpg',
+            originalName: 'b.jpg',
+            mimeType: 'image/jpeg',
+            size: 200,
+            pageId: null,
+            archivePath: 'files/b.jpg',
+            createdAt: '2025-01-10T00:00:00.000Z',
+          },
+          {
+            id: 'f3',
+            name: 'c.txt',
+            originalName: 'c.txt',
+            mimeType: 'text/plain',
+            size: 50,
+            pageId: null,
+            archivePath: 'files/c.txt',
+            createdAt: '2025-01-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      // First and third files exist, second is missing
+      mockFs.existsSync
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+      mockFileStorage.upload.mockResolvedValue('path');
+      mockFileStorage.getUrl.mockResolvedValue('/url');
+      mockPrisma.file.create.mockResolvedValue({ id: 'new-file' });
+
+      const result = await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(result.filesRestored).toBe(2);
+      expect(mockFileStorage.upload).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.file.create).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ===========================================
+  // DATABASE PROPERTY/VIEW/ROW DETAILS
+  // ===========================================
+
+  describe('database child entity details', () => {
+    it('should pass correct fields for properties, views, and rows', async () => {
+      const manifest = createManifest({
+        databases: [
+          {
+            id: 'db-1',
+            name: 'Tracker',
+            pageId: null,
+            properties: [
+              {
+                id: 'prop-1',
+                name: 'Status',
+                type: 'SELECT',
+                position: 1,
+                config: { options: ['Todo', 'Done'] },
+              },
+            ],
+            views: [
+              {
+                id: 'view-1',
+                name: 'Board View',
+                type: 'KANBAN',
+                position: 0,
+                config: { groupBy: 'Status' },
+              },
+            ],
+            rows: [
+              {
+                id: 'row-1',
+                position: 0,
+                cells: { 'prop-1': 'Todo' },
+                createdAt: '2025-01-10T00:00:00.000Z',
+              },
+            ],
+          },
+        ],
+      });
+
+      mockPrisma.backup.findFirst.mockResolvedValue(createBackupRecord());
+      mockBackupStorage.download.mockResolvedValue(Buffer.from('archive'));
+      mockExtractTarGz.mockResolvedValue(undefined);
+      mockFs.readFileSync.mockReturnValue(Buffer.from(JSON.stringify(manifest)));
+      mockPrisma.database.create.mockResolvedValue({ id: 'new-db-1' });
+      mockPrisma.databaseProperty.create.mockResolvedValue({ id: 'new-prop' });
+      mockPrisma.databaseView.create.mockResolvedValue({ id: 'new-view' });
+      mockPrisma.databaseRow.create.mockResolvedValue({ id: 'new-row' });
+
+      await restoreOrgBackup('backup-1', 'org-1');
+
+      expect(mockPrisma.databaseProperty.create).toHaveBeenCalledWith({
+        data: {
+          databaseId: 'new-db-1',
+          name: 'Status',
+          type: 'SELECT',
+          position: 1,
+          config: { options: ['Todo', 'Done'] },
+        },
+      });
+
+      expect(mockPrisma.databaseView.create).toHaveBeenCalledWith({
+        data: {
+          databaseId: 'new-db-1',
+          name: 'Board View',
+          type: 'KANBAN',
+          position: 0,
+          config: { groupBy: 'Status' },
+        },
+      });
+
+      expect(mockPrisma.databaseRow.create).toHaveBeenCalledWith({
+        data: {
+          databaseId: 'new-db-1',
+          position: 0,
+          cells: { 'prop-1': 'Todo' },
+        },
+      });
+    });
+  });
 });

@@ -377,6 +377,36 @@ describe('Admin Backup Routes', () => {
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('BACKUP_NOT_FOUND');
     });
+
+    it('should return 400 when backup is not available for restore', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(new Error('BACKUP_NOT_AVAILABLE'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/backups/system/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_NOT_AVAILABLE');
+    });
+
+    it('should return 400 when password is required for admin restore', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(
+        new Error('Password required for encrypted backup')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/admin/backups/system/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_PASSWORD_REQUIRED');
+    });
   });
 });
 
@@ -626,6 +656,20 @@ describe('Org Backup Routes', () => {
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('BACKUP_NOT_FOUND');
+    });
+
+    it('should return 400 when backup is not available for restore', async () => {
+      mockRestoreService.restoreOrgBackup.mockRejectedValue(new Error('BACKUP_NOT_AVAILABLE'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-1/backups/backup-1/restore',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('BACKUP_NOT_AVAILABLE');
     });
   });
 });

@@ -11,6 +11,7 @@ const mockPagesStore = vi.hoisted(() => ({
   currentPage: null as any,
   updatePageData: vi.fn(),
   trashPage: vi.fn(),
+  hasPageContent: vi.fn().mockReturnValue(false),
 }));
 
 const mockSyncStore = vi.hoisted(() => ({
@@ -68,6 +69,11 @@ vi.mock('@/components/editor', () => ({
       'userColor',
     ],
     emits: ['update:modelValue'],
+  },
+  AiBubbleMenu: {
+    name: 'AiBubbleMenu',
+    template: '<div class="stub-ai-bubble-menu" />',
+    props: ['editor'],
   },
 }));
 
