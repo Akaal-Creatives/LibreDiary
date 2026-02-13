@@ -172,8 +172,8 @@ onMounted(() => {
 
 watch(
   () => props.pageId,
-  async (_newId, oldId) => {
-    // Flush pending content save before switching pages
+  (_newId, oldId) => {
+    // Flush pending content save — fire-and-forget so we don't block navigation
     if (contentSaveTimeout) {
       clearTimeout(contentSaveTimeout);
       contentSaveTimeout = null;
@@ -183,16 +183,14 @@ watch(
       const hasContent =
         content && content.trim() && content !== '<p></p>' && content !== '<p><br></p>';
       if (hasContent) {
-        try {
-          await pagesStore.updatePageData(oldId, { htmlContent: content });
-        } catch (e) {
-          console.error('Failed to flush content save on page switch:', e);
-        }
+        pagesStore
+          .updatePageData(oldId, { htmlContent: content })
+          .catch((e) => console.error('Failed to flush content save:', e));
       }
     }
-    // Cleanup old page if it was empty
+    // Cleanup old page if it was empty — fire-and-forget
     if (oldId) {
-      await cleanupEmptyPage(oldId);
+      cleanupEmptyPage(oldId).catch(() => {});
     }
     // Disconnect from old collaboration
     disconnectCollaboration();
@@ -254,12 +252,14 @@ async function loadPage() {
     // Expand ancestors in sidebar
     pagesStore.expandToPage(props.pageId);
 
-    // If collaboration is synced, show content immediately
-    if (isSynced.value) {
+    // Cached page — show content immediately, no need to wait for collaboration sync
+    if (pagesStore.hasPageContent(props.pageId)) {
+      loading.value = false;
+    } else if (isSynced.value) {
+      // First visit but already synced — show content immediately
       loading.value = false;
     } else {
-      // Set a timeout to show content even if sync takes too long
-      // This prevents infinite loading state if WebSocket has issues
+      // First visit — wait for collaboration sync with timeout
       setTimeout(() => {
         if (loading.value) {
           console.warn('Collaboration sync timeout - showing editor anyway');

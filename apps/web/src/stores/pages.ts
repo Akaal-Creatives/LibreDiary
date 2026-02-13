@@ -17,6 +17,7 @@ export const usePagesStore = defineStore('pages', () => {
   const favorites = ref<FavoriteWithPage[]>([]);
   const trashedPages = ref<Page[]>([]);
   const expandedPageIds = ref<Set<string>>(new Set());
+  const fetchedPageIds = ref<Set<string>>(new Set());
   const loading = ref(false);
   const favoritesLoading = ref(false);
   const trashLoading = ref(false);
@@ -176,6 +177,10 @@ export const usePagesStore = defineStore('pages', () => {
     }
   }
 
+  function hasPageContent(pageId: string): boolean {
+    return fetchedPageIds.value.has(pageId);
+  }
+
   // ===========================================
   // API ACTIONS - PAGE CRUD
   // ===========================================
@@ -193,10 +198,23 @@ export const usePagesStore = defineStore('pages', () => {
 
   async function fetchPage(pageId: string): Promise<Page> {
     const orgId = getOrgId();
+    const cached = pages.value.get(pageId);
+
+    if (cached && fetchedPageIds.value.has(pageId)) {
+      // Background refresh — no loading state
+      pagesService
+        .getPage(orgId, pageId)
+        .then((data) => updatePage(data.page))
+        .catch(() => {}); // silent — cached data is good enough
+      return cached;
+    }
+
+    // First fetch — must await
     loading.value = true;
     try {
       const data = await pagesService.getPage(orgId, pageId);
       updatePage(data.page);
+      fetchedPageIds.value.add(pageId);
       return data.page;
     } finally {
       loading.value = false;
@@ -364,6 +382,7 @@ export const usePagesStore = defineStore('pages', () => {
     favorites.value = [];
     trashedPages.value = [];
     expandedPageIds.value.clear();
+    fetchedPageIds.value.clear();
   }
 
   return {
@@ -391,6 +410,7 @@ export const usePagesStore = defineStore('pages', () => {
     removePage,
     toggleExpanded,
     expandToPage,
+    hasPageContent,
     // API Actions - CRUD
     fetchPageTree,
     fetchPage,
