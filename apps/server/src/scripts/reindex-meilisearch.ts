@@ -5,6 +5,7 @@
  *   pnpm --filter @librediary/server search:reindex
  */
 import { prisma } from '../lib/prisma.js';
+import type { Prisma } from '../generated/prisma/client.js';
 import { initMeilisearch, stopMeilisearchHealthCheck } from '../modules/search/meilisearch.init.js';
 import { bulkIndex, type MeiliPageDocument } from '../modules/search/meilisearch.service.js';
 import { htmlToText } from '../utils/html-to-text.js';
@@ -13,10 +14,12 @@ import { yjsStateToText } from '../utils/yjs-to-text.js';
 const BATCH_SIZE = 500;
 
 async function main() {
+  // eslint-disable-next-line no-console
   console.log('[reindex] Initialising Meilisearch connection...');
   await initMeilisearch();
 
   const totalCount = await prisma.page.count({ where: { trashedAt: null } });
+  // eslint-disable-next-line no-console
   console.log(`[reindex] Found ${totalCount} non-trashed pages to index`);
 
   let processed = 0;
@@ -86,15 +89,17 @@ async function main() {
       .filter(Boolean);
 
     if (updates.length > 0) {
-      await prisma.$transaction(updates as any);
+      await prisma.$transaction(updates as Prisma.PrismaPromise<unknown>[]);
     }
 
     processed += pages.length;
     cursor = pages[pages.length - 1]!.id;
 
+    // eslint-disable-next-line no-console
     console.log(`[reindex] Processed ${processed}/${totalCount} pages`);
   }
 
+  // eslint-disable-next-line no-console
   console.log(`[reindex] Complete. ${processed} pages indexed.`);
 
   stopMeilisearchHealthCheck();
@@ -103,6 +108,7 @@ async function main() {
 }
 
 main().catch((err) => {
+  // eslint-disable-next-line no-console
   console.error('[reindex] Fatal error:', err);
   process.exit(1);
 });

@@ -1,5 +1,6 @@
 import cron, { type ScheduledTask } from 'node-cron';
 import { env } from '../../config/index.js';
+import { logger } from '../../lib/logger.js';
 import { createSystemBackup } from './system-backup.service.js';
 import { cleanupOldBackups } from './backup.service.js';
 
@@ -15,25 +16,25 @@ export function startBackupScheduler(): void {
   }
 
   if (!cron.validate(env.BACKUP_SCHEDULE)) {
-    console.error(`Invalid backup schedule: ${env.BACKUP_SCHEDULE}`);
+    logger.error(`Invalid backup schedule: ${env.BACKUP_SCHEDULE}`);
     return;
   }
 
   scheduledTask = cron.schedule(env.BACKUP_SCHEDULE, async () => {
     try {
-      console.log('Scheduled backup starting...');
+      logger.info('Scheduled backup starting...');
       await createSystemBackup();
       const cleaned = await cleanupOldBackups();
       if (cleaned > 0) {
-        console.log(`Cleaned up ${cleaned} old backup(s)`);
+        logger.info(`Cleaned up ${cleaned} old backup(s)`);
       }
-      console.log('Scheduled backup completed');
+      logger.info('Scheduled backup completed');
     } catch (error) {
-      console.error('Scheduled backup failed:', error);
+      logger.error(error, 'Scheduled backup failed');
     }
   });
 
-  console.log(`Backup scheduler started (schedule: ${env.BACKUP_SCHEDULE})`);
+  logger.info(`Backup scheduler started (schedule: ${env.BACKUP_SCHEDULE})`);
 }
 
 /**

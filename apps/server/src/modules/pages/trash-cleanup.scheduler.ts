@@ -1,4 +1,5 @@
 import cron, { type ScheduledTask } from 'node-cron';
+import { logger } from '../../lib/logger.js';
 import { cleanupExpiredTrash } from './trash-cleanup.service.js';
 
 let scheduledTask: ScheduledTask | null = null;
@@ -12,26 +13,26 @@ export function startTrashCleanupScheduler(): void {
   const schedule = '0 2 * * *'; // Daily at 02:00
 
   if (!cron.validate(schedule)) {
-    console.error(`[trash-cleanup] Invalid schedule: ${schedule}`);
+    logger.error(`[trash-cleanup] Invalid schedule: ${schedule}`);
     return;
   }
 
   scheduledTask = cron.schedule(schedule, async () => {
     try {
-      console.log('[trash-cleanup] Scheduled trash cleanup starting...');
+      logger.info('[trash-cleanup] Scheduled trash cleanup starting...');
 
       const deleted = await cleanupExpiredTrash();
       if (deleted > 0) {
-        console.log(`[trash-cleanup] Permanently deleted ${deleted} expired trashed page(s)`);
+        logger.info(`[trash-cleanup] Permanently deleted ${deleted} expired trashed page(s)`);
       }
 
-      console.log('[trash-cleanup] Scheduled trash cleanup completed');
+      logger.info('[trash-cleanup] Scheduled trash cleanup completed');
     } catch (error) {
-      console.error('[trash-cleanup] Scheduled trash cleanup failed:', error);
+      logger.error(error, '[trash-cleanup] Scheduled trash cleanup failed');
     }
   });
 
-  console.log('[trash-cleanup] Trash cleanup scheduler started (daily at 02:00)');
+  logger.info('[trash-cleanup] Trash cleanup scheduler started (daily at 02:00)');
 }
 
 /**

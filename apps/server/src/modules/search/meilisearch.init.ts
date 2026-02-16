@@ -3,6 +3,7 @@ import {
   PAGES_INDEX,
   isMeilisearchConfigured,
 } from '../../lib/meilisearch.js';
+import { logger } from '../../lib/logger.js';
 
 let healthy = false;
 let healthTimer: ReturnType<typeof setInterval> | null = null;
@@ -43,10 +44,10 @@ export async function initMeilisearch(): Promise<void> {
     await index.updateFaceting({ maxValuesPerFacet: 100 });
 
     healthy = true;
-    console.log('[meilisearch] Connected and index configured:', PAGES_INDEX);
+    logger.info('[meilisearch] Connected and index configured: %s', PAGES_INDEX);
   } catch (err) {
     healthy = false;
-    console.warn('[meilisearch] Initial connection failed — PG FTS will be used as fallback:', err);
+    logger.warn(err, '[meilisearch] Initial connection failed — PG FTS will be used as fallback');
   }
 
   // Periodic health check every 30 seconds
@@ -59,12 +60,12 @@ export async function initMeilisearch(): Promise<void> {
       }
       await client.health();
       if (!healthy) {
-        console.log('[meilisearch] Connection recovered');
+        logger.info('[meilisearch] Connection recovered');
       }
       healthy = true;
     } catch {
       if (healthy) {
-        console.warn('[meilisearch] Health check failed — falling back to PG FTS');
+        logger.warn('[meilisearch] Health check failed — falling back to PG FTS');
       }
       healthy = false;
     }
