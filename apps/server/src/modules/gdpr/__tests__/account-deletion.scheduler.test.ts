@@ -14,6 +14,15 @@ vi.mock('node-cron', () => ({
   },
 }));
 
+const mockLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  error: vi.fn(),
+}));
+
+vi.mock('../../../lib/logger.js', () => ({
+  logger: mockLogger,
+}));
+
 vi.mock('../account-deletion.service.js', () => ({
   processScheduledDeletions: vi.fn().mockResolvedValue(0),
 }));
@@ -55,25 +64,17 @@ describe('GDPR Scheduler', () => {
     it('should not schedule when cron expression is invalid', () => {
       mockValidate.mockReturnValue(false);
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       startGdprScheduler();
 
       expect(mockSchedule).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
     });
 
     it('should log a startup message', () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
       startGdprScheduler();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('[gdpr] GDPR scheduler started')
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('should call processScheduledDeletions when the cron job fires', async () => {
@@ -99,28 +100,22 @@ describe('GDPR Scheduler', () => {
       vi.mocked(processScheduledDeletions).mockResolvedValue(3);
       vi.mocked(cleanupExpiredExports).mockResolvedValue(5);
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
       startGdprScheduler();
 
       const callback = mockSchedule.mock.calls[0][1] as () => Promise<void>;
       await callback();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Permanently deleted 3 account(s)')
       );
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Cleaned up 5 expired export(s)')
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('should not log counts when there are no deletions or cleanups', async () => {
       vi.mocked(processScheduledDeletions).mockResolvedValue(0);
       vi.mocked(cleanupExpiredExports).mockResolvedValue(0);
-
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       startGdprScheduler();
 
@@ -128,18 +123,15 @@ describe('GDPR Scheduler', () => {
       await callback();
 
       // Should log the start/end messages but not the count messages
-      const countLogs = consoleSpy.mock.calls.filter(
-        (call) => String(call[0]).includes('deleted') || String(call[0]).includes('Cleaned up')
+      const countLogs = mockLogger.info.mock.calls.filter(
+        (call: unknown[]) =>
+          String(call[0]).includes('deleted') || String(call[0]).includes('Cleaned up')
       );
       expect(countLogs).toHaveLength(0);
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle errors in the cron callback without throwing', async () => {
       vi.mocked(processScheduledDeletions).mockRejectedValue(new Error('Scheduler error'));
-
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       startGdprScheduler();
 
@@ -148,12 +140,10 @@ describe('GDPR Scheduler', () => {
       // Should not throw
       await expect(callback()).resolves.toBeUndefined();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[gdpr] Scheduled GDPR maintenance failed'),
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining('[gdpr] Scheduled GDPR maintenance failed')
       );
-
-      consoleSpy.mockRestore();
     });
   });
 

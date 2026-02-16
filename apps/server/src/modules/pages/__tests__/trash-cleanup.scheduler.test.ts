@@ -14,6 +14,15 @@ vi.mock('node-cron', () => ({
   },
 }));
 
+const mockLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  error: vi.fn(),
+}));
+
+vi.mock('../../../lib/logger.js', () => ({
+  logger: mockLogger,
+}));
+
 vi.mock('../trash-cleanup.service.js', () => ({
   cleanupExpiredTrash: vi.fn().mockResolvedValue(0),
 }));
@@ -53,25 +62,17 @@ describe('Trash Cleanup Scheduler', () => {
     it('should not schedule when cron expression is invalid', () => {
       mockValidate.mockReturnValue(false);
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       startTrashCleanupScheduler();
 
       expect(mockSchedule).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
     });
 
     it('should log a startup message', () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
       startTrashCleanupScheduler();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('[trash-cleanup] Trash cleanup scheduler started')
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('should call cleanupExpiredTrash when the cron job fires', async () => {
@@ -86,42 +87,32 @@ describe('Trash Cleanup Scheduler', () => {
     it('should log count when pages are cleaned up', async () => {
       vi.mocked(cleanupExpiredTrash).mockResolvedValue(7);
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
       startTrashCleanupScheduler();
 
       const callback = mockSchedule.mock.calls[0][1] as () => Promise<void>;
       await callback();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Permanently deleted 7 expired trashed page(s)')
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('should not log count when no pages are cleaned up', async () => {
       vi.mocked(cleanupExpiredTrash).mockResolvedValue(0);
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
       startTrashCleanupScheduler();
 
       const callback = mockSchedule.mock.calls[0][1] as () => Promise<void>;
       await callback();
 
-      const countLogs = consoleSpy.mock.calls.filter((call) =>
+      const countLogs = mockLogger.info.mock.calls.filter((call: unknown[]) =>
         String(call[0]).includes('Permanently deleted')
       );
       expect(countLogs).toHaveLength(0);
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle errors in the cron callback without throwing', async () => {
       vi.mocked(cleanupExpiredTrash).mockRejectedValue(new Error('Cleanup failed'));
-
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       startTrashCleanupScheduler();
 
@@ -129,12 +120,10 @@ describe('Trash Cleanup Scheduler', () => {
 
       await expect(callback()).resolves.toBeUndefined();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[trash-cleanup] Scheduled trash cleanup failed'),
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining('[trash-cleanup] Scheduled trash cleanup failed')
       );
-
-      consoleSpy.mockRestore();
     });
   });
 

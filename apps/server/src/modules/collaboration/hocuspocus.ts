@@ -221,6 +221,7 @@ export function createHocuspocusServer(): Hocuspocus {
 
       // Add user info to awareness for cursor display
       if (context?.userName) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Hocuspocus onConnect data typing does not expose connection.awareness
         (data as any).connection?.awareness?.setLocalStateField('user', {
           name: context.userName,
           color: generateUserColor(context.userId),
