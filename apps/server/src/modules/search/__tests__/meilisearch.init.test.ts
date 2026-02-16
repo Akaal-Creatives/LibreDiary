@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Mock logger
+const mockLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+}));
+
+vi.mock('../../../lib/logger.js', () => ({
+  logger: mockLogger,
+}));
+
 // Mock meilisearch client and config using vi.hoisted
 const { mockClient, mockIndex, mockConfigured, mockGetClient } = vi.hoisted(() => {
   const mockIndex = {
@@ -156,16 +167,14 @@ describe('meilisearch.init', () => {
     });
 
     it('logs warning on connection failure', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       mockIndex.updateSearchableAttributes.mockRejectedValueOnce(new Error('connection refused'));
 
       await initMeilisearch();
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[meilisearch]'),
-        expect.anything()
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining('[meilisearch]')
       );
-      warnSpy.mockRestore();
     });
   });
 
@@ -187,11 +196,9 @@ describe('meilisearch.init', () => {
 
     it('recovers when health succeeds after failure', async () => {
       vi.useFakeTimers();
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       // Init fails — sets healthy=false
       mockIndex.updateSearchableAttributes.mockRejectedValueOnce(new Error('down'));
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
       await initMeilisearch();
       expect(isMeilisearchAvailable()).toBe(false);
 
@@ -200,12 +207,10 @@ describe('meilisearch.init', () => {
       await vi.advanceTimersByTimeAsync(30_000);
 
       expect(isMeilisearchAvailable()).toBe(true);
-      logSpy.mockRestore();
     });
 
     it('marks unhealthy when check fails', async () => {
       vi.useFakeTimers();
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       await initMeilisearch();
       expect(isMeilisearchAvailable()).toBe(true);
@@ -219,39 +224,35 @@ describe('meilisearch.init', () => {
 
     it('logs recovery message', async () => {
       vi.useFakeTimers();
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Init fails
       mockIndex.updateSearchableAttributes.mockRejectedValueOnce(new Error('down'));
       await initMeilisearch();
 
+      mockLogger.info.mockClear();
+
       // Health check recovers
       mockClient.health.mockResolvedValueOnce({ status: 'available' });
       await vi.advanceTimersByTimeAsync(30_000);
 
-      expect(logSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('[meilisearch] Connection recovered')
       );
-      logSpy.mockRestore();
     });
 
     it('logs fallback message', async () => {
       vi.useFakeTimers();
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await initMeilisearch();
-      warnSpy.mockClear();
+      mockLogger.warn.mockClear();
 
       // Health check fails
       mockClient.health.mockRejectedValueOnce(new Error('timeout'));
       await vi.advanceTimersByTimeAsync(30_000);
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('[meilisearch] Health check failed')
       );
-      warnSpy.mockRestore();
     });
   });
 
