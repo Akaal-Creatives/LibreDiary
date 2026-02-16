@@ -11,19 +11,23 @@ export function htmlToText(html: string): string {
   text = text.replace(/<\/(p|div|h[1-6]|li|tr|blockquote|pre|br\s*\/?)>/gi, '\n');
   text = text.replace(/<br\s*\/?>/gi, '\n');
 
-  // Strip all remaining HTML tags
-  text = text.replace(/<[^>]*>/g, '');
+  // Strip all remaining HTML tags (loop to handle nested/malformed markup like <<script>script>)
+  let prev = '';
+  do {
+    prev = text;
+    text = text.replace(/<[^>]*>/g, '');
+  } while (text !== prev);
 
-  // Decode common HTML entities
+  // Decode common HTML entities (decode &amp; last to avoid double-unescaping e.g. &amp;lt; → &lt; → <)
   text = text
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ')
     .replace(/&#(\d+);/g, (_match, code) => String.fromCharCode(Number(code)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) => String.fromCharCode(parseInt(hex, 16)));
+    .replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&');
 
   // Normalise whitespace: collapse runs of spaces/tabs, trim lines, collapse blank lines
   text = text

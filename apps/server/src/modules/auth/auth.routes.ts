@@ -47,12 +47,22 @@ const resetPasswordSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+// Stricter rate limit config for sensitive auth endpoints
+const authRateLimit = {
+  config: {
+    rateLimit: {
+      max: 10,
+      timeWindow: '5 minutes',
+    },
+  },
+};
+
 export async function authRoutes(fastify: FastifyInstance): Promise<void> {
   /**
    * POST /auth/register
    * Register a new user with invite token
    */
-  fastify.post('/register', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/register', authRateLimit, async (request: FastifyRequest, reply: FastifyReply) => {
     const body = registerSchema.safeParse(request.body);
     if (!body.success) {
       return reply.status(400).send({
@@ -105,7 +115,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * POST /auth/login
    * Login with email and password
    */
-  fastify.post('/login', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/login', authRateLimit, async (request: FastifyRequest, reply: FastifyReply) => {
     const body = loginSchema.safeParse(request.body);
     if (!body.success) {
       return reply.status(400).send({
@@ -267,46 +277,50 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * POST /auth/verify-email
    * Verify email with token
    */
-  fastify.post('/verify-email', async (request: FastifyRequest, reply: FastifyReply) => {
-    const body = verifyEmailSchema.safeParse(request.body);
-    if (!body.success) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request body',
-        },
-      });
+  fastify.post(
+    '/verify-email',
+    authRateLimit,
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = verifyEmailSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+          },
+        });
+      }
+
+      try {
+        const user = await authService.verifyEmail(body.data.token);
+
+        logAudit({
+          action: 'AUTH_EMAIL_VERIFIED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+        });
+
+        return {
+          success: true,
+          data: {
+            user: sanitizeUser(user),
+            message: 'Email verified successfully',
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Verification failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VERIFICATION_ERROR',
+            message,
+          },
+        });
+      }
     }
-
-    try {
-      const user = await authService.verifyEmail(body.data.token);
-
-      logAudit({
-        action: 'AUTH_EMAIL_VERIFIED',
-        userId: user.id,
-        ipAddress: getClientIp(request),
-        userAgent: request.headers['user-agent'],
-      });
-
-      return {
-        success: true,
-        data: {
-          user: sanitizeUser(user),
-          message: 'Email verified successfully',
-        },
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Verification failed';
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'VERIFICATION_ERROR',
-          message,
-        },
-      });
-    }
-  });
+  );
 
   /**
    * POST /auth/resend-verification
@@ -340,68 +354,76 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * POST /auth/forgot-password
    * Request password reset
    */
-  fastify.post('/forgot-password', async (request: FastifyRequest, reply: FastifyReply) => {
-    const body = forgotPasswordSchema.safeParse(request.body);
-    if (!body.success) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid email address',
-        },
-      });
+  fastify.post(
+    '/forgot-password',
+    authRateLimit,
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = forgotPasswordSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid email address',
+          },
+        });
+      }
+
+      // Always return success to prevent email enumeration
+      await authService.forgotPassword(body.data.email);
+
+      return {
+        success: true,
+        data: { message: 'If an account exists with this email, a reset link has been sent' },
+      };
     }
-
-    // Always return success to prevent email enumeration
-    await authService.forgotPassword(body.data.email);
-
-    return {
-      success: true,
-      data: { message: 'If an account exists with this email, a reset link has been sent' },
-    };
-  });
+  );
 
   /**
    * POST /auth/reset-password
    * Reset password with token
    */
-  fastify.post('/reset-password', async (request: FastifyRequest, reply: FastifyReply) => {
-    const body = resetPasswordSchema.safeParse(request.body);
-    if (!body.success) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request body',
-          details: body.error.flatten().fieldErrors,
-        },
-      });
+  fastify.post(
+    '/reset-password',
+    authRateLimit,
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = resetPasswordSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        await authService.resetPassword(body.data.token, body.data.password);
+
+        logAudit({
+          action: 'AUTH_PASSWORD_RESET',
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+        });
+
+        return {
+          success: true,
+          data: { message: 'Password reset successfully' },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Password reset failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'RESET_ERROR',
+            message,
+          },
+        });
+      }
     }
-
-    try {
-      await authService.resetPassword(body.data.token, body.data.password);
-
-      logAudit({
-        action: 'AUTH_PASSWORD_RESET',
-        ipAddress: getClientIp(request),
-        userAgent: request.headers['user-agent'],
-      });
-
-      return {
-        success: true,
-        data: { message: 'Password reset successfully' },
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Password reset failed';
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'RESET_ERROR',
-          message,
-        },
-      });
-    }
-  });
+  );
 
   /**
    * GET /auth/sessions

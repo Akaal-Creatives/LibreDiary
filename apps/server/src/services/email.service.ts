@@ -47,14 +47,21 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
  * Strip HTML tags for plain text version
  */
 function stripHtml(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<[^>]*>/g, '')
+  let text = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n');
+
+  // Loop to handle nested/malformed markup like <<script>script>
+  let prev = '';
+  do {
+    prev = text;
+    text = text.replace(/<[^>]*>/g, '');
+  } while (text !== prev);
+
+  // Decode entities (decode &amp; last to avoid double-unescaping)
+  return text
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
     .trim();
 }
 

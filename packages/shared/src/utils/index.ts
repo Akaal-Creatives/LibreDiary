@@ -6,12 +6,16 @@
  * Generate a URL-friendly slug from a string
  */
 export function slugify(text: string): string {
-  return text
+  // Limit input length to prevent ReDoS on untrusted data
+  const safe = text.slice(0, 500);
+  return safe
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[\s_]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 }
 
 /**

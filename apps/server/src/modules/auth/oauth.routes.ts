@@ -37,6 +37,16 @@ setInterval(
   5 * 60 * 1000
 ); // Every 5 minutes
 
+// Stricter rate limit config for OAuth endpoints
+const oauthRateLimit = {
+  config: {
+    rateLimit: {
+      max: 20,
+      timeWindow: '5 minutes',
+    },
+  },
+};
+
 export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
   /**
    * GET /oauth/providers
@@ -108,78 +118,82 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
    * GET /oauth/:provider/callback
    * Handle OAuth callback - login or create user, then redirect
    */
-  fastify.get('/:provider/callback', async (request: FastifyRequest, reply: FastifyReply) => {
-    const params = providerParamSchema.safeParse(request.params);
-    if (!params.success) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'INVALID_PROVIDER',
-          message: 'Unsupported OAuth provider',
-        },
-      });
+  fastify.get(
+    '/:provider/callback',
+    oauthRateLimit,
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const params = providerParamSchema.safeParse(request.params);
+      if (!params.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'INVALID_PROVIDER',
+            message: 'Unsupported OAuth provider',
+          },
+        });
+      }
+
+      const query = callbackQuerySchema.safeParse(request.query);
+      if (!query.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'INVALID_CALLBACK',
+            message: 'Missing code or state parameter',
+            details: query.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      const provider = params.data.provider as OAuthProvider;
+      const { code, state } = query.data;
+
+      // Validate state
+      const storedState = oauthStateStore.get(state);
+      if (!storedState) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'INVALID_STATE',
+            message: 'Invalid or expired OAuth state',
+          },
+        });
+      }
+
+      // Remove used state
+      oauthStateStore.delete(state);
+
+      try {
+        const result = await oauthService.handleOAuthCallback({
+          provider,
+          code,
+          state,
+          codeVerifier: storedState.codeVerifier,
+          meta: {
+            userAgent: request.headers['user-agent'],
+            ipAddress: getClientIp(request),
+          },
+        });
+
+        // Set session cookie
+        setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
+
+        // Determine redirect URL
+        const frontendUrl = env.APP_URL.replace(':3000', ':5173'); // Adjust port for dev
+        const redirectUrl = result.isNewUser ? `${frontendUrl}/onboarding` : `${frontendUrl}/`;
+
+        return reply.status(302).redirect(redirectUrl);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'OAuth authentication failed';
+
+        // Redirect to login page with error
+        const frontendUrl = env.APP_URL.replace(':3000', ':5173');
+        return reply
+          .status(302)
+          .redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
+      }
     }
-
-    const query = callbackQuerySchema.safeParse(request.query);
-    if (!query.success) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'INVALID_CALLBACK',
-          message: 'Missing code or state parameter',
-          details: query.error.flatten().fieldErrors,
-        },
-      });
-    }
-
-    const provider = params.data.provider as OAuthProvider;
-    const { code, state } = query.data;
-
-    // Validate state
-    const storedState = oauthStateStore.get(state);
-    if (!storedState) {
-      return reply.status(400).send({
-        success: false,
-        error: {
-          code: 'INVALID_STATE',
-          message: 'Invalid or expired OAuth state',
-        },
-      });
-    }
-
-    // Remove used state
-    oauthStateStore.delete(state);
-
-    try {
-      const result = await oauthService.handleOAuthCallback({
-        provider,
-        code,
-        state,
-        codeVerifier: storedState.codeVerifier,
-        meta: {
-          userAgent: request.headers['user-agent'],
-          ipAddress: getClientIp(request),
-        },
-      });
-
-      // Set session cookie
-      setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
-
-      // Determine redirect URL
-      const frontendUrl = env.APP_URL.replace(':3000', ':5173'); // Adjust port for dev
-      const redirectUrl = result.isNewUser ? `${frontendUrl}/onboarding` : `${frontendUrl}/`;
-
-      return reply.status(302).redirect(redirectUrl);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'OAuth authentication failed';
-
-      // Redirect to login page with error
-      const frontendUrl = env.APP_URL.replace(':3000', ':5173');
-      return reply
-        .status(302)
-        .redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
-    }
-  });
+  );
 
   /**
    * GET /oauth/accounts
@@ -268,7 +282,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.delete(
     '/:provider/unlink',
-    { preHandler: [requireAuth] },
+    { preHandler: [requireAuth], config: { rateLimit: { max: 20, timeWindow: '5 minutes' } } },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const params = providerParamSchema.safeParse(request.params);
       if (!params.success) {

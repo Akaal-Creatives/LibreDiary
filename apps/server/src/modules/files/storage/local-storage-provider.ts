@@ -10,11 +10,18 @@ export class LocalStorageProvider implements StorageProvider {
    * Resolve a key to a safe file path, preventing directory traversal.
    */
   private safePath(key: string): string {
-    const resolved = path.resolve(this.basePath, key);
-    if (
-      !resolved.startsWith(path.resolve(this.basePath) + path.sep) &&
-      resolved !== path.resolve(this.basePath)
-    ) {
+    // Reject keys containing path traversal sequences before resolution
+    if (/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(key) || path.isAbsolute(key)) {
+      throw new Error('Invalid storage key: path traversal detected');
+    }
+
+    // Normalise and resolve against the base path
+    const normalised = path.normalize(key);
+    const resolvedBase = path.resolve(this.basePath);
+    const resolved = path.join(resolvedBase, normalised);
+
+    // Ensure the resolved path is within the base directory
+    if (!resolved.startsWith(resolvedBase + path.sep) && resolved !== resolvedBase) {
       throw new Error('Invalid storage key: path traversal detected');
     }
     return resolved;
