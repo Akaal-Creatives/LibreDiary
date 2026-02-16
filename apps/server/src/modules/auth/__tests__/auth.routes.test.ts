@@ -77,6 +77,10 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
   });
 
 // Mock modules before any imports
+vi.mock('../../audit/audit.service.js', () => ({
+  logAudit: vi.fn(),
+}));
+
 vi.mock('../auth.service.js', () => mockAuthService);
 
 vi.mock('../auth.middleware.js', () => ({

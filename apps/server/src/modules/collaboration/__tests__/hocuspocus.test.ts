@@ -16,6 +16,13 @@ const { mockCollaborationService, mockSessionService } = vi.hoisted(() => {
 });
 
 // Mock modules before imports
+vi.mock('../../../lib/prisma.js', () => ({
+  prisma: {
+    $transaction: vi.fn(),
+    page: { update: vi.fn() },
+  },
+}));
+
 vi.mock('../collaboration.service.js', () => mockCollaborationService);
 vi.mock('../../../services/session.service.js', () => mockSessionService);
 

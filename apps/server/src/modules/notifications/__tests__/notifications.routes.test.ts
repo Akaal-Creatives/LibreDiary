@@ -39,6 +39,13 @@ const { mockNotificationsService, mockNotification, resetMocks } = vi.hoisted(()
   return { mockNotificationsService, mockNotification, resetMocks };
 });
 
+// Mock prisma to prevent PrismaPg adapter initialisation
+vi.mock('../../../lib/prisma.js', () => ({
+  prisma: {
+    $transaction: vi.fn(),
+  },
+}));
+
 // Mock the services
 vi.mock('../notifications.service.js', () => mockNotificationsService);
 
