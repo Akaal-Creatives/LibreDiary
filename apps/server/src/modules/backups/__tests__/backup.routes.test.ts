@@ -341,7 +341,12 @@ describe('Admin Backup Routes', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data.result.pagesRestored).toBe(5);
-      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', undefined, {});
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith(
+        'backup-1',
+        undefined,
+        {},
+        'user-1'
+      );
     });
 
     it('should pass password for encrypted backups', async () => {
@@ -359,9 +364,14 @@ describe('Admin Backup Routes', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', undefined, {
-        password: 'securepass',
-      });
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith(
+        'backup-1',
+        undefined,
+        {
+          password: 'securepass',
+        },
+        'user-1'
+      );
     });
 
     it('should return error when restore fails', async () => {
@@ -605,7 +615,12 @@ describe('Org Backup Routes', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data.result.pagesRestored).toBe(3);
-      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', 'org-1', {});
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith(
+        'backup-1',
+        'org-1',
+        {},
+        'user-1'
+      );
     });
 
     it('should pass password for encrypted backups', async () => {
@@ -623,9 +638,14 @@ describe('Org Backup Routes', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith('backup-1', 'org-1', {
-        password: 'mypassword',
-      });
+      expect(mockRestoreService.restoreOrgBackup).toHaveBeenCalledWith(
+        'backup-1',
+        'org-1',
+        {
+          password: 'mypassword',
+        },
+        'user-1'
+      );
     });
 
     it('should return error when password is required', async () => {

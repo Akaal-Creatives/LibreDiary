@@ -2,6 +2,7 @@ import { readFileSync, rmSync, mkdtempSync, existsSync } from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { prisma } from '../../lib/prisma.js';
+import type { PropertyType, ViewType, Prisma } from '../../generated/prisma/client.js';
 import { getBackupStorageProvider } from './storage/index.js';
 import { getStorageProvider } from '../files/storage/index.js';
 import { extractTarGz } from './utils/compress.js';
@@ -92,7 +93,8 @@ const SUPPORTED_MANIFEST_VERSION = 1;
 export async function restoreOrgBackup(
   backupId: string,
   orgId: string,
-  options?: RestoreOptions
+  options?: RestoreOptions,
+  userId?: string
 ): Promise<RestoreResult> {
   // Find the backup record
   const backup = await prisma.backup.findFirst({
@@ -137,14 +139,17 @@ export async function restoreOrgBackup(
       throw new Error(`Unsupported backup manifest version: ${manifest.version}`);
     }
 
+    // Use provided userId or fall back to the organisation ID as a placeholder
+    const restoreUserId = userId ?? orgId;
+
     // Restore pages
-    const pagesRestored = await restorePages(manifest.pages, orgId);
+    const pagesRestored = await restorePages(manifest.pages, orgId, restoreUserId);
 
     // Restore databases
-    const databasesRestored = await restoreDatabases(manifest.databases, orgId);
+    const databasesRestored = await restoreDatabases(manifest.databases, orgId, restoreUserId);
 
     // Restore files
-    const filesRestored = await restoreFiles(manifest.files, orgId, tmpDir);
+    const filesRestored = await restoreFiles(manifest.files, orgId, tmpDir, restoreUserId);
 
     return {
       success: true,
@@ -161,7 +166,7 @@ export async function restoreOrgBackup(
 /**
  * Restores pages, preserving parent-child hierarchy via ID mapping.
  */
-async function restorePages(pages: ManifestPage[], orgId: string): Promise<number> {
+async function restorePages(pages: ManifestPage[], orgId: string, userId: string): Promise<number> {
   const idMap = new Map<string, string>();
   let restored = 0;
 
@@ -171,6 +176,7 @@ async function restorePages(pages: ManifestPage[], orgId: string): Promise<numbe
     const created = await prisma.page.create({
       data: {
         organizationId: orgId,
+        createdById: userId,
         title: page.title,
         icon: page.icon,
         parentId,
@@ -190,13 +196,18 @@ async function restorePages(pages: ManifestPage[], orgId: string): Promise<numbe
 /**
  * Restores databases with their properties, views, and rows.
  */
-async function restoreDatabases(databases: ManifestDatabase[], orgId: string): Promise<number> {
+async function restoreDatabases(
+  databases: ManifestDatabase[],
+  orgId: string,
+  userId: string
+): Promise<number> {
   let restored = 0;
 
   for (const db of databases) {
     const created = await prisma.database.create({
       data: {
         organizationId: orgId,
+        createdById: userId,
         name: db.name,
       },
     });
@@ -207,9 +218,9 @@ async function restoreDatabases(databases: ManifestDatabase[], orgId: string): P
         data: {
           databaseId: created.id,
           name: prop.name,
-          type: prop.type,
+          type: prop.type as PropertyType,
           position: prop.position,
-          config: prop.config,
+          config: (prop.config as Prisma.InputJsonValue) ?? undefined,
         },
       });
     }
@@ -220,9 +231,9 @@ async function restoreDatabases(databases: ManifestDatabase[], orgId: string): P
         data: {
           databaseId: created.id,
           name: view.name,
-          type: view.type,
+          type: view.type as ViewType,
           position: view.position,
-          config: view.config,
+          config: (view.config as Prisma.InputJsonValue) ?? undefined,
         },
       });
     }
@@ -232,8 +243,9 @@ async function restoreDatabases(databases: ManifestDatabase[], orgId: string): P
       await prisma.databaseRow.create({
         data: {
           databaseId: created.id,
+          createdById: userId,
           position: row.position,
-          cells: row.cells,
+          cells: (row.cells as Prisma.InputJsonValue) ?? undefined,
         },
       });
     }
@@ -248,7 +260,12 @@ async function restoreDatabases(databases: ManifestDatabase[], orgId: string): P
  * Restores files by uploading them to the current storage provider.
  * Skips files that are missing from the archive.
  */
-async function restoreFiles(files: ManifestFile[], orgId: string, tmpDir: string): Promise<number> {
+async function restoreFiles(
+  files: ManifestFile[],
+  orgId: string,
+  tmpDir: string,
+  userId: string
+): Promise<number> {
   const storageProvider = getStorageProvider();
   let restored = 0;
 
@@ -271,6 +288,7 @@ async function restoreFiles(files: ManifestFile[], orgId: string, tmpDir: string
     await prisma.file.create({
       data: {
         organizationId: orgId,
+        uploadedById: userId,
         name: file.name,
         originalName: file.originalName,
         mimeType: file.mimeType,

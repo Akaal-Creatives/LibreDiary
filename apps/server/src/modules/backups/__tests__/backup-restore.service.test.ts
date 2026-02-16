@@ -905,6 +905,7 @@ describe('Backup Restore Service', () => {
       expect(mockPrisma.file.create).toHaveBeenCalledWith({
         data: {
           organizationId: 'org-1',
+          uploadedById: 'org-1',
           name: 'image.png',
           originalName: 'my-photo.png',
           mimeType: 'image/png',
@@ -1049,6 +1050,7 @@ describe('Backup Restore Service', () => {
       expect(mockPrisma.databaseRow.create).toHaveBeenCalledWith({
         data: {
           databaseId: 'new-db-1',
+          createdById: 'org-1',
           position: 0,
           cells: { 'prop-1': 'Todo' },
         },

@@ -197,7 +197,8 @@ export async function adminBackupRoutes(app: FastifyInstance): Promise<void> {
         const result = await restoreService.restoreOrgBackup(
           request.params.backupId,
           undefined as unknown as string,
-          body
+          body,
+          getAuthUser(request).id
         );
 
         logAudit({
@@ -343,7 +344,8 @@ export async function orgBackupRoutes(app: FastifyInstance): Promise<void> {
         const result = await restoreService.restoreOrgBackup(
           request.params.backupId,
           request.params.orgId,
-          body
+          body,
+          getAuthUser(request).id
         );
 
         logAudit({

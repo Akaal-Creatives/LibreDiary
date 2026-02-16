@@ -90,7 +90,7 @@ async function main() {
     }
 
     processed += pages.length;
-    cursor = pages[pages.length - 1].id;
+    cursor = pages[pages.length - 1]!.id;
 
     console.log(`[reindex] Processed ${processed}/${totalCount} pages`);
   }

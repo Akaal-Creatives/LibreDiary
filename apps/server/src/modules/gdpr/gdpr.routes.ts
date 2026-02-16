@@ -80,10 +80,10 @@ export async function gdprRoutes(fastify: FastifyInstance): Promise<void> {
   /**
    * GET /gdpr/exports/:id — Get a single data export
    */
-  fastify.get(
+  fastify.get<{ Params: { id: string } }>(
     '/exports/:id',
     { preHandler: [requireAuth] },
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    async (request, reply) => {
       const user = getAuthUser(request);
       const dataExport = await getDataExport(request.params.id, user.id);
 
@@ -104,10 +104,10 @@ export async function gdprRoutes(fastify: FastifyInstance): Promise<void> {
   /**
    * GET /gdpr/exports/:id/download — Download a completed data export
    */
-  fastify.get(
+  fastify.get<{ Params: { id: string } }>(
     '/exports/:id/download',
     { preHandler: [requireAuth] },
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    async (request, reply) => {
       const user = getAuthUser(request);
       const result = await getExportArchive(request.params.id, user.id);
 

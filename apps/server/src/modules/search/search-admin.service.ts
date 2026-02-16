@@ -99,7 +99,7 @@ export async function triggerReindex(): Promise<ReindexResult> {
       await bulkIndex(docs);
 
       totalIndexed += pages.length;
-      cursor = pages[pages.length - 1].id;
+      cursor = pages[pages.length - 1]!.id;
       reindexProgress = { processed: totalIndexed, total: totalCount };
     }
 
