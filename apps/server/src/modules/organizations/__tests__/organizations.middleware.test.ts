@@ -17,6 +17,8 @@ vi.mock('../../../lib/prisma.js', () => ({
   prisma: mockPrisma,
 }));
 
+import type { FastifyRequest, FastifyReply } from 'fastify';
+
 import {
   requireOrgAccess,
   requireOrgRole,
@@ -32,14 +34,14 @@ function createMockRequest(overrides: Record<string, unknown> = {}) {
     membership: undefined,
     params: {},
     ...overrides,
-  } as any;
+  } as unknown as FastifyRequest;
 }
 
 function createMockReply() {
-  const reply: any = {
+  const reply = {
     status: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
-  };
+  } as unknown as FastifyReply;
   return reply;
 }
 

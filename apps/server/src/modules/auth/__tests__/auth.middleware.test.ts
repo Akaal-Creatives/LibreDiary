@@ -16,6 +16,8 @@ vi.mock('../../../config/index.js', () => ({
   },
 }));
 
+import type { FastifyRequest, FastifyReply } from 'fastify';
+
 import {
   requireAuth,
   optionalAuth,
@@ -35,18 +37,18 @@ function createMockRequest(overrides: Record<string, unknown> = {}) {
     sessionId: undefined,
     sessionToken: undefined,
     ...overrides,
-  } as any;
+  } as unknown as FastifyRequest;
 }
 
 function createMockReply() {
-  const reply: any = {
+  const reply = {
     statusCode: 200,
     status: vi.fn().mockReturnThis(),
     send: vi.fn().mockReturnThis(),
     clearCookie: vi.fn().mockReturnThis(),
     setCookie: vi.fn().mockReturnThis(),
     header: vi.fn().mockReturnThis(),
-  };
+  } as unknown as FastifyReply;
   return reply;
 }
 

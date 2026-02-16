@@ -18,7 +18,7 @@ const { mockClient, mockIndex, mockConfigured, mockGetClient } = vi.hoisted(() =
 
   const mockConfigured = { value: true };
 
-  const mockGetClient = { fn: () => mockClient as any };
+  const mockGetClient = { fn: () => mockClient as unknown };
 
   return { mockClient, mockIndex, mockConfigured, mockGetClient };
 });
@@ -40,7 +40,7 @@ describe('meilisearch.init', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockConfigured.value = true;
-    mockGetClient.fn = () => mockClient as any;
+    mockGetClient.fn = () => mockClient as unknown;
     mockClient.createIndex.mockResolvedValue({});
     mockClient.health.mockResolvedValue({ status: 'available' });
     mockIndex.updateSearchableAttributes.mockResolvedValue({ taskUid: 1 });

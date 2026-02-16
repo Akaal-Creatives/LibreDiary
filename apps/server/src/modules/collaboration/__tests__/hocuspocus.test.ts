@@ -29,6 +29,22 @@ vi.mock('../../../services/session.service.js', () => mockSessionService);
 // Import after mocking
 import { createHocuspocusServer, parseDocumentName } from '../hocuspocus.js';
 
+/** Internal Hocuspocus server shape used for testing configuration hooks */
+interface HocuspocusServerInternal {
+  configuration: {
+    name: string;
+    onAuthenticate: (data: { documentName: string; token: string }) => Promise<{
+      userId: string;
+      organizationId: string;
+      userName: string;
+    }>;
+    onLoadDocument: (...args: unknown[]) => unknown;
+    onStoreDocument: (...args: unknown[]) => unknown;
+    onConnect: (...args: unknown[]) => unknown;
+    onDisconnect: (...args: unknown[]) => unknown;
+  };
+}
+
 function resetMocks() {
   Object.values(mockCollaborationService).forEach((mock) => mock.mockReset());
   Object.values(mockSessionService).forEach((mock) => mock.mockReset());
@@ -110,7 +126,7 @@ describe('Hocuspocus Server', () => {
 
     it('should create server with proper configuration', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(config).toBeDefined();
       expect(config.name).toBe('librediary-collab');
@@ -124,7 +140,7 @@ describe('Hocuspocus Server', () => {
   describe('onAuthenticate hook', () => {
     it('should have onAuthenticate configured', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(typeof config.onAuthenticate).toBe('function');
     });
@@ -138,7 +154,7 @@ describe('Hocuspocus Server', () => {
       });
 
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'org-123/page-456',
@@ -156,7 +172,7 @@ describe('Hocuspocus Server', () => {
 
     it('should reject missing token', async () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'org-123/page-456',
@@ -168,7 +184,7 @@ describe('Hocuspocus Server', () => {
 
     it('should reject invalid document name', async () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'invalid',
@@ -182,7 +198,7 @@ describe('Hocuspocus Server', () => {
       mockSessionService.getSessionByToken.mockResolvedValue(null);
 
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'org-123/page-456',
@@ -202,7 +218,7 @@ describe('Hocuspocus Server', () => {
       });
 
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'org-123/page-456',
@@ -225,7 +241,7 @@ describe('Hocuspocus Server', () => {
       });
 
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       const data = {
         documentName: 'org-123/page-456',
@@ -245,28 +261,28 @@ describe('Hocuspocus Server', () => {
   describe('document hooks', () => {
     it('should have onLoadDocument configured', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(typeof config.onLoadDocument).toBe('function');
     });
 
     it('should have onStoreDocument configured', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(typeof config.onStoreDocument).toBe('function');
     });
 
     it('should have onConnect configured', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(typeof config.onConnect).toBe('function');
     });
 
     it('should have onDisconnect configured', () => {
       const server = createHocuspocusServer();
-      const config = (server as any).configuration;
+      const config = (server as unknown as HocuspocusServerInternal).configuration;
 
       expect(typeof config.onDisconnect).toBe('function');
     });

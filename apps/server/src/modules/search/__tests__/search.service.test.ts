@@ -620,7 +620,7 @@ describe('Search Service', () => {
 
     it('returns hits.length when estimatedTotalHits undefined', async () => {
       const response = makeMeiliResponse();
-      delete (response as any).estimatedTotalHits;
+      delete (response as unknown as Record<string, unknown>).estimatedTotalHits;
       mockMeiliSearch.mockResolvedValueOnce(response);
       mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 

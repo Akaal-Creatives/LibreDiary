@@ -52,6 +52,9 @@ vi.mock('../organizations.middleware.js', () => ({
 }));
 vi.mock('../../audit/audit.service.js', () => ({ logAudit: vi.fn() }));
 
+import type { OrgRole } from '../../../generated/prisma/client.js';
+import type { Invite } from '../../../generated/prisma/client.js';
+
 import {
   createOrganization,
   getUserOrganizations,
@@ -134,12 +137,15 @@ describe('Organisations Service', () => {
 
   describe('getInviteStatus', () => {
     it('should return ACCEPTED when acceptedAt is set', () => {
-      const invite = { acceptedAt: new Date(), expiresAt: new Date() } as any;
+      const invite = { acceptedAt: new Date(), expiresAt: new Date() } as unknown as Invite;
       expect(getInviteStatus(invite)).toBe('ACCEPTED');
     });
 
     it('should return EXPIRED when the invite has expired', () => {
-      const invite = { acceptedAt: null, expiresAt: new Date(Date.now() - 1000) } as any;
+      const invite = {
+        acceptedAt: null,
+        expiresAt: new Date(Date.now() - 1000),
+      } as unknown as Invite;
       mockIsExpired.mockReturnValue(true);
       expect(getInviteStatus(invite)).toBe('EXPIRED');
     });
@@ -148,7 +154,7 @@ describe('Organisations Service', () => {
       const invite = {
         acceptedAt: null,
         expiresAt: new Date(Date.now() + 86400000),
-      } as any;
+      } as unknown as Invite;
       mockIsExpired.mockReturnValue(false);
       expect(getInviteStatus(invite)).toBe('PENDING');
     });
@@ -377,7 +383,12 @@ describe('Organisations Service', () => {
         role: 'ADMIN',
       });
 
-      const result = await updateMemberRole('org-1', 'mem-1', 'ADMIN' as any, 'OWNER' as any);
+      const result = await updateMemberRole(
+        'org-1',
+        'mem-1',
+        'ADMIN' as OrgRole,
+        'OWNER' as OrgRole
+      );
 
       expect(result.role).toBe('ADMIN');
       expect(mockPrisma.organizationMember.update).toHaveBeenCalledWith({
@@ -390,7 +401,7 @@ describe('Organisations Service', () => {
       mockPrisma.organizationMember.findFirst.mockResolvedValue(null);
 
       await expect(
-        updateMemberRole('org-1', 'mem-999', 'ADMIN' as any, 'OWNER' as any)
+        updateMemberRole('org-1', 'mem-999', 'ADMIN' as OrgRole, 'OWNER' as OrgRole)
       ).rejects.toThrow('MEMBER_NOT_FOUND');
     });
 
@@ -400,7 +411,7 @@ describe('Organisations Service', () => {
       mockPrisma.organizationMember.count.mockResolvedValue(1);
 
       await expect(
-        updateMemberRole('org-1', 'mem-1', 'ADMIN' as any, 'OWNER' as any)
+        updateMemberRole('org-1', 'mem-1', 'ADMIN' as OrgRole, 'OWNER' as OrgRole)
       ).rejects.toThrow('LAST_OWNER');
     });
 
@@ -410,7 +421,7 @@ describe('Organisations Service', () => {
       vi.mocked(canModifyMember).mockReturnValue(false);
 
       await expect(
-        updateMemberRole('org-1', 'mem-1', 'MEMBER' as any, 'ADMIN' as any)
+        updateMemberRole('org-1', 'mem-1', 'MEMBER' as OrgRole, 'ADMIN' as OrgRole)
       ).rejects.toThrow('CANNOT_MODIFY_HIGHER_ROLE');
     });
 
@@ -421,7 +432,7 @@ describe('Organisations Service', () => {
       vi.mocked(canAssignRole).mockReturnValue(false);
 
       await expect(
-        updateMemberRole('org-1', 'mem-1', 'OWNER' as any, 'ADMIN' as any)
+        updateMemberRole('org-1', 'mem-1', 'OWNER' as OrgRole, 'ADMIN' as OrgRole)
       ).rejects.toThrow('INSUFFICIENT_ROLE');
     });
   });
@@ -442,7 +453,7 @@ describe('Organisations Service', () => {
       vi.mocked(canModifyMember).mockReturnValue(true);
       mockPrisma.organizationMember.delete.mockResolvedValue({});
 
-      await removeMember('org-1', 'mem-2', 'user-1', 'OWNER' as any);
+      await removeMember('org-1', 'mem-2', 'user-1', 'OWNER' as OrgRole);
 
       expect(mockPrisma.organizationMember.delete).toHaveBeenCalledWith({
         where: { id: 'mem-2' },
@@ -452,7 +463,7 @@ describe('Organisations Service', () => {
     it('should throw MEMBER_NOT_FOUND when target does not exist', async () => {
       mockPrisma.organizationMember.findFirst.mockResolvedValue(null);
 
-      await expect(removeMember('org-1', 'mem-999', 'user-1', 'OWNER' as any)).rejects.toThrow(
+      await expect(removeMember('org-1', 'mem-999', 'user-1', 'OWNER' as OrgRole)).rejects.toThrow(
         'MEMBER_NOT_FOUND'
       );
     });
@@ -466,7 +477,7 @@ describe('Organisations Service', () => {
       };
       mockPrisma.organizationMember.findFirst.mockResolvedValue(targetMember);
 
-      await expect(removeMember('org-1', 'mem-1', 'user-1', 'ADMIN' as any)).rejects.toThrow(
+      await expect(removeMember('org-1', 'mem-1', 'user-1', 'ADMIN' as OrgRole)).rejects.toThrow(
         'USE_LEAVE_ENDPOINT'
       );
     });
@@ -480,7 +491,7 @@ describe('Organisations Service', () => {
       };
       mockPrisma.organizationMember.findFirst.mockResolvedValue(targetMember);
 
-      await expect(removeMember('org-1', 'mem-1', 'user-1', 'ADMIN' as any)).rejects.toThrow(
+      await expect(removeMember('org-1', 'mem-1', 'user-1', 'ADMIN' as OrgRole)).rejects.toThrow(
         'CANNOT_MODIFY_OWNER'
       );
     });
@@ -495,7 +506,7 @@ describe('Organisations Service', () => {
       mockPrisma.organizationMember.findFirst.mockResolvedValue(targetMember);
       vi.mocked(canModifyMember).mockReturnValue(false);
 
-      await expect(removeMember('org-1', 'mem-2', 'user-1', 'ADMIN' as any)).rejects.toThrow(
+      await expect(removeMember('org-1', 'mem-2', 'user-1', 'ADMIN' as OrgRole)).rejects.toThrow(
         'CANNOT_MODIFY_HIGHER_ROLE'
       );
     });
@@ -642,9 +653,9 @@ describe('Organisations Service', () => {
 
       const result = await createInvite(
         'org-1',
-        { email: 'new@example.com', role: 'MEMBER' as any },
+        { email: 'new@example.com', role: 'MEMBER' as OrgRole },
         'user-1',
-        'OWNER' as any
+        'OWNER' as OrgRole
       );
 
       expect(result).toEqual(mockInvite);
@@ -662,9 +673,9 @@ describe('Organisations Service', () => {
       await expect(
         createInvite(
           'org-999',
-          { email: 'a@b.com', role: 'MEMBER' as any },
+          { email: 'a@b.com', role: 'MEMBER' as OrgRole },
           'user-1',
-          'OWNER' as any
+          'OWNER' as OrgRole
         )
       ).rejects.toThrow('ORG_NOT_FOUND');
     });
@@ -679,9 +690,9 @@ describe('Organisations Service', () => {
       await expect(
         createInvite(
           'org-1',
-          { email: 'user@other.com', role: 'MEMBER' as any },
+          { email: 'user@other.com', role: 'MEMBER' as OrgRole },
           'user-1',
-          'OWNER' as any
+          'OWNER' as OrgRole
         )
       ).rejects.toThrow('DOMAIN_NOT_ALLOWED');
     });
@@ -697,9 +708,9 @@ describe('Organisations Service', () => {
       await expect(
         createInvite(
           'org-1',
-          { email: 'user@example.com', role: 'OWNER' as any },
+          { email: 'user@example.com', role: 'OWNER' as OrgRole },
           'user-1',
-          'ADMIN' as any
+          'ADMIN' as OrgRole
         )
       ).rejects.toThrow('INSUFFICIENT_ROLE');
     });
@@ -720,9 +731,9 @@ describe('Organisations Service', () => {
       await expect(
         createInvite(
           'org-1',
-          { email: 'existing@example.com', role: 'MEMBER' as any },
+          { email: 'existing@example.com', role: 'MEMBER' as OrgRole },
           'user-1',
-          'OWNER' as any
+          'OWNER' as OrgRole
         )
       ).rejects.toThrow('MEMBER_ALREADY_EXISTS');
     });
@@ -740,9 +751,9 @@ describe('Organisations Service', () => {
       await expect(
         createInvite(
           'org-1',
-          { email: 'new@example.com', role: 'MEMBER' as any },
+          { email: 'new@example.com', role: 'MEMBER' as OrgRole },
           'user-1',
-          'OWNER' as any
+          'OWNER' as OrgRole
         )
       ).rejects.toThrow('INVITE_ALREADY_EXISTS');
     });

@@ -7,13 +7,13 @@ vi.mock('@aws-sdk/client-s3', () => {
   // Use a real class so `new S3Client(...)` works as a constructor
   class MockS3Client {
     send = mockSend;
-    config: any;
-    constructor(config: any) {
+    config: unknown;
+    constructor(config: unknown) {
       this.config = config;
       // Record the call so we can assert on it
       MockS3Client.lastConfig = config;
     }
-    static lastConfig: any = null;
+    static lastConfig: unknown = null;
   }
 
   return {
@@ -49,7 +49,7 @@ describe('S3BackupStorage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (S3Client as any).lastConfig = null;
+    (S3Client as unknown as { lastConfig: unknown }).lastConfig = null;
     provider = new S3BackupStorage(defaultConfig);
   });
 
@@ -67,7 +67,7 @@ describe('S3BackupStorage', () => {
 
       new S3BackupStorage(config);
 
-      expect((S3Client as any).lastConfig).toEqual({
+      expect((S3Client as unknown as { lastConfig: unknown }).lastConfig).toEqual({
         endpoint: 'https://s3.custom-endpoint.example.com',
         region: 'eu-west-2',
         credentials: {
@@ -81,19 +81,19 @@ describe('S3BackupStorage', () => {
     it('should default the region to us-east-1 when not provided', () => {
       new S3BackupStorage(defaultConfig);
 
-      expect((S3Client as any).lastConfig.region).toBe('us-east-1');
+      expect((S3Client as unknown as { lastConfig: unknown }).lastConfig.region).toBe('us-east-1');
     });
 
     it('should pass endpoint as undefined when not provided', () => {
       new S3BackupStorage(defaultConfig);
 
-      expect((S3Client as any).lastConfig.endpoint).toBeUndefined();
+      expect((S3Client as unknown as { lastConfig: unknown }).lastConfig.endpoint).toBeUndefined();
     });
 
     it('should always enable forcePathStyle', () => {
       new S3BackupStorage(defaultConfig);
 
-      expect((S3Client as any).lastConfig.forcePathStyle).toBe(true);
+      expect((S3Client as unknown as { lastConfig: unknown }).lastConfig.forcePathStyle).toBe(true);
     });
   });
 

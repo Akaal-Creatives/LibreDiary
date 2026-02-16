@@ -72,6 +72,7 @@ vi.mock('../../services/email.service.js', () => ({
   sendInviteEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
+import type { Invite } from '../../generated/prisma/client.js';
 import * as orgService from './organizations.service.js';
 import { canModifyMember, canAssignRole } from './organizations.middleware.js';
 
@@ -480,18 +481,18 @@ describe('Organizations Service', () => {
 
   describe('getInviteStatus', () => {
     it('should return ACCEPTED for accepted invites', () => {
-      const invite = { acceptedAt: now, expiresAt: futureDate } as any;
+      const invite = { acceptedAt: now, expiresAt: futureDate } as unknown as Invite;
       expect(orgService.getInviteStatus(invite)).toBe('ACCEPTED');
     });
 
     it('should return EXPIRED for expired invites', () => {
       const pastDate = new Date(now.getTime() - 1000);
-      const invite = { acceptedAt: null, expiresAt: pastDate } as any;
+      const invite = { acceptedAt: null, expiresAt: pastDate } as unknown as Invite;
       expect(orgService.getInviteStatus(invite)).toBe('EXPIRED');
     });
 
     it('should return PENDING for valid invites', () => {
-      const invite = { acceptedAt: null, expiresAt: futureDate } as any;
+      const invite = { acceptedAt: null, expiresAt: futureDate } as unknown as Invite;
       expect(orgService.getInviteStatus(invite)).toBe('PENDING');
     });
   });

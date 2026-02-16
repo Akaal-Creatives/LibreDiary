@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ZodError } from 'zod';
+import type { FastifyRequest, FastifyReply, FastifyInstance, FastifyError } from 'fastify';
+
+type ErrorHandlerFn = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => void;
+type NotFoundHandlerFn = (request: FastifyRequest, reply: FastifyReply) => void;
 
 describe('Error Handler Plugin', () => {
   // Test the error handler logic directly with mock request/reply
@@ -9,31 +13,31 @@ describe('Error Handler Plugin', () => {
       url: '/test',
       log: { error: vi.fn() },
       ...overrides,
-    } as any;
+    } as unknown as FastifyRequest;
   }
 
   function createMockReply() {
-    const reply: any = {
+    const reply = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
-    };
+    } as unknown as FastifyReply;
     return reply;
   }
 
   // Extract the handler functions for direct testing
-  let errorHandler: (error: any, request: any, reply: any) => any;
-  let notFoundHandler: (request: any, reply: any) => any;
+  let errorHandler: ErrorHandlerFn;
+  let notFoundHandler: NotFoundHandlerFn;
 
   beforeEach(async () => {
     // Create a mock fastify instance that captures the handlers
-    const mockFastify: any = {
-      setErrorHandler: vi.fn((fn: any) => {
+    const mockFastify = {
+      setErrorHandler: vi.fn((fn: ErrorHandlerFn) => {
         errorHandler = fn;
       }),
-      setNotFoundHandler: vi.fn((fn: any) => {
+      setNotFoundHandler: vi.fn((fn: NotFoundHandlerFn) => {
         notFoundHandler = fn;
       }),
-    };
+    } as unknown as FastifyInstance;
 
     // Import and register the plugin to capture handlers
     const { errorHandlerPlugin } = await import('../error-handler.js');
