@@ -115,6 +115,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * POST /auth/login
    * Login with email and password
    */
+  // codeql[js/missing-rate-limiting] Rate limited via @fastify/rate-limit config
   fastify.post('/login', authRateLimit, async (request: FastifyRequest, reply: FastifyReply) => {
     const body = loginSchema.safeParse(request.body);
     if (!body.success) {
@@ -277,6 +278,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    * POST /auth/verify-email
    * Verify email with token
    */
+  // codeql[js/missing-rate-limiting] Rate limited via @fastify/rate-limit config
   fastify.post(
     '/verify-email',
     authRateLimit,

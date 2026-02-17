@@ -118,6 +118,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
    * GET /oauth/:provider/callback
    * Handle OAuth callback - login or create user, then redirect
    */
+  // codeql[js/missing-rate-limiting] Rate limited via @fastify/rate-limit config
   fastify.get(
     '/:provider/callback',
     oauthRateLimit,
@@ -280,6 +281,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
    * DELETE /oauth/:provider/unlink
    * Unlink OAuth account from current user (authenticated)
    */
+  // codeql[js/missing-rate-limiting] Rate limited via @fastify/rate-limit config
   fastify.delete(
     '/:provider/unlink',
     { preHandler: [requireAuth], config: { rateLimit: { max: 20, timeWindow: '5 minutes' } } },
