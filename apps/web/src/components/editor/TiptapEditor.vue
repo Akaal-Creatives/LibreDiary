@@ -14,6 +14,21 @@ import { CalloutExtension } from './extensions/CalloutExtension';
 import { ToggleNode, ToggleSummaryNode, ToggleContentNode } from './extensions/ToggleExtension';
 import { TableOfContentsExtension } from './extensions/TableOfContentsExtension';
 import { DragHandleExtension } from './extensions/DragHandleExtension';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import Link from '@tiptap/extension-link';
+import { ImageUploadExtension } from './extensions/ImageUploadExtension';
+import Typography from '@tiptap/extension-typography';
+import { FootnoteExtension } from './extensions/FootnoteExtension';
+import { MermaidExtension } from './extensions/MermaidExtension';
+import { Markdown } from 'tiptap-markdown';
+import { defineAsyncComponent } from 'vue';
+
+const RawMarkdownEditor = defineAsyncComponent(() => import('./RawMarkdownEditor.vue'));
 // Use yCursorPlugin from @tiptap/y-tiptap (same package as Collaboration) to ensure
 // the ySyncPluginKey matches. The standalone @tiptap/extension-collaboration-cursor
 // imports from y-prosemirror which creates a different PluginKey instance, causing a
@@ -117,6 +132,35 @@ const emit = defineEmits<{
 // Use shallowRef to avoid reactivity issues with the Editor instance
 const editor = shallowRef<Editor | null>(null);
 
+// Editor mode: WYSIWYG or raw Markdown
+const editorMode = ref<'wysiwyg' | 'markdown'>('wysiwyg');
+const rawMarkdownContent = ref('');
+
+function toggleEditorMode() {
+  if (editorMode.value === 'wysiwyg') {
+    // Switch to raw Markdown — extract current content
+    if (editor.value) {
+      const storage = editor.value.storage as any;
+      if (storage?.markdown?.getMarkdown) {
+        rawMarkdownContent.value = storage.markdown.getMarkdown();
+      } else {
+        rawMarkdownContent.value = editor.value.getHTML();
+      }
+    }
+    editorMode.value = 'markdown';
+  } else {
+    // Switch back to WYSIWYG — import the raw Markdown
+    if (editor.value && rawMarkdownContent.value) {
+      editor.value.commands.setContent(rawMarkdownContent.value, { emitUpdate: true });
+    }
+    editorMode.value = 'wysiwyg';
+  }
+}
+
+function onRawMarkdownUpdate(value: string) {
+  rawMarkdownContent.value = value;
+}
+
 // Track if we've created a collaborative editor
 const isCollaborativeEditor = ref(false);
 
@@ -199,6 +243,31 @@ function buildExtensions(
     ToggleContentNode,
     TableOfContentsExtension,
     DragHandleExtension,
+    Table.configure({ resizable: true }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    Link.configure({
+      openOnClick: false,
+      autolink: true,
+      linkOnPaste: true,
+    }),
+    ImageUploadExtension.configure({
+      inline: false,
+      allowBase64: false,
+    }),
+    Typography,
+    FootnoteExtension,
+    MermaidExtension,
+    Markdown.configure({
+      html: true,
+      tightLists: true,
+      bulletListMarker: '-',
+      transformPastedText: true,
+      transformCopiedText: true,
+    }),
     Placeholder.configure({
       placeholder: props.placeholder,
       emptyEditorClass: 'is-editor-empty',
@@ -436,15 +505,28 @@ defineExpose({
   get editor() {
     return editor.value;
   },
+  get editorMode() {
+    return editorMode.value;
+  },
+  toggleEditorMode,
 });
 </script>
 
 <template>
   <div class="tiptap-editor">
-    <EditorContent v-if="editor" :editor="editor" class="editor-content" />
-    <div v-else class="editor-loading">
-      <span>Loading editor...</span>
-    </div>
+    <template v-if="editorMode === 'wysiwyg'">
+      <EditorContent v-if="editor" :editor="editor" class="editor-content" />
+      <div v-else class="editor-loading">
+        <span>Loading editor...</span>
+      </div>
+    </template>
+    <template v-else>
+      <RawMarkdownEditor
+        :model-value="rawMarkdownContent"
+        :read-only="collaborative"
+        @update:model-value="onRawMarkdownUpdate"
+      />
+    </template>
 
     <Teleport to="body">
       <div
@@ -716,6 +798,30 @@ defineExpose({
   background: var(--color-surface-sunken);
 }
 
+/* Table selected cell */
+.editor-content .ProseMirror .selectedCell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  content: '';
+  background: var(--color-accent-subtle);
+}
+
+.editor-content .ProseMirror .column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: -2px;
+  width: 4px;
+  pointer-events: none;
+  background-color: var(--color-accent);
+}
+
+.editor-content .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
 /* Strikethrough */
 .editor-content .ProseMirror s {
   text-decoration: line-through;
@@ -929,6 +1035,120 @@ defineExpose({
   color: var(--color-text-tertiary);
   font-size: var(--text-sm);
   font-style: italic;
+}
+
+/* ==========================================================================
+   Mermaid Diagrams
+   ========================================================================== */
+
+.editor-content .ProseMirror .mermaid-block {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.editor-content .ProseMirror .mermaid-edit-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  z-index: 1;
+}
+
+.editor-content .ProseMirror .mermaid-edit-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.editor-content .ProseMirror .mermaid-code-input {
+  width: 100%;
+  min-height: 100px;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  outline: none;
+  margin-bottom: var(--space-3);
+}
+
+.editor-content .ProseMirror .mermaid-code-input:focus {
+  border-color: var(--color-accent);
+}
+
+.editor-content .ProseMirror .mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.editor-content .ProseMirror .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.editor-content .ProseMirror .mermaid-error {
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: var(--color-error-subtle);
+  border-radius: var(--radius-md);
+}
+
+.editor-content .ProseMirror .mermaid-error code {
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+
+.editor-content .ProseMirror .mermaid-placeholder {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Footnotes
+   ========================================================================== */
+
+.editor-content .ProseMirror .footnote-ref {
+  color: var(--color-accent);
+  font-size: 0.75em;
+  cursor: pointer;
+  vertical-align: super;
+  font-weight: 600;
+}
+
+.editor-content .ProseMirror .footnote-ref:hover {
+  text-decoration: underline;
+}
+
+.editor-content .ProseMirror .footnote-content {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-left: 2px solid var(--color-border);
+}
+
+.editor-content .ProseMirror .footnote-label {
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 /* ==========================================================================

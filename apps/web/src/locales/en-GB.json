@@ -305,7 +305,17 @@
     "tableOfContents": "Table of Contents",
     "tableOfContentsDescription": "Auto-generated heading outline",
     "toggle": "Toggle",
-    "toggleDescription": "Collapsible content block"
+    "toggleDescription": "Collapsible content block",
+    "taskList": "Task List",
+    "taskListDescription": "Interactive checklist with checkboxes",
+    "table": "Table",
+    "tableDescription": "Insert a table with rows and columns",
+    "image": "Image",
+    "imageDescription": "Insert an image from a URL",
+    "footnote": "Footnote",
+    "footnoteDescription": "Add a footnote reference and content",
+    "mermaidDiagram": "Mermaid Diagram",
+    "mermaidDiagramDescription": "Insert a Mermaid flowchart or diagram"
   },
   "comments": {
     "title": "Comments",

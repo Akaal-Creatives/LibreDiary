@@ -18,6 +18,7 @@ export {
 export { useKeyboardShortcuts, type KeyboardShortcut } from './useKeyboardShortcuts';
 export { useSidebar } from './useSidebar';
 export { useOnboardingTour } from './useOnboardingTour';
+export { useMarkdownExport } from './useMarkdownExport';
 
 // Re-export design tokens for convenience
 export * from '@/styles/design-tokens';

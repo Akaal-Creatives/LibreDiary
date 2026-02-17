@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch, onUnmounted, defineAsyncComponent } fr
 import { usePagesStore, useSyncStore, useAuthStore } from '@/stores';
 import { useCollaboration } from '@/composables';
 import { TiptapEditor, AiBubbleMenu } from '@/components/editor';
+import { useMarkdownExport } from '@/composables';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
@@ -35,6 +36,9 @@ const commentCount = ref(0);
 
 // Ref to the TiptapEditor component
 const editorRef = ref<InstanceType<typeof TiptapEditor> | null>(null);
+
+// Markdown export/import
+const { downloadAsMarkdown, importFromFile } = useMarkdownExport(() => editorRef.value?.editor);
 
 // Track if page has been modified
 const hasBeenModified = ref(false);
@@ -472,6 +476,58 @@ function formatDate(dateString: string): string {
               <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5" />
               <path
                 d="M9 5V9L11.5 10.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            class="action-btn"
+            :title="
+              editorRef?.editorMode === 'markdown' ? 'Switch to WYSIWYG' : 'Switch to Markdown'
+            "
+            @click="editorRef?.toggleEditorMode()"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect
+                x="2"
+                y="3"
+                width="14"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M5 12V6l2.5 3L10 6v6M12.5 9.5L14 8v4"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            class="action-btn"
+            title="Export as Markdown"
+            @click="downloadAsMarkdown(`${pageTitle || 'untitled'}.md`)"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 2.25v9M5.25 7.5L9 11.25l3.75-3.75M3 12.75v1.5a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button class="action-btn" title="Import Markdown" @click="importFromFile">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 11.25v-9M12.75 6L9 2.25 5.25 6M3 12.75v1.5a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5v-1.5"
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"

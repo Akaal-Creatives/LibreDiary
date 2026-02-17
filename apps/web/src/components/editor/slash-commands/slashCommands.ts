@@ -110,7 +110,43 @@ export const SLASH_COMMANDS: SlashCommand[] = [
       editor.chain().focus().toggleOrderedList().run();
     },
   },
+  {
+    id: 'taskList',
+    labelKey: 'slashCommands.taskList',
+    descriptionKey: 'slashCommands.taskListDescription',
+    icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11',
+    group: 'lists',
+    keywords: ['task', 'todo', 'checklist', 'checkbox'],
+    action: (editor) => {
+      editor.chain().focus().toggleTaskList().run();
+    },
+  },
   // Advanced blocks
+  {
+    id: 'table',
+    labelKey: 'slashCommands.table',
+    descriptionKey: 'slashCommands.tableDescription',
+    icon: 'M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18',
+    group: 'advanced',
+    keywords: ['table', 'grid', 'spreadsheet', 'rows', 'columns'],
+    action: (editor) => {
+      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    },
+  },
+  {
+    id: 'image',
+    labelKey: 'slashCommands.image',
+    descriptionKey: 'slashCommands.imageDescription',
+    icon: 'M21 15V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10m18 0l-4.5-4.5a1 1 0 00-1.4 0L9 16m12-1v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m6-5a2 2 0 11-4 0 2 2 0 014 0z',
+    group: 'advanced',
+    keywords: ['image', 'picture', 'photo', 'img'],
+    action: (editor) => {
+      const url = window.prompt('Enter image URL');
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    },
+  },
   {
     id: 'calloutInfo',
     labelKey: 'slashCommands.calloutInfo',
@@ -175,6 +211,28 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     keywords: ['toggle', 'collapsible', 'accordion', 'details', 'expand'],
     action: (editor) => {
       (editor.chain().focus() as any).setToggle().run();
+    },
+  },
+  {
+    id: 'mermaidDiagram',
+    labelKey: 'slashCommands.mermaidDiagram',
+    descriptionKey: 'slashCommands.mermaidDiagramDescription',
+    icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM9 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4zM7 10v4M17 10v1a2 2 0 01-2 2h-2M7 10h10',
+    group: 'advanced',
+    keywords: ['mermaid', 'diagram', 'chart', 'flowchart', 'graph', 'sequence'],
+    action: (editor) => {
+      (editor.chain().focus() as any).insertMermaidDiagram().run();
+    },
+  },
+  {
+    id: 'footnote',
+    labelKey: 'slashCommands.footnote',
+    descriptionKey: 'slashCommands.footnoteDescription',
+    icon: 'M4 19h16M4 15h16M4 11h16M4 7h16M17 3v4M15 5h4',
+    group: 'advanced',
+    keywords: ['footnote', 'reference', 'citation', 'note'],
+    action: (editor) => {
+      (editor.chain().focus() as any).insertFootnote().run();
     },
   },
 ];
