@@ -13,6 +13,7 @@ vi.mock('node:fs', async (importOriginal) => {
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
     readFileSync: vi.fn(),
+    realpathSync: vi.fn((p: string) => p),
     unlinkSync: vi.fn(),
     accessSync: vi.fn(),
   };
@@ -26,7 +27,14 @@ describe('LocalStorageProvider', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    // Constructor calls existsSync and realpathSync, so set defaults first
+    mockedFs.existsSync.mockReturnValue(true);
+    mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
     provider = new LocalStorageProvider(basePath);
+    // Reset call counts so constructor calls don't pollute test assertions
+    vi.clearAllMocks();
+    // Re-apply default realpathSync mock after clearAllMocks
+    mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
   });
 
   // ===========================================
@@ -114,11 +122,13 @@ describe('LocalStorageProvider', () => {
       const result = await provider.download('org-1/document.txt');
 
       expect(result).toEqual(content);
-      expect(mockedFs.readFileSync).toHaveBeenCalledWith(path.join(basePath, 'org-1/document.txt'));
+      const expectedPath = path.join(basePath, 'org-1/document.txt');
+      expect(mockedFs.realpathSync).toHaveBeenCalledWith(expectedPath);
+      expect(mockedFs.readFileSync).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should propagate errors when the file does not exist on disc', async () => {
-      mockedFs.readFileSync.mockImplementation(() => {
+      mockedFs.realpathSync.mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
 
@@ -149,8 +159,10 @@ describe('LocalStorageProvider', () => {
 
       await provider.delete('org-1/old-file.txt');
 
-      expect(mockedFs.existsSync).toHaveBeenCalledWith(path.join(basePath, 'org-1/old-file.txt'));
-      expect(mockedFs.unlinkSync).toHaveBeenCalledWith(path.join(basePath, 'org-1/old-file.txt'));
+      const expectedPath = path.join(basePath, 'org-1/old-file.txt');
+      expect(mockedFs.existsSync).toHaveBeenCalledWith(expectedPath);
+      expect(mockedFs.realpathSync).toHaveBeenCalledWith(expectedPath);
+      expect(mockedFs.unlinkSync).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should do nothing when the file does not exist', async () => {
@@ -187,8 +199,10 @@ describe('LocalStorageProvider', () => {
 
       const result = await provider.exists('org-1/file.txt');
 
+      const expectedPath = path.join(basePath, 'org-1/file.txt');
       expect(result).toBe(true);
-      expect(mockedFs.existsSync).toHaveBeenCalledWith(path.join(basePath, 'org-1/file.txt'));
+      expect(mockedFs.existsSync).toHaveBeenCalledWith(expectedPath);
+      expect(mockedFs.realpathSync).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should return false when the file does not exist on disc', async () => {
@@ -374,10 +388,10 @@ describe('LocalStorageProvider', () => {
 
       const result = await provider.download('org-1/file..backup.txt');
 
+      const expectedPath = path.join(basePath, 'org-1/file..backup.txt');
       expect(result).toEqual(Buffer.from('ok'));
-      expect(mockedFs.readFileSync).toHaveBeenCalledWith(
-        path.join(basePath, 'org-1/file..backup.txt')
-      );
+      expect(mockedFs.realpathSync).toHaveBeenCalledWith(expectedPath);
+      expect(mockedFs.readFileSync).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should allow keys with subdirectories that stay within the base path', async () => {
