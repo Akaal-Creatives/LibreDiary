@@ -17,6 +17,7 @@ const { mockAuthStore, mockPagesStore, mockTemplatesStore, mockDialog, mockToast
       user: { name: 'Test User', isSuperAdmin: false },
     },
     mockPagesStore: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rootPages: [] as any[],
       createPage: vi.fn(),
       fetchPageTree: vi.fn(),
@@ -296,6 +297,7 @@ describe('DashboardPage', () => {
 
     // Find the TemplateLibrary stub component and emit the useTemplate event
     const template = { id: 'tpl-1', name: 'Meeting Notes' };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const templateLib = wrapper.findComponent(TemplateLibrary as any);
     templateLib.vm.$emit('useTemplate', template);
 
@@ -324,6 +326,7 @@ describe('DashboardPage', () => {
 
     // Find the TemplateLibrary stub component and emit the useTemplate event
     const template = { id: 'tpl-bad', name: 'Broken Template' };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const templateLib = wrapper.findComponent(TemplateLibrary as any);
     templateLib.vm.$emit('useTemplate', template);
 

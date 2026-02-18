@@ -8,6 +8,7 @@ import { i18n } from '@/i18n';
 // Helper to mount KeyboardShortcutsModal with proper context
 function mountModal() {
   // We need a parent component that initialises the composable
+  // eslint-disable-next-line vue/one-component-per-file
   const TestWrapper = defineComponent({
     components: { KeyboardShortcutsModal },
     setup() {
@@ -54,6 +55,7 @@ describe('KeyboardShortcutsModal', () => {
     // Reset help visibility
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useKeyboardShortcuts>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useKeyboardShortcuts();
@@ -84,6 +86,7 @@ describe('KeyboardShortcutsModal', () => {
     // Open modal by toggling help
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useKeyboardShortcuts>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useKeyboardShortcuts();
@@ -109,6 +112,7 @@ describe('KeyboardShortcutsModal', () => {
 
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useKeyboardShortcuts>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useKeyboardShortcuts();

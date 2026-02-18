@@ -96,6 +96,7 @@ describe('Organizations Service', () => {
     it('should PATCH to correct endpoint with role', async () => {
       mockApi.patch.mockResolvedValue({ member: { id: 'mem-1', role: 'ADMIN' } });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await organizationsService.updateMemberRole('org-1', 'mem-1', 'ADMIN' as any);
 
       expect(mockApi.patch).toHaveBeenCalledWith('/organizations/org-1/members/mem-1', {
@@ -146,6 +147,7 @@ describe('Organizations Service', () => {
 
       await organizationsService.createInvite('org-1', {
         email: 'new@example.com',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: 'MEMBER' as any,
       });
 

@@ -1,4 +1,5 @@
 import { Extension } from '@tiptap/core';
+import type { Editor } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 
 export const SlashCommandExtension = Extension.create({
@@ -14,9 +15,9 @@ export const SlashCommandExtension = Extension.create({
           range,
           props,
         }: {
-          editor: any;
+          editor: Editor;
           range: { from: number; to: number };
-          props: { action: (editor: any) => void };
+          props: { action: (editor: Editor) => void };
         }) => {
           editor.chain().focus().deleteRange(range).run();
           props.action(editor);

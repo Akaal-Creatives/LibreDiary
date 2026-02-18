@@ -5,6 +5,7 @@ import { setActivePinia, createPinia } from 'pinia';
 const { mockPagesStore, mockDialog } = vi.hoisted(() => ({
   mockPagesStore: {
     fetchTrashedPages: vi.fn(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     trashedPages: [] as any[],
     trashLoading: false,
     restorePage: vi.fn(),

@@ -6,6 +6,7 @@ import { useOnboardingTour } from '@/composables/useOnboardingTour';
 import { i18n } from '@/i18n';
 
 function mountTour() {
+  // eslint-disable-next-line vue/one-component-per-file
   const TestWrapper = defineComponent({
     components: { OnboardingTour },
     setup() {
@@ -46,6 +47,7 @@ describe('OnboardingTour', () => {
     // Reset tour state
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useOnboardingTour>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useOnboardingTour();
@@ -75,6 +77,7 @@ describe('OnboardingTour', () => {
     // Start the tour
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useOnboardingTour>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useOnboardingTour();
@@ -100,6 +103,7 @@ describe('OnboardingTour', () => {
 
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useOnboardingTour>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useOnboardingTour();
@@ -130,6 +134,7 @@ describe('OnboardingTour', () => {
 
     const { result, unmount } = (() => {
       let result!: ReturnType<typeof useOnboardingTour>;
+      // eslint-disable-next-line vue/one-component-per-file
       const comp = defineComponent({
         setup() {
           result = useOnboardingTour();

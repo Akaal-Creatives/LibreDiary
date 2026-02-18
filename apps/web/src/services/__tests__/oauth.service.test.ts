@@ -90,6 +90,7 @@ describe('OAuth Service', () => {
       const oauthUrl = 'https://accounts.google.com/o/oauth2/auth?client_id=abc';
       mockApi.get.mockResolvedValue({ url: oauthUrl, state: 'random-state' });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await initiateOAuth('google' as any);
 
       expect(mockApi.get).toHaveBeenCalledWith('/oauth/google');
@@ -100,6 +101,7 @@ describe('OAuth Service', () => {
       const oauthUrl = 'https://github.com/login/oauth/authorize?client_id=xyz';
       mockApi.get.mockResolvedValue({ url: oauthUrl, state: 'state-123' });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await initiateOAuth('github' as any);
 
       expect(mockApi.get).toHaveBeenCalledWith('/oauth/github');
@@ -109,6 +111,7 @@ describe('OAuth Service', () => {
     it('should propagate API errors without redirecting', async () => {
       mockApi.get.mockRejectedValue(new Error('Provider not configured'));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await expect(initiateOAuth('google' as any)).rejects.toThrow('Provider not configured');
       expect(window.location.href).toBe('');
     });
@@ -123,6 +126,7 @@ describe('OAuth Service', () => {
       const oauthUrl = 'https://accounts.google.com/o/oauth2/auth?client_id=abc&mode=link';
       mockApi.get.mockResolvedValue({ url: oauthUrl, state: 'link-state' });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await initiateOAuthLink('google' as any);
 
       expect(mockApi.get).toHaveBeenCalledWith('/oauth/google/link');
@@ -133,6 +137,7 @@ describe('OAuth Service', () => {
       const oauthUrl = 'https://github.com/login/oauth/authorize?client_id=xyz&mode=link';
       mockApi.get.mockResolvedValue({ url: oauthUrl, state: 'state-456' });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await initiateOAuthLink('github' as any);
 
       expect(mockApi.get).toHaveBeenCalledWith('/oauth/github/link');
@@ -142,6 +147,7 @@ describe('OAuth Service', () => {
     it('should propagate API errors without redirecting', async () => {
       mockApi.get.mockRejectedValue(new Error('Unauthorised'));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await expect(initiateOAuthLink('google' as any)).rejects.toThrow('Unauthorised');
       expect(window.location.href).toBe('');
     });
@@ -197,6 +203,7 @@ describe('OAuth Service', () => {
     it('should call DELETE /oauth/{provider}/unlink', async () => {
       mockApi.delete.mockResolvedValue(undefined);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await unlinkAccount('google' as any);
 
       expect(mockApi.delete).toHaveBeenCalledWith('/oauth/google/unlink');
@@ -205,6 +212,7 @@ describe('OAuth Service', () => {
     it('should call DELETE for github provider', async () => {
       mockApi.delete.mockResolvedValue(undefined);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await unlinkAccount('github' as any);
 
       expect(mockApi.delete).toHaveBeenCalledWith('/oauth/github/unlink');
@@ -213,6 +221,7 @@ describe('OAuth Service', () => {
     it('should not return a value', async () => {
       mockApi.delete.mockResolvedValue(undefined);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await unlinkAccount('google' as any);
 
       expect(result).toBeUndefined();
@@ -221,6 +230,7 @@ describe('OAuth Service', () => {
     it('should propagate API errors', async () => {
       mockApi.delete.mockRejectedValue(new Error('Cannot unlink last account'));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await expect(unlinkAccount('google' as any)).rejects.toThrow('Cannot unlink last account');
     });
   });

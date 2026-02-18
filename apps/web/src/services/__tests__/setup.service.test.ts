@@ -132,6 +132,7 @@ describe('Setup Service', () => {
       };
       mockApi.post.mockResolvedValue(mockResult);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await setupService.complete(minimalInput as any);
 
       expect(mockApi.post).toHaveBeenCalledWith('/setup/complete', minimalInput);

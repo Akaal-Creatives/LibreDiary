@@ -15,6 +15,8 @@ vi.mock('node:fs', async (importOriginal) => {
     unlinkSync: vi.fn(),
     accessSync: vi.fn(),
     statSync: vi.fn(),
+    // realpathSync is used by the security hardening to canonicalise paths
+    realpathSync: vi.fn((p: string) => p),
   };
 });
 
@@ -26,7 +28,13 @@ describe('LocalStorageProvider', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Constructor calls existsSync + realpathSync; ensure base dir "exists"
+    mockedFs.existsSync.mockReturnValue(true);
     provider = new LocalStorageProvider(basePath);
+    // Reset after constructor so individual tests control their own mocks
+    vi.clearAllMocks();
+    // Re-apply the realpathSync default (clearAllMocks resets it)
+    mockedFs.realpathSync.mockImplementation(((p: string) => p) as typeof fs.realpathSync);
   });
 
   // ===========================================

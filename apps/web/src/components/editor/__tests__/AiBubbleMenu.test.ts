@@ -127,6 +127,7 @@ function mountComponent(
 
   return mount(AiBubbleMenu, {
     props: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       editor: (overrides.editor ?? createMockEditor()) as any,
     },
   });

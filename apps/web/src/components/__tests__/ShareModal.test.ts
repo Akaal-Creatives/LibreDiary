@@ -49,7 +49,7 @@ const defaultProps = {
  * Sets up the mockApi.get implementation to return appropriate data for
  * the three parallel requests made by loadData().
  */
-function setupLoadMock(options?: { isPublic?: boolean; permissions?: any[] }) {
+function setupLoadMock(options?: { isPublic?: boolean; permissions?: Record<string, unknown>[] }) {
   const permissions = options?.permissions ?? [];
   mockApi.get.mockImplementation((url: string) => {
     if (url.includes('/permissions/share-links')) {

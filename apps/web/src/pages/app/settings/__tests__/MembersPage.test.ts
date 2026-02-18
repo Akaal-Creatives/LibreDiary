@@ -5,12 +5,16 @@ import { setActivePinia, createPinia } from 'pinia';
 // Hoist mocks so they are available before module imports
 const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
   mockAuthStore: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: { id: 'user-1', name: 'Test User', email: 'test@example.com' } as any,
     currentOrganizationId: 'org-1',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentOrganization: { id: 'org-1', name: 'Test Org' } as any,
   },
   mockOrgsStore: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     members: [] as any[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     invites: [] as any[],
     isOwner: false,
     isAdmin: false,

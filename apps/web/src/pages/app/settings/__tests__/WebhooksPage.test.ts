@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 
 // Hoist mocks so they are available before module imports
 const mockWebhooksStore = vi.hoisted(() => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   webhooks: [] as any[],
   loading: false,
   creating: false,

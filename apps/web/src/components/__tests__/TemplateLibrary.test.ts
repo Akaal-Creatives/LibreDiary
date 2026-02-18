@@ -6,7 +6,7 @@ const { mockTemplatesStore } = vi.hoisted(() => ({
   mockTemplatesStore: {
     fetchTemplates: vi.fn(),
     loading: false,
-    filteredTemplates: [] as any[],
+    filteredTemplates: [] as Record<string, unknown>[],
     searchQuery: '',
     categoryFilter: null as string | null,
   },

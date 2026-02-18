@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
+import type { Editor } from '@tiptap/core';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 15 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(15);
+  it('has 20 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(20);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -36,12 +37,17 @@ describe('SLASH_COMMANDS', () => {
       'divider',
       'bulletList',
       'orderedList',
+      'taskList',
+      'table',
+      'image',
       'calloutInfo',
       'calloutWarning',
       'calloutError',
       'calloutSuccess',
       'tableOfContents',
       'toggle',
+      'mermaidDiagram',
+      'footnote',
     ]);
   });
 
@@ -51,15 +57,20 @@ describe('SLASH_COMMANDS', () => {
     expect(groups.heading1).toBe('basic');
     expect(groups.bulletList).toBe('lists');
     expect(groups.orderedList).toBe('lists');
+    expect(groups.taskList).toBe('lists');
     expect(groups.blockquote).toBe('basic');
     expect(groups.codeBlock).toBe('basic');
     expect(groups.divider).toBe('basic');
+    expect(groups.table).toBe('advanced');
+    expect(groups.image).toBe('advanced');
     expect(groups.calloutInfo).toBe('advanced');
     expect(groups.calloutWarning).toBe('advanced');
     expect(groups.calloutError).toBe('advanced');
     expect(groups.calloutSuccess).toBe('advanced');
     expect(groups.tableOfContents).toBe('advanced');
     expect(groups.toggle).toBe('advanced');
+    expect(groups.mermaidDiagram).toBe('advanced');
+    expect(groups.footnote).toBe('advanced');
   });
 
   it('has unique IDs for every command', () => {
@@ -113,7 +124,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(15);
+    expect(result).toHaveLength(20);
   });
 
   it('filters by id match', () => {
@@ -239,7 +250,7 @@ describe('command actions', () => {
   it('paragraph action calls setParagraph', () => {
     const { editor, run } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'paragraph')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(editor.chain).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -247,7 +258,7 @@ describe('command actions', () => {
   it('heading1 action calls setHeading with level 1', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading1')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 1 });
     expect(run).toHaveBeenCalled();
   });
@@ -255,7 +266,7 @@ describe('command actions', () => {
   it('heading2 action calls setHeading with level 2', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading2')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 2 });
     expect(run).toHaveBeenCalled();
   });
@@ -263,7 +274,7 @@ describe('command actions', () => {
   it('heading3 action calls setHeading with level 3', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading3')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 3 });
     expect(run).toHaveBeenCalled();
   });
@@ -271,7 +282,7 @@ describe('command actions', () => {
   it('bulletList action calls toggleBulletList', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'bulletList')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['toggleBulletList']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -279,7 +290,7 @@ describe('command actions', () => {
   it('orderedList action calls toggleOrderedList', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'orderedList')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['toggleOrderedList']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -287,7 +298,7 @@ describe('command actions', () => {
   it('blockquote action calls toggleBlockquote', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'blockquote')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['toggleBlockquote']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -295,7 +306,7 @@ describe('command actions', () => {
   it('codeBlock action calls toggleCodeBlock', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'codeBlock')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['toggleCodeBlock']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -303,7 +314,7 @@ describe('command actions', () => {
   it('divider action calls setHorizontalRule', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'divider')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setHorizontalRule']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -311,7 +322,7 @@ describe('command actions', () => {
   it('calloutInfo action calls setCallout with "info"', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutInfo')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setCallout']).toHaveBeenCalledWith('info');
     expect(run).toHaveBeenCalled();
   });
@@ -319,7 +330,7 @@ describe('command actions', () => {
   it('calloutWarning action calls setCallout with "warning"', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutWarning')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setCallout']).toHaveBeenCalledWith('warning');
     expect(run).toHaveBeenCalled();
   });
@@ -327,7 +338,7 @@ describe('command actions', () => {
   it('calloutError action calls setCallout with "error"', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutError')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setCallout']).toHaveBeenCalledWith('error');
     expect(run).toHaveBeenCalled();
   });
@@ -335,7 +346,7 @@ describe('command actions', () => {
   it('calloutSuccess action calls setCallout with "success"', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'calloutSuccess')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setCallout']).toHaveBeenCalledWith('success');
     expect(run).toHaveBeenCalled();
   });
@@ -343,7 +354,7 @@ describe('command actions', () => {
   it('tableOfContents action calls setTableOfContents', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'tableOfContents')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setTableOfContents']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
@@ -351,25 +362,75 @@ describe('command actions', () => {
   it('toggle action calls setToggle', () => {
     const { editor, run, chainMethods } = createMockEditor();
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'toggle')!;
-    cmd.action(editor as any);
+    cmd.action(editor as unknown as Editor);
     expect(chainMethods['setToggle']).toHaveBeenCalled();
     expect(run).toHaveBeenCalled();
   });
 
+  it('taskList action calls toggleTaskList', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'taskList')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['toggleTaskList']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('table action calls insertTable', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'table')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['insertTable']).toHaveBeenCalledWith({
+      rows: 3,
+      cols: 3,
+      withHeaderRow: true,
+    });
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('image action calls setImage when URL is provided', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'image')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['setImage']).toHaveBeenCalledWith({ src: 'https://example.com/img.png' });
+    expect(run).toHaveBeenCalled();
+    window.prompt = undefined as unknown as typeof window.prompt;
+  });
+
+  it('mermaidDiagram action calls insertMermaidDiagram', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'mermaidDiagram')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['insertMermaidDiagram']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('footnote action calls insertFootnote', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'footnote')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['insertFootnote']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
+  });
+
   it('every action calls focus() in the chain', () => {
+    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
     for (const cmd of SLASH_COMMANDS) {
       const { editor, chainMethods } = createMockEditor();
-      cmd.action(editor as any);
+      cmd.action(editor as unknown as Editor);
       expect(chainMethods['focus']).toHaveBeenCalled();
     }
+    window.prompt = undefined as unknown as typeof window.prompt;
   });
 
   it('every action calls chain() then run()', () => {
+    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
     for (const cmd of SLASH_COMMANDS) {
       const { editor, run } = createMockEditor();
-      cmd.action(editor as any);
+      cmd.action(editor as unknown as Editor);
       expect(editor.chain).toHaveBeenCalledTimes(1);
       expect(run).toHaveBeenCalledTimes(1);
     }
+    window.prompt = undefined as unknown as typeof window.prompt;
   });
 });

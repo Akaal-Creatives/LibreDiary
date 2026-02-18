@@ -1,5 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import type { ChainedCommands } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import type { Component } from 'vue';
 import { defineComponent, ref, watch, onMounted, h } from 'vue';
 
 /**
@@ -164,7 +166,7 @@ export const MermaidExtension = Node.create({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(MermaidNodeView as any);
+    return VueNodeViewRenderer(MermaidNodeView as Component);
   },
 
   // @ts-expect-error — custom command type not in tiptap's RawCommands interface
@@ -172,7 +174,7 @@ export const MermaidExtension = Node.create({
     return {
       insertMermaidDiagram:
         (code?: string) =>
-        ({ chain }: { chain: () => any }) => {
+        ({ chain }: { chain: () => ChainedCommands }) => {
           return chain()
             .insertContent({
               type: 'mermaidDiagram',

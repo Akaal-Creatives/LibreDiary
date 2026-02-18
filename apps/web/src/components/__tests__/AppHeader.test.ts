@@ -18,12 +18,12 @@ describe('AppHeader', () => {
     // Default mock return values (no current page, idle sync)
     vi.mocked(usePagesStore).mockReturnValue({
       currentPage: null,
-    } as any);
+    } as unknown as ReturnType<typeof usePagesStore>);
 
     vi.mocked(useSyncStore).mockReturnValue({
       status: 'idle',
       statusMessage: '',
-    } as any);
+    } as unknown as ReturnType<typeof useSyncStore>);
   });
 
   // -----------------------------------------------------------------
@@ -42,7 +42,7 @@ describe('AppHeader', () => {
     it('shows breadcrumbs with icon and title when currentPage exists', () => {
       vi.mocked(usePagesStore).mockReturnValue({
         currentPage: { id: 'page-1', title: 'My Page', icon: '📝' },
-      } as any);
+      } as unknown as ReturnType<typeof usePagesStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -54,7 +54,7 @@ describe('AppHeader', () => {
     it('shows default icon (📄) when currentPage has no icon', () => {
       vi.mocked(usePagesStore).mockReturnValue({
         currentPage: { id: 'page-2', title: 'Untitled', icon: null },
-      } as any);
+      } as unknown as ReturnType<typeof usePagesStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -71,7 +71,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'idle',
         statusMessage: '',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -82,7 +82,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'pending',
         statusMessage: 'Waiting to save...',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -96,7 +96,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'saving',
         statusMessage: 'Saving...',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -110,7 +110,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'saved',
         statusMessage: 'All changes saved',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -126,7 +126,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'error',
         statusMessage: 'Failed to save',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 
@@ -142,7 +142,7 @@ describe('AppHeader', () => {
       vi.mocked(useSyncStore).mockReturnValue({
         status: 'saving',
         statusMessage: 'Saving...',
-      } as any);
+      } as unknown as ReturnType<typeof useSyncStore>);
 
       const wrapper = mount(AppHeader);
 

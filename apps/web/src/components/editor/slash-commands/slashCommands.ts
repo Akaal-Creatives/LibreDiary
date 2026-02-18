@@ -1,4 +1,13 @@
-import type { Editor } from '@tiptap/core';
+import type { Editor, ChainedCommands } from '@tiptap/core';
+
+/**
+ * Helper to cast a chained command to access custom extension commands
+ * that are not part of Tiptap's built-in RawCommands interface.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function custom(chain: ChainedCommands): any {
+  return chain;
+}
 
 export interface SlashCommand {
   id: string;
@@ -155,7 +164,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['callout', 'info', 'note', 'tip'],
     action: (editor) => {
-      (editor.chain().focus() as any).setCallout('info').run();
+      custom(editor.chain().focus()).setCallout('info').run();
     },
   },
   {
@@ -166,7 +175,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['callout', 'warning', 'caution', 'alert'],
     action: (editor) => {
-      (editor.chain().focus() as any).setCallout('warning').run();
+      custom(editor.chain().focus()).setCallout('warning').run();
     },
   },
   {
@@ -177,7 +186,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['callout', 'error', 'danger', 'important'],
     action: (editor) => {
-      (editor.chain().focus() as any).setCallout('error').run();
+      custom(editor.chain().focus()).setCallout('error').run();
     },
   },
   {
@@ -188,7 +197,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['callout', 'success', 'done', 'check'],
     action: (editor) => {
-      (editor.chain().focus() as any).setCallout('success').run();
+      custom(editor.chain().focus()).setCallout('success').run();
     },
   },
   {
@@ -199,7 +208,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['toc', 'table of contents', 'outline', 'navigation'],
     action: (editor) => {
-      (editor.chain().focus() as any).setTableOfContents().run();
+      custom(editor.chain().focus()).setTableOfContents().run();
     },
   },
   {
@@ -210,7 +219,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['toggle', 'collapsible', 'accordion', 'details', 'expand'],
     action: (editor) => {
-      (editor.chain().focus() as any).setToggle().run();
+      custom(editor.chain().focus()).setToggle().run();
     },
   },
   {
@@ -221,7 +230,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['mermaid', 'diagram', 'chart', 'flowchart', 'graph', 'sequence'],
     action: (editor) => {
-      (editor.chain().focus() as any).insertMermaidDiagram().run();
+      custom(editor.chain().focus()).insertMermaidDiagram().run();
     },
   },
   {
@@ -232,7 +241,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['footnote', 'reference', 'citation', 'note'],
     action: (editor) => {
-      (editor.chain().focus() as any).insertFootnote().run();
+      custom(editor.chain().focus()).insertFootnote().run();
     },
   },
 ];

@@ -1,4 +1,5 @@
 import Image from '@tiptap/extension-image';
+import type { ChainedCommands } from '@tiptap/core';
 
 /**
  * ImageUploadExtension wraps the standard Tiptap Image extension and adds
@@ -21,7 +22,7 @@ export const ImageUploadExtension = Image.extend({
       ...this.parent?.(),
       uploadImage:
         (file: File, orgId: string) =>
-        ({ chain }: { chain: () => any }) => {
+        ({ chain }: { chain: () => ChainedCommands }) => {
           const formData = new FormData();
           formData.append('file', file);
 

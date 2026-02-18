@@ -32,6 +32,7 @@ vi.mock('vue-router', () => ({
 
 const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
   mockAuthStore: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: { id: 'user-1', name: 'Test User' } as any,
     currentOrganizationId: 'org-1',
     currentOrganization: {
@@ -41,6 +42,7 @@ const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
       allowedDomains: ['example.com'],
       aiEnabled: true,
       accentColor: '#3b82f6',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
   },
   mockOrgsStore: {

@@ -1,4 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import type { ChainedCommands } from '@tiptap/core';
+import type { EditorState } from '@tiptap/pm/state';
+import type { Node as PmNode } from '@tiptap/pm/model';
 
 /**
  * Inline footnote reference — renders as a clickable superscript number.
@@ -87,10 +90,10 @@ export const FootnoteExtension = Node.create({
     return {
       insertFootnote:
         () =>
-        ({ chain, state }: { chain: () => any; state: any }) => {
+        ({ chain, state }: { chain: () => ChainedCommands; state: EditorState }) => {
           // Count existing footnotes to determine the next label
           let count = 0;
-          state.doc.descendants((node: any) => {
+          state.doc.descendants((node: PmNode) => {
             if (node.type.name === 'footnoteReference') count++;
           });
           const label = String(count + 1);

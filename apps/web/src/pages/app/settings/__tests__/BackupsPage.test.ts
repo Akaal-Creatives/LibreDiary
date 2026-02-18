@@ -5,6 +5,7 @@ import { setActivePinia, createPinia } from 'pinia';
 // Hoist mocks so they are available before module imports
 const { mockBackupsStore, mockToast } = vi.hoisted(() => ({
   mockBackupsStore: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orgBackups: [] as any[],
     creating: false,
     fetchOrgBackups: vi.fn(),

@@ -8,6 +8,7 @@ const mockPagesStore = vi.hoisted(() => ({
   fetchPage: vi.fn(),
   setCurrentPage: vi.fn(),
   expandToPage: vi.fn(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentPage: null as any,
   updatePageData: vi.fn(),
   trashPage: vi.fn(),
@@ -32,8 +33,11 @@ let mockCollabRefs: {
   isSynced: ReturnType<typeof ref<boolean>>;
   isConnecting: ReturnType<typeof ref<boolean>>;
   connectionError: ReturnType<typeof ref<string | null>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   connectedUsers: ReturnType<typeof ref<any[]>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ydoc: ReturnType<typeof ref<any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   provider: ReturnType<typeof ref<any>>;
   disconnect: ReturnType<typeof vi.fn>;
 };
@@ -51,6 +55,12 @@ vi.mock('@/stores', () => ({
 
 vi.mock('@/composables', () => ({
   useCollaboration: () => mockCollabRefs,
+  useMarkdownExport: () => ({
+    exportAsMarkdown: vi.fn().mockReturnValue(''),
+    importFromMarkdown: vi.fn(),
+    downloadAsMarkdown: vi.fn(),
+    importFromFile: vi.fn(),
+  }),
 }));
 
 // Stub child components

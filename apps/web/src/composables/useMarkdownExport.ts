@@ -15,9 +15,10 @@ export function useMarkdownExport(getEditor: () => Editor | null | undefined) {
     if (!editor) return '';
 
     // tiptap-markdown stores a getMarkdown() helper on editor.storage.markdown
-    const storage = editor.storage as any;
-    if (storage?.markdown?.getMarkdown) {
-      return storage.markdown.getMarkdown();
+    const storage = editor.storage as unknown as Record<string, Record<string, unknown>>;
+    const md = storage?.markdown;
+    if (md && typeof md.getMarkdown === 'function') {
+      return (md.getMarkdown as () => string)();
     }
 
     // Fallback: return the raw HTML (shouldn't happen if the extension is loaded)
