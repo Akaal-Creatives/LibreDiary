@@ -85,9 +85,9 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - [x] **Phase 19: GDPR Compliance** — Data export, account deletion with 30-day grace period
 - [ ] **Phase 20: Production Ready** — UI/UX polish (done), performance (done), accessibility (done), documentation (done), Docker deployment
 
-### Upcoming
+### Integrations
 
-- [ ] **MCP Server** — Model Context Protocol server for managing LibreDiary from AI assistants (pages, databases, search, organisations)
+- [ ] **Phase 21: MCP Server** — Model Context Protocol server for managing LibreDiary from AI assistants (pages, databases, search, organisations)
 
 ## Quick Start
 
