@@ -779,6 +779,19 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [ ] Export to Markdown
 - [ ] Export to PDF
 
+### MCP Server (Model Context Protocol)
+
+- [ ] Design MCP server architecture (standalone package in `packages/mcp-server`)
+- [ ] Implement MCP authentication via API tokens
+- [ ] Expose page tools (list, create, read, update, delete, search, move, trash/restore)
+- [ ] Expose database tools (CRUD databases, properties, rows, query/filter)
+- [ ] Expose organisation tools (list, read settings, manage members/invitations)
+- [ ] Expose user tools (profile, preferences)
+- [ ] Expose search tools (full-text search across pages and databases)
+- [ ] Expose file tools (upload, list attachments)
+- [ ] Publish as npm package (`npx @librediary/mcp-server`)
+- [ ] Document setup for AI assistants (Claude, Cursor, Windsurf)
+
 ### Mobile Apps
 
 - [x] Create PWA manifest
