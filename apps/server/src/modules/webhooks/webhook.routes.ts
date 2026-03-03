@@ -1,10 +1,16 @@
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { createWebhookSchema, updateWebhookSchema } from '@librediary/shared';
 import * as webhookService from './webhook.service.js';
 import * as deliveryService from './webhook-delivery.service.js';
 import { getAuthUser } from '../../utils/errors.js';
+
+const paginationSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
 
 export async function webhookRoutes(fastify: FastifyInstance) {
   // All routes require auth + org access
@@ -137,8 +143,14 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     Params: { webhookId: string };
     Querystring: { limit?: string; offset?: string };
   }>('/:webhookId/deliveries', async (request, reply) => {
-    const limit = Math.min(parseInt(request.query.limit || '50', 10), 100);
-    const offset = parseInt(request.query.offset || '0', 10);
+    const parsed = paginationSchema.safeParse(request.query);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid pagination parameters' },
+      });
+    }
+    const { limit, offset } = parsed.data;
 
     try {
       const result = await deliveryService.listDeliveries(
