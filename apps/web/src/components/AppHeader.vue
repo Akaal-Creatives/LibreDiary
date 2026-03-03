@@ -1,10 +1,116 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { usePagesStore, useSyncStore } from '@/stores';
+import { useToast } from '@/composables';
 import { useSidebar } from '@/composables/useSidebar';
+import type { Page, PageWithChildren } from '@librediary/shared';
+import PageContextMenu from './PageContextMenu.vue';
+import SaveAsTemplateModal from './SaveAsTemplateModal.vue';
 
+const router = useRouter();
+const { t } = useI18n();
+const toast = useToast();
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
 const sidebar = useSidebar();
+
+// More options context menu
+const moreBtnRef = ref<HTMLButtonElement>();
+const contextMenu = ref<{
+  show: boolean;
+  x: number;
+  y: number;
+}>({
+  show: false,
+  x: 0,
+  y: 0,
+});
+
+const saveTemplateModal = ref<{
+  open: boolean;
+  pageId: string;
+  pageTitle: string;
+}>({
+  open: false,
+  pageId: '',
+  pageTitle: '',
+});
+
+function openMoreMenu() {
+  if (!pagesStore.currentPage || !moreBtnRef.value) return;
+  const rect = moreBtnRef.value.getBoundingClientRect();
+  contextMenu.value = {
+    show: true,
+    x: rect.right - 180, // Align right edge of menu with button
+    y: rect.bottom + 4,
+  };
+}
+
+function closeContextMenu() {
+  contextMenu.value.show = false;
+}
+
+async function handleAddSubpage(page: Page | PageWithChildren) {
+  try {
+    const newPage = await pagesStore.createPage({
+      title: t('pages.untitled'),
+      parentId: page.id,
+    });
+    router.push({ name: 'page', params: { pageId: newPage.id } });
+  } catch {
+    toast.error(t('pages.failedToCreate'));
+  }
+}
+
+async function handleDuplicate(page: Page | PageWithChildren) {
+  try {
+    const newPage = await pagesStore.duplicatePage(page.id);
+    toast.success(t('pages.pageDuplicated'));
+    router.push({ name: 'page', params: { pageId: newPage.id } });
+  } catch {
+    toast.error(t('pages.failedToDuplicate'));
+  }
+}
+
+function handleRename(page: Page | PageWithChildren) {
+  router.push({ name: 'page', params: { pageId: page.id } });
+}
+
+async function handleToggleFavorite(page: Page | PageWithChildren) {
+  try {
+    const wasFavorite = pagesStore.isFavorite(page.id);
+    await pagesStore.toggleFavorite(page.id);
+    toast.success(wasFavorite ? t('pages.removeFromFavourites') : t('pages.addToFavourites'));
+  } catch {
+    toast.error(t('pages.failedToUpdateFavourites'));
+  }
+}
+
+function handleSaveAsTemplate(page: Page | PageWithChildren) {
+  saveTemplateModal.value = {
+    open: true,
+    pageId: page.id,
+    pageTitle: page.title,
+  };
+}
+
+function closeSaveTemplateModal() {
+  saveTemplateModal.value.open = false;
+}
+
+async function handleMoveToTrash(page: Page | PageWithChildren) {
+  try {
+    await pagesStore.trashPage(page.id);
+    toast.success(t('pages.movedToTrash'));
+    if (pagesStore.currentPageId === page.id) {
+      router.push({ name: 'dashboard' });
+    }
+  } catch {
+    toast.error(t('pages.failedToTrash'));
+  }
+}
 </script>
 
 <template>
@@ -189,10 +295,13 @@ const sidebar = useSidebar();
 
       <!-- More Options -->
       <button
+        ref="moreBtnRef"
         class="more-btn"
         type="button"
         :title="$t('header.moreOptions')"
         :aria-label="$t('header.moreOptions')"
+        :disabled="!pagesStore.currentPage"
+        @click="openMoreMenu"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="1.5" fill="currentColor" />
@@ -201,6 +310,32 @@ const sidebar = useSidebar();
         </svg>
       </button>
     </div>
+
+    <!-- Context Menu (teleported to body for correct positioning) -->
+    <Teleport to="body">
+      <PageContextMenu
+        v-if="contextMenu.show && pagesStore.currentPage"
+        :page="pagesStore.currentPage"
+        :x="contextMenu.x"
+        :y="contextMenu.y"
+        @close="closeContextMenu"
+        @add-subpage="handleAddSubpage"
+        @duplicate="handleDuplicate"
+        @rename="handleRename"
+        @toggle-favorite="handleToggleFavorite"
+        @save-as-template="handleSaveAsTemplate"
+        @move-to-trash="handleMoveToTrash"
+      />
+    </Teleport>
+
+    <!-- Save as Template Modal -->
+    <SaveAsTemplateModal
+      :open="saveTemplateModal.open"
+      :page-id="saveTemplateModal.pageId"
+      :page-title="saveTemplateModal.pageTitle"
+      @close="closeSaveTemplateModal"
+      @saved="closeSaveTemplateModal"
+    />
   </header>
 </template>
 
@@ -343,9 +478,14 @@ const sidebar = useSidebar();
   transition: all var(--transition-fast);
 }
 
-.more-btn:hover {
+.more-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
   background: var(--color-hover);
+}
+
+.more-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 /* ===========================================
