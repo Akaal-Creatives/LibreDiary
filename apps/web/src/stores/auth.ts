@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { User, Organization, OrgRole } from '@librediary/shared';
 import { authService, type OrgMembership } from '@/services';
+import { clearWsTokenCache } from '@/composables/useCollaboration';
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -123,6 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
       memberships.value = [];
       currentOrganizationId.value = null;
       localStorage.removeItem('currentOrganizationId');
+      clearWsTokenCache();
       loading.value = false;
     }
   }

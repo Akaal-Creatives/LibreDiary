@@ -22,6 +22,11 @@ export interface UseCollaborationOptions {
 // Cache the WS token to avoid fetching on every connection
 let cachedWsToken: { token: string; expiresAt: number } | null = null;
 
+/** Clear the cached WS token — call on logout to prevent stale tokens. */
+export function clearWsTokenCache() {
+  cachedWsToken = null;
+}
+
 /**
  * Fetch a WebSocket authentication token from the API
  * This token is short-lived (5 minutes) and used for WebSocket auth
