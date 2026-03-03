@@ -746,13 +746,27 @@ async function main() {
         name: 'Status',
         type: 'SELECT' as const,
         position: 1,
-        config: { options: ['Todo', 'In Progress', 'Done', 'Blocked'] },
+        config: {
+          options: [
+            { label: 'Todo' },
+            { label: 'In Progress' },
+            { label: 'Done' },
+            { label: 'Blocked' },
+          ],
+        },
       },
       {
         name: 'Priority',
         type: 'SELECT' as const,
         position: 2,
-        config: { options: ['Low', 'Medium', 'High', 'Critical'] },
+        config: {
+          options: [
+            { label: 'Low' },
+            { label: 'Medium' },
+            { label: 'High' },
+            { label: 'Critical' },
+          ],
+        },
       },
       { name: 'Assignee', type: 'PERSON' as const, position: 3 },
       { name: 'Due Date', type: 'DATE' as const, position: 4 },
@@ -760,7 +774,16 @@ async function main() {
         name: 'Tags',
         type: 'MULTI_SELECT' as const,
         position: 5,
-        config: { options: ['Frontend', 'Backend', 'Design', 'DevOps', 'Bug', 'Feature'] },
+        config: {
+          options: [
+            { label: 'Frontend' },
+            { label: 'Backend' },
+            { label: 'Design' },
+            { label: 'DevOps' },
+            { label: 'Bug' },
+            { label: 'Feature' },
+          ],
+        },
       },
       { name: 'Created', type: 'CREATED_TIME' as const, position: 6 },
     ];
@@ -977,13 +1000,27 @@ async function main() {
         name: 'Status',
         type: 'SELECT' as const,
         position: 3,
-        config: { options: ['Draft', 'Review', 'Scheduled', 'Published'] },
+        config: {
+          options: [
+            { label: 'Draft' },
+            { label: 'Review' },
+            { label: 'Scheduled' },
+            { label: 'Published' },
+          ],
+        },
       },
       {
         name: 'Category',
         type: 'SELECT' as const,
         position: 4,
-        config: { options: ['Blog', 'Tutorial', 'Changelog', 'Guide'] },
+        config: {
+          options: [
+            { label: 'Blog' },
+            { label: 'Tutorial' },
+            { label: 'Changelog' },
+            { label: 'Guide' },
+          ],
+        },
       },
       { name: 'URL', type: 'URL' as const, position: 5 },
     ];
@@ -1156,13 +1193,22 @@ async function main() {
         name: 'Role',
         type: 'SELECT' as const,
         position: 2,
-        config: { options: ['Engineer', 'Designer', 'PM', 'QA'] },
+        config: {
+          options: [{ label: 'Engineer' }, { label: 'Designer' }, { label: 'PM' }, { label: 'QA' }],
+        },
       },
       {
         name: 'Department',
         type: 'SELECT' as const,
         position: 3,
-        config: { options: ['Engineering', 'Design', 'Product', 'Marketing'] },
+        config: {
+          options: [
+            { label: 'Engineering' },
+            { label: 'Design' },
+            { label: 'Product' },
+            { label: 'Marketing' },
+          ],
+        },
       },
       { name: 'Phone', type: 'PHONE' as const, position: 4 },
       { name: 'Start Date', type: 'DATE' as const, position: 5 },
