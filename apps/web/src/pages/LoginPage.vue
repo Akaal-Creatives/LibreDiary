@@ -49,7 +49,9 @@ async function handleSubmit() {
 
     // Redirect to intended destination or app home
     const redirect = route.query.redirect as string;
-    router.push(redirect || '/app');
+    const safeRedirect =
+      redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/app';
+    router.push(safeRedirect);
   } catch (err) {
     if (err instanceof ApiError) {
       if (err.code === 'LOGIN_ERROR') {
