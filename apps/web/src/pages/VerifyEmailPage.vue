@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTheme } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/services';
+import AuthLayout from '@/components/AuthLayout.vue';
 
 const props = defineProps<{
   token: string;
@@ -11,7 +11,6 @@ const props = defineProps<{
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { theme, toggleTheme } = useTheme();
 
 const loading = ref(true);
 const error = ref('');
@@ -32,10 +31,6 @@ onMounted(async () => {
   }
 });
 
-function goHome() {
-  router.push('/');
-}
-
 function goToApp() {
   router.push('/app');
 }
@@ -46,215 +41,70 @@ function goToLogin() {
 </script>
 
 <template>
-  <div class="verify-page">
-    <!-- Theme Toggle -->
-    <button class="theme-toggle" :title="`Theme: ${theme}`" @click="toggleTheme">
-      <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
+  <AuthLayout
+    :title="
+      loading
+        ? $t('auth.verifyingEmail')
+        : success
+          ? $t('auth.emailVerified')
+          : $t('auth.verificationFailed')
+    "
+    :subtitle="
+      loading
+        ? undefined
+        : success
+          ? $t('auth.emailVerifiedMessage')
+          : $t('auth.verificationFailedMessage')
+    "
+  >
+    <!-- Loading State -->
+    <div v-if="loading" class="state-container">
+      <div class="loading-spinner large"></div>
+    </div>
+
+    <!-- Success State -->
+    <div v-else-if="success" class="state-container">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="success-icon">
+        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
         <path
-          d="M10 2.5V4M10 16V17.5M2.5 10H4M16 10H17.5M4.7 4.7L5.76 5.76M14.24 14.24L15.3 15.3M4.7 15.3L5.76 14.24M14.24 5.76L15.3 4.7"
+          d="M16 24L22 30L32 18"
           stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-      <svg v-else-if="theme === 'dark'" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path
-          d="M17.5 11.5C16.5 12.5 15.1 13.1 13.6 13.1C10.5 13.1 8 10.6 8 7.5C8 5.9 8.6 4.5 9.6 3.5C5.8 4.2 3 7.5 3 11.5C3 16 6.6 19.5 11 19.5C15 19.5 18.3 16.7 19 12.9C18.6 12.5 18.1 12 17.5 11.5Z"
-          stroke="currentColor"
-          stroke-width="1.5"
+          stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
         />
       </svg>
-      <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect
-          x="2.5"
-          y="4"
-          width="15"
-          height="11"
-          rx="1.5"
-          stroke="currentColor"
-          stroke-width="1.5"
-        />
-        <path d="M6.5 18H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <path d="M10 15V18" stroke="currentColor" stroke-width="1.5" />
-      </svg>
-    </button>
-
-    <div class="verify-container">
-      <!-- Brand -->
-      <button class="brand" @click="goHome">
-        <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
-          <rect
-            x="4"
-            y="3"
-            width="16"
-            height="22"
-            rx="2"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M8 8H16M8 12H16M8 16H12"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <path
-            d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </svg>
-        <span class="brand-name">LibreDiary</span>
+      <button v-if="authStore.isAuthenticated" type="button" class="submit-btn" @click="goToApp">
+        {{ $t('auth.goToApp') }}
       </button>
-
-      <!-- Verify Email Card -->
-      <div class="verify-card">
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state">
-          <div class="loading-spinner large"></div>
-          <p>{{ $t('auth.verifyingEmail') }}</p>
-        </div>
-
-        <!-- Success State -->
-        <div v-else-if="success" class="success-state">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
-            <path
-              d="M16 24L22 30L32 18"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <h2>{{ $t('auth.emailVerified') }}</h2>
-          <p>{{ $t('auth.emailVerifiedMessage') }}</p>
-          <button v-if="authStore.isAuthenticated" class="submit-btn" @click="goToApp">
-            {{ $t('auth.goToApp') }}
-          </button>
-          <button v-else class="submit-btn" @click="goToLogin">{{ $t('auth.signIn') }}</button>
-        </div>
-
-        <!-- Error State -->
-        <div v-else class="error-state">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
-            <path
-              d="M24 16V28M24 34V34.1"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <h2>{{ $t('auth.verificationFailed') }}</h2>
-          <p>{{ $t('auth.verificationFailedMessage') }}</p>
-          <button v-if="authStore.isAuthenticated" class="secondary-btn" @click="goToApp">
-            {{ $t('auth.goToApp') }}
-          </button>
-          <button v-else class="secondary-btn" @click="goToLogin">{{ $t('auth.signIn') }}</button>
-        </div>
-      </div>
-
-      <!-- Back link -->
-      <button class="back-link" @click="goHome">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path
-            d="M10 12L6 8L10 4"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        {{ $t('auth.backToHome') }}
+      <button v-else type="button" class="submit-btn" @click="goToLogin">
+        {{ $t('auth.signIn') }}
       </button>
     </div>
-  </div>
+
+    <!-- Error State -->
+    <div v-else class="state-container">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="error-icon">
+        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+        <path
+          d="M24 16V28M24 34V34.1"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <button v-if="authStore.isAuthenticated" type="button" class="secondary-btn" @click="goToApp">
+        {{ $t('auth.goToApp') }}
+      </button>
+      <button v-else type="button" class="secondary-btn" @click="goToLogin">
+        {{ $t('auth.signIn') }}
+      </button>
+    </div>
+  </AuthLayout>
 </template>
 
 <style scoped>
-.verify-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-6);
-  background: var(--color-background);
-}
-
-.theme-toggle {
-  position: fixed;
-  top: var(--space-5);
-  right: var(--space-5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.theme-toggle:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.verify-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 400px;
-}
-
-.brand {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  margin-bottom: var(--space-8);
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
-}
-
-.brand:hover {
-  opacity: 0.8;
-}
-
-.brand-icon {
-  color: var(--color-accent);
-}
-
-.verify-card {
-  width: 100%;
-  padding: var(--space-10);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-lg);
-}
-
-.loading-state,
-.success-state,
-.error-state {
+.state-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -263,38 +113,12 @@ function goToLogin() {
   text-align: center;
 }
 
-.loading-state p {
-  color: var(--color-text-secondary);
-}
-
-.success-state svg {
+.success-icon {
   color: var(--color-success);
 }
 
-.success-state h2 {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 600;
-}
-
-.success-state p {
-  margin: 0;
-  color: var(--color-text-secondary);
-}
-
-.error-state svg {
+.error-icon {
   color: var(--color-error);
-}
-
-.error-state h2 {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 600;
-}
-
-.error-state p {
-  margin: 0;
-  color: var(--color-text-secondary);
 }
 
 .submit-btn {
@@ -356,24 +180,5 @@ function goToLogin() {
   to {
     transform: rotate(360deg);
   }
-}
-
-.back-link {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  margin-top: var(--space-6);
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-}
-
-.back-link:hover {
-  color: var(--color-text-primary);
 }
 </style>

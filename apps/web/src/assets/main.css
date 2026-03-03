@@ -116,6 +116,7 @@
   /* Interactive States */
   --color-hover: rgba(44, 47, 44, 0.04);
   --color-active: rgba(44, 47, 44, 0.08);
+  --color-surface-hover: rgba(44, 47, 44, 0.04);
   --color-focus-ring: rgba(107, 143, 113, 0.4);
   --color-selection: rgba(107, 143, 113, 0.15);
 
@@ -184,6 +185,7 @@
   /* Interactive States */
   --color-hover: rgba(255, 255, 255, 0.04);
   --color-active: rgba(255, 255, 255, 0.08);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
   --color-focus-ring: rgba(136, 176, 142, 0.5);
   --color-selection: rgba(136, 176, 142, 0.2);
 

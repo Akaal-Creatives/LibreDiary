@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTheme } from '@/composables';
 import { authService, ApiError } from '@/services';
+import AuthLayout from '@/components/AuthLayout.vue';
 
 const props = defineProps<{
   token: string;
 }>();
 
 const router = useRouter();
-const { theme, toggleTheme } = useTheme();
 
 const password = ref('');
 const confirmPassword = ref('');
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 const loading = ref(false);
 const error = ref('');
 const success = ref(false);
@@ -46,277 +47,202 @@ async function handleSubmit() {
   }
 }
 
-function goHome() {
-  router.push('/');
-}
-
 function goToLogin() {
   router.push('/login');
 }
 </script>
 
 <template>
-  <div class="reset-page">
-    <!-- Theme Toggle -->
-    <button
-      type="button"
-      class="theme-toggle"
-      :title="`Theme: ${theme}`"
-      :aria-label="$t('a11y.toggleTheme')"
-      @click="toggleTheme"
-    >
-      <svg v-if="theme === 'light'" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
+  <AuthLayout
+    :title="success ? $t('auth.passwordResetSuccess') : $t('auth.resetPasswordTitle')"
+    :subtitle="
+      success ? $t('auth.passwordResetSuccessMessage') : $t('auth.resetPasswordDescription')
+    "
+  >
+    <!-- Success State -->
+    <div v-if="success" class="success-state" role="alert" aria-live="polite">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
         <path
-          d="M10 2.5V4M10 16V17.5M2.5 10H4M16 10H17.5M4.7 4.7L5.76 5.76M14.24 14.24L15.3 15.3M4.7 15.3L5.76 14.24M14.24 5.76L15.3 4.7"
+          d="M16 24L22 30L32 18"
           stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-      <svg v-else-if="theme === 'dark'" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path
-          d="M17.5 11.5C16.5 12.5 15.1 13.1 13.6 13.1C10.5 13.1 8 10.6 8 7.5C8 5.9 8.6 4.5 9.6 3.5C5.8 4.2 3 7.5 3 11.5C3 16 6.6 19.5 11 19.5C15 19.5 18.3 16.7 19 12.9C18.6 12.5 18.1 12 17.5 11.5Z"
-          stroke="currentColor"
-          stroke-width="1.5"
+          stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
         />
       </svg>
-      <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect
-          x="2.5"
-          y="4"
-          width="15"
-          height="11"
-          rx="1.5"
-          stroke="currentColor"
-          stroke-width="1.5"
-        />
-        <path d="M6.5 18H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <path d="M10 15V18" stroke="currentColor" stroke-width="1.5" />
-      </svg>
-    </button>
-
-    <div class="reset-container">
-      <!-- Brand -->
-      <button type="button" class="brand" @click="goHome">
-        <svg class="brand-icon" width="32" height="32" viewBox="0 0 28 28" fill="none">
-          <rect
-            x="4"
-            y="3"
-            width="16"
-            height="22"
-            rx="2"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M8 8H16M8 12H16M8 16H12"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <path
-            d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </svg>
-        <span class="brand-name">LibreDiary</span>
+      <button type="button" class="submit-btn" @click="goToLogin">
+        {{ $t('auth.signIn') }}
       </button>
+    </div>
 
-      <!-- Reset Password Card -->
-      <div class="reset-card">
-        <!-- Success State -->
-        <div v-if="success" class="success-state" role="alert" aria-live="polite">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" />
+    <!-- Form State -->
+    <template v-else>
+      <form class="auth-form" @submit.prevent="handleSubmit">
+        <div
+          v-if="error"
+          id="reset-password-error"
+          class="error-message"
+          role="alert"
+          aria-live="polite"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
             <path
-              d="M16 24L22 30L32 18"
+              d="M8 5V8.5M8 11V11.01"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="1.5"
               stroke-linecap="round"
-              stroke-linejoin="round"
             />
           </svg>
-          <h2>{{ $t('auth.passwordResetSuccess') }}</h2>
-          <p>{{ $t('auth.passwordResetSuccessMessage') }}</p>
-          <button type="button" class="submit-btn" @click="goToLogin">
-            {{ $t('auth.signIn') }}
-          </button>
+          {{ error }}
         </div>
 
-        <!-- Form State -->
-        <template v-else>
-          <div class="reset-header">
-            <h1>{{ $t('auth.resetPasswordTitle') }}</h1>
-            <p>{{ $t('auth.resetPasswordDescription') }}</p>
-          </div>
-
-          <form class="reset-form" @submit.prevent="handleSubmit">
-            <div
-              v-if="error"
-              id="reset-password-error"
-              class="error-message"
-              role="alert"
-              aria-live="polite"
+        <div class="form-field">
+          <label for="password">{{ $t('auth.newPassword') }}</label>
+          <div class="input-group">
+            <input
+              id="password"
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              :placeholder="$t('auth.newPasswordPlaceholder')"
+              required
+              autocomplete="new-password"
+              :aria-invalid="!!error"
+              :aria-describedby="error ? 'reset-password-error' : undefined"
+            />
+            <button
+              type="button"
+              class="password-toggle-btn"
+              :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
+              @click="showPassword = !showPassword"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+              <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
-                  d="M8 5V8.5M8 11V11.01"
+                  d="M2.5 10C2.5 10 5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 15 15.5 10 15.5C5 15.5 2.5 10 2.5 10Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M3 3L17 17"
                   stroke="currentColor"
                   stroke-width="1.5"
                   stroke-linecap="round"
                 />
-              </svg>
-              {{ error }}
-            </div>
-
-            <div class="form-field">
-              <label for="password">{{ $t('auth.newPassword') }}</label>
-              <input
-                id="password"
-                v-model="password"
-                type="password"
-                :placeholder="$t('auth.newPasswordPlaceholder')"
-                required
-                autocomplete="new-password"
-                :aria-invalid="!!error"
-                :aria-describedby="error ? 'reset-password-error' : undefined"
-              />
-            </div>
-
-            <div class="form-field">
-              <label for="confirm-password">{{ $t('auth.confirmPassword') }}</label>
-              <input
-                id="confirm-password"
-                v-model="confirmPassword"
-                type="password"
-                :placeholder="$t('auth.confirmPasswordPlaceholder')"
-                required
-                autocomplete="new-password"
-                :aria-invalid="!!error"
-                :aria-describedby="error ? 'reset-password-error' : undefined"
-              />
-            </div>
-
-            <button type="submit" class="submit-btn" :disabled="loading">
-              <span v-if="loading" class="loading-spinner"></span>
-              <span v-else>{{ $t('auth.resetPassword') }}</span>
-            </button>
-          </form>
-
-          <div class="reset-footer">
-            <button type="button" class="link-btn" @click="goToLogin">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
-                  d="M10 12L6 8L10 4"
+                  d="M8.5 4.8C9 4.6 9.5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 16.8 11.3 15.5 12.7"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M4.5 7.3C3.2 8.7 2.5 10 2.5 10C2.5 10 5 15.5 10 15.5C10.5 15.5 11 15.4 11.5 15.2"
                   stroke="currentColor"
                   stroke-width="1.5"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
               </svg>
-              {{ $t('auth.backToLogin') }}
             </button>
           </div>
-        </template>
-      </div>
+        </div>
 
-      <!-- Back link -->
-      <button type="button" class="back-link" @click="goHome">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path
-            d="M10 12L6 8L10 4"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        {{ $t('auth.backToHome') }}
-      </button>
-    </div>
-  </div>
+        <div class="form-field">
+          <label for="confirm-password">{{ $t('auth.confirmPassword') }}</label>
+          <div class="input-group">
+            <input
+              id="confirm-password"
+              v-model="confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              :placeholder="$t('auth.confirmPasswordPlaceholder')"
+              required
+              autocomplete="new-password"
+              :aria-invalid="!!error"
+              :aria-describedby="error ? 'reset-password-error' : undefined"
+            />
+            <button
+              type="button"
+              class="password-toggle-btn"
+              :aria-label="showConfirmPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              <svg
+                v-if="!showConfirmPassword"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+              >
+                <path
+                  d="M2.5 10C2.5 10 5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 15 15.5 10 15.5C5 15.5 2.5 10 2.5 10Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M3 3L17 17"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8.5 4.8C9 4.6 9.5 4.5 10 4.5C15 4.5 17.5 10 17.5 10C17.5 10 16.8 11.3 15.5 12.7"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M4.5 7.3C3.2 8.7 2.5 10 2.5 10C2.5 10 5 15.5 10 15.5C10.5 15.5 11 15.4 11.5 15.2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" :disabled="loading">
+          <span v-if="loading" class="loading-spinner"></span>
+          <span v-else>{{ $t('auth.resetPassword') }}</span>
+        </button>
+      </form>
+
+      <div class="auth-card-footer">
+        <button type="button" class="link-btn" @click="goToLogin">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M10 12L6 8L10 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          {{ $t('auth.backToLogin') }}
+        </button>
+      </div>
+    </template>
+  </AuthLayout>
 </template>
 
 <style scoped>
-.reset-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-6);
-  background: var(--color-background);
-}
-
-.theme-toggle {
-  position: fixed;
-  top: var(--space-5);
-  right: var(--space-5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.theme-toggle:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.reset-container {
+.auth-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 400px;
-}
-
-.brand {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  margin-bottom: var(--space-8);
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
-}
-
-.brand:hover {
-  opacity: 0.8;
-}
-
-.brand-icon {
-  color: var(--color-accent);
-}
-
-.reset-card {
-  width: 100%;
-  padding: var(--space-10);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-lg);
+  gap: var(--space-5);
 }
 
 .success-state {
@@ -329,39 +255,6 @@ function goToLogin() {
 
 .success-state svg {
   color: var(--color-success);
-}
-
-.success-state h2 {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 600;
-}
-
-.success-state p {
-  margin: 0;
-  color: var(--color-text-secondary);
-}
-
-.reset-header {
-  margin-bottom: var(--space-8);
-  text-align: center;
-}
-
-.reset-header h1 {
-  margin-bottom: var(--space-2);
-  font-size: var(--text-2xl);
-  font-weight: 600;
-}
-
-.reset-header p {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.reset-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
 }
 
 .error-message {
@@ -409,6 +302,38 @@ function goToLogin() {
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
+.input-group {
+  position: relative;
+}
+
+.input-group input {
+  padding-right: calc(var(--space-4) + 40px);
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+  transform: translateY(-50%);
+}
+
+.password-toggle-btn:hover {
+  opacity: 0.7;
+}
+
 .submit-btn {
   display: flex;
   align-items: center;
@@ -451,7 +376,7 @@ function goToLogin() {
   }
 }
 
-.reset-footer {
+.auth-card-footer {
   margin-top: var(--space-6);
   text-align: center;
 }
@@ -473,24 +398,5 @@ function goToLogin() {
 
 .link-btn:hover {
   color: var(--color-accent-hover);
-}
-
-.back-link {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  margin-top: var(--space-6);
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-}
-
-.back-link:hover {
-  color: var(--color-text-primary);
 }
 </style>
