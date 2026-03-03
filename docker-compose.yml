@@ -1,0 +1,225 @@
+# ===========================================
+# LibreDiary Docker Compose - Pre-built Images
+#
+# For end users deploying with published images.
+# No source code or build step required.
+#
+# Usage:
+#   cp .env.example .env
+#   docker compose up -d
+#
+# HTTP-only mode (no TLS):
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+#
+# Optional services:
+#   --profile storage   Enable MinIO (S3-compatible storage)
+#   --profile search    Enable Meilisearch (full-text search)
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+# ===========================================
+
+services:
+  # ===========================================
+  # Nginx Reverse Proxy
+  # ===========================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: librediary-nginx
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./tooling/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tooling/docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${SSL_CERT_PATH:-./tooling/docker/nginx/ssl}:/etc/nginx/ssl:ro
+      - certbot_webroot:/var/www/certbot:ro
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    depends_on:
+      server:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # Server (Fastify API)
+  # ===========================================
+  server:
+    image: librediary/server:0.1.0
+    container_name: librediary-server
+    expose:
+      - "3000"
+    env_file:
+      - ./.env
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-librediary}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-librediary}
+      - STORAGE_LOCAL_PATH=/app/data/files
+      - BACKUP_LOCAL_PATH=/app/backups
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - STORAGE_S3_ENDPOINT=http://minio:9000
+    volumes:
+      - server_uploads:/app/data/files
+      - server_backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => { if (!r.ok) throw new Error(); }).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # Web (Vue SPA)
+  # ===========================================
+  web:
+    image: librediary/web:0.1.0
+    container_name: librediary-web
+    expose:
+      - "80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: librediary-postgres-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-librediary}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-librediary}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-librediary}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # MinIO (S3-compatible storage) - Optional
+  # ===========================================
+  minio:
+    image: minio/minio:RELEASE.2025-02-18T16-25-55Z
+    container_name: librediary-minio-prod
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+    ports:
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    profiles:
+      - storage
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # Meilisearch (Full-text search) - Optional
+  # ===========================================
+  meilisearch:
+    image: getmeili/meilisearch:v1.13
+    container_name: librediary-meilisearch-prod
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-masterkey}
+      MEILI_ENV: production
+    volumes:
+      - meilisearch_data:/meili_data
+    expose:
+      - "7700"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    profiles:
+      - search
+    networks:
+      - librediary_network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  postgres_data:
+    name: librediary_postgres_prod
+  server_uploads:
+    name: librediary_uploads_prod
+  server_backups:
+    name: librediary_backups_prod
+  certbot_webroot:
+    name: librediary_certbot
+  minio_data:
+    name: librediary_minio_prod
+  meilisearch_data:
+    name: librediary_meilisearch_prod
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  librediary_network:
+    name: librediary_network
+    driver: bridge

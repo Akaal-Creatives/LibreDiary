@@ -1,0 +1,18 @@
+# ===========================================
+# LibreDiary Docker Compose - HTTP-Only Override
+#
+# Removes TLS requirement for local testing or environments
+# where TLS is terminated upstream (e.g. Cloudflare, load balancer).
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+# ===========================================
+
+services:
+  nginx:
+    volumes:
+      - ./tooling/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tooling/docker/nginx/default-http.conf.template:/etc/nginx/templates/default.conf.template:ro

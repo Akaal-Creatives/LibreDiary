@@ -176,9 +176,50 @@ This swaps the nginx config to serve everything over port 80 without any TLS dir
 
 ---
 
-## 5. Building & Running
+## 5. Deploy with Pre-built Images
 
-All commands use the `-f` flag to specify the production compose file:
+The simplest way to deploy — no source code or build step required. Uses published Docker images from the registry.
+
+```bash
+# Clone the repository (only needed for config files)
+git clone https://github.com/Akaal-Creatives/LibreDiary.git
+cd LibreDiary
+
+# Create environment file
+cp .env.example .env
+nano .env
+
+# Start all services
+docker compose up -d
+
+# HTTP-only mode (no TLS certificates needed)
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+# With optional services
+docker compose --profile storage --profile search up -d
+```
+
+The root `docker-compose.yml` references pre-built images (`librediary/server:0.1.0`, `librediary/web:0.1.0`). No `docker compose build` is needed.
+
+### Building Images Manually
+
+To build and tag images locally (e.g. for custom modifications or publishing):
+
+```bash
+# Build both server and web images, tagged with version + latest
+./scripts/docker-build.sh
+
+# Build and push to a registry
+./scripts/docker-build.sh --push
+```
+
+The script reads the version from `package.json` and tags each image with both the version number and `latest`.
+
+---
+
+## 6. Building & Running from Source
+
+For development or when you need to build from source, use the production compose file directly:
 
 ```bash
 # Set the compose file alias (optional, for convenience)
@@ -206,7 +247,7 @@ docker compose -f tooling/docker/docker-compose.production.yml up -d server
 
 ---
 
-## 6. Database Migrations
+## 7. Database Migrations
 
 Migrations run **automatically** on every container start via the Docker entrypoint script. This includes:
 
@@ -223,7 +264,7 @@ docker compose -f tooling/docker/docker-compose.production.yml exec server \
 
 ---
 
-## 7. Optional Services
+## 8. Optional Services
 
 ### MinIO (S3-compatible storage)
 
@@ -265,7 +306,7 @@ docker compose -f tooling/docker/docker-compose.production.yml \
 
 ---
 
-## 8. Updating
+## 9. Updating
 
 ```bash
 # Pull latest code
@@ -280,7 +321,7 @@ docker compose -f tooling/docker/docker-compose.production.yml up -d
 
 ---
 
-## 9. Backup & Restore
+## 10. Backup & Restore
 
 ### Application Backups
 
@@ -329,7 +370,7 @@ docker compose -f tooling/docker/docker-compose.production.yml exec -T postgres 
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### Services not starting
 
@@ -373,7 +414,7 @@ docker compose -f tooling/docker/docker-compose.production.yml logs nginx
 
 ---
 
-## 11. Production Checklist
+## 12. Production Checklist
 
 - [ ] Strong, unique `POSTGRES_PASSWORD` set
 - [ ] Strong, unique `APP_SECRET` set (min 32 characters)
