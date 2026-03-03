@@ -129,7 +129,9 @@ const sections: SectionDef[] = [
     waitFor: '.search-modal',
     requiresAuth: true,
     setup: async (page: Page) => {
-      await page.click('.search-wrapper');
+      // Use keyboard shortcut — .search-wrapper is hidden on tablet/mobile
+      // when sidebar collapses, so clicking it fails on smaller viewports.
+      await page.keyboard.press('Meta+k');
       await page.waitForSelector('.search-modal', { timeout: WAIT_TIMEOUT });
       await delay(300);
     },
@@ -141,12 +143,9 @@ const sections: SectionDef[] = [
     requiresAuth: true,
     setup: async (page: Page) => {
       // Click the share button in the page header
-      const shareBtn = page.locator('.action-btn', { hasText: /share/i }).first();
-      if (await shareBtn.isVisible()) {
+      const shareBtn = page.locator('.share-btn').first();
+      if (await shareBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         await shareBtn.click();
-      } else {
-        // Fallback: try the SVG-based share button
-        await page.locator('.header-actions .action-btn').first().click();
       }
       await page.waitForSelector('.modal-container', { timeout: WAIT_TIMEOUT });
       await delay(400);
@@ -334,64 +333,64 @@ interface AppIds {
 }
 
 async function resolveIds(page: Page): Promise<AppIds> {
-  // Navigate to dashboard to ensure sidebar is loaded
-  await page.goto(`${BASE_URL}/app/dashboard`, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.dashboard-page', { timeout: WAIT_TIMEOUT });
-  await delay(500);
+  // Use the API to resolve IDs — sidebar uses <button> elements without href
+  // attributes, so DOM queries for <a> tags won't work.
 
-  const ids = await page.evaluate(() => {
-    // Find page links in the sidebar nav
-    const pageLinks = document.querySelectorAll<HTMLAnchorElement>(
-      '.sidebar-nav a[href*="/app/page/"]'
-    );
-    let gettingStartedPageId: string | null = null;
-
-    for (const link of pageLinks) {
-      const text = link.textContent?.trim() ?? '';
-      if (text.includes('Getting Started')) {
-        const match = link.getAttribute('href')?.match(/\/app\/page\/(.+)/);
-        if (match) gettingStartedPageId = match[1];
-        break;
-      }
-    }
-
-    // If not found by text, grab the first page link
-    if (!gettingStartedPageId && pageLinks.length > 0) {
-      const match = pageLinks[0].getAttribute('href')?.match(/\/app\/page\/(.+)/);
-      if (match) gettingStartedPageId = match[1];
-    }
-
-    // Find database links in sidebar
-    const dbLinks = document.querySelectorAll<HTMLAnchorElement>(
-      '.sidebar-nav a[href*="/app/database/"], .database-item[href*="/app/database/"], a[href*="/app/database/"]'
-    );
-    let taskTrackerDbId: string | null = null;
-    let teamDirectoryDbId: string | null = null;
-
-    for (const link of dbLinks) {
-      const text = link.textContent?.trim() ?? '';
-      const match = link.getAttribute('href')?.match(/\/app\/database\/(.+)/);
-      if (!match) continue;
-      const id = match[1];
-
-      if (text.includes('Task Tracker')) taskTrackerDbId = id;
-      else if (text.includes('Team Directory')) teamDirectoryDbId = id;
-    }
-
-    // Fallback: grab first two database links
-    if (!taskTrackerDbId && dbLinks.length > 0) {
-      const match = dbLinks[0].getAttribute('href')?.match(/\/app\/database\/(.+)/);
-      if (match) taskTrackerDbId = match[1];
-    }
-    if (!teamDirectoryDbId && dbLinks.length > 1) {
-      const match = dbLinks[1].getAttribute('href')?.match(/\/app\/database\/(.+)/);
-      if (match) teamDirectoryDbId = match[1];
-    }
-
-    return { gettingStartedPageId, taskTrackerDbId, teamDirectoryDbId };
+  // First, get the current org ID from the app state
+  const orgId = await page.evaluate(() => {
+    // The Pinia auth store persists the org ID in localStorage
+    const stored = localStorage.getItem('currentOrganizationId');
+    if (stored) return stored;
+    return null;
   });
 
-  return ids;
+  if (!orgId) {
+    console.log('  ⚠️  Could not resolve org ID from app state');
+    return { gettingStartedPageId: null, taskTrackerDbId: null, teamDirectoryDbId: null };
+  }
+
+  let gettingStartedPageId: string | null = null;
+  let taskTrackerDbId: string | null = null;
+  let teamDirectoryDbId: string | null = null;
+
+  try {
+    // Fetch pages via API (shares the authenticated session cookie)
+    const pagesResponse = await page.request.get(`${BASE_URL}/api/v1/organizations/${orgId}/pages`);
+    if (pagesResponse.ok()) {
+      const data = await pagesResponse.json();
+      const pages = data.pages ?? [];
+
+      // Find "Getting Started" page, fallback to first page
+      const gettingStarted = pages.find((p: { title: string }) => p.title === 'Getting Started');
+      gettingStartedPageId = gettingStarted?.id ?? pages[0]?.id ?? null;
+    }
+  } catch (e) {
+    console.log('  ⚠️  Failed to fetch pages via API:', e);
+  }
+
+  try {
+    // Fetch databases via API
+    const dbResponse = await page.request.get(
+      `${BASE_URL}/api/v1/organizations/${orgId}/databases`
+    );
+    if (dbResponse.ok()) {
+      const data = await dbResponse.json();
+      const databases = data.databases ?? [];
+
+      for (const db of databases) {
+        if (db.name === 'Task Tracker') taskTrackerDbId = db.id;
+        else if (db.name === 'Team Directory') teamDirectoryDbId = db.id;
+      }
+
+      // Fallback: use first two databases
+      if (!taskTrackerDbId && databases.length > 0) taskTrackerDbId = databases[0].id;
+      if (!teamDirectoryDbId && databases.length > 1) teamDirectoryDbId = databases[1].id;
+    }
+  } catch (e) {
+    console.log('  ⚠️  Failed to fetch databases via API:', e);
+  }
+
+  return { gettingStartedPageId, taskTrackerDbId, teamDirectoryDbId };
 }
 
 async function captureScreenshot(
@@ -514,15 +513,18 @@ async function main(): Promise<void> {
           }
 
           // Wait for the content selector
-          await page.waitForSelector(section.waitFor, { timeout: WAIT_TIMEOUT }).catch(() => {
-            // If specific selector not found, wait a bit and capture anyway
+          await page.waitForSelector(section.waitFor, { timeout: WAIT_TIMEOUT }).catch(async () => {
+            // Admin pages load data on mount — wait for any content to appear
+            if (section.name.startsWith('admin-')) {
+              await delay(2000);
+            }
             console.log(
               `  ⚠️  Selector "${section.waitFor}" not found for ${section.name}, capturing anyway`
             );
           });
 
-          // Extra settle time
-          await delay(300);
+          // Extra settle time for data-driven pages
+          await delay(section.name.startsWith('admin-') ? 500 : 300);
 
           await captureScreenshot(page, section.name, vp.name, theme);
           console.log(`  ✅ ${section.name}-${vp.name}-${theme}`);
