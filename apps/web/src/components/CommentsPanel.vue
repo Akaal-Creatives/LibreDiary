@@ -284,9 +284,17 @@ function getInitials(name: string | null): string {
 }
 
 function formatContentWithMentions(content: string): string {
-  // Sanitise first, then replace @mentions with styled spans
-  const clean = DOMPurify.sanitize(content, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
-  return clean.replace(/(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g, '<span class="mention">@$1</span>');
+  // Strip all HTML first, then add mention spans, then sanitise the final output
+  // to ensure no injected HTML survives (defence-in-depth).
+  const stripped = DOMPurify.sanitize(content, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  const withMentions = stripped.replace(
+    /(?:^|(?<=\s))@([a-zA-Z0-9_]+)/g,
+    '<span class="mention">@$1</span>'
+  );
+  return DOMPurify.sanitize(withMentions, {
+    ALLOWED_TAGS: ['span'],
+    ALLOWED_ATTR: ['class'],
+  });
 }
 
 function close() {
