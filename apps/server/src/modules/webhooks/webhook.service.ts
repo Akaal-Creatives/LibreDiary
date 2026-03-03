@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import type { CreateWebhookInput, UpdateWebhookInput } from '@librediary/shared';
 import { logAudit } from '../audit/audit.service.js';
+import { validateWebhookUrl } from '../../utils/url-validation.js';
 
 function generateSecret(): string {
   return `whsec_${randomBytes(24).toString('base64url')}`;
@@ -13,6 +14,12 @@ function maskSecret(secret: string): string {
 }
 
 export async function createWebhook(orgId: string, userId: string, input: CreateWebhookInput) {
+  // Validate URL to prevent SSRF
+  const urlCheck = await validateWebhookUrl(input.url);
+  if (!urlCheck.valid) {
+    throw new Error(urlCheck.reason ?? 'Invalid webhook URL');
+  }
+
   const secret = generateSecret();
 
   const webhook = await prisma.webhook.create({
@@ -74,6 +81,14 @@ export async function updateWebhook(webhookId: string, orgId: string, input: Upd
 
   if (!webhook) {
     throw new Error('Webhook not found');
+  }
+
+  // Validate URL if being updated
+  if (input.url !== undefined) {
+    const urlCheck = await validateWebhookUrl(input.url);
+    if (!urlCheck.valid) {
+      throw new Error(urlCheck.reason ?? 'Invalid webhook URL');
+    }
   }
 
   const updated = await prisma.webhook.update({

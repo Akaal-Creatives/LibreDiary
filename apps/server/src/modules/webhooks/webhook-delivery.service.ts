@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import { validateWebhookUrl } from '../../utils/url-validation.js';
 
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [0, 5 * 60 * 1000, 30 * 60 * 1000]; // immediate, 5min, 30min
@@ -51,6 +52,18 @@ export async function executeDelivery(deliveryId: string) {
   });
 
   if (!delivery || !delivery.webhook) return;
+
+  // Re-validate URL at delivery time to defend against DNS rebinding
+  const urlCheck = await validateWebhookUrl(delivery.webhook.url);
+  if (!urlCheck.valid) {
+    await handleFailure(
+      deliveryId,
+      delivery.attempts + 1,
+      null,
+      `SSRF blocked: ${urlCheck.reason}`
+    );
+    return;
+  }
 
   const payloadStr = JSON.stringify(delivery.payload);
   const signature = generateSignature(payloadStr, delivery.webhook.secret);
