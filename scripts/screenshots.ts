@@ -65,7 +65,13 @@ const sections: SectionDef[] = [
   {
     name: 'login',
     route: '/login',
-    waitFor: '.login-card',
+    waitFor: '.auth-layout__card',
+    requiresAuth: false,
+  },
+  {
+    name: 'forgot-password',
+    route: '/forgot-password',
+    waitFor: '.auth-layout__card',
     requiresAuth: false,
   },
 
@@ -301,7 +307,7 @@ async function suppressOnboarding(page: Page): Promise<void> {
 
 async function login(page: Page): Promise<void> {
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.login-card', { timeout: WAIT_TIMEOUT });
+  await page.waitForSelector('.auth-layout__card', { timeout: WAIT_TIMEOUT });
 
   await page.fill('#email', LOGIN_EMAIL);
   await page.fill('#password', LOGIN_PASSWORD);
@@ -425,19 +431,23 @@ async function main(): Promise<void> {
   const page = await context.newPage();
 
   // ------------------------------------------------------------------
-  // Step 1: Capture login page (unauthenticated)
+  // Step 1: Capture unauthenticated auth pages
   // ------------------------------------------------------------------
-  console.log('--- Capturing login page ---');
-  await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.login-card', { timeout: WAIT_TIMEOUT });
-  await delay(300);
+  const unauthSections = sections.filter((s) => !s.requiresAuth);
 
-  for (const vp of VIEWPORTS) {
-    await page.setViewportSize({ width: vp.width, height: vp.height });
-    for (const theme of THEMES) {
-      await setTheme(page, theme);
-      await captureScreenshot(page, 'login', vp.name, theme);
-      console.log(`  ✅ login-${vp.name}-${theme}`);
+  for (const section of unauthSections) {
+    console.log(`--- Capturing ${section.name} ---`);
+    await page.goto(`${BASE_URL}${section.route}`, { waitUntil: 'networkidle' });
+    await page.waitForSelector(section.waitFor, { timeout: WAIT_TIMEOUT });
+    await delay(300);
+
+    for (const vp of VIEWPORTS) {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      for (const theme of THEMES) {
+        await setTheme(page, theme);
+        await captureScreenshot(page, section.name, vp.name, theme);
+        console.log(`  ✅ ${section.name}-${vp.name}-${theme}`);
+      }
     }
   }
 
@@ -473,7 +483,7 @@ async function main(): Promise<void> {
   // ------------------------------------------------------------------
   // Step 4: Capture authenticated sections
   // ------------------------------------------------------------------
-  const authSections = sections.filter((s) => s.name !== 'login');
+  const authSections = sections.filter((s) => s.requiresAuth);
 
   for (const section of authSections) {
     const route = sectionRoutes[section.name] ?? section.route;
