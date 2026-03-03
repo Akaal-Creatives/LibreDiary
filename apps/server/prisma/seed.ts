@@ -71,6 +71,25 @@ async function main() {
   });
 
   console.log('Created welcome page');
+
+  // Create system settings (marks setup as completed)
+  await prisma.systemSettings.upsert({
+    where: { id: 'system' },
+    update: {},
+    create: {
+      id: 'system',
+      setupCompleted: true,
+      setupCompletedAt: new Date(),
+      setupCompletedBy: superAdmin.id,
+      siteName: 'LibreDiary',
+      allowSignups: false,
+      requireEmailVerification: true,
+      aiEnabled: false,
+    },
+  });
+
+  console.log('Created system settings (setup marked as completed)');
+
   console.log('');
   console.log('========================================');
   console.log('Seed completed successfully!');

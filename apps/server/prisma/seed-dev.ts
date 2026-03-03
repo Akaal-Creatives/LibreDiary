@@ -1288,6 +1288,28 @@ async function main() {
   }
 
   // =============================================
+  // Phase 4b: Create SystemSettings
+  // =============================================
+  console.log('\n⚙️  Phase 4b: Creating system settings...\n');
+
+  await prisma.systemSettings.upsert({
+    where: { id: 'system' },
+    update: {},
+    create: {
+      id: 'system',
+      setupCompleted: true,
+      setupCompletedAt: new Date(),
+      setupCompletedBy: users[0].id,
+      siteName: 'LibreDiary Dev',
+      allowSignups: true,
+      requireEmailVerification: false,
+      aiEnabled: false,
+      defaultUserLocale: 'en',
+    },
+  });
+  console.log('✅ Created system settings (setup completed, signups enabled)');
+
+  // =============================================
   // Phase 5: Create built-in templates
   // =============================================
   console.log('\n📋 Phase 5: Creating templates...\n');
@@ -1640,29 +1662,551 @@ async function main() {
   }
 
   // =============================================
+  // Phase 12: Create page versions
+  // =============================================
+  console.log('\n📜 Phase 12: Creating page versions...\n');
+
+  const pagesForVersions = ['Getting Started', 'Product Roadmap', 'Technical Specs'];
+  let versionCount = 0;
+
+  for (const pageTitle of pagesForVersions) {
+    const pId = pageMap.get(pageTitle);
+    if (!pId) continue;
+
+    const existingVersions = await prisma.pageVersion.count({
+      where: { pageId: pId },
+    });
+
+    if (existingVersions === 0) {
+      const versionTitles = [`${pageTitle} (draft)`, `${pageTitle} (v2)`, pageTitle];
+
+      for (let v = 1; v <= 3; v++) {
+        await prisma.pageVersion.create({
+          data: {
+            pageId: pId,
+            version: v,
+            title: versionTitles[v - 1],
+            createdById: users[v % users.length].id,
+            createdAt: new Date(Date.now() - (4 - v) * 7 * 24 * 60 * 60 * 1000), // weeks ago
+          },
+        });
+        versionCount++;
+      }
+      console.log(`✅ Created 3 versions for "${pageTitle}"`);
+    } else {
+      console.log(`ℹ️  Versions already exist for "${pageTitle}"`);
+    }
+  }
+
+  if (versionCount > 0) {
+    console.log(`   Total: ${versionCount} page versions created`);
+  }
+
+  // =============================================
+  // Phase 13: Create page permissions
+  // =============================================
+  console.log('\n🔐 Phase 13: Creating page permissions...\n');
+
+  const designGuidelinesPageId = pageMap.get('Design Guidelines');
+  const analyticsPageId = pageMap.get('Analytics Dashboard');
+  let permCount = 0;
+
+  // Give user1 EDIT access to Design Guidelines
+  if (designGuidelinesPageId) {
+    const existingPerm = await prisma.pagePermission.findFirst({
+      where: { pageId: designGuidelinesPageId, userId: users[1].id },
+    });
+
+    if (!existingPerm) {
+      await prisma.pagePermission.create({
+        data: {
+          pageId: designGuidelinesPageId,
+          userId: users[1].id,
+          level: 'EDIT',
+          grantedById: users[0].id,
+        },
+      });
+      permCount++;
+    }
+  }
+
+  // Give user2 VIEW access to Design Guidelines
+  if (designGuidelinesPageId) {
+    const existingPerm = await prisma.pagePermission.findFirst({
+      where: { pageId: designGuidelinesPageId, userId: users[2].id },
+    });
+
+    if (!existingPerm) {
+      await prisma.pagePermission.create({
+        data: {
+          pageId: designGuidelinesPageId,
+          userId: users[2].id,
+          level: 'VIEW',
+          grantedById: users[0].id,
+        },
+      });
+      permCount++;
+    }
+  }
+
+  // Give user3 FULL_ACCESS to Analytics Dashboard
+  if (analyticsPageId) {
+    const existingPerm = await prisma.pagePermission.findFirst({
+      where: { pageId: analyticsPageId, userId: users[3].id },
+    });
+
+    if (!existingPerm) {
+      await prisma.pagePermission.create({
+        data: {
+          pageId: analyticsPageId,
+          userId: users[3].id,
+          level: 'FULL_ACCESS',
+          grantedById: users[0].id,
+        },
+      });
+      permCount++;
+    }
+  }
+
+  // Create a public share link for Getting Started
+  if (gettingStartedPageId) {
+    const existingShareLink = await prisma.pagePermission.findFirst({
+      where: { pageId: gettingStartedPageId, userId: null, shareToken: { not: null } },
+    });
+
+    if (!existingShareLink) {
+      await prisma.pagePermission.create({
+        data: {
+          pageId: gettingStartedPageId,
+          userId: null,
+          level: 'VIEW',
+          shareToken: randomBytes(16).toString('hex'),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          grantedById: users[0].id,
+        },
+      });
+      permCount++;
+    }
+  }
+
+  if (permCount > 0) {
+    console.log(`✅ Created ${permCount} page permissions (incl. 1 public share link)`);
+  } else {
+    console.log('ℹ️  Page permissions already exist');
+  }
+
+  // =============================================
+  // Phase 14: Create audit log entries
+  // =============================================
+  console.log('\n📋 Phase 14: Creating audit log entries...\n');
+
+  const existingAuditLogs = await prisma.auditLog.count({
+    where: { organizationId: organization.id },
+  });
+
+  if (existingAuditLogs === 0) {
+    const auditEntries = [
+      {
+        action: 'AUTH_LOGIN' as const,
+        userId: users[0].id,
+        metadata: { method: 'password' },
+        ipAddress: '192.168.1.100',
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+        daysAgo: 0,
+      },
+      {
+        action: 'ORG_CREATED' as const,
+        userId: users[0].id,
+        resourceType: 'organization',
+        resourceId: organization.id,
+        metadata: { name: organization.name },
+        ipAddress: '192.168.1.100',
+        daysAgo: 30,
+      },
+      {
+        action: 'MEMBER_INVITED' as const,
+        userId: users[0].id,
+        resourceType: 'user',
+        resourceId: users[1].id,
+        metadata: { email: users[1].email, role: 'MEMBER' },
+        ipAddress: '192.168.1.100',
+        daysAgo: 29,
+      },
+      {
+        action: 'PAGE_CREATED' as const,
+        userId: users[0].id,
+        resourceType: 'page',
+        resourceId: gettingStartedPageId ?? undefined,
+        metadata: { title: 'Getting Started' },
+        ipAddress: '192.168.1.100',
+        daysAgo: 28,
+      },
+      {
+        action: 'PAGE_CREATED' as const,
+        userId: users[1].id,
+        resourceType: 'page',
+        resourceId: productRoadmapPageId ?? undefined,
+        metadata: { title: 'Product Roadmap' },
+        ipAddress: '192.168.1.101',
+        daysAgo: 27,
+      },
+      {
+        action: 'COMMENT_CREATED' as const,
+        userId: users[1].id,
+        resourceType: 'page',
+        resourceId: gettingStartedPageId ?? undefined,
+        metadata: { preview: 'This guide is really helpful!' },
+        ipAddress: '192.168.1.101',
+        daysAgo: 20,
+      },
+      {
+        action: 'PERMISSION_GRANTED' as const,
+        userId: users[0].id,
+        resourceType: 'page',
+        resourceId: designGuidelinesPageId ?? undefined,
+        metadata: { grantedTo: users[1].email, level: 'EDIT' },
+        ipAddress: '192.168.1.100',
+        daysAgo: 15,
+      },
+      {
+        action: 'SHARE_LINK_CREATED' as const,
+        userId: users[0].id,
+        resourceType: 'page',
+        resourceId: gettingStartedPageId ?? undefined,
+        metadata: { level: 'VIEW', expiresInDays: 30 },
+        ipAddress: '192.168.1.100',
+        daysAgo: 10,
+      },
+      {
+        action: 'PAGE_TRASHED' as const,
+        userId: users[0].id,
+        resourceType: 'page',
+        resourceId: completedPageId ?? undefined,
+        metadata: { title: 'Completed' },
+        ipAddress: '192.168.1.100',
+        daysAgo: 5,
+      },
+      {
+        action: 'ADMIN_SETTINGS_UPDATED' as const,
+        userId: users[0].id,
+        metadata: { changes: { allowSignups: { from: false, to: true } } },
+        ipAddress: '192.168.1.100',
+        daysAgo: 2,
+      },
+      {
+        action: 'AUTH_LOGIN' as const,
+        userId: users[2].id,
+        metadata: { method: 'password' },
+        ipAddress: '10.0.0.42',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        daysAgo: 1,
+      },
+      {
+        action: 'PAGE_UPDATED' as const,
+        userId: users[3].id,
+        resourceType: 'page',
+        resourceId: pageMap.get('Technical Specs') ?? undefined,
+        metadata: { title: 'Technical Specs' },
+        ipAddress: '10.0.0.55',
+        daysAgo: 1,
+      },
+    ];
+
+    for (const entry of auditEntries) {
+      await prisma.auditLog.create({
+        data: {
+          action: entry.action,
+          userId: entry.userId,
+          organizationId:
+            entry.action.startsWith('AUTH_') || entry.action.startsWith('ADMIN_')
+              ? undefined
+              : organization.id,
+          resourceType: entry.resourceType ?? undefined,
+          resourceId: entry.resourceId ?? undefined,
+          metadata: entry.metadata,
+          ipAddress: entry.ipAddress,
+          userAgent: entry.userAgent ?? undefined,
+          createdAt: new Date(Date.now() - entry.daysAgo * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+
+    console.log(`✅ Created ${auditEntries.length} audit log entries`);
+  } else {
+    console.log('ℹ️  Audit log entries already exist');
+  }
+
+  // =============================================
+  // Phase 15: Create webhook deliveries
+  // =============================================
+  console.log('\n📬 Phase 15: Creating webhook deliveries...\n');
+
+  const webhook = await prisma.webhook.findFirst({
+    where: { organizationId: organization.id, name: 'Slack Notifications' },
+  });
+
+  if (webhook) {
+    const existingDeliveries = await prisma.webhookDelivery.count({
+      where: { webhookId: webhook.id },
+    });
+
+    if (existingDeliveries === 0) {
+      const deliveries = [
+        {
+          event: 'page.created',
+          payload: { page: { id: gettingStartedPageId, title: 'Getting Started' } },
+          status: 'SUCCESS' as const,
+          statusCode: 200,
+          responseBody: '{"ok":true}',
+          attempts: 1,
+          daysAgo: 25,
+        },
+        {
+          event: 'page.updated',
+          payload: { page: { id: productRoadmapPageId, title: 'Product Roadmap' } },
+          status: 'SUCCESS' as const,
+          statusCode: 200,
+          responseBody: '{"ok":true}',
+          attempts: 1,
+          daysAgo: 20,
+        },
+        {
+          event: 'comment.created',
+          payload: {
+            page: { id: gettingStartedPageId, title: 'Getting Started' },
+            comment: { preview: 'This guide is really helpful!' },
+          },
+          status: 'SUCCESS' as const,
+          statusCode: 200,
+          responseBody: '{"ok":true}',
+          attempts: 1,
+          daysAgo: 18,
+        },
+        {
+          event: 'page.created',
+          payload: { page: { id: pageMap.get('Meeting Notes'), title: 'Meeting Notes' } },
+          status: 'FAILED' as const,
+          statusCode: 500,
+          responseBody: '{"error":"internal_error"}',
+          attempts: 3,
+          daysAgo: 15,
+        },
+        {
+          event: 'page.updated',
+          payload: { page: { id: pageMap.get('Design Guidelines'), title: 'Design Guidelines' } },
+          status: 'SUCCESS' as const,
+          statusCode: 200,
+          responseBody: '{"ok":true}',
+          attempts: 2,
+          daysAgo: 10,
+        },
+      ];
+
+      for (const delivery of deliveries) {
+        const createdAt = new Date(Date.now() - delivery.daysAgo * 24 * 60 * 60 * 1000);
+        await prisma.webhookDelivery.create({
+          data: {
+            webhookId: webhook.id,
+            event: delivery.event,
+            payload: delivery.payload,
+            status: delivery.status,
+            statusCode: delivery.statusCode,
+            responseBody: delivery.responseBody,
+            attempts: delivery.attempts,
+            completedAt: createdAt,
+            createdAt,
+          },
+        });
+      }
+
+      console.log(`✅ Created ${deliveries.length} webhook deliveries (4 success, 1 failed)`);
+    } else {
+      console.log('ℹ️  Webhook deliveries already exist');
+    }
+  }
+
+  // =============================================
+  // Phase 16: Create mention records
+  // =============================================
+  console.log('\n@ Phase 16: Creating mentions...\n');
+
+  // Find the comments we created to attach mentions to
+  const gsComments = gettingStartedPageId
+    ? await prisma.comment.findMany({
+        where: { pageId: gettingStartedPageId },
+        orderBy: { createdAt: 'asc' },
+      })
+    : [];
+
+  let mentionCount = 0;
+
+  // The first comment mentions user0 (the reply says "I'll draft something")
+  if (gsComments.length > 0) {
+    const firstComment = gsComments[0];
+    const existingMention = await prisma.mention.findFirst({
+      where: { commentId: firstComment.id, userId: users[0].id },
+    });
+
+    if (!existingMention) {
+      await prisma.mention.create({
+        data: {
+          commentId: firstComment.id,
+          userId: users[0].id,
+        },
+      });
+      mentionCount++;
+    }
+  }
+
+  // The third comment (reply) mentions user0
+  if (gsComments.length >= 3) {
+    const thirdComment = gsComments[2];
+    const existingMention = await prisma.mention.findFirst({
+      where: { commentId: thirdComment.id, userId: users[0].id },
+    });
+
+    if (!existingMention) {
+      await prisma.mention.create({
+        data: {
+          commentId: thirdComment.id,
+          userId: users[0].id,
+        },
+      });
+      mentionCount++;
+    }
+  }
+
+  // Product Roadmap comments mention user0
+  const prComments = productRoadmapPageId
+    ? await prisma.comment.findMany({
+        where: { pageId: productRoadmapPageId },
+        orderBy: { createdAt: 'asc' },
+      })
+    : [];
+
+  if (prComments.length > 0) {
+    const existingMention = await prisma.mention.findFirst({
+      where: { commentId: prComments[0].id, userId: users[0].id },
+    });
+
+    if (!existingMention) {
+      await prisma.mention.create({
+        data: {
+          commentId: prComments[0].id,
+          userId: users[0].id,
+        },
+      });
+      mentionCount++;
+    }
+  }
+
+  if (mentionCount > 0) {
+    console.log(`✅ Created ${mentionCount} mentions`);
+  } else {
+    console.log('ℹ️  Mentions already exist');
+  }
+
+  // =============================================
+  // Phase 17: Create second organisation
+  // =============================================
+  console.log('\n🏢 Phase 17: Creating second organisation...\n');
+
+  let org2 = await prisma.organization.findFirst({
+    where: { slug: 'side-project' },
+  });
+
+  if (!org2) {
+    org2 = await prisma.organization.create({
+      data: {
+        name: 'Side Project',
+        slug: 'side-project',
+        accentColor: '#c2785c', // Terracotta
+      },
+    });
+
+    // Add user0 as owner, user1 and user2 as members
+    await prisma.organizationMember.create({
+      data: {
+        organizationId: org2.id,
+        userId: users[0].id,
+        role: 'OWNER',
+      },
+    });
+    await prisma.organizationMember.create({
+      data: {
+        organizationId: org2.id,
+        userId: users[1].id,
+        role: 'MEMBER',
+      },
+    });
+    await prisma.organizationMember.create({
+      data: {
+        organizationId: org2.id,
+        userId: users[2].id,
+        role: 'MEMBER',
+      },
+    });
+
+    // Create a couple of pages in the second org
+    await prisma.page.create({
+      data: {
+        organizationId: org2.id,
+        title: 'Project Ideas',
+        icon: '💡',
+        createdById: users[0].id,
+        position: 0,
+        htmlContent:
+          '<h2>Project Ideas</h2><p>A collection of side project ideas to explore.</p><ul><li>CLI tool for bookmark management</li><li>Markdown-based blog engine</li><li>Recipe database with meal planning</li></ul>',
+      },
+    });
+
+    await prisma.page.create({
+      data: {
+        organizationId: org2.id,
+        title: 'Research Notes',
+        icon: '🔬',
+        createdById: users[1].id,
+        position: 1,
+        htmlContent:
+          '<h2>Research Notes</h2><p>Interesting findings and references for the side project.</p><h3>Technologies to Evaluate</h3><ul><li>Bun runtime</li><li>Drizzle ORM</li><li>SolidJS</li></ul>',
+      },
+    });
+
+    console.log(`✅ Created organisation: ${org2.name} (3 members, 2 pages)`);
+  } else {
+    console.log(`ℹ️  Organisation already exists: ${org2.name}`);
+  }
+
+  // =============================================
   // Summary
   // =============================================
   console.log('');
   console.log('========================================');
   console.log('🎉 Development seed completed!');
   console.log('');
-  console.log('Organisation:');
-  console.log(`  Name: ${organization.name}`);
-  console.log(`  Slug: ${organization.slug}`);
+  console.log('Organisations:');
+  console.log(`  1. ${organization.name} (${organization.slug})`);
+  console.log(`  2. Side Project (side-project)`);
   console.log('');
   console.log('Users created (10):');
   console.log('  Email format: user[0-9]@akaal.biz');
   console.log('  Password: Password123');
   console.log('  user0 is super admin');
   console.log('');
-  console.log('Pages: 10 parent pages + 30 subpages');
+  console.log('System Settings: setup completed, signups enabled');
+  console.log('Pages: 10 parent pages + 30 subpages + 2 (side project)');
+  console.log('Page Versions: 9 (3 pages x 3 versions)');
+  console.log('Page Permissions: 4 (3 user-level + 1 share link)');
   console.log('Databases: 3 (Task Tracker, Content Calendar, Team Directory)');
   console.log('Templates: 5 built-in');
   console.log('Comments: 8 (threaded, 1 resolved)');
+  console.log('Mentions: 3');
   console.log('Notifications: 6 (4 unread)');
   console.log('Favourites: 3');
   console.log('Webhooks: 1');
+  console.log('Webhook Deliveries: 5 (4 success, 1 failed)');
   console.log('API Tokens: 1');
+  console.log('Audit Logs: 12');
   console.log('Trashed: 1 page');
   console.log('========================================');
 }
