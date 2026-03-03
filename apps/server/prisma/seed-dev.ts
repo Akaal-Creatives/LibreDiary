@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from 'argon2';
+import { createHash, randomBytes } from 'node:crypto';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -699,21 +700,970 @@ async function main() {
     }
   }
 
+  // =============================================
+  // Phase 3: Make user0 a super admin
+  // =============================================
+  console.log('\n👑 Phase 3: Promoting user0 to super admin...\n');
+
+  await prisma.user.update({
+    where: { id: users[0].id },
+    data: { isSuperAdmin: true },
+  });
+  console.log(`✅ user0 is now a super admin`);
+
+  // =============================================
+  // Phase 4: Create databases with properties, views, and rows
+  // =============================================
+  console.log('\n🗄️  Phase 4: Creating databases...\n');
+
+  // Helper to get a date relative to today
+  const daysFromNow = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString();
+  };
+
+  // --- Task Tracker Database ---
+  const taskTrackerPage = createdPages.find((p) => p.title === 'Task Tracker');
+  let taskTrackerDb = await prisma.database.findFirst({
+    where: { organizationId: organization.id, name: 'Task Tracker' },
+  });
+
+  if (!taskTrackerDb) {
+    taskTrackerDb = await prisma.database.create({
+      data: {
+        organizationId: organization.id,
+        pageId: taskTrackerPage?.id ?? null,
+        name: 'Task Tracker',
+        createdById: users[0].id,
+      },
+    });
+
+    // Properties
+    const ttProps = [
+      { name: 'Title', type: 'TEXT' as const, position: 0 },
+      {
+        name: 'Status',
+        type: 'SELECT' as const,
+        position: 1,
+        config: { options: ['Todo', 'In Progress', 'Done', 'Blocked'] },
+      },
+      {
+        name: 'Priority',
+        type: 'SELECT' as const,
+        position: 2,
+        config: { options: ['Low', 'Medium', 'High', 'Critical'] },
+      },
+      { name: 'Assignee', type: 'PERSON' as const, position: 3 },
+      { name: 'Due Date', type: 'DATE' as const, position: 4 },
+      {
+        name: 'Tags',
+        type: 'MULTI_SELECT' as const,
+        position: 5,
+        config: { options: ['Frontend', 'Backend', 'Design', 'DevOps', 'Bug', 'Feature'] },
+      },
+      { name: 'Created', type: 'CREATED_TIME' as const, position: 6 },
+    ];
+
+    for (const prop of ttProps) {
+      await prisma.databaseProperty.create({
+        data: {
+          databaseId: taskTrackerDb.id,
+          name: prop.name,
+          type: prop.type,
+          position: prop.position,
+          config: 'config' in prop ? prop.config : undefined,
+        },
+      });
+    }
+
+    // Views
+    const ttViews = [
+      { name: 'All Tasks', type: 'TABLE' as const, position: 0 },
+      {
+        name: 'By Status',
+        type: 'KANBAN' as const,
+        position: 1,
+        config: { groupByProperty: 'Status' },
+      },
+      {
+        name: 'Timeline',
+        type: 'CALENDAR' as const,
+        position: 2,
+        config: { dateProperty: 'Due Date' },
+      },
+      { name: 'Gallery', type: 'GALLERY' as const, position: 3 },
+    ];
+
+    for (const view of ttViews) {
+      await prisma.databaseView.create({
+        data: {
+          databaseId: taskTrackerDb.id,
+          name: view.name,
+          type: view.type,
+          position: view.position,
+          config: 'config' in view ? view.config : undefined,
+        },
+      });
+    }
+
+    // Rows
+    const taskRows = [
+      {
+        Title: 'Implement dark mode toggle',
+        Status: 'Done',
+        Priority: 'High',
+        assigneeIdx: 1,
+        dueDays: -5,
+        Tags: ['Frontend', 'Feature'],
+      },
+      {
+        Title: 'Fix sidebar collapse on mobile',
+        Status: 'Done',
+        Priority: 'Medium',
+        assigneeIdx: 2,
+        dueDays: -3,
+        Tags: ['Frontend', 'Bug'],
+      },
+      {
+        Title: 'Add export to PDF',
+        Status: 'In Progress',
+        Priority: 'High',
+        assigneeIdx: 3,
+        dueDays: 7,
+        Tags: ['Backend', 'Feature'],
+      },
+      {
+        Title: 'Database calendar view',
+        Status: 'In Progress',
+        Priority: 'Medium',
+        assigneeIdx: 4,
+        dueDays: 10,
+        Tags: ['Frontend', 'Feature'],
+      },
+      {
+        Title: 'Optimise search indexing',
+        Status: 'In Progress',
+        Priority: 'Critical',
+        assigneeIdx: 0,
+        dueDays: 3,
+        Tags: ['Backend', 'DevOps'],
+      },
+      {
+        Title: 'Add webhook retry logic',
+        Status: 'Todo',
+        Priority: 'Medium',
+        assigneeIdx: 5,
+        dueDays: 14,
+        Tags: ['Backend', 'Feature'],
+      },
+      {
+        Title: 'Write API documentation',
+        Status: 'Todo',
+        Priority: 'Low',
+        assigneeIdx: 6,
+        dueDays: 21,
+        Tags: ['Backend'],
+      },
+      {
+        Title: 'Design template gallery UI',
+        Status: 'Todo',
+        Priority: 'Medium',
+        assigneeIdx: 7,
+        dueDays: 12,
+        Tags: ['Design', 'Feature'],
+      },
+      {
+        Title: 'Set up CI/CD pipeline',
+        Status: 'Done',
+        Priority: 'High',
+        assigneeIdx: 8,
+        dueDays: -10,
+        Tags: ['DevOps'],
+      },
+      {
+        Title: 'Implement page versioning',
+        Status: 'Done',
+        Priority: 'Critical',
+        assigneeIdx: 0,
+        dueDays: -14,
+        Tags: ['Backend', 'Feature'],
+      },
+      {
+        Title: 'Add keyboard shortcuts',
+        Status: 'Blocked',
+        Priority: 'Low',
+        assigneeIdx: 9,
+        dueDays: 5,
+        Tags: ['Frontend'],
+      },
+      {
+        Title: 'Migrate to new auth provider',
+        Status: 'Blocked',
+        Priority: 'High',
+        assigneeIdx: 1,
+        dueDays: 8,
+        Tags: ['Backend', 'DevOps'],
+      },
+      {
+        Title: 'Implement comment threading',
+        Status: 'In Progress',
+        Priority: 'High',
+        assigneeIdx: 2,
+        dueDays: 6,
+        Tags: ['Frontend', 'Backend', 'Feature'],
+      },
+      {
+        Title: 'Add drag-and-drop page reorder',
+        Status: 'Todo',
+        Priority: 'Medium',
+        assigneeIdx: 3,
+        dueDays: 18,
+        Tags: ['Frontend', 'Feature'],
+      },
+      {
+        Title: 'Performance audit and fixes',
+        Status: 'Todo',
+        Priority: 'High',
+        assigneeIdx: 0,
+        dueDays: 20,
+        Tags: ['Frontend', 'Backend'],
+      },
+    ];
+
+    for (let i = 0; i < taskRows.length; i++) {
+      const row = taskRows[i];
+      await prisma.databaseRow.create({
+        data: {
+          databaseId: taskTrackerDb.id,
+          position: i,
+          createdById: users[row.assigneeIdx].id,
+          cells: {
+            Title: row.Title,
+            Status: row.Status,
+            Priority: row.Priority,
+            Assignee: users[row.assigneeIdx].id,
+            'Due Date': daysFromNow(row.dueDays),
+            Tags: row.Tags,
+          },
+        },
+      });
+    }
+
+    console.log(`✅ Created database: Task Tracker (${taskRows.length} rows, 4 views)`);
+  } else {
+    console.log('ℹ️  Task Tracker database already exists');
+  }
+
+  // --- Content Calendar Database ---
+  let contentCalendarDb = await prisma.database.findFirst({
+    where: { organizationId: organization.id, name: 'Content Calendar' },
+  });
+
+  if (!contentCalendarDb) {
+    contentCalendarDb = await prisma.database.create({
+      data: {
+        organizationId: organization.id,
+        name: 'Content Calendar',
+        createdById: users[0].id,
+      },
+    });
+
+    const ccProps = [
+      { name: 'Title', type: 'TEXT' as const, position: 0 },
+      { name: 'Publish Date', type: 'DATE' as const, position: 1 },
+      { name: 'Author', type: 'PERSON' as const, position: 2 },
+      {
+        name: 'Status',
+        type: 'SELECT' as const,
+        position: 3,
+        config: { options: ['Draft', 'Review', 'Scheduled', 'Published'] },
+      },
+      {
+        name: 'Category',
+        type: 'SELECT' as const,
+        position: 4,
+        config: { options: ['Blog', 'Tutorial', 'Changelog', 'Guide'] },
+      },
+      { name: 'URL', type: 'URL' as const, position: 5 },
+    ];
+
+    for (const prop of ccProps) {
+      await prisma.databaseProperty.create({
+        data: {
+          databaseId: contentCalendarDb.id,
+          name: prop.name,
+          type: prop.type,
+          position: prop.position,
+          config: 'config' in prop ? prop.config : undefined,
+        },
+      });
+    }
+
+    const ccViews = [
+      { name: 'All Content', type: 'TABLE' as const, position: 0 },
+      {
+        name: 'Schedule',
+        type: 'CALENDAR' as const,
+        position: 1,
+        config: { dateProperty: 'Publish Date' },
+      },
+      {
+        name: 'Pipeline',
+        type: 'KANBAN' as const,
+        position: 2,
+        config: { groupByProperty: 'Status' },
+      },
+    ];
+
+    for (const view of ccViews) {
+      await prisma.databaseView.create({
+        data: {
+          databaseId: contentCalendarDb.id,
+          name: view.name,
+          type: view.type,
+          position: view.position,
+          config: 'config' in view ? view.config : undefined,
+        },
+      });
+    }
+
+    const contentRows = [
+      {
+        Title: 'Introducing LibreDiary 1.0',
+        pubDays: -30,
+        authorIdx: 0,
+        Status: 'Published',
+        Category: 'Blog',
+        URL: 'https://blog.example.com/introducing-librediary',
+      },
+      {
+        Title: 'Getting Started with Databases',
+        pubDays: -20,
+        authorIdx: 1,
+        Status: 'Published',
+        Category: 'Tutorial',
+        URL: 'https://blog.example.com/getting-started-databases',
+      },
+      {
+        Title: 'v0.9 Release Notes',
+        pubDays: -15,
+        authorIdx: 0,
+        Status: 'Published',
+        Category: 'Changelog',
+        URL: 'https://blog.example.com/v09-release',
+      },
+      {
+        Title: 'Advanced Page Permissions Guide',
+        pubDays: -7,
+        authorIdx: 2,
+        Status: 'Published',
+        Category: 'Guide',
+        URL: 'https://blog.example.com/permissions-guide',
+      },
+      {
+        Title: 'Building Custom Templates',
+        pubDays: 3,
+        authorIdx: 3,
+        Status: 'Scheduled',
+        Category: 'Tutorial',
+        URL: '',
+      },
+      {
+        Title: 'v1.1 Release Notes',
+        pubDays: 5,
+        authorIdx: 0,
+        Status: 'Review',
+        Category: 'Changelog',
+        URL: '',
+      },
+      {
+        Title: 'Collaboration Best Practices',
+        pubDays: 10,
+        authorIdx: 4,
+        Status: 'Draft',
+        Category: 'Blog',
+        URL: '',
+      },
+      {
+        Title: 'Self-Hosting LibreDiary',
+        pubDays: 14,
+        authorIdx: 5,
+        Status: 'Draft',
+        Category: 'Guide',
+        URL: '',
+      },
+      {
+        Title: 'API Integration Walkthrough',
+        pubDays: 18,
+        authorIdx: 6,
+        Status: 'Draft',
+        Category: 'Tutorial',
+        URL: '',
+      },
+      {
+        Title: 'Year in Review: LibreDiary 2025',
+        pubDays: 25,
+        authorIdx: 0,
+        Status: 'Draft',
+        Category: 'Blog',
+        URL: '',
+      },
+    ];
+
+    for (let i = 0; i < contentRows.length; i++) {
+      const row = contentRows[i];
+      await prisma.databaseRow.create({
+        data: {
+          databaseId: contentCalendarDb.id,
+          position: i,
+          createdById: users[row.authorIdx].id,
+          cells: {
+            Title: row.Title,
+            'Publish Date': daysFromNow(row.pubDays),
+            Author: users[row.authorIdx].id,
+            Status: row.Status,
+            Category: row.Category,
+            URL: row.URL,
+          },
+        },
+      });
+    }
+
+    console.log(`✅ Created database: Content Calendar (${contentRows.length} rows, 3 views)`);
+  } else {
+    console.log('ℹ️  Content Calendar database already exists');
+  }
+
+  // --- Team Directory Database ---
+  let teamDirectoryDb = await prisma.database.findFirst({
+    where: { organizationId: organization.id, name: 'Team Directory' },
+  });
+
+  if (!teamDirectoryDb) {
+    teamDirectoryDb = await prisma.database.create({
+      data: {
+        organizationId: organization.id,
+        name: 'Team Directory',
+        createdById: users[0].id,
+      },
+    });
+
+    const tdProps = [
+      { name: 'Name', type: 'TEXT' as const, position: 0 },
+      { name: 'Email', type: 'EMAIL' as const, position: 1 },
+      {
+        name: 'Role',
+        type: 'SELECT' as const,
+        position: 2,
+        config: { options: ['Engineer', 'Designer', 'PM', 'QA'] },
+      },
+      {
+        name: 'Department',
+        type: 'SELECT' as const,
+        position: 3,
+        config: { options: ['Engineering', 'Design', 'Product', 'Marketing'] },
+      },
+      { name: 'Phone', type: 'PHONE' as const, position: 4 },
+      { name: 'Start Date', type: 'DATE' as const, position: 5 },
+    ];
+
+    for (const prop of tdProps) {
+      await prisma.databaseProperty.create({
+        data: {
+          databaseId: teamDirectoryDb.id,
+          name: prop.name,
+          type: prop.type,
+          position: prop.position,
+          config: 'config' in prop ? prop.config : undefined,
+        },
+      });
+    }
+
+    const tdViews = [
+      { name: 'All Members', type: 'TABLE' as const, position: 0 },
+      { name: 'Cards', type: 'GALLERY' as const, position: 1 },
+    ];
+
+    for (const view of tdViews) {
+      await prisma.databaseView.create({
+        data: {
+          databaseId: teamDirectoryDb.id,
+          name: view.name,
+          type: view.type,
+          position: view.position,
+        },
+      });
+    }
+
+    const teamMembers = [
+      {
+        name: 'Harpreet Singh',
+        role: 'Engineer',
+        dept: 'Engineering',
+        phone: '+44 7700 900001',
+        startDays: -365,
+      },
+      {
+        name: 'Amara Okafor',
+        role: 'Designer',
+        dept: 'Design',
+        phone: '+44 7700 900002',
+        startDays: -300,
+      },
+      {
+        name: 'James Chen',
+        role: 'PM',
+        dept: 'Product',
+        phone: '+44 7700 900003',
+        startDays: -250,
+      },
+      {
+        name: 'Priya Sharma',
+        role: 'Engineer',
+        dept: 'Engineering',
+        phone: '+44 7700 900004',
+        startDays: -200,
+      },
+      {
+        name: 'Liam Murphy',
+        role: 'QA',
+        dept: 'Engineering',
+        phone: '+44 7700 900005',
+        startDays: -180,
+      },
+      {
+        name: 'Sophie Martin',
+        role: 'Designer',
+        dept: 'Design',
+        phone: '+44 7700 900006',
+        startDays: -150,
+      },
+      {
+        name: 'Raj Patel',
+        role: 'Engineer',
+        dept: 'Engineering',
+        phone: '+44 7700 900007',
+        startDays: -120,
+      },
+      {
+        name: 'Emma Wilson',
+        role: 'PM',
+        dept: 'Marketing',
+        phone: '+44 7700 900008',
+        startDays: -90,
+      },
+      {
+        name: 'Noah Garcia',
+        role: 'Engineer',
+        dept: 'Engineering',
+        phone: '+44 7700 900009',
+        startDays: -60,
+      },
+      { name: 'Aisha Khan', role: 'QA', dept: 'Product', phone: '+44 7700 900010', startDays: -30 },
+    ];
+
+    for (let i = 0; i < teamMembers.length; i++) {
+      const member = teamMembers[i];
+      await prisma.databaseRow.create({
+        data: {
+          databaseId: teamDirectoryDb.id,
+          position: i,
+          createdById: users[i].id,
+          cells: {
+            Name: member.name,
+            Email: users[i].email,
+            Role: member.role,
+            Department: member.dept,
+            Phone: member.phone,
+            'Start Date': daysFromNow(member.startDays),
+          },
+        },
+      });
+    }
+
+    console.log(`✅ Created database: Team Directory (${teamMembers.length} rows, 2 views)`);
+  } else {
+    console.log('ℹ️  Team Directory database already exists');
+  }
+
+  // =============================================
+  // Phase 5: Create built-in templates
+  // =============================================
+  console.log('\n📋 Phase 5: Creating templates...\n');
+
+  const templates = [
+    {
+      name: 'Meeting Notes',
+      icon: '📝',
+      category: 'Productivity',
+      description: 'Capture meeting agendas, notes, and action items with a structured format.',
+    },
+    {
+      name: 'Project Brief',
+      icon: '📋',
+      category: 'Project Management',
+      description: 'Define project scope, objectives, timeline, and stakeholders.',
+    },
+    {
+      name: 'Weekly Report',
+      icon: '📊',
+      category: 'Reporting',
+      description: 'Summarise weekly progress, blockers, and plans for the coming week.',
+    },
+    {
+      name: 'Design Spec',
+      icon: '🎨',
+      category: 'Design',
+      description: 'Document design decisions, component specs, and visual guidelines.',
+    },
+    {
+      name: 'Bug Report',
+      icon: '🐛',
+      category: 'Engineering',
+      description:
+        'Report bugs with reproduction steps, expected behaviour, and environment details.',
+    },
+  ];
+
+  for (const tmpl of templates) {
+    const exists = await prisma.template.findFirst({
+      where: { organizationId: organization.id, name: tmpl.name },
+    });
+
+    if (!exists) {
+      await prisma.template.create({
+        data: {
+          organizationId: organization.id,
+          name: tmpl.name,
+          description: tmpl.description,
+          icon: tmpl.icon,
+          category: tmpl.category,
+          isBuiltIn: true,
+          createdById: users[0].id,
+        },
+      });
+      console.log(`✅ Created template: ${tmpl.icon} ${tmpl.name}`);
+    } else {
+      console.log(`ℹ️  Template already exists: ${tmpl.name}`);
+    }
+  }
+
+  // =============================================
+  // Phase 6: Create comments on pages
+  // =============================================
+  console.log('\n💬 Phase 6: Creating comments...\n');
+
+  const gettingStartedPageId = pageMap.get('Getting Started');
+  const productRoadmapPageId = pageMap.get('Product Roadmap');
+
+  if (gettingStartedPageId) {
+    const existingComments = await prisma.comment.count({
+      where: { pageId: gettingStartedPageId },
+    });
+
+    if (existingComments === 0) {
+      // Thread 1: General feedback
+      const c1 = await prisma.comment.create({
+        data: {
+          pageId: gettingStartedPageId,
+          content: 'This guide is really helpful! Could we add a section about keyboard shortcuts?',
+          createdById: users[1].id,
+        },
+      });
+      await prisma.comment.create({
+        data: {
+          pageId: gettingStartedPageId,
+          parentId: c1.id,
+          content:
+            "Great idea! I'll draft something this week. We should reference the editor shortcuts from the docs.",
+          createdById: users[0].id,
+        },
+      });
+      await prisma.comment.create({
+        data: {
+          pageId: gettingStartedPageId,
+          parentId: c1.id,
+          content:
+            'I can help with the Markdown shortcuts section — I documented them last sprint.',
+          createdById: users[3].id,
+        },
+      });
+
+      // Thread 2: Standalone comment
+      await prisma.comment.create({
+        data: {
+          pageId: gettingStartedPageId,
+          content: 'The installation steps work perfectly on macOS. Has anyone tested on Windows?',
+          createdById: users[4].id,
+        },
+      });
+
+      // Thread 3: Quick note
+      await prisma.comment.create({
+        data: {
+          pageId: gettingStartedPageId,
+          content: 'We should add a video walkthrough link at the top for visual learners.',
+          createdById: users[2].id,
+        },
+      });
+
+      console.log('✅ Created 5 comments on "Getting Started"');
+    } else {
+      console.log('ℹ️  Comments already exist on "Getting Started"');
+    }
+  }
+
+  if (productRoadmapPageId) {
+    const existingComments = await prisma.comment.count({
+      where: { pageId: productRoadmapPageId },
+    });
+
+    if (existingComments === 0) {
+      await prisma.comment.create({
+        data: {
+          pageId: productRoadmapPageId,
+          content: 'Q2 priorities look solid. Should we add API rate limiting to the list?',
+          createdById: users[5].id,
+        },
+      });
+      await prisma.comment.create({
+        data: {
+          pageId: productRoadmapPageId,
+          content:
+            'Can we move the mobile responsive design task up? Users have been requesting it.',
+          createdById: users[6].id,
+        },
+      });
+      // Resolved comment
+      await prisma.comment.create({
+        data: {
+          pageId: productRoadmapPageId,
+          content: 'The Q1 goals section needs updating — all items are now complete.',
+          createdById: users[7].id,
+          isResolved: true,
+          resolvedAt: new Date(),
+          resolvedById: users[0].id,
+        },
+      });
+
+      console.log('✅ Created 3 comments on "Product Roadmap" (1 resolved)');
+    } else {
+      console.log('ℹ️  Comments already exist on "Product Roadmap"');
+    }
+  }
+
+  // =============================================
+  // Phase 7: Create notifications for user0
+  // =============================================
+  console.log('\n🔔 Phase 7: Creating notifications...\n');
+
+  const existingNotifications = await prisma.notification.count({
+    where: { userId: users[0].id },
+  });
+
+  if (existingNotifications === 0) {
+    const notifications = [
+      {
+        type: 'MENTION' as const,
+        title: 'Amara mentioned you',
+        message: 'Amara Okafor mentioned you in a comment on "Getting Started"',
+        isRead: false,
+        data: { pageId: gettingStartedPageId },
+      },
+      {
+        type: 'COMMENT_REPLY' as const,
+        title: 'Priya replied to your comment',
+        message: 'Priya Sharma replied to your comment on "Task Tracker"',
+        isRead: false,
+        data: { pageId: pageMap.get('Task Tracker') },
+      },
+      {
+        type: 'PAGE_SHARED' as const,
+        title: 'Page shared with you',
+        message: 'James Chen shared "Design Guidelines" with you',
+        isRead: true,
+        readAt: new Date(Date.now() - 3600000),
+        data: { pageId: pageMap.get('Design Guidelines') },
+      },
+      {
+        type: 'INVITATION' as const,
+        title: 'New team member joined',
+        message: 'Aisha Khan accepted the invitation to join Akaal Development',
+        isRead: true,
+        readAt: new Date(Date.now() - 86400000),
+        data: {},
+      },
+      {
+        type: 'COMMENT_REPLY' as const,
+        title: 'Liam replied to your comment',
+        message: 'Liam Murphy replied to your comment on "Product Roadmap"',
+        isRead: false,
+        data: { pageId: productRoadmapPageId },
+      },
+      {
+        type: 'MENTION' as const,
+        title: 'Sophie mentioned you',
+        message: 'Sophie Martin mentioned you in "Meeting Notes"',
+        isRead: false,
+        data: { pageId: pageMap.get('Meeting Notes') },
+      },
+    ];
+
+    for (const notif of notifications) {
+      await prisma.notification.create({
+        data: {
+          userId: users[0].id,
+          type: notif.type,
+          title: notif.title,
+          message: notif.message,
+          isRead: notif.isRead,
+          readAt: 'readAt' in notif ? notif.readAt : undefined,
+          data: notif.data,
+        },
+      });
+    }
+
+    console.log(`✅ Created ${notifications.length} notifications for user0 (4 unread, 2 read)`);
+  } else {
+    console.log('ℹ️  Notifications already exist for user0');
+  }
+
+  // =============================================
+  // Phase 8: Add favourites for user0
+  // =============================================
+  console.log('\n⭐ Phase 8: Creating favourites...\n');
+
+  const favouritePages = ['Getting Started', 'Product Roadmap', 'Task Tracker'];
+  let favCount = 0;
+
+  for (let i = 0; i < favouritePages.length; i++) {
+    const fpId = pageMap.get(favouritePages[i]);
+    if (!fpId) continue;
+
+    const exists = await prisma.favorite.findFirst({
+      where: { userId: users[0].id, pageId: fpId },
+    });
+
+    if (!exists) {
+      await prisma.favorite.create({
+        data: {
+          userId: users[0].id,
+          pageId: fpId,
+          position: i,
+        },
+      });
+      favCount++;
+    }
+  }
+
+  if (favCount > 0) {
+    console.log(`✅ Added ${favCount} favourites for user0`);
+  } else {
+    console.log('ℹ️  Favourites already exist for user0');
+  }
+
+  // =============================================
+  // Phase 9: Create a webhook
+  // =============================================
+  console.log('\n🔗 Phase 9: Creating webhook...\n');
+
+  const existingWebhook = await prisma.webhook.findFirst({
+    where: { organizationId: organization.id, name: 'Slack Notifications' },
+  });
+
+  if (!existingWebhook) {
+    await prisma.webhook.create({
+      data: {
+        organizationId: organization.id,
+        name: 'Slack Notifications',
+        url: 'https://hooks.slack.example.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
+        secret: randomBytes(32).toString('hex'),
+        events: ['page.created', 'page.updated', 'comment.created'],
+        isActive: true,
+        createdById: users[0].id,
+      },
+    });
+    console.log('✅ Created webhook: Slack Notifications');
+  } else {
+    console.log('ℹ️  Webhook already exists: Slack Notifications');
+  }
+
+  // =============================================
+  // Phase 10: Create an API token for user0
+  // =============================================
+  console.log('\n🔑 Phase 10: Creating API token...\n');
+
+  const existingToken = await prisma.apiToken.findFirst({
+    where: { userId: users[0].id, name: 'CI/CD Pipeline Token' },
+  });
+
+  if (!existingToken) {
+    const dummyToken = 'ld_xxxx' + randomBytes(28).toString('hex');
+    const tokenHash = createHash('sha256').update(dummyToken).digest('hex');
+
+    await prisma.apiToken.create({
+      data: {
+        userId: users[0].id,
+        name: 'CI/CD Pipeline Token',
+        tokenHash,
+        tokenPrefix: dummyToken.slice(0, 8),
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+      },
+    });
+    console.log('✅ Created API token: CI/CD Pipeline Token');
+  } else {
+    console.log('ℹ️  API token already exists: CI/CD Pipeline Token');
+  }
+
+  // =============================================
+  // Phase 11: Trash a page
+  // =============================================
+  console.log('\n🗑️  Phase 11: Moving a page to trash...\n');
+
+  // Trash the "Completed" subpage under "Task Tracker"
+  const completedPageId = pageMap.get('Completed');
+  if (completedPageId) {
+    const completedPage = await prisma.page.findUnique({
+      where: { id: completedPageId },
+    });
+
+    if (completedPage && !completedPage.trashedAt) {
+      await prisma.page.update({
+        where: { id: completedPageId },
+        data: { trashedAt: new Date() },
+      });
+      console.log('✅ Moved "Completed" page to trash');
+    } else {
+      console.log('ℹ️  "Completed" page is already trashed or not found');
+    }
+  }
+
+  // =============================================
+  // Summary
+  // =============================================
   console.log('');
   console.log('========================================');
   console.log('🎉 Development seed completed!');
   console.log('');
-  console.log('Organization:');
+  console.log('Organisation:');
   console.log(`  Name: ${organization.name}`);
   console.log(`  Slug: ${organization.slug}`);
   console.log('');
   console.log('Users created (10):');
   console.log('  Email format: user[0-9]@akaal.biz');
   console.log('  Password: Password123');
+  console.log('  user0 is super admin');
   console.log('');
-  console.log('Pages created: 10 parent pages + 30 subpages');
-  console.log('  - Each page has rich HTML content');
-  console.log('  - Pages are interlinked for navigation');
+  console.log('Pages: 10 parent pages + 30 subpages');
+  console.log('Databases: 3 (Task Tracker, Content Calendar, Team Directory)');
+  console.log('Templates: 5 built-in');
+  console.log('Comments: 8 (threaded, 1 resolved)');
+  console.log('Notifications: 6 (4 unread)');
+  console.log('Favourites: 3');
+  console.log('Webhooks: 1');
+  console.log('API Tokens: 1');
+  console.log('Trashed: 1 page');
   console.log('========================================');
 }
 

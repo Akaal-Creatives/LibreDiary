@@ -33,7 +33,8 @@
     "db:migrate": "pnpm --filter @librediary/server db:migrate",
     "db:push": "pnpm --filter @librediary/server db:push",
     "db:studio": "pnpm --filter @librediary/server db:studio",
-    "prepare": "husky"
+    "prepare": "husky",
+    "screenshots": "npx tsx scripts/screenshots.ts"
   },
   "pnpm": {
     "overrides": {
@@ -43,6 +44,7 @@
     }
   },
   "devDependencies": {
+    "playwright": "^1.50.0",
     "husky": "^9.1.0",
     "lint-staged": "^16.2.7",
     "prettier": "^3.4.0",

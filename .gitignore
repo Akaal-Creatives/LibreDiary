@@ -150,3 +150,6 @@ vite.config.ts.timestamp-*
 
 # Uploaded files (local storage)
 uploads/
+
+# Marketing screenshots
+screenshots/
