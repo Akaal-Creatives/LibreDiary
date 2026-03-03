@@ -50,7 +50,7 @@ cp .env.example .env
 # Edit .env with your production values (see Section 3)
 nano .env
 
-# Place TLS certificates (see Section 4)
+# Place TLS certificates (see Section 4) — or use HTTP-only mode (see Section 4b)
 mkdir -p tooling/docker/nginx/ssl
 cp /path/to/fullchain.pem tooling/docker/nginx/ssl/fullchain.pem
 cp /path/to/privkey.pem tooling/docker/nginx/ssl/privkey.pem
@@ -58,12 +58,8 @@ cp /path/to/privkey.pem tooling/docker/nginx/ssl/privkey.pem
 # Build images
 docker compose -f tooling/docker/docker-compose.production.yml build
 
-# Start services
+# Start services (migrations and seed run automatically on first boot)
 docker compose -f tooling/docker/docker-compose.production.yml up -d
-
-# Run database migrations
-docker compose -f tooling/docker/docker-compose.production.yml exec server \
-    npx prisma migrate deploy --schema=apps/server/prisma/schema.prisma
 ```
 
 ---
@@ -82,6 +78,7 @@ Edit `.env` in the project root. The server container reads this file and applie
 | `APP_SECRET`        | Application secret (min 32 characters)        | `generate-with-openssl-rand-hex-32` |
 | `SESSION_SECRET`    | Session secret (min 32 characters)            | `generate-with-openssl-rand-hex-32` |
 | `DOMAIN`            | Domain name for nginx                         | `diary.example.com`                 |
+| `FRONTEND_URL`      | Public frontend URL (for OAuth redirects)     | `https://diary.example.com`         |
 
 ### Optional Variables
 
@@ -160,6 +157,23 @@ crontab -e
     docker compose -f /path/to/LibreDiary/tooling/docker/docker-compose.production.yml exec nginx nginx -s reload
 ```
 
+### Option C: HTTP-Only Mode (No TLS)
+
+For local testing or environments where TLS is terminated upstream (e.g. Cloudflare, load balancer), use the HTTP-only compose override. No certificates are required:
+
+```bash
+# Build
+docker compose -f tooling/docker/docker-compose.production.yml build
+
+# Start in HTTP-only mode
+docker compose \
+    -f tooling/docker/docker-compose.production.yml \
+    -f tooling/docker/docker-compose.local.yml \
+    up -d
+```
+
+This swaps the nginx config to serve everything over port 80 without any TLS directives.
+
 ---
 
 ## 5. Building & Running
@@ -194,7 +208,13 @@ docker compose -f tooling/docker/docker-compose.production.yml up -d server
 
 ## 6. Database Migrations
 
-Run migrations after first deployment and after each update:
+Migrations run **automatically** on every container start via the Docker entrypoint script. This includes:
+
+1. **Prisma migrations** (`prisma migrate deploy`) — schema changes
+2. **Custom SQL migrations** — search vectors and other extensions
+3. **Database seed** — creates the super admin account on first boot (idempotent; skips if admin exists)
+
+To run migrations manually (e.g. for debugging):
 
 ```bash
 docker compose -f tooling/docker/docker-compose.production.yml exec server \
@@ -254,11 +274,7 @@ git pull origin main
 # Rebuild images
 docker compose -f tooling/docker/docker-compose.production.yml build
 
-# Run any new migrations
-docker compose -f tooling/docker/docker-compose.production.yml exec server \
-    npx prisma migrate deploy --schema=apps/server/prisma/schema.prisma
-
-# Restart services (zero-downtime for web, brief restart for server)
+# Restart services (migrations run automatically on server start)
 docker compose -f tooling/docker/docker-compose.production.yml up -d
 ```
 
@@ -363,6 +379,7 @@ docker compose -f tooling/docker/docker-compose.production.yml logs nginx
 - [ ] Strong, unique `APP_SECRET` set (min 32 characters)
 - [ ] Strong, unique `SESSION_SECRET` set (min 32 characters)
 - [ ] `APP_URL` and `API_URL` set to production domain with HTTPS
+- [ ] `FRONTEND_URL` set to production frontend URL (for OAuth redirects)
 - [ ] `DOMAIN` set for nginx
 - [ ] Valid TLS certificates installed
 - [ ] SMTP configured for email features (password reset, invitations)

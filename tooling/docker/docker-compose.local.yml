@@ -1,0 +1,20 @@
+# ===========================================
+# LibreDiary Docker Compose - HTTP-Only Override
+#
+# Removes TLS requirement for local testing / development.
+# Use alongside the production compose file:
+#
+#   docker compose \
+#     -f tooling/docker/docker-compose.production.yml \
+#     -f tooling/docker/docker-compose.local.yml \
+#     up -d
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+# ===========================================
+
+services:
+  nginx:
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default-http.conf.template:/etc/nginx/templates/default.conf.template:ro

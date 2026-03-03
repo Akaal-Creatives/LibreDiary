@@ -37,10 +37,14 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
     networks:
       - librediary_network
 
@@ -77,8 +81,12 @@ services:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => { if (!r.ok) throw new Error(); }).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
-      start_period: 15s
+      start_period: 60s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     networks:
       - librediary_network
 
@@ -100,6 +108,10 @@ services:
       timeout: 10s
       start_period: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
     networks:
       - librediary_network
 
@@ -121,6 +133,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     networks:
       - librediary_network
 
@@ -128,7 +144,7 @@ services:
   # MinIO (S3-compatible storage) - Optional
   # ===========================================
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-02-18T16-25-55Z
     container_name: librediary-minio-prod
     command: server /data --console-address ":9001"
     environment:
@@ -146,6 +162,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     profiles:
       - storage
     networks:
@@ -155,7 +175,7 @@ services:
   # Meilisearch (Full-text search) - Optional
   # ===========================================
   meilisearch:
-    image: getmeili/meilisearch:latest
+    image: getmeili/meilisearch:v1.13
     container_name: librediary-meilisearch-prod
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-masterkey}
@@ -170,6 +190,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     profiles:
       - search
     networks:

@@ -84,11 +84,18 @@ COPY packages/eslint-config/package.json packages/eslint-config/package.json
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
+# Install tsx globally for runtime migrations and seed
+RUN pnpm add -g tsx
+
 # Copy built artefacts from build stage
 COPY --from=build /app/apps/server/dist/ apps/server/dist/
 COPY --from=build /app/apps/server/src/generated/ apps/server/src/generated/
 COPY --from=build /app/apps/server/prisma/ apps/server/prisma/
 COPY --from=build /app/packages/shared/dist/ packages/shared/dist/
+
+# Copy entrypoint script
+COPY apps/server/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Create data directories
 RUN mkdir -p /app/data/files /app/backups && \
@@ -99,7 +106,8 @@ USER node
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD node -e "fetch('http://localhost:3000/health').then(r => { if (!r.ok) throw new Error(); }).catch(() => process.exit(1))"
 
-CMD ["dumb-init", "--", "node", "apps/server/dist/index.js"]
+ENTRYPOINT ["dumb-init", "--", "/app/docker-entrypoint.sh"]
+CMD ["node", "apps/server/dist/index.js"]

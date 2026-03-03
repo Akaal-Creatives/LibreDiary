@@ -180,7 +180,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
         setSessionCookie(reply, result.session.token, EXPIRATION.SESSION);
 
         // Determine redirect URL
-        const frontendUrl = env.APP_URL.replace(':3000', ':5173'); // Adjust port for dev
+        const frontendUrl = env.FRONTEND_URL ?? env.APP_URL;
         const redirectUrl = result.isNewUser ? `${frontendUrl}/onboarding` : `${frontendUrl}/`;
 
         return reply.status(302).redirect(redirectUrl);
@@ -188,7 +188,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
         const message = error instanceof Error ? error.message : 'OAuth authentication failed';
 
         // Redirect to login page with error
-        const frontendUrl = env.APP_URL.replace(':3000', ':5173');
+        const frontendUrl = env.FRONTEND_URL ?? env.APP_URL;
         return reply
           .status(302)
           .redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
