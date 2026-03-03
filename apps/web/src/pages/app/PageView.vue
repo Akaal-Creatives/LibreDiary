@@ -4,6 +4,7 @@ import { usePagesStore, useSyncStore, useAuthStore } from '@/stores';
 import { useCollaboration } from '@/composables';
 import { TiptapEditor, AiBubbleMenu } from '@/components/editor';
 import { useMarkdownExport } from '@/composables';
+import { usePagePanels } from '@/composables/usePagePanels';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
@@ -29,10 +30,16 @@ const error = ref<string | null>(null);
 const pageTitle = ref('');
 const pageContent = ref('');
 const showEmojiPicker = ref(false);
-const showShareModal = ref(false);
-const showVersionHistory = ref(false);
-const showCommentsPanel = ref(false);
-const commentCount = ref(0);
+const {
+  showShareModal,
+  showVersionHistory,
+  showCommentsPanel,
+  commentCount,
+  closeComments,
+  closeVersionHistory,
+  closeShare,
+  setCommentCount,
+} = usePagePanels();
 
 // Ref to the TiptapEditor component
 const editorRef = ref<InstanceType<typeof TiptapEditor> | null>(null);
@@ -575,7 +582,7 @@ function formatDate(dateString: string): string {
       :page-id="props.pageId"
       :page-title="pageTitle"
       :is-open="showShareModal"
-      @close="showShareModal = false"
+      @close="closeShare"
       @update="loadPage"
     />
 
@@ -584,7 +591,7 @@ function formatDate(dateString: string): string {
       :page-id="props.pageId"
       :page-title="pageTitle"
       :is-open="showVersionHistory"
-      @close="showVersionHistory = false"
+      @close="closeVersionHistory"
       @restored="loadPage"
     />
 
@@ -592,8 +599,8 @@ function formatDate(dateString: string): string {
     <CommentsPanel
       :page-id="props.pageId"
       :is-open="showCommentsPanel"
-      @close="showCommentsPanel = false"
-      @comment-count-change="(count) => (commentCount = count)"
+      @close="closeComments"
+      @comment-count-change="(count) => setCommentCount(count)"
     />
   </div>
 </template>

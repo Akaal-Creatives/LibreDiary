@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { usePagesStore, useSyncStore } from '@/stores';
 import { useToast } from '@/composables';
 import { useSidebar } from '@/composables/useSidebar';
+import { usePagePanels } from '@/composables/usePagePanels';
 import type { Page, PageWithChildren } from '@librediary/shared';
 import PageContextMenu from './PageContextMenu.vue';
 import SaveAsTemplateModal from './SaveAsTemplateModal.vue';
@@ -15,6 +16,7 @@ const toast = useToast();
 const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
 const sidebar = useSidebar();
+const { openComments, openVersionHistory, openShare, commentCount } = usePagePanels();
 
 // More options context menu
 const moreBtnRef = ref<HTMLButtonElement>();
@@ -201,8 +203,10 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         <button
           class="action-btn"
           type="button"
+          :disabled="!pagesStore.currentPage"
           :title="$t('header.viewHistory')"
           :aria-label="$t('header.viewHistory')"
+          @click="openVersionHistory"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="6.75" stroke="currentColor" stroke-width="1.5" />
@@ -218,8 +222,11 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         <button
           class="action-btn"
           type="button"
+          :disabled="!pagesStore.currentPage"
+          :class="{ 'has-comments': commentCount > 0 }"
           :title="$t('header.comments')"
           :aria-label="$t('header.comments')"
+          @click="openComments"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
@@ -230,12 +237,15 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
               stroke-linejoin="round"
             />
           </svg>
+          <span v-if="commentCount > 0" class="comment-badge">{{ commentCount }}</span>
         </button>
         <button
           class="action-btn"
           type="button"
+          :disabled="!pagesStore.currentPage"
           :title="$t('header.favourite')"
           :aria-label="$t('header.favourite')"
+          @click="pagesStore.currentPage && handleToggleFavorite(pagesStore.currentPage)"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
@@ -252,7 +262,13 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <div class="header-divider"></div>
 
       <!-- Share Button -->
-      <button class="share-btn" type="button" :aria-label="$t('header.share')">
+      <button
+        class="share-btn"
+        type="button"
+        :disabled="!pagesStore.currentPage"
+        :aria-label="$t('header.share')"
+        @click="openShare"
+      >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M12 5.5C13.1046 5.5 14 4.60457 14 3.5C14 2.39543 13.1046 1.5 12 1.5C10.8954 1.5 10 2.39543 10 3.5C10 4.60457 10.8954 5.5 12 5.5Z"
@@ -430,9 +446,39 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   transition: all var(--transition-fast);
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
   background: var(--color-hover);
+}
+
+.action-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.action-btn {
+  position: relative;
+}
+
+.action-btn.has-comments {
+  color: var(--color-accent);
+}
+
+.comment-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
 }
 
 .header-divider {
