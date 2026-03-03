@@ -38,6 +38,63 @@ export interface StorageConnectionResult {
   message: string;
 }
 
+/**
+ * MIME types that are blocked because they can execute scripts when served
+ * inline (XSS risk) or are dangerous executables.
+ */
+const BLOCKED_MIME_TYPES = new Set([
+  // Script-capable types
+  'text/html',
+  'application/xhtml+xml',
+  'image/svg+xml',
+  'application/xml',
+  'text/xml',
+  // Executables
+  'application/x-msdownload',
+  'application/x-executable',
+  'application/x-elf',
+  'application/x-mach-binary',
+  'application/x-dosexec',
+  'application/vnd.microsoft.portable-executable',
+  // Script files
+  'application/javascript',
+  'text/javascript',
+  'application/x-httpd-php',
+  'application/x-sh',
+  'application/x-csh',
+]);
+
+/**
+ * File extensions that are always blocked regardless of detected MIME type.
+ */
+const BLOCKED_EXTENSIONS = new Set([
+  '.exe',
+  '.bat',
+  '.cmd',
+  '.com',
+  '.msi',
+  '.scr',
+  '.pif',
+  '.sh',
+  '.bash',
+  '.csh',
+  '.ksh',
+  '.php',
+  '.jsp',
+  '.asp',
+  '.aspx',
+  '.htm',
+  '.html',
+  '.xhtml',
+  '.svg',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.vbs',
+  '.wsf',
+  '.ps1',
+]);
+
 function generateStorageKey(orgId: string, originalName: string): string {
   const ext = path.extname(originalName);
   const uuid = randomUUID();
@@ -61,6 +118,14 @@ export async function uploadFile(
   // so we fall back to the client-provided MIME type.
   const detected = await fileTypeFromBuffer(data.buffer);
   const mimeType = detected?.mime ?? data.mimeType;
+
+  // Block dangerous file types that could enable XSS or code execution
+  const ext = path.extname(data.originalName).toLowerCase();
+  if (BLOCKED_MIME_TYPES.has(mimeType) || BLOCKED_EXTENSIONS.has(ext)) {
+    const error = new Error('FILE_TYPE_NOT_ALLOWED');
+    error.name = 'FILE_TYPE_NOT_ALLOWED';
+    throw error;
+  }
 
   const provider = getStorageProvider();
   const key = generateStorageKey(orgId, data.originalName);

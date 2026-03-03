@@ -35,6 +35,11 @@ const errorMap: ErrorMap = {
     code: 'FILE_TOO_LARGE',
     message: 'File exceeds maximum size limit',
   },
+  FILE_TYPE_NOT_ALLOWED: {
+    status: 415,
+    code: 'FILE_TYPE_NOT_ALLOWED',
+    message: 'This file type is not allowed for security reasons',
+  },
 };
 
 // ===========================================
