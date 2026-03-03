@@ -38,6 +38,14 @@ export function usePagePanels() {
     commentCount.value = count;
   }
 
+  /** Reset all panels and counts — call when navigating to a different page. */
+  function resetPanels() {
+    showCommentsPanel.value = false;
+    showVersionHistory.value = false;
+    showShareModal.value = false;
+    commentCount.value = 0;
+  }
+
   return {
     showCommentsPanel,
     showVersionHistory,
@@ -50,5 +58,6 @@ export function usePagePanels() {
     openShare,
     closeShare,
     setCommentCount,
+    resetPanels,
   };
 }

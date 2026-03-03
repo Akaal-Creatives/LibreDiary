@@ -39,6 +39,7 @@ const {
   closeVersionHistory,
   closeShare,
   setCommentCount,
+  resetPanels,
 } = usePagePanels();
 
 // Ref to the TiptapEditor component
@@ -205,8 +206,9 @@ watch(
     }
     // Disconnect from old collaboration
     disconnectCollaboration();
-    // Reset modification tracking for new page
+    // Reset modification tracking and panel state for new page
     hasBeenModified.value = false;
+    resetPanels();
     loadPage();
   }
 );
@@ -236,6 +238,10 @@ onUnmounted(async () => {
 
   // Cleanup empty page when leaving
   await cleanupEmptyPage(props.pageId);
+
+  // Clear current page so header buttons hide on non-page routes
+  pagesStore.setCurrentPage(null);
+  resetPanels();
 });
 
 async function loadPage() {
