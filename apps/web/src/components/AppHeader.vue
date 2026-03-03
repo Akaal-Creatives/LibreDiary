@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { usePagesStore, useSyncStore } from '@/stores';
@@ -17,6 +17,10 @@ const pagesStore = usePagesStore();
 const syncStore = useSyncStore();
 const sidebar = useSidebar();
 const { openComments, openVersionHistory, openShare, commentCount } = usePagePanels();
+
+const isCurrentPageFavorite = computed(() =>
+  pagesStore.currentPage ? pagesStore.isFavorite(pagesStore.currentPage.id) : false
+);
 
 // More options context menu
 const moreBtnRef = ref<HTMLButtonElement>();
@@ -241,15 +245,21 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
         </button>
         <button
           class="action-btn"
+          :class="{ 'is-favourite': isCurrentPageFavorite }"
           type="button"
           :disabled="!pagesStore.currentPage"
-          :title="$t('header.favourite')"
-          :aria-label="$t('header.favourite')"
+          :title="
+            isCurrentPageFavorite ? $t('pages.removeFromFavourites') : $t('pages.addToFavourites')
+          "
+          :aria-label="
+            isCurrentPageFavorite ? $t('pages.removeFromFavourites') : $t('pages.addToFavourites')
+          "
           @click="pagesStore.currentPage && handleToggleFavorite(pagesStore.currentPage)"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 2.25L11.0962 6.50074L15.75 7.18125L12.375 10.4693L13.1925 15.1013L9 12.8925L4.8075 15.1013L5.625 10.4693L2.25 7.18125L6.90375 6.50074L9 2.25Z"
+              :fill="isCurrentPageFavorite ? 'currentColor' : 'none'"
               stroke="currentColor"
               stroke-width="1.5"
               stroke-linecap="round"
@@ -462,6 +472,10 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
 .action-btn.has-comments {
   color: var(--color-accent);
+}
+
+.action-btn.is-favourite {
+  color: var(--color-warning);
 }
 
 .comment-badge {

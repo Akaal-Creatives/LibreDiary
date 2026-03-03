@@ -255,38 +255,42 @@ function close() {
 </template>
 
 <style scoped>
-/* Modal Overlay */
+/* Modal Overlay — warm-tinted scrim with stronger presence */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  padding: var(--space-6);
+  background: rgba(44, 47, 44, 0.52);
+  backdrop-filter: blur(8px);
 }
 
+/* Container — layered shadow for tactile depth */
 .modal-container {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: 440px;
-  max-height: calc(100vh - 2rem);
+  max-width: 460px;
+  max-height: calc(100vh - var(--space-16));
   overflow: hidden;
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
+    var(--shadow-xl),
+    0 0 0 1px rgba(44, 47, 44, 0.04);
 }
 
 /* Header */
 .modal-header {
   display: flex;
   gap: var(--space-3);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-6);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -300,10 +304,10 @@ function close() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   color: var(--color-accent);
-  background: rgba(107, 143, 113, 0.1);
+  background: var(--color-accent-subtle);
   border-radius: var(--radius-lg);
 }
 
@@ -311,61 +315,73 @@ function close() {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 600;
+  line-height: var(--leading-tight);
   color: var(--color-text-primary);
 }
 
 .modal-subtitle {
-  margin: var(--space-1) 0 0;
+  margin: 2px 0 0;
   font-size: var(--text-sm);
   color: var(--color-text-tertiary);
 }
 
+/* Close button — visible, accessible 44px touch target */
 .close-btn {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  background: transparent;
-  border: none;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .close-btn:hover {
   color: var(--color-text-primary);
-  background: var(--color-hover);
+  background: var(--color-active);
+  border-color: var(--color-border);
+}
+
+.close-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Loading Skeleton */
 .modal-loading {
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-6);
 }
 
 .skeleton-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .skeleton-item {
   display: flex;
   gap: var(--space-3);
   align-items: center;
-  padding: var(--space-3);
-  background: var(--color-bg-secondary);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-sunken);
   border-radius: var(--radius-md);
 }
 
 .skeleton-badge {
   width: 56px;
   height: 24px;
-  background: var(--color-bg-tertiary);
+  background: var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
 }
 
 .skeleton-content {
@@ -374,83 +390,100 @@ function close() {
 
 .skeleton-title {
   width: 60%;
-  height: 16px;
+  height: 14px;
   margin-bottom: var(--space-2);
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-xs);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  animation-delay: 0.1s;
+  background: var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+  animation-delay: 0.15s;
 }
 
 .skeleton-meta {
   width: 40%;
-  height: 12px;
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-xs);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  animation-delay: 0.2s;
+  height: 10px;
+  background: var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+  animation-delay: 0.3s;
 }
 
 @keyframes skeleton-pulse {
   0%,
   100% {
-    opacity: 0.5;
+    opacity: 0.4;
   }
   50% {
-    opacity: 1;
+    opacity: 0.8;
   }
 }
 
-/* Error State */
+/* Error State — grounded, clear, actionable */
 .modal-error {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-items: center;
-  padding: var(--space-10);
+  padding: var(--space-12) var(--space-8);
   text-align: center;
 }
 
 .error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
   color: var(--color-error);
+  background: var(--color-error-subtle);
+  border-radius: var(--radius-full);
 }
 
 .modal-error p {
   margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   color: var(--color-text-secondary);
 }
 
 .retry-btn {
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-5);
   font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-accent);
   cursor: pointer;
-  background: rgba(107, 143, 113, 0.1);
-  border: none;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-muted);
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .retry-btn:hover {
-  background: rgba(107, 143, 113, 0.2);
+  background: var(--color-accent-muted);
+  border-color: var(--color-accent);
+}
+
+.retry-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Empty State */
 .modal-empty {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-items: center;
-  padding: var(--space-10);
+  padding: var(--space-12) var(--space-8);
   text-align: center;
 }
 
 .empty-icon {
   margin-bottom: var(--space-2);
   color: var(--color-text-tertiary);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .modal-empty h3 {
@@ -463,13 +496,14 @@ function close() {
 .modal-empty p {
   margin: 0;
   font-size: var(--text-sm);
+  line-height: var(--leading-normal);
   color: var(--color-text-tertiary);
 }
 
-/* Body */
+/* Body — scrollable version list */
 .modal-body {
   max-height: 400px;
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   overflow-y: auto;
 }
 
@@ -485,19 +519,23 @@ function close() {
   gap: var(--space-3);
   align-items: center;
   width: 100%;
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  background: var(--color-bg-secondary);
+  background: var(--color-surface-sunken);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-lg);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .version-item:hover {
-  background: var(--color-hover);
+  background: var(--color-surface-hover);
   border-color: var(--color-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .version-item:hover .version-action {
@@ -505,9 +543,15 @@ function close() {
   opacity: 1;
 }
 
+.version-item:focus-visible {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
 .version-item.current {
-  background: rgba(107, 143, 113, 0.05);
-  border-color: rgba(107, 143, 113, 0.2);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-muted);
 }
 
 .version-badge {
@@ -520,13 +564,13 @@ function close() {
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-text-tertiary);
-  background: var(--color-bg-tertiary);
+  background: var(--color-surface);
   border-radius: var(--radius-sm);
 }
 
 .version-badge.current {
   color: var(--color-accent);
-  background: rgba(107, 143, 113, 0.15);
+  background: var(--color-accent-muted);
 }
 
 .version-content {
@@ -568,10 +612,13 @@ function close() {
   transition: all var(--transition-fast);
 }
 
-/* Transitions */
-.modal-enter-active,
+/* Transitions — organic cubic-bezier for natural feel */
+.modal-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .modal-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-enter-from,
@@ -579,23 +626,40 @@ function close() {
   opacity: 0;
 }
 
-.modal-enter-from .modal-container,
+.modal-enter-active .modal-container {
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-leave-active .modal-container {
+  transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from .modal-container {
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+}
+
 .modal-leave-to .modal-container {
-  transform: scale(0.95) translateY(10px);
+  opacity: 0;
+  transform: scale(0.98) translateY(4px);
 }
 
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
 }
 
 .list-move {
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
 }
 </style>
