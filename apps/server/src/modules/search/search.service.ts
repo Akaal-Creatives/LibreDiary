@@ -90,11 +90,13 @@ async function searchWithMeilisearch(options: SearchOptions): Promise<SearchServ
   const client = getMeilisearchClient();
   if (!client) throw new Error('Meilisearch client not available');
 
-  // Build filter array
-  const filters: string[] = [`orgId = "${organizationId}"`];
+  // Build filter array — escape double quotes to prevent filter injection
+  const safeOrgId = organizationId.replace(/"/g, '\\"');
+  const filters: string[] = [`orgId = "${safeOrgId}"`];
 
   if (createdById) {
-    filters.push(`createdById = "${createdById}"`);
+    const safeCreatedById = createdById.replace(/"/g, '\\"');
+    filters.push(`createdById = "${safeCreatedById}"`);
   }
   if (dateFrom) {
     filters.push(`createdAt >= ${Math.floor(new Date(dateFrom).getTime() / 1000)}`);
