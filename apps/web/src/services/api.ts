@@ -38,7 +38,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   const response = await fetch(`${API_BASE}${endpoint}`, config);
 
-  const data: ApiResponse<T> = await response.json();
+  let data: ApiResponse<T>;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(
+      'PARSE_ERROR',
+      `Server returned an unexpected response (HTTP ${response.status})`
+    );
+  }
 
   if (!data.success) {
     throw new ApiError(
