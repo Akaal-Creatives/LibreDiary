@@ -5,6 +5,7 @@ import { useCollaboration } from '@/composables';
 import { TiptapEditor, AiBubbleMenu } from '@/components/editor';
 import { useMarkdownExport } from '@/composables';
 import { usePagePanels } from '@/composables/usePagePanels';
+import { commentsService } from '@/services/comments.service';
 import PageBreadcrumbs from '@/components/PageBreadcrumbs.vue';
 import EmojiPicker from '@/components/EmojiPicker.vue';
 import PageCoverImage from '@/components/PageCoverImage.vue';
@@ -39,7 +40,7 @@ const {
   closeVersionHistory,
   closeShare,
   setCommentCount,
-  resetPanels,
+  closePanels,
 } = usePagePanels();
 
 // Ref to the TiptapEditor component
@@ -208,7 +209,7 @@ watch(
     disconnectCollaboration();
     // Reset modification tracking and panel state for new page
     hasBeenModified.value = false;
-    resetPanels();
+    closePanels();
     loadPage();
   }
 );
@@ -241,7 +242,7 @@ onUnmounted(async () => {
 
   // Clear current page so header buttons hide on non-page routes
   pagesStore.setCurrentPage(null);
-  resetPanels();
+  closePanels();
 });
 
 async function loadPage() {
@@ -264,6 +265,15 @@ async function loadPage() {
     }
     if (page.title && page.title !== 'Untitled') {
       hasBeenModified.value = true;
+    }
+
+    // Eagerly fetch comment count so the badge updates without opening the panel
+    const orgId = authStore.currentOrganizationId;
+    if (orgId) {
+      commentsService
+        .getCommentCount(orgId, props.pageId)
+        .then((count) => setCommentCount(count))
+        .catch(() => setCommentCount(0));
     }
 
     // Expand ancestors in sidebar
