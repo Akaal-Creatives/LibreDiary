@@ -49,8 +49,8 @@ COPY packages/tsconfig/ packages/tsconfig/
 COPY packages/eslint-config/ packages/eslint-config/
 COPY apps/server/ apps/server/
 
-# Generate Prisma client
-RUN pnpm --filter @librediary/server db:generate
+# Generate Prisma client (dummy URL — generate only reads the schema, no connection needed)
+RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" pnpm --filter @librediary/server db:generate
 
 # Build shared package first, then server (turbo handles dependency order)
 RUN pnpm turbo run build --filter=@librediary/server
