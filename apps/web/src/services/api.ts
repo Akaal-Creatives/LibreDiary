@@ -1,6 +1,6 @@
 import type { ApiResponse } from '@librediary/shared';
 
-const API_BASE = '/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export class ApiError extends Error {
   constructor(

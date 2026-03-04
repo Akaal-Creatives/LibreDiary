@@ -521,6 +521,35 @@ async function main() {
     console.log(`ℹ️  Organization already exists: ${organization.name}`);
   }
 
+  // Create demo user
+  const demoPasswordHash = await hash('password');
+  let demoUser = await prisma.user.findUnique({
+    where: { email: 'demo@librediary.com' },
+  });
+
+  if (!demoUser) {
+    demoUser = await prisma.user.create({
+      data: {
+        email: 'demo@librediary.com',
+        name: 'Demo User',
+        passwordHash: demoPasswordHash,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
+    });
+    console.log(`✅ Created demo user: demo@librediary.com`);
+
+    await prisma.organizationMember.create({
+      data: {
+        organizationId: organization.id,
+        userId: demoUser.id,
+        role: 'MEMBER',
+      },
+    });
+  } else {
+    console.log(`ℹ️  Demo user already exists: demo@librediary.com`);
+  }
+
   // Create 10 users
   const passwordHash = await hash('Password123');
   const users: Array<{ id: string; email: string; name: string }> = [];

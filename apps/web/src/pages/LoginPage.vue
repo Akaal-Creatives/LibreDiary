@@ -21,6 +21,7 @@ const loading = ref(false);
 const error = ref('');
 const oauthLoading = ref<OAuthProvider | null>(null);
 const configuredProviders = ref<OAuthProvider[]>([]);
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
 // Check for OAuth error from callback
 onMounted(async () => {
@@ -107,6 +108,22 @@ async function handleOAuthClick(provider: OAuthProvider) {
     />
 
     <AuthDivider v-if="configuredProviders.length > 0" :text="$t('auth.continueWithEmail')" />
+
+    <div v-if="isDemoMode" class="demo-banner" role="status" aria-live="polite">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+        <path
+          d="M8 5V8.5M8 11V11.01"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span>
+        This is a demo instance. Data resets every 24 hours. Use
+        <strong>demo@librediary.com</strong> / <strong>password</strong> to log in.
+      </span>
+    </div>
 
     <form class="auth-form" @submit.prevent="handleSubmit">
       <div v-if="error" class="error-message" role="alert" aria-live="polite">
@@ -210,6 +227,18 @@ async function handleOAuthClick(provider: OAuthProvider) {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+}
+
+.demo-banner {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
 }
 
 .error-message {

@@ -89,6 +89,13 @@ const envSchema = z.object({
   OPENROUTER_BASE_URL: z.string().url().default('https://openrouter.ai/api/v1'),
   AI_DEFAULT_MODEL: z.string().default('openai/gpt-4o-mini'),
 
+  // Demo Mode
+  DEMO_MODE: z
+    .string()
+    .transform((v) => v === 'true')
+    .default(false),
+  DEMO_RESEED_SCHEDULE: z.string().default('0 0 * * *'), // midnight daily
+
   // Search - Meilisearch (optional)
   MEILISEARCH_HOST: z.string().url().optional(),
   MEILISEARCH_API_KEY: z.string().optional(),
