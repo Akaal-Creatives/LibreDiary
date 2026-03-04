@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -9,16 +11,16 @@ permissions:
   issues: write
   pull-requests: write
 
-jobs:
-  # First, run all CI checks
-  ci:
-    name: CI
-    uses: ./.github/workflows/ci.yml
+concurrency:
+  group: release
+  cancel-in-progress: true
 
+jobs:
   release:
     name: Release
-    needs: ci
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
