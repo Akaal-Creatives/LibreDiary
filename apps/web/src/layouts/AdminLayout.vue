@@ -851,10 +851,27 @@ async function handleLogout() {
   background: var(--color-border-strong);
 }
 
-/* Responsive padding */
+/* Responsive */
 @media (max-width: 767px) {
   .admin-content {
     padding: var(--space-4);
+  }
+
+  .admin-header {
+    padding: 0 var(--space-3);
+  }
+
+  .header-right {
+    gap: var(--space-2);
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .user-menu {
+    gap: var(--space-2);
+    padding-left: var(--space-2);
   }
 }
 

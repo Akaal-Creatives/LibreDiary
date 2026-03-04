@@ -202,10 +202,9 @@ async function setCardSize(size: string) {
 }
 
 .gallery-cover-prompt {
-  flex: 1;
   justify-content: center;
-  padding: var(--space-8) var(--space-6);
-  border-bottom: none;
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .cover-prompt-content {

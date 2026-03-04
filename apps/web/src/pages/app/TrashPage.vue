@@ -403,4 +403,25 @@ function formatDate(dateString: string): string {
 .delete-btn:hover:not(:disabled) {
   background: var(--color-error-subtle);
 }
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .trash-page {
+    padding: var(--space-4);
+  }
+
+  .trash-item {
+    flex-wrap: wrap;
+  }
+
+  .item-info {
+    flex-basis: calc(100% - 52px);
+  }
+
+  .item-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: var(--space-2);
+  }
+}
 </style>

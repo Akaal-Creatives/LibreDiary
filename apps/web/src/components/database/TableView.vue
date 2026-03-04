@@ -912,4 +912,39 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   color: var(--color-accent);
   background: var(--color-hover);
 }
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .col-drag,
+  .cell-drag {
+    display: none;
+  }
+
+  .col-checkbox,
+  .cell-checkbox {
+    width: 28px;
+  }
+
+  .data-table {
+    table-layout: auto;
+    min-width: max-content;
+  }
+
+  .col-header {
+    min-width: 100px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .bulk-actions {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .add-row-btn {
+    padding: var(--space-2) var(--space-3);
+  }
+}
 </style>

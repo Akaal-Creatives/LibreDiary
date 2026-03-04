@@ -856,4 +856,30 @@ function formatDate(dateString: string): string {
   min-height: 400px;
   padding: 0 var(--space-4);
 }
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  .page-meta {
+    flex-basis: calc(100% - 72px);
+    min-width: 0;
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
+  }
+
+  .page-icon {
+    font-size: 2rem;
+  }
+
+  .header-actions {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    padding-top: var(--space-2);
+  }
+}
 </style>

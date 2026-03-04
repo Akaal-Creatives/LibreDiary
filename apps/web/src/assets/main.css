@@ -78,6 +78,8 @@
 
 [data-theme='light'],
 :root {
+  color-scheme: light;
+
   /* Core Palette */
   --color-background: #F6F8F6;
   --color-surface: #FFFFFF;
@@ -147,6 +149,8 @@
    ============================================ */
 
 [data-theme='dark'] {
+  color-scheme: dark;
+
   /* Core Palette - Deep forest tones */
   --color-background: #161917;
   --color-surface: #1E2220;
