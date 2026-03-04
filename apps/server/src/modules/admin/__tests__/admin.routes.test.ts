@@ -60,13 +60,11 @@ const {
   };
 
   const mockAiService = {
-    testConnection: vi
-      .fn()
-      .mockResolvedValue({
-        success: true,
-        message: 'Connection successful',
-        model: 'openai/gpt-4o-mini',
-      }),
+    testConnection: vi.fn().mockResolvedValue({
+      success: true,
+      message: 'Connection successful',
+      model: 'openai/gpt-4o-mini',
+    }),
     maskApiKey: vi.fn((key: string) => {
       if (key.length <= 4) return '****';
       return `****${key.substring(key.length - 4)}`;

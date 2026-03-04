@@ -1,4 +1,5 @@
 import helmet from '@fastify/helmet';
+import type { FastifyHelmetOptions } from '@fastify/helmet';
 import type { FastifyInstance } from 'fastify';
 
 export async function helmetPlugin(fastify: FastifyInstance) {
@@ -17,6 +18,8 @@ export async function helmetPlugin(fastify: FastifyInstance) {
     },
     crossOriginEmbedderPolicy: false,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    // permissionsPolicy is supported at runtime via helmet but not
+    // yet reflected in @fastify/helmet's TypeScript definitions.
     permissionsPolicy: {
       features: {
         camera: [],
@@ -25,5 +28,5 @@ export async function helmetPlugin(fastify: FastifyInstance) {
         payment: [],
       },
     },
-  });
+  } as FastifyHelmetOptions);
 }
