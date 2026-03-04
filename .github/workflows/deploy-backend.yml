@@ -31,7 +31,13 @@ jobs:
           script: |
             cd "$APP_PATH"
             git pull origin main
-            docker compose -f tooling/docker/docker-compose.production.yml build server
-            docker compose -f tooling/docker/docker-compose.production.yml up -d server
+            docker compose \
+              -f tooling/docker/docker-compose.production.yml \
+              -f tooling/docker/docker-compose.api-only.yml \
+              build server
+            docker compose \
+              -f tooling/docker/docker-compose.production.yml \
+              -f tooling/docker/docker-compose.api-only.yml \
+              up -d server
         env:
           APP_PATH: ${{ secrets.VPS_APP_PATH }}
