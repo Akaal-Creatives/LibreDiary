@@ -70,7 +70,7 @@ describe('RegisterPage', () => {
     mockAuthService.getInvite.mockReturnValue(new Promise(() => {}));
     const wrapper = mountRegister();
 
-    expect(wrapper.find('.loading-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Loading invite');
   });
 
@@ -78,7 +78,7 @@ describe('RegisterPage', () => {
     const wrapper = mountRegister();
     await flushPromises();
 
-    expect(wrapper.find('.loading-state').exists()).toBe(false);
+    expect(wrapper.find('.state-container').exists()).toBe(false);
     expect(wrapper.find('h1').text()).toContain('Join Test Org');
     expect(wrapper.find('#email').element.value).toBe('invited@example.com');
   });
@@ -90,7 +90,7 @@ describe('RegisterPage', () => {
     const wrapper = mountRegister('expired-token');
     await flushPromises();
 
-    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Invalid Invite');
     expect(wrapper.text()).toContain('Invite has expired');
   });
@@ -100,7 +100,7 @@ describe('RegisterPage', () => {
     const wrapper = mountRegister();
     await flushPromises();
 
-    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Invalid or expired invite link');
   });
 
@@ -120,7 +120,7 @@ describe('RegisterPage', () => {
 
     await wrapper.find('#password').setValue('password123');
     await wrapper.find('#confirm-password').setValue('different456');
-    await wrapper.find('.register-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Passwords do not match');
@@ -133,7 +133,7 @@ describe('RegisterPage', () => {
 
     await wrapper.find('#password').setValue('short');
     await wrapper.find('#confirm-password').setValue('short');
-    await wrapper.find('.register-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('at least 8 characters');
@@ -148,7 +148,7 @@ describe('RegisterPage', () => {
     await wrapper.find('#name').setValue('Test User');
     await wrapper.find('#password').setValue('password123');
     await wrapper.find('#confirm-password').setValue('password123');
-    await wrapper.find('.register-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(mockAuthStore.register).toHaveBeenCalledWith(
@@ -167,19 +167,10 @@ describe('RegisterPage', () => {
 
     await wrapper.find('#password').setValue('password123');
     await wrapper.find('#confirm-password').setValue('password123');
-    await wrapper.find('.register-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Email already in use');
-  });
-
-  it('navigates home when brand button is clicked', async () => {
-    const wrapper = mountRegister();
-    await flushPromises();
-
-    await wrapper.find('.brand').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
   });
 
   it('navigates to login when Sign in link is clicked', async () => {

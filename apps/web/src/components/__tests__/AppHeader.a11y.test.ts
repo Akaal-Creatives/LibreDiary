@@ -1,19 +1,57 @@
 import { describe, it, expect, vi } from 'vitest';
+import { ref } from 'vue';
 import { mount } from '@vue/test-utils';
 
 vi.mock('@/stores', () => ({
   usePagesStore: () => ({
     currentPage: { id: 'p1', title: 'My Page', icon: null },
+    isFavorite: vi.fn().mockReturnValue(false),
+    toggleFavorite: vi.fn(),
   }),
   useSyncStore: () => ({ status: 'idle', statusMessage: '' }),
 }));
 
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
+vi.mock('@/composables', () => ({
+  useToast: () => ({
+    toasts: ref([]),
+    addToast: vi.fn(),
+    removeToast: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  }),
+}));
+
 vi.mock('@/composables/useSidebar', () => ({
   useSidebar: () => ({
-    isOverlay: { value: false },
-    isOpen: { value: true },
+    isOverlay: ref(false),
+    isOpen: ref(true),
     toggle: vi.fn(),
     close: vi.fn(),
+  }),
+}));
+
+vi.mock('@/composables/usePagePanels', () => ({
+  usePagePanels: () => ({
+    showCommentsPanel: ref(false),
+    showVersionHistory: ref(false),
+    showShareModal: ref(false),
+    commentCount: ref(0),
+    openComments: vi.fn(),
+    closeComments: vi.fn(),
+    openVersionHistory: vi.fn(),
+    closeVersionHistory: vi.fn(),
+    openShare: vi.fn(),
+    closeShare: vi.fn(),
+    setCommentCount: vi.fn(),
+    closePanels: vi.fn(),
   }),
 }));
 
@@ -28,6 +66,9 @@ describe('AppHeader accessibility', () => {
           ShareModal: { template: '<div />' },
           VersionHistoryModal: { template: '<div />' },
           CommentsPanel: { template: '<div />' },
+          PageContextMenu: { template: '<div />' },
+          SaveAsTemplateModal: { template: '<div />' },
+          Teleport: true,
           Transition: true,
         },
       },

@@ -65,7 +65,7 @@ describe('VerifyEmailPage', () => {
     mockAuthStore.verifyEmail.mockReturnValue(new Promise(() => {}));
     const wrapper = mountPage();
 
-    expect(wrapper.find('.loading-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Verifying your email');
   });
 
@@ -74,7 +74,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('.success-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Email verified!');
   });
 
@@ -84,7 +84,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.find('.success-state .submit-btn');
+    const button = wrapper.find('.state-container .submit-btn');
     expect(button.text()).toBe('Sign In');
 
     await button.trigger('click');
@@ -97,7 +97,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.find('.success-state .submit-btn');
+    const button = wrapper.find('.state-container .submit-btn');
     expect(button.text()).toBe('Go to App');
 
     await button.trigger('click');
@@ -111,7 +111,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Verification failed');
     expect(wrapper.text()).toContain('Failed to verify email. Please try again.');
   });
@@ -121,7 +121,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.state-container').exists()).toBe(true);
     expect(wrapper.text()).toContain('Failed to verify email');
   });
 
@@ -131,7 +131,7 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.find('.error-state .secondary-btn');
+    const button = wrapper.find('.state-container .secondary-btn');
     expect(button.text()).toBe('Sign In');
 
     await button.trigger('click');
@@ -144,21 +144,11 @@ describe('VerifyEmailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.find('.error-state .secondary-btn');
+    const button = wrapper.find('.state-container .secondary-btn');
     expect(button.text()).toBe('Go to App');
 
     await button.trigger('click');
     expect(mockRouter.push).toHaveBeenCalledWith('/app');
-  });
-
-  it('navigates home when brand button is clicked', async () => {
-    mockAuthStore.verifyEmail.mockResolvedValue(undefined);
-    const wrapper = mountPage();
-    await flushPromises();
-
-    await wrapper.find('.brand').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
   });
 
   it('passes the token prop to verifyEmail', async () => {

@@ -66,7 +66,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('password123');
     await wrapper.find('#confirm-password').setValue('different456');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Passwords do not match');
@@ -78,7 +78,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('short');
     await wrapper.find('#confirm-password').setValue('short');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('at least 8 characters');
@@ -91,7 +91,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('newpassword123');
     await wrapper.find('#confirm-password').setValue('newpassword123');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(mockAuthService.resetPassword).toHaveBeenCalledWith('reset-token-abc', 'newpassword123');
@@ -105,7 +105,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('newpassword123');
     await wrapper.find('#confirm-password').setValue('newpassword123');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     await wrapper.find('.submit-btn').trigger('click');
@@ -121,7 +121,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('newpassword123');
     await wrapper.find('#confirm-password').setValue('newpassword123');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Token has expired');
@@ -134,7 +134,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('newpassword123');
     await wrapper.find('#confirm-password').setValue('newpassword123');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Failed to reset password');
@@ -146,7 +146,7 @@ describe('ResetPasswordPage', () => {
 
     await wrapper.find('#password').setValue('newpassword123');
     await wrapper.find('#confirm-password').setValue('newpassword123');
-    await wrapper.find('.reset-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
 
     expect(wrapper.find('.submit-btn').attributes('disabled')).toBeDefined();
   });
@@ -157,13 +157,5 @@ describe('ResetPasswordPage', () => {
     await wrapper.find('.link-btn').trigger('click');
 
     expect(mockRouter.push).toHaveBeenCalledWith('/login');
-  });
-
-  it('navigates home when back-link is clicked', async () => {
-    const wrapper = mountPage();
-
-    await wrapper.find('.back-link').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
   });
 });

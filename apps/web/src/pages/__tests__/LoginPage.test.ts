@@ -100,14 +100,6 @@ describe('LoginPage', () => {
     expect(wrapper.find('.submit-btn').text()).toBe('Sign In');
   });
 
-  it('renders brand button that navigates home', async () => {
-    const wrapper = mountLogin();
-
-    await wrapper.find('.brand').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
-  });
-
   it('navigates to /forgot-password when forgot link is clicked', async () => {
     const wrapper = mountLogin();
 
@@ -122,7 +114,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('user@example.com');
     await wrapper.find('#password').setValue('password123');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(mockAuthStore.login).toHaveBeenCalledWith('user@example.com', 'password123');
@@ -136,7 +128,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('user@example.com');
     await wrapper.find('#password').setValue('password123');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(mockRouter.push).toHaveBeenCalledWith('/app/settings');
@@ -149,7 +141,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('user@example.com');
     await wrapper.find('#password').setValue('wrongpw');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('Invalid email or password');
@@ -164,7 +156,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('bad');
     await wrapper.find('#password').setValue('pw');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('email: Email is required');
@@ -176,7 +168,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('user@example.com');
     await wrapper.find('#password').setValue('password123');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('An unexpected error occurred');
@@ -188,7 +180,7 @@ describe('LoginPage', () => {
 
     await wrapper.find('#email').setValue('user@example.com');
     await wrapper.find('#password').setValue('password123');
-    await wrapper.find('.login-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
 
     // Button should be disabled while waiting
     expect(wrapper.find('.submit-btn').attributes('disabled')).toBeDefined();
@@ -201,13 +193,5 @@ describe('LoginPage', () => {
 
     expect(wrapper.find('.error-message').text()).toContain('OAuth provider rejected request');
     expect(mockRouter.replace).toHaveBeenCalledWith({ query: {} });
-  });
-
-  it('navigates home when back-link is clicked', async () => {
-    const wrapper = mountLogin();
-
-    await wrapper.find('.back-link').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
   });
 });

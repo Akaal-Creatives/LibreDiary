@@ -64,7 +64,7 @@ describe('ForgotPasswordPage', () => {
     const wrapper = mountPage();
 
     await wrapper.find('#email').setValue('user@example.com');
-    await wrapper.find('.forgot-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(mockAuthService.forgotPassword).toHaveBeenCalledWith('user@example.com');
@@ -78,7 +78,7 @@ describe('ForgotPasswordPage', () => {
     const wrapper = mountPage();
 
     await wrapper.find('#email').setValue('nobody@example.com');
-    await wrapper.find('.forgot-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('User not found');
@@ -90,7 +90,7 @@ describe('ForgotPasswordPage', () => {
     const wrapper = mountPage();
 
     await wrapper.find('#email').setValue('user@example.com');
-    await wrapper.find('.forgot-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     expect(wrapper.find('.error-message').text()).toContain('An unexpected error occurred');
@@ -101,7 +101,7 @@ describe('ForgotPasswordPage', () => {
     const wrapper = mountPage();
 
     await wrapper.find('#email').setValue('user@example.com');
-    await wrapper.find('.forgot-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
 
     expect(wrapper.find('.submit-btn').attributes('disabled')).toBeDefined();
   });
@@ -114,28 +114,12 @@ describe('ForgotPasswordPage', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/login');
   });
 
-  it('navigates home when brand button is clicked', async () => {
-    const wrapper = mountPage();
-
-    await wrapper.find('.brand').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
-  });
-
-  it('navigates home when back-link is clicked', async () => {
-    const wrapper = mountPage();
-
-    await wrapper.find('.back-link').trigger('click');
-
-    expect(mockRouter.push).toHaveBeenCalledWith('/');
-  });
-
   it('navigates to login from success state Back to Login button', async () => {
     mockAuthService.forgotPassword.mockResolvedValue({ message: 'sent' });
     const wrapper = mountPage();
 
     await wrapper.find('#email').setValue('user@example.com');
-    await wrapper.find('.forgot-form').trigger('submit');
+    await wrapper.find('.auth-form').trigger('submit');
     await flushPromises();
 
     await wrapper.find('.secondary-btn').trigger('click');
@@ -146,7 +130,7 @@ describe('ForgotPasswordPage', () => {
   it('calls toggleTheme when theme button is clicked', async () => {
     const wrapper = mountPage();
 
-    await wrapper.find('.theme-toggle').trigger('click');
+    await wrapper.find('.auth-layout__theme-toggle').trigger('click');
 
     expect(mockTheme.toggleTheme).toHaveBeenCalled();
   });

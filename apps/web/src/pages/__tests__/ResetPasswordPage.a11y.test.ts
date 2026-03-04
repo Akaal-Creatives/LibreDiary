@@ -65,7 +65,7 @@ describe('ResetPasswordPage accessibility', () => {
 
   it('theme toggle button has aria-label', () => {
     const wrapper = mountPage();
-    const themeBtn = wrapper.find('.theme-toggle');
+    const themeBtn = wrapper.find('.auth-layout__theme-toggle');
     expect(themeBtn.attributes('aria-label')).toBeTruthy();
   });
 
