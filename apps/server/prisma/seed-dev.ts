@@ -2224,6 +2224,245 @@ async function main() {
   }
 
   // =============================================
+  // Phase 18: Create invites
+  // =============================================
+  console.log('\n📨 Phase 18: Creating invites...\n');
+
+  const existingInvites = await prisma.invite.count({
+    where: { organizationId: organization.id },
+  });
+
+  if (existingInvites === 0) {
+    const invites = [
+      {
+        email: 'sarah.williams@gmail.com',
+        role: 'MEMBER' as const,
+        daysUntilExpiry: 7,
+      },
+      {
+        email: 'mike.chen@outlook.com',
+        role: 'ADMIN' as const,
+        daysUntilExpiry: 1,
+      },
+      {
+        email: 'emily.johnson@yahoo.com',
+        role: 'MEMBER' as const,
+        daysUntilExpiry: -2, // Already expired
+      },
+    ];
+
+    for (const inv of invites) {
+      await prisma.invite.create({
+        data: {
+          email: inv.email,
+          token: randomBytes(32).toString('hex'),
+          organizationId: organization.id,
+          role: inv.role,
+          invitedById: users[0].id,
+          expiresAt: new Date(Date.now() + inv.daysUntilExpiry * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+
+    console.log('✅ Created 3 invites (2 pending, 1 expired)');
+  } else {
+    console.log('ℹ️  Invites already exist');
+  }
+
+  // =============================================
+  // Phase 19: Create backup records
+  // =============================================
+  console.log('\n💾 Phase 19: Creating backup records...\n');
+
+  const existingBackups = await prisma.backup.count();
+
+  if (existingBackups === 0) {
+    // Completed org backup
+    await prisma.backup.create({
+      data: {
+        type: 'ORGANISATION',
+        status: 'COMPLETED',
+        organizationId: organization.id,
+        fileName: 'akaal-dev-backup-20260302.tar.gz',
+        fileSize: 5242880, // ~5MB
+        storagePath: '/backups/org/akaal-dev-backup-20260302.tar.gz',
+        storageType: 'LOCAL',
+        isEncrypted: false,
+        triggeredById: users[0].id,
+        startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 45000),
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    // Completed system backup
+    await prisma.backup.create({
+      data: {
+        type: 'SYSTEM',
+        status: 'COMPLETED',
+        fileName: 'system-backup-20260227.tar.gz.enc',
+        fileSize: 12582912, // ~12MB
+        storagePath: '/backups/system/system-backup-20260227.tar.gz.enc',
+        storageType: 'LOCAL',
+        isEncrypted: true,
+        triggeredById: users[0].id,
+        startedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 120000),
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    // Failed org backup
+    await prisma.backup.create({
+      data: {
+        type: 'ORGANISATION',
+        status: 'FAILED',
+        organizationId: organization.id,
+        errorMessage: 'pg_dump: connection refused',
+        triggeredById: users[0].id,
+        startedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    console.log('✅ Created 3 backup records (2 completed, 1 failed)');
+  } else {
+    console.log('ℹ️  Backup records already exist');
+  }
+
+  // =============================================
+  // Phase 20: Create data export records
+  // =============================================
+  console.log('\n📦 Phase 20: Creating data export records...\n');
+
+  const existingExports = await prisma.dataExport.count({
+    where: { userId: users[0].id },
+  });
+
+  if (existingExports === 0) {
+    // Completed export (available for download)
+    await prisma.dataExport.create({
+      data: {
+        userId: users[0].id,
+        status: 'COMPLETED',
+        fileName: 'data-export-20260301.zip',
+        fileSize: 2202009, // ~2.1MB
+        storagePath: '/exports/data-export-20260301.zip',
+        requestedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        startedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 5000),
+        completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 30000),
+        expiresAt: new Date(Date.now() + 45 * 60 * 60 * 1000), // Expires in 45 hours
+      },
+    });
+
+    // Expired export
+    await prisma.dataExport.create({
+      data: {
+        userId: users[0].id,
+        status: 'EXPIRED',
+        fileName: 'data-export-20260225.zip',
+        fileSize: 1887436,
+        storagePath: '/exports/data-export-20260225.zip',
+        requestedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        startedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 + 5000),
+        completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 + 25000),
+        expiresAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // Already expired
+      },
+    });
+
+    console.log('✅ Created 2 data export records (1 completed, 1 expired)');
+  } else {
+    console.log('ℹ️  Data export records already exist');
+  }
+
+  // =============================================
+  // Phase 21: Make "Getting Started" page public
+  // =============================================
+  console.log('\n🌐 Phase 21: Making "Getting Started" page public...\n');
+
+  if (gettingStartedPageId) {
+    const gsPage = await prisma.page.findUnique({
+      where: { id: gettingStartedPageId },
+    });
+
+    if (gsPage && !gsPage.isPublic) {
+      await prisma.page.update({
+        where: { id: gettingStartedPageId },
+        data: {
+          isPublic: true,
+          publicSlug: 'getting-started',
+        },
+      });
+      console.log('✅ Made "Getting Started" page public with slug: getting-started');
+    } else {
+      console.log('ℹ️  "Getting Started" page is already public or not found');
+    }
+  }
+
+  // =============================================
+  // Phase 22: Add more varied notifications
+  // =============================================
+  console.log('\n🔔 Phase 22: Adding extra notifications...\n');
+
+  const currentNotifCount = await prisma.notification.count({
+    where: { userId: users[0].id },
+  });
+
+  // Only add if we have the original 6 (not more)
+  if (currentNotifCount <= 6) {
+    const extraNotifications = [
+      {
+        type: 'COMMENT_RESOLVED' as const,
+        title: 'Comment resolved',
+        message: 'Your comment on "Product Roadmap" was resolved by Test User 7',
+        isRead: false,
+        data: { pageId: productRoadmapPageId },
+      },
+      {
+        type: 'INVITATION' as const,
+        title: 'Invitation sent',
+        message: 'You invited sarah.williams@gmail.com to join Akaal Development',
+        isRead: true,
+        readAt: new Date(Date.now() - 7200000), // 2 hours ago
+        data: { email: 'sarah.williams@gmail.com' },
+      },
+      {
+        type: 'COMMENT_RESOLVED' as const,
+        title: 'Comment resolved',
+        message: 'Raj Patel resolved a comment on "Design Guidelines"',
+        isRead: false,
+        data: { pageId: designGuidelinesPageId },
+      },
+      {
+        type: 'INVITATION' as const,
+        title: 'Invitation accepted',
+        message: 'Noah Garcia accepted your invitation to join Akaal Development',
+        isRead: true,
+        readAt: new Date(Date.now() - 172800000), // 2 days ago
+        data: {},
+      },
+    ];
+
+    for (const notif of extraNotifications) {
+      await prisma.notification.create({
+        data: {
+          userId: users[0].id,
+          type: notif.type,
+          title: notif.title,
+          message: notif.message,
+          isRead: notif.isRead,
+          readAt: 'readAt' in notif ? notif.readAt : undefined,
+          data: notif.data,
+        },
+      });
+    }
+
+    console.log(`✅ Added ${extraNotifications.length} extra notifications for user0`);
+  } else {
+    console.log('ℹ️  Extra notifications already exist');
+  }
+
+  // =============================================
   // Summary
   // =============================================
   console.log('');
@@ -2247,13 +2486,17 @@ async function main() {
   console.log('Templates: 5 built-in');
   console.log('Comments: 8 (threaded, 1 resolved)');
   console.log('Mentions: 3');
-  console.log('Notifications: 6 (4 unread)');
+  console.log('Notifications: 10 (6 unread, 4 read)');
   console.log('Favourites: 3');
   console.log('Webhooks: 1');
   console.log('Webhook Deliveries: 5 (4 success, 1 failed)');
   console.log('API Tokens: 1');
   console.log('Audit Logs: 12');
   console.log('Trashed: 1 page');
+  console.log('Invites: 3 (2 pending, 1 expired)');
+  console.log('Backups: 3 (2 completed, 1 failed)');
+  console.log('Data Exports: 2 (1 completed, 1 expired)');
+  console.log('Public Pages: 1 (Getting Started)');
   console.log('========================================');
 }
 
