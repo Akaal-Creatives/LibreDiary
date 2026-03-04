@@ -21,7 +21,10 @@ const callbackQuerySchema = z.object({
 });
 
 // Store for OAuth state validation (in production, use Redis or database)
-const oauthStateStore = new Map<string, { codeVerifier?: string; timestamp: number }>();
+const oauthStateStore = new Map<
+  string,
+  { codeVerifier?: string; timestamp: number; linkingUserId?: string }
+>();
 
 // Cleanup old state entries periodically
 setInterval(
@@ -165,6 +168,20 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
       oauthStateStore.delete(state);
 
       try {
+        // If this state was initiated from a linking flow, handle as account linking
+        if (storedState.linkingUserId) {
+          await oauthService.linkOAuthAccount({
+            userId: storedState.linkingUserId,
+            provider,
+            code,
+            state,
+            codeVerifier: storedState.codeVerifier,
+          });
+
+          const frontendUrl = env.FRONTEND_URL ?? env.APP_URL;
+          return reply.status(302).redirect(`${frontendUrl}/settings?linked=${provider}`);
+        }
+
         const result = await oauthService.handleOAuthCallback({
           provider,
           code,
@@ -250,12 +267,14 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
+        const userId = getAuthUser(request).id;
         const result = await oauthService.getAuthorizationUrl(provider);
 
-        // Store state with user ID for linking
+        // Store state with user ID for linking — binds the OAuth flow to this user
         oauthStateStore.set(result.state, {
           codeVerifier: result.codeVerifier,
           timestamp: Date.now(),
+          linkingUserId: userId,
         });
 
         return {
