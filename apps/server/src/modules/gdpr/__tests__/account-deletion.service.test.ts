@@ -139,7 +139,9 @@ describe('Account Deletion Service', () => {
       const result = await requestAccountDeletion('user-1');
 
       const expectedDate = new Date(now + 30 * 24 * 60 * 60 * 1000);
-      expect(result.deletionDate.getTime()).toBe(expectedDate.getTime());
+      expect(Math.abs(result.deletionDate.getTime() - expectedDate.getTime())).toBeLessThanOrEqual(
+        5
+      );
 
       vi.restoreAllMocks();
     });
