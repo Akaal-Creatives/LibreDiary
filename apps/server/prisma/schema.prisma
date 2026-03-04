@@ -408,6 +408,7 @@ model Comment {
   mentions   Mention[]
 
   @@index([pageId])
+  @@index([pageId, createdAt])
   @@index([parentId])
   @@index([blockId])
   @@index([createdById])
@@ -778,7 +779,9 @@ model WebhookDelivery {
   webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@index([webhookId])
+  @@index([webhookId, createdAt])
   @@index([status])
+  @@index([status, nextRetryAt])
   @@index([nextRetryAt])
   @@index([createdAt])
 }
