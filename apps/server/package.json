@@ -69,7 +69,7 @@
     "@types/node": "^25.2.3",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.10",
-    "@types/tar": "^6.1.13",
+    "@types/tar": "^7.0.87",
     "@types/turndown": "^5.0.6",
     "@vitest/coverage-v8": "^4.0.18",
     "prisma": "^7.4.0",
