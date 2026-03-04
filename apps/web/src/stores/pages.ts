@@ -58,7 +58,6 @@ export const usePagesStore = defineStore('pages', () => {
     function traverse(nodes: PageWithChildren[]) {
       for (const node of nodes) {
         // Extract just the Page fields (exclude children)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { children, ...page } = node;
         result.push(page);
         if (children && children.length > 0) {
