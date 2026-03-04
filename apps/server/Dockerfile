@@ -81,8 +81,8 @@ COPY packages/shared/package.json packages/shared/package.json
 COPY packages/tsconfig/package.json packages/tsconfig/package.json
 COPY packages/eslint-config/package.json packages/eslint-config/package.json
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies only (ignore-scripts skips husky prepare hook)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Install tsx globally for runtime migrations and seed
 RUN pnpm add -g tsx
