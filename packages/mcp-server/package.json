@@ -1,0 +1,38 @@
+{
+  "name": "@librediary/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for LibreDiary - enables AI assistants to manage workspaces",
+  "private": true,
+  "license": "AGPL-3.0",
+  "type": "module",
+  "bin": {
+    "librediary-mcp": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0"
+  },
+  "devDependencies": {
+    "@librediary/eslint-config": "workspace:*",
+    "@librediary/shared": "workspace:*",
+    "@librediary/tsconfig": "workspace:*",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  }
+}
