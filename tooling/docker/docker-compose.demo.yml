@@ -1,0 +1,92 @@
+# ===========================================
+# LibreDiary Docker Compose - Demo / API-Only
+#
+# For deployments where the web SPA is hosted
+# separately (e.g. Cloudflare Pages) and nginx
+# runs on the host.
+#
+# Images are pulled from GitHub Container Registry.
+#
+# Usage:
+#   Copy this file + .env to /opt/librediary/ on the VPS
+#   docker compose -f docker-compose.yml up -d
+#
+# Developed by Akaal Creatives
+# https://www.akaalcreatives.com
+# ===========================================
+
+services:
+  # ===========================================
+  # Server (Fastify API)
+  # ===========================================
+  server:
+    image: ghcr.io/akaal-creatives/librediary-server:latest
+    container_name: librediary-server
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-librediary}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-librediary}
+      - STORAGE_LOCAL_PATH=/app/data/files
+      - BACKUP_LOCAL_PATH=/app/backups
+    volumes:
+      - server_uploads:/app/data/files
+      - server_backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => { if (!r.ok) throw new Error(); }).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - librediary_network
+
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: librediary-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-librediary}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-librediary}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-librediary}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - librediary_network
+
+volumes:
+  postgres_data:
+    name: librediary_postgres_data
+  server_uploads:
+    name: librediary_uploads
+  server_backups:
+    name: librediary_backups
+
+networks:
+  librediary_network:
+    name: librediary_network
+    driver: bridge
