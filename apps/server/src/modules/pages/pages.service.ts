@@ -6,6 +6,7 @@ import { logAudit } from '../audit/audit.service.js';
 import { htmlToText } from '../../utils/html-to-text.js';
 import { indexPage, removePage as removePageFromSearch } from '../search/meilisearch.service.js';
 import { TtlCache } from '../../utils/ttl-cache.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -116,7 +117,7 @@ export async function createPage(
   invalidatePageTreeCache(orgId);
 
   triggerWebhooks(orgId, 'page.created', { pageId: page.id, title: page.title }).catch((err) =>
-    console.error('[webhook] delivery failed:', err)
+    logger.error(err, '[webhook] page.created delivery failed')
   );
 
   logAudit({
@@ -294,10 +295,14 @@ export async function updatePage(
     createdById: updated.createdById,
     createdAt: Math.floor(updated.createdAt.getTime() / 1000),
     updatedAt: Math.floor(updated.updatedAt.getTime() / 1000),
-  }).catch(() => {});
+  }).catch((err) => {
+    logger.error(err, '[meilisearch] failed to index page %s', updated.id);
+  });
 
   triggerWebhooks(orgId, 'page.updated', { pageId: updated.id, title: updated.title }).catch(
-    () => {}
+    (err) => {
+      logger.error(err, '[webhook] page.updated delivery failed');
+    }
   );
 
   // Log public/private changes specifically, otherwise general update
@@ -355,10 +360,12 @@ export async function trashPage(orgId: string, pageId: string): Promise<void> {
   invalidatePageTreeCache(orgId);
 
   // Remove from Meilisearch index (fire-and-forget)
-  removePageFromSearch(pageId).catch(() => {});
+  removePageFromSearch(pageId).catch((err) => {
+    logger.error(err, '[meilisearch] failed to remove page %s', pageId);
+  });
 
   triggerWebhooks(orgId, 'page.deleted', { pageId, title: page.title }).catch((err) =>
-    console.error('[webhook] delivery failed:', err)
+    logger.error(err, '[webhook] page.deleted delivery failed')
   );
 
   logAudit({
@@ -687,7 +694,9 @@ export async function restorePage(orgId: string, pageId: string): Promise<Page> 
     createdById: restored.createdById,
     createdAt: Math.floor(restored.createdAt.getTime() / 1000),
     updatedAt: Math.floor(restored.updatedAt.getTime() / 1000),
-  }).catch(() => {});
+  }).catch((err) => {
+    logger.error(err, '[meilisearch] failed to re-index restored page %s', restored.id);
+  });
 
   logAudit({
     action: 'PAGE_RESTORED',
@@ -720,7 +729,9 @@ export async function permanentlyDeletePage(orgId: string, pageId: string): Prom
   }
 
   // Remove from Meilisearch index (fire-and-forget)
-  removePageFromSearch(pageId).catch(() => {});
+  removePageFromSearch(pageId).catch((err) => {
+    logger.error(err, '[meilisearch] failed to remove permanently deleted page %s', pageId);
+  });
 
   // Delete the page (Prisma will cascade to favorites)
   await prisma.page.delete({

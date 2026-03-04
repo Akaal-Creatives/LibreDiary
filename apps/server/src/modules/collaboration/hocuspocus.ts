@@ -7,6 +7,7 @@ import { env } from '../../config/index.js';
 import { yjsDocToText } from '../../utils/yjs-to-text.js';
 import { prisma } from '../../lib/prisma.js';
 import { indexPage } from '../search/meilisearch.service.js';
+import { logger } from '../../lib/logger.js';
 
 const SESSION_COOKIE_NAME = 'session_token';
 
@@ -158,7 +159,7 @@ export function createHocuspocusServer(): Hocuspocus {
           Y.applyUpdate(data.document, update);
         }
       } catch (error) {
-        console.error('Error loading document:', error);
+        logger.error(error, '[hocuspocus] error loading document %s', documentName);
         // Continue with empty document if load fails
       }
 
@@ -206,9 +207,15 @@ export function createHocuspocusServer(): Hocuspocus {
           createdById: page.createdById,
           createdAt: Math.floor(page.createdAt.getTime() / 1000),
           updatedAt: Math.floor(page.updatedAt.getTime() / 1000),
-        }).catch(() => {});
+        }).catch((err) => {
+          logger.error(
+            err,
+            '[meilisearch] failed to index page from collaboration %s',
+            parsed.pageId
+          );
+        });
       } catch (error) {
-        console.error('Error storing document:', error);
+        logger.error(error, '[hocuspocus] error storing document %s', documentName);
         // Don't throw - this would disconnect all users
       }
     },

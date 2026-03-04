@@ -9,6 +9,7 @@ import {
   sendCommentResolvedNotificationEmail,
 } from '../../services/email.service.js';
 import { shouldSendEmail } from './notifications.prefs.service.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -254,7 +255,7 @@ export async function createMentionNotification(
       }
     }
   } catch (error) {
-    console.error('Failed to send mention notification email:', error);
+    logger.error(error, '[notifications] failed to send mention notification email');
   }
 
   return notification;
@@ -297,7 +298,7 @@ export async function createCommentReplyNotification(
       }
     }
   } catch (error) {
-    console.error('Failed to send comment reply notification email:', error);
+    logger.error(error, '[notifications] failed to send comment reply notification email');
   }
 
   return notification;
@@ -341,7 +342,7 @@ export async function createPageSharedNotification(
       }
     }
   } catch (error) {
-    console.error('Failed to send page shared notification email:', error);
+    logger.error(error, '[notifications] failed to send page shared notification email');
   }
 
   return notification;
@@ -384,7 +385,7 @@ export async function createCommentResolvedNotification(
       }
     }
   } catch (error) {
-    console.error('Failed to send comment resolved notification email:', error);
+    logger.error(error, '[notifications] failed to send comment resolved notification email');
   }
 
   return notification;

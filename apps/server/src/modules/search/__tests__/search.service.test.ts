@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Mock logger
+const { mockLoggerWarn } = vi.hoisted(() => ({
+  mockLoggerWarn: vi.fn(),
+}));
+vi.mock('../../../lib/logger.js', () => ({
+  logger: {
+    error: vi.fn(),
+    warn: mockLoggerWarn,
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 // Mock prisma
 const { mockPrisma, resetMocks } = vi.hoisted(() => {
   const mockPrisma = {
@@ -638,7 +651,6 @@ describe('Search Service', () => {
     });
 
     it('falls back to PG FTS when Meilisearch throws', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       mockMeiliSearch.mockRejectedValueOnce(new Error('connection refused'));
       mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
 
@@ -646,11 +658,10 @@ describe('Search Service', () => {
 
       // PG FTS was used as fallback
       expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalled();
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[search] Meilisearch query failed'),
-        expect.anything()
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('Meilisearch query failed')
       );
-      warnSpy.mockRestore();
     });
 
     it('passes facets to Meilisearch when provided', async () => {

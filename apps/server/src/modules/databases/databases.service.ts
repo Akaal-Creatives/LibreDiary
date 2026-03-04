@@ -3,6 +3,7 @@ import type { PropertyType, ViewType } from '../../generated/prisma/client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -124,7 +125,9 @@ export async function createDatabase(orgId: string, userId: string, input: Creat
     });
 
     triggerWebhooks(orgId, 'database.created', { databaseId: result.id, name: result.name }).catch(
-      () => {}
+      (err) => {
+        logger.error(err, '[webhook] database webhook delivery failed');
+      }
     );
 
     logAudit({
@@ -204,7 +207,7 @@ export async function deleteDatabase(orgId: string, databaseId: string) {
   await prisma.database.delete({ where: { id: databaseId } });
 
   triggerWebhooks(orgId, 'database.deleted', { databaseId, name: database.name }).catch((err) =>
-    console.error('[webhook] delivery failed:', err)
+    logger.error(err, '[webhook] database.deleted delivery failed')
   );
 
   logAudit({

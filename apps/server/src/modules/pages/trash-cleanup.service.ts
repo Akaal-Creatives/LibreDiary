@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { removePage as removePageFromSearch } from '../search/meilisearch.service.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 const TRASH_RETENTION_DAYS = 30;
 
@@ -37,7 +38,9 @@ export async function cleanupExpiredTrash(): Promise<number> {
   for (const page of expiredPages) {
     try {
       // Remove from Meilisearch index (fire-and-forget)
-      removePageFromSearch(page.id).catch(() => {});
+      removePageFromSearch(page.id).catch((err) => {
+        logger.error(err, '[meilisearch] failed to remove expired trash page %s', page.id);
+      });
 
       await prisma.page.delete({ where: { id: page.id } });
 
@@ -51,7 +54,7 @@ export async function cleanupExpiredTrash(): Promise<number> {
 
       deletedCount++;
     } catch (error) {
-      console.error(`[trash-cleanup] Failed to delete page ${page.id}:`, error);
+      logger.error(error, '[trash-cleanup] failed to delete page %s', page.id);
     }
   }
 

@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import multipart from '@fastify/multipart';
 import { env } from './config/index.js';
+import { logger } from './lib/logger.js';
 import {
   corsPlugin,
   helmetPlugin,
@@ -200,7 +201,7 @@ export async function buildApp() {
 
   // Initialise Meilisearch (non-blocking; PG FTS fallback if unavailable)
   initMeilisearch().catch((err) => {
-    console.warn('[meilisearch] Startup init error:', err);
+    logger.warn(err, '[meilisearch] startup init error');
   });
 
   return fastify;

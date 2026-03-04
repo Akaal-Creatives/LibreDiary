@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { validateWebhookUrl } from '../../utils/url-validation.js';
+import { logger } from '../../lib/logger.js';
 
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [0, 5 * 60 * 1000, 30 * 60 * 1000]; // immediate, 5min, 30min
@@ -41,7 +42,7 @@ export async function triggerWebhooks(orgId: string, event: string, data: Record
     });
 
     // Execute immediately (fire-and-forget)
-    executeDelivery(delivery.id).catch((err) => console.error('[webhook] delivery failed:', err));
+    executeDelivery(delivery.id).catch((err) => logger.error(err, '[webhook] delivery failed'));
   }
 }
 
@@ -135,7 +136,7 @@ async function handleFailure(
   if (shouldRetry && nextRetryAt) {
     const delay = nextRetryAt.getTime() - Date.now();
     setTimeout(() => {
-      executeDelivery(deliveryId).catch((err) => console.error('[webhook] delivery failed:', err));
+      executeDelivery(deliveryId).catch((err) => logger.error(err, '[webhook] delivery failed'));
     }, delay);
   }
 }
@@ -151,7 +152,7 @@ export async function retryFailedDeliveries() {
 
   let retried = 0;
   for (const delivery of pendingRetries) {
-    executeDelivery(delivery.id).catch((err) => console.error('[webhook] delivery failed:', err));
+    executeDelivery(delivery.id).catch((err) => logger.error(err, '[webhook] delivery failed'));
     retried++;
   }
 

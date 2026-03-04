@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { createMentionNotification } from '../notifications/notifications.service.js';
+import { logger } from '../../lib/logger.js';
 
 const mentionInclude = {
   user: {
@@ -95,30 +96,29 @@ export async function createMentions(commentId: string, userIds: string[]) {
     skipDuplicates: true,
   });
 
-  // Create notifications for each mentioned user (excluding self-mentions)
+  // Create notifications for all mentioned users in parallel (excluding self-mentions)
   const actorId = comment.createdBy.id;
   const actorName = comment.createdBy.name || 'Someone';
   const pageId = comment.page.id;
   const pageTitle = comment.page.title;
 
-  for (const userId of userIds) {
-    // Don't notify users who mention themselves
-    if (userId !== actorId) {
-      try {
-        await createMentionNotification({
-          recipientId: userId,
-          actorId,
-          actorName,
-          pageId,
-          pageTitle,
-          commentId,
-        });
-      } catch (error) {
+  const notificationPromises = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) =>
+      createMentionNotification({
+        recipientId: userId,
+        actorId,
+        actorName,
+        pageId,
+        pageTitle,
+        commentId,
+      }).catch((error) => {
         // Log but don't fail the mention creation if notification fails
-        console.error(`Failed to create mention notification for user ${userId}:`, error);
-      }
-    }
-  }
+        logger.error(error, '[mentions] failed to create mention notification for user %s', userId);
+      })
+    );
+
+  await Promise.all(notificationPromises);
 
   // Return created mentions with user info
   const mentions = await prisma.mention.findMany({

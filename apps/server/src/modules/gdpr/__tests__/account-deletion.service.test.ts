@@ -1,5 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const { mockLoggerError } = vi.hoisted(() => ({
+  mockLoggerError: vi.fn(),
+}));
+vi.mock('../../../lib/logger.js', () => ({
+  logger: {
+    error: mockLoggerError,
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 const { mockPrisma, mockFs, resetMocks } = vi.hoisted(() => {
   const mockPrisma = {
     user: {
@@ -488,18 +500,15 @@ describe('Account Deletion Service', () => {
       mockPrisma.dataExport.deleteMany.mockResolvedValue({});
       mockPrisma.user.update.mockResolvedValue({});
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       const count = await processScheduledDeletions();
 
       // Only user-2 was successfully deleted
       expect(count).toBe(1);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[gdpr] Failed to permanently delete user user-1'),
-        expect.any(Error)
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining('failed to permanently delete user'),
+        'user-1'
       );
-
-      consoleSpy.mockRestore();
     });
   });
 

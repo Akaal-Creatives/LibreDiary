@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Mock logger
+const { mockLoggerError } = vi.hoisted(() => ({
+  mockLoggerError: vi.fn(),
+}));
+vi.mock('../../../lib/logger.js', () => ({
+  logger: {
+    error: mockLoggerError,
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 // Mock meilisearch client
 const mockAddDocuments = vi.fn().mockResolvedValue({ taskUid: 1 });
 const mockDeleteDocument = vi.fn().mockResolvedValue({ taskUid: 2 });
@@ -52,6 +65,7 @@ describe('meilisearch.service', () => {
     mockAddDocuments.mockClear();
     mockDeleteDocument.mockClear();
     mockIndex.mockClear();
+    mockLoggerError.mockClear();
   });
 
   describe('indexPage', () => {
@@ -69,10 +83,8 @@ describe('meilisearch.service', () => {
 
     it('catches and logs errors without throwing', async () => {
       mockAddDocuments.mockRejectedValueOnce(new Error('connection refused'));
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       await indexPage(testDoc); // Should not throw
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      expect(mockLoggerError).toHaveBeenCalled();
     });
   });
 
@@ -91,10 +103,8 @@ describe('meilisearch.service', () => {
 
     it('catches and logs errors without throwing', async () => {
       mockDeleteDocument.mockRejectedValueOnce(new Error('not found'));
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       await removePage('page-1'); // Should not throw
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      expect(mockLoggerError).toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { PermissionLevel } from '../../generated/prisma/client.js';
 import crypto from 'crypto';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -204,7 +205,9 @@ export async function getPageByShareToken(token: string): Promise<SharedPage> {
       where: { id: permission.id },
       data: { lastAccessedAt: new Date() },
     })
-    .catch(() => {});
+    .catch((err) => {
+      logger.error(err, '[public] failed to update share token access timestamp');
+    });
 
   return {
     id: permission.page.id,

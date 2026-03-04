@@ -5,6 +5,7 @@ import archiver from 'archiver';
 import { prisma } from '../../lib/prisma.js';
 import { env } from '../../config/index.js';
 import type { DataExportStatus } from '../../generated/prisma/client.js';
+import { logger } from '../../lib/logger.js';
 
 /** How long an export download link remains valid (48 hours) */
 const EXPORT_EXPIRY_HOURS = 48;
@@ -39,7 +40,7 @@ export async function requestDataExport(userId: string) {
 
   // Fire-and-forget — errors are captured in the record
   executeDataExport(dataExport.id).catch((err) => {
-    console.error(`[gdpr] Data export ${dataExport.id} failed:`, err);
+    logger.error(err, '[gdpr] data export %s failed', dataExport.id);
   });
 
   return dataExport;
