@@ -27,8 +27,11 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          envs: APP_PATH
           script: |
-            cd /opt/librediary
+            cd "$APP_PATH"
             git pull origin main
             docker compose -f docker-compose.prod.yml build server
             docker compose -f docker-compose.prod.yml up -d server
+        env:
+          APP_PATH: ${{ secrets.VPS_APP_PATH }}
