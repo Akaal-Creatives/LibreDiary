@@ -1,8 +1,20 @@
 import cors from '@fastify/cors';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../config/index.js';
+import { logger } from '../lib/logger.js';
 
-const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+const allowedOrigins = env.CORS_ORIGIN.split(',')
+  .map((o) => o.trim())
+  .filter((origin) => {
+    if (!origin) return false;
+    try {
+      new URL(origin);
+      return true;
+    } catch {
+      logger.warn('[cors] ignoring malformed CORS origin: %s', origin);
+      return false;
+    }
+  });
 
 export async function corsPlugin(fastify: FastifyInstance) {
   await fastify.register(cors, {
