@@ -139,6 +139,50 @@ describe('Files Service', () => {
       expect(uploadCall[0]).toMatch(/^org-1\/.+\.pdf$/);
     });
 
+    it('should block files with dangerous extensions', async () => {
+      await expect(
+        uploadFile('org-1', 'user-1', {
+          buffer: Buffer.from('malicious'),
+          originalName: 'payload.exe',
+          mimeType: 'application/octet-stream',
+          size: 100,
+        })
+      ).rejects.toThrow('FILE_TYPE_NOT_ALLOWED');
+
+      await expect(
+        uploadFile('org-1', 'user-1', {
+          buffer: Buffer.from('script'),
+          originalName: 'hack.html',
+          mimeType: 'text/html',
+          size: 100,
+        })
+      ).rejects.toThrow('FILE_TYPE_NOT_ALLOWED');
+    });
+
+    it('should block files with dangerous extensions regardless of claimed MIME type', async () => {
+      // Attacker renames .exe but claims it's an image
+      await expect(
+        uploadFile('org-1', 'user-1', {
+          buffer: Buffer.from('MZ'), // PE header start
+          originalName: 'innocent.bat',
+          mimeType: 'image/jpeg',
+          size: 100,
+        })
+      ).rejects.toThrow('FILE_TYPE_NOT_ALLOWED');
+    });
+
+    it('should block files with blocked client MIME type when magic bytes are undetectable', async () => {
+      // Text-based files where file-type returns undefined — fallback to client MIME
+      await expect(
+        uploadFile('org-1', 'user-1', {
+          buffer: Buffer.from('<script>alert("xss")</script>'),
+          originalName: 'page.xhtml',
+          mimeType: 'application/xhtml+xml',
+          size: 100,
+        })
+      ).rejects.toThrow('FILE_TYPE_NOT_ALLOWED');
+    });
+
     it('should optionally associate file with a page', async () => {
       mockStorageProvider.upload.mockResolvedValue('org-1/abc.txt');
       mockStorageProvider.getUrl.mockResolvedValue('/uploads/org-1/abc.txt');

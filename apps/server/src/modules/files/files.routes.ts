@@ -144,6 +144,7 @@ export async function filesRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply
           .header('content-type', result.mimeType)
+          .header('x-content-type-options', 'nosniff')
           .header(
             'content-disposition',
             `attachment; filename="${encodeURIComponent(result.filename)}"`
