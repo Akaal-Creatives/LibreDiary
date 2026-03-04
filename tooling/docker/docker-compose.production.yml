@@ -2,6 +2,10 @@
 # LibreDiary Docker Compose - Production
 #
 # Usage:
+#   docker compose -f tooling/docker/docker-compose.production.yml pull
+#   docker compose -f tooling/docker/docker-compose.production.yml up -d
+#
+# To build locally instead of pulling:
 #   docker compose -f tooling/docker/docker-compose.production.yml build
 #   docker compose -f tooling/docker/docker-compose.production.yml up -d
 #
@@ -52,10 +56,10 @@ services:
   # Server (Fastify API)
   # ===========================================
   server:
+    image: ghcr.io/akaal-creatives/librediary-server:latest
     build:
       context: ../../
       dockerfile: apps/server/Dockerfile
-    image: librediary/server:latest
     container_name: librediary-server
     expose:
       - "3000"
@@ -94,10 +98,10 @@ services:
   # Web (Vue SPA)
   # ===========================================
   web:
+    image: ghcr.io/akaal-creatives/librediary-web:latest
     build:
       context: ../../
       dockerfile: apps/web/Dockerfile
-    image: librediary/web:latest
     container_name: librediary-web
     expose:
       - "80"
