@@ -55,10 +55,18 @@
     }
   },
   "devDependencies": {
-    "playwright": "^1.50.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "conventional-changelog-conventionalcommits": "^9.2.0",
     "husky": "^9.1.0",
     "lint-staged": "^16.2.7",
+    "playwright": "^1.50.0",
     "prettier": "^3.4.0",
+    "semantic-release": "^25.0.3",
     "turbo": "^2.8.9"
   },
   "lint-staged": {
