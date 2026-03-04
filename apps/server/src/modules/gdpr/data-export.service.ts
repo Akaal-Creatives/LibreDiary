@@ -277,15 +277,15 @@ export async function executeDataExport(exportId: string): Promise<void> {
         files,
       });
 
-      // 4. Read the archive and store it
-      const archiveData = fs.readFileSync(zipPath);
+      // 4. Copy the archive to final storage (avoids loading entire ZIP into memory)
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `librediary-export-${timestamp}.zip`;
       const storagePath = path.join(env.BACKUP_LOCAL_PATH, 'exports', userId, fileName);
 
       // Ensure directory exists
       fs.mkdirSync(path.dirname(storagePath), { recursive: true });
-      fs.writeFileSync(storagePath, archiveData);
+      fs.copyFileSync(zipPath, storagePath);
+      const fileSize = fs.statSync(storagePath).size;
 
       // 5. Update record as completed
       await prisma.dataExport.update({
@@ -293,7 +293,7 @@ export async function executeDataExport(exportId: string): Promise<void> {
         data: {
           status: 'COMPLETED',
           fileName,
-          fileSize: archiveData.length,
+          fileSize,
           storagePath,
           completedAt: new Date(),
         },
@@ -317,11 +317,12 @@ export async function executeDataExport(exportId: string): Promise<void> {
 
 /**
  * Read the export archive from disk for download.
+ * Returns a readable stream to avoid loading the entire archive into memory.
  */
 export async function getExportArchive(
   exportId: string,
   userId: string
-): Promise<{ buffer: Buffer; fileName: string } | null> {
+): Promise<{ stream: fs.ReadStream; fileName: string; fileSize: number } | null> {
   const dataExport = await prisma.dataExport.findFirst({
     where: { id: exportId, userId, status: 'COMPLETED' },
   });
@@ -339,7 +340,8 @@ export async function getExportArchive(
 
   if (!fs.existsSync(dataExport.storagePath)) return null;
 
-  const buffer = fs.readFileSync(dataExport.storagePath);
+  const stat = fs.statSync(dataExport.storagePath);
+  const stream = fs.createReadStream(dataExport.storagePath);
 
   // Mark as downloaded
   await prisma.dataExport.update({
@@ -347,7 +349,7 @@ export async function getExportArchive(
     data: { downloadedAt: new Date() },
   });
 
-  return { buffer, fileName: dataExport.fileName };
+  return { stream, fileName: dataExport.fileName, fileSize: stat.size };
 }
 
 /**

@@ -52,11 +52,14 @@ const { mockPrisma, mockFs, mockEnv, resetMocks } = vi.hoisted(() => {
     mkdtempSync: vi.fn(),
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
+    copyFileSync: vi.fn(),
+    statSync: vi.fn(),
     mkdirSync: vi.fn(),
     rmSync: vi.fn(),
     existsSync: vi.fn(),
     unlinkSync: vi.fn(),
     createWriteStream: vi.fn(),
+    createReadStream: vi.fn(),
   };
 
   const mockEnv = {
@@ -315,7 +318,7 @@ describe('Data Export Service', () => {
   // ===========================================
 
   describe('getExportArchive', () => {
-    it('should return buffer and fileName for a completed, non-expired export', async () => {
+    it('should return stream, fileName, and fileSize for a completed, non-expired export', async () => {
       const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const mockExport = {
         id: 'export-1',
@@ -325,15 +328,18 @@ describe('Data Export Service', () => {
         fileName: 'librediary-export-2025-01-01.zip',
         expiresAt: futureDate,
       };
+      const mockStream = { pipe: vi.fn() };
       mockPrisma.dataExport.findFirst.mockResolvedValue(mockExport);
       mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(Buffer.from('zip-data'));
+      mockFs.statSync.mockReturnValue({ size: 4096 });
+      mockFs.createReadStream.mockReturnValue(mockStream);
       mockPrisma.dataExport.update.mockResolvedValue({});
 
       const result = await getExportArchive('export-1', 'user-1');
 
       expect(result).not.toBeNull();
-      expect(result!.buffer).toEqual(Buffer.from('zip-data'));
+      expect(result!.stream).toBe(mockStream);
+      expect(result!.fileSize).toBe(4096);
       expect(result!.fileName).toBe('librediary-export-2025-01-01.zip');
     });
 
@@ -349,7 +355,8 @@ describe('Data Export Service', () => {
       };
       mockPrisma.dataExport.findFirst.mockResolvedValue(mockExport);
       mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(Buffer.from('zip-data'));
+      mockFs.statSync.mockReturnValue({ size: 1024 });
+      mockFs.createReadStream.mockReturnValue({ pipe: vi.fn() });
       mockPrisma.dataExport.update.mockResolvedValue({});
 
       await getExportArchive('export-1', 'user-1');
@@ -560,8 +567,8 @@ describe('Data Export Service', () => {
 
     function setupFsMocks() {
       mockFs.mkdtempSync.mockReturnValue('/tmp/librediary-export-abc123');
-      mockFs.readFileSync.mockReturnValue(Buffer.from('zip-content'));
-      mockFs.writeFileSync.mockImplementation(() => {});
+      mockFs.copyFileSync.mockImplementation(() => {});
+      mockFs.statSync.mockReturnValue({ size: 11 }); // length of 'zip-content'
       mockFs.mkdirSync.mockImplementation(() => {});
       mockFs.rmSync.mockImplementation(() => {});
       // For the archiver createWriteStream
@@ -706,7 +713,7 @@ describe('Data Export Service', () => {
       expect(completedCall).toBeDefined();
       expect(completedCall![0].where).toEqual({ id: 'export-1' });
       expect(completedCall![0].data.fileName).toMatch(/^librediary-export-.*\.zip$/);
-      expect(completedCall![0].data.fileSize).toBe(Buffer.from('zip-content').length);
+      expect(completedCall![0].data.fileSize).toBe(11);
       expect(completedCall![0].data.storagePath).toBeDefined();
       expect(completedCall![0].data.completedAt).toBeInstanceOf(Date);
     });
@@ -744,14 +751,13 @@ describe('Data Export Service', () => {
 
       setupAllDataMocks();
       setupFsMocks();
-      // Make the archive creation fail by causing readFileSync to throw
-      // after the temp dir is created
+      // Make the archive copy fail after the temp dir is created
       mockFs.mkdtempSync.mockReturnValue('/tmp/librediary-export-abc123');
-      mockFs.readFileSync.mockImplementation(() => {
-        throw new Error('Read failed');
+      mockFs.copyFileSync.mockImplementation(() => {
+        throw new Error('Copy failed');
       });
 
-      await expect(executeDataExport('export-1')).rejects.toThrow('Read failed');
+      await expect(executeDataExport('export-1')).rejects.toThrow('Copy failed');
 
       expect(mockFs.rmSync).toHaveBeenCalledWith('/tmp/librediary-export-abc123', {
         recursive: true,
@@ -792,7 +798,7 @@ describe('Data Export Service', () => {
       expect(failedCall![0].data.errorMessage).toBe('DB connection lost');
     });
 
-    it('should write the archive to the correct storage path', async () => {
+    it('should copy the archive to the correct storage path', async () => {
       mockPrisma.dataExport.update
         .mockResolvedValueOnce({
           id: 'export-1',
@@ -807,9 +813,9 @@ describe('Data Export Service', () => {
 
       await executeDataExport('export-1');
 
-      expect(mockFs.writeFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('/tmp/backups/exports/user-1/'),
-        Buffer.from('zip-content')
+      expect(mockFs.copyFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('/tmp/librediary-export-abc123/'),
+        expect.stringContaining('/tmp/backups/exports/user-1/')
       );
     });
   });

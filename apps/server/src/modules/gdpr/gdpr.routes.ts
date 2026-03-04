@@ -133,8 +133,8 @@ export async function gdprRoutes(fastify: FastifyInstance): Promise<void> {
       return reply
         .header('Content-Type', 'application/zip')
         .header('Content-Disposition', `attachment; filename="${result.fileName}"`)
-        .header('Content-Length', result.buffer.length)
-        .send(result.buffer);
+        .header('Content-Length', result.fileSize)
+        .send(result.stream);
     }
   );
 
