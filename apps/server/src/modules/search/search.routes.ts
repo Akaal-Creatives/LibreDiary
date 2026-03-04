@@ -21,7 +21,7 @@ const searchQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format')
     .optional(),
-  createdById: z.string().uuid('Must be a valid UUID').optional(),
+  createdById: z.string().min(1).optional(),
   facets: z
     .string()
     .transform((v) =>
