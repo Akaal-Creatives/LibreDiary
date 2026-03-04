@@ -5,6 +5,7 @@ import { prisma } from '../../lib/prisma.js';
 import { env } from '../../config/index.js';
 import { getBackupStorageProvider } from './storage/index.js';
 import { encryptBuffer } from './utils/encrypt.js';
+import { logger } from '../../lib/logger.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -43,7 +44,7 @@ export async function createSystemBackup(
 
   // Execute asynchronously
   executeSystemBackup(backup.id, options?.password).catch((error) => {
-    console.error(`System backup ${backup.id} failed:`, error);
+    logger.error(error, 'system backup %s failed', backup.id);
   });
 
   return backup;

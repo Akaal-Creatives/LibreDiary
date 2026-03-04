@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { getMeilisearchClient, PAGES_INDEX } from '../../lib/meilisearch.js';
 import { isMeilisearchAvailable } from './meilisearch.init.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -292,7 +293,7 @@ export async function searchPages(options: SearchOptions): Promise<SearchService
     try {
       return await searchWithMeilisearch(options);
     } catch (err) {
-      console.warn('[search] Meilisearch query failed, falling back to PG FTS:', err);
+      logger.warn(err, 'Meilisearch query failed, falling back to PG FTS');
     }
   }
 

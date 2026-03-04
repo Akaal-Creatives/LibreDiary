@@ -1,5 +1,6 @@
 import { getMeilisearchClient, PAGES_INDEX } from '../../lib/meilisearch.js';
 import { isMeilisearchAvailable } from './meilisearch.init.js';
+import { logger } from '../../lib/logger.js';
 
 /**
  * Shape of a page document stored in the Meilisearch index.
@@ -27,7 +28,7 @@ export async function indexPage(doc: MeiliPageDocument): Promise<void> {
 
     await client.index(PAGES_INDEX).addDocuments([doc]);
   } catch (err) {
-    console.error('[meilisearch] Failed to index page:', doc.id, err);
+    logger.error(err, 'failed to index page %s', doc.id);
   }
 }
 
@@ -44,7 +45,7 @@ export async function removePage(pageId: string): Promise<void> {
 
     await client.index(PAGES_INDEX).deleteDocument(pageId);
   } catch (err) {
-    console.error('[meilisearch] Failed to remove page:', pageId, err);
+    logger.error(err, 'failed to remove page %s', pageId);
   }
 }
 
@@ -62,6 +63,6 @@ export async function bulkIndex(docs: MeiliPageDocument[]): Promise<void> {
 
     await client.index(PAGES_INDEX).addDocuments(docs);
   } catch (err) {
-    console.error('[meilisearch] Failed to bulk index', docs.length, 'pages:', err);
+    logger.error(err, 'failed to bulk index %d pages', docs.length);
   }
 }

@@ -11,6 +11,7 @@ import type {
 import { canModifyMember, canAssignRole } from './organizations.middleware.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -359,7 +360,7 @@ export async function removeMember(
   });
 
   triggerWebhooks(orgId, 'member.removed', { userId: targetMember.userId }).catch((err) =>
-    console.error('[webhook] delivery failed:', err)
+    logger.error(err, 'webhook delivery failed')
   );
 
   logAudit({

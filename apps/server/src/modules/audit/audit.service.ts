@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { AuditAction } from '../../generated/prisma/client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -65,7 +66,7 @@ export function logAudit(input: AuditLogInput): void {
         userAgent: input.userAgent ?? null,
       },
     })
-    .catch((err) => console.error('[audit] logging failed:', err));
+    .catch((err) => logger.error(err, 'audit logging failed'));
 }
 
 // ===========================================

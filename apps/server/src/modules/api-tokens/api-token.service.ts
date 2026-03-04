@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 const TOKEN_PREFIX_LENGTH = 8;
 
@@ -100,7 +101,7 @@ export async function validateToken(rawToken: string) {
       where: { id: apiToken.id },
       data: { lastUsedAt: new Date() },
     })
-    .catch((err) => console.error('[api-token] lastUsedAt update failed:', err));
+    .catch((err) => logger.error(err, 'api-token lastUsedAt update failed'));
 
   return {
     user: apiToken.user,

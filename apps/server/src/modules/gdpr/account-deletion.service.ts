@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import { prisma } from '../../lib/prisma.js';
+import { logger } from '../../lib/logger.js';
 
 /** Grace period in days before permanent deletion */
 const DELETION_GRACE_PERIOD_DAYS = 30;
@@ -120,7 +121,7 @@ export async function processScheduledDeletions(): Promise<number> {
       await permanentlyDeleteUser(user.id);
       deletedCount++;
     } catch (error) {
-      console.error(`[gdpr] Failed to permanently delete user ${user.id}:`, error);
+      logger.error(error, 'failed to permanently delete user %s', user.id);
     }
   }
 

@@ -5,6 +5,7 @@ import {
 } from '../notifications/notifications.service.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 interface CreateCommentOptions {
   parentId?: string;
@@ -111,7 +112,7 @@ export async function createComment(
       });
     } catch (error) {
       // Log but don't fail comment creation if notification fails
-      console.error('Failed to create comment reply notification:', error);
+      logger.error(error, 'failed to create comment reply notification');
     }
   }
 
@@ -284,7 +285,7 @@ export async function resolveComment(commentId: string, userId: string, resolve:
       });
     } catch (error) {
       // Log but don't fail resolution if notification fails
-      console.error('Failed to create comment resolved notification:', error);
+      logger.error(error, 'failed to create comment resolved notification');
     }
   }
 
@@ -292,7 +293,7 @@ export async function resolveComment(commentId: string, userId: string, resolve:
     triggerWebhooks(comment.page.organizationId, 'comment.resolved', {
       commentId,
       pageId: comment.page.id,
-    }).catch((err) => console.error('[webhook] delivery failed:', err));
+    }).catch((err) => logger.error(err, 'webhook delivery failed'));
   }
 
   logAudit({

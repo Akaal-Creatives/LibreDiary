@@ -3,6 +3,7 @@ import type { PagePermission, PermissionLevel } from '../../generated/prisma/cli
 import crypto from 'crypto';
 import { createPageSharedNotification } from '../notifications/notifications.service.js';
 import { logAudit } from '../audit/audit.service.js';
+import { logger } from '../../lib/logger.js';
 
 // ===========================================
 // TYPES
@@ -193,7 +194,7 @@ export async function grantPermission(
       });
     } catch (error) {
       // Log but don't fail permission grant if notification fails
-      console.error('Failed to create page shared notification:', error);
+      logger.error(error, 'failed to create page shared notification');
     }
   }
 

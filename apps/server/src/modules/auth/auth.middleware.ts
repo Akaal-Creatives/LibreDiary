@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { getSessionByToken, touchSession } from '../../services/session.service.js';
 import { env } from '../../config/index.js';
+import { logger } from '../../lib/logger.js';
 import type { User } from '../../generated/prisma/client.js';
 
 // Helper to add CORS headers to error responses
@@ -106,7 +107,7 @@ export async function optionalAuth(request: FastifyRequest, _reply: FastifyReply
   request.sessionToken = token;
 
   // Update last active time
-  touchSession(session.id).catch((err) => console.error('[session] touch failed:', err));
+  touchSession(session.id).catch((err) => logger.error(err, 'session touch failed'));
 }
 
 /**

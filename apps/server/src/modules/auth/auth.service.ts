@@ -1,6 +1,7 @@
 import { hash, verify } from '@node-rs/argon2';
 import { prisma } from '../../lib/prisma.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
+import { logger } from '../../lib/logger.js';
 import {
   createSession,
   deleteSession,
@@ -130,7 +131,7 @@ export async function register(
   });
 
   triggerWebhooks(invite.organizationId, 'member.added', { userId: result.id }).catch((err) =>
-    console.error('[webhook] delivery failed:', err)
+    logger.error(err, 'webhook delivery failed')
   );
 
   // Create session
