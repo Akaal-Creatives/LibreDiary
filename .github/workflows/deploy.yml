@@ -86,5 +86,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
-            docker compose -f /opt/librediary/docker-compose.yml pull server
-            docker compose -f /opt/librediary/docker-compose.yml up -d server
+            cd ${{ secrets.VPS_APP_PATH }}
+            docker compose pull server
+            docker compose up -d server
