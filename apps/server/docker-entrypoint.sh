@@ -11,6 +11,20 @@ set -e
 
 echo "=== LibreDiary Server Entrypoint ==="
 
+# ------------------------------------------
+# 0. Build DATABASE_URL from POSTGRES_* variables if not set
+# ------------------------------------------
+if [ -z "$DATABASE_URL" ]; then
+  if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_DB" ]; then
+    DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}"
+    export DATABASE_URL
+    echo "DATABASE_URL constructed from POSTGRES_* variables."
+  else
+    echo "Error: DATABASE_URL is not set and POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB are required to construct it."
+    exit 1
+  fi
+fi
+
 # Prisma commands must run from apps/server where prisma.config.ts lives
 cd /app/apps/server
 
