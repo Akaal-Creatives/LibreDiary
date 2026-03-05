@@ -121,7 +121,7 @@ async function handleOAuthClick(provider: OAuthProvider) {
       </svg>
       <span>
         This is a demo instance. Data resets every 24 hours. Use
-        <strong>demo@librediary.com</strong> / <strong>password</strong> to log in.
+        <strong>demo@librediary.org</strong> / <strong>password</strong> to log in.
       </span>
     </div>
 

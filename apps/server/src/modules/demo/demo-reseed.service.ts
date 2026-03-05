@@ -55,7 +55,7 @@ export async function reseedDemoData(): Promise<void> {
 
   const user = await prisma.user.create({
     data: {
-      email: 'demo@librediary.com',
+      email: 'demo@librediary.org',
       name: 'Demo User',
       passwordHash,
       emailVerified: true,

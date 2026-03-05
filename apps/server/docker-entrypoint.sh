@@ -34,6 +34,16 @@ npx tsx apps/server/prisma/seed.ts || {
   echo "Warning: database seed failed."
 }
 
+# ------------------------------------------
+# 4. Seed demo data when DEMO_MODE is enabled
+# ------------------------------------------
+if [ "$DEMO_MODE" = "true" ]; then
+  echo "DEMO_MODE enabled — running demo reseed..."
+  npx tsx apps/server/prisma/seed-dev.ts || {
+    echo "Warning: demo seed failed."
+  }
+fi
+
 echo "=== Entrypoint complete, starting server ==="
 
 # Hand off to the main process (CMD)
