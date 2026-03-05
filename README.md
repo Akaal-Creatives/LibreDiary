@@ -12,8 +12,8 @@
 <p align="center">
   <a href="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/ci.yml"><img src="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/release.yml"><img src="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/release.yml/badge.svg" alt="Release"></a>
-  <a href="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/codeql.yml"><img src="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://github.com/Akaal-Creatives/LibreDiary/releases/latest"><img src="https://img.shields.io/github/v/release/Akaal-Creatives/LibreDiary?label=version" alt="Latest Release"></a>
+  <a href="https://github.com/Akaal-Creatives/LibreDiary/security/code-scanning"><img src="https://github.com/Akaal-Creatives/LibreDiary/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
+  <a href="https://github.com/Akaal-Creatives/LibreDiary/releases/latest"><img src="https://img.shields.io/github/v/tag/Akaal-Creatives/LibreDiary?label=version&sort=semver" alt="Latest Version"></a>
   <a href="https://github.com/Akaal-Creatives/LibreDiary/pkgs/container/librediary-server"><img src="https://img.shields.io/badge/ghcr.io-librediary--server-blue?logo=docker" alt="Docker Image"></a>
   <a href="https://github.com/Akaal-Creatives/LibreDiary/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
 </p>
