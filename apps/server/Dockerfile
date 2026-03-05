@@ -97,9 +97,9 @@ COPY --from=build /app/packages/shared/dist/ packages/shared/dist/
 COPY apps/server/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-# Create data directories
+# Create data directories and fix permissions for node user
 RUN mkdir -p /app/data/files /app/backups && \
-    chown -R node:node /app/data /app/backups
+    chown -R node:node /app/data /app/backups /app/node_modules/@prisma/engines
 
 # Run as non-root user
 USER node
