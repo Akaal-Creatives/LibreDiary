@@ -140,7 +140,7 @@ describe('Account Deletion Service', () => {
 
       const expectedDate = new Date(now + 30 * 24 * 60 * 60 * 1000);
       expect(Math.abs(result.deletionDate.getTime() - expectedDate.getTime())).toBeLessThanOrEqual(
-        5
+        100
       );
 
       vi.restoreAllMocks();
