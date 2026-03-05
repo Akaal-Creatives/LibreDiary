@@ -35,7 +35,10 @@ export function loadConfig(args: string[] = process.argv.slice(2)): McpConfig {
   }
 
   // Ensure no trailing slash
-  const normalised = apiUrl.replace(/\/+$/, '');
+  let normalised = apiUrl;
+  while (normalised.endsWith('/')) {
+    normalised = normalised.slice(0, -1);
+  }
 
   return { apiUrl: normalised, apiToken, orgId };
 }
