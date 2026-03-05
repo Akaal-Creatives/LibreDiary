@@ -91,6 +91,7 @@ RUN pnpm add -g tsx
 COPY --from=build /app/apps/server/dist/ apps/server/dist/
 COPY --from=build /app/apps/server/src/generated/ apps/server/src/generated/
 COPY --from=build /app/apps/server/prisma/ apps/server/prisma/
+COPY --from=build /app/apps/server/prisma.config.ts apps/server/prisma.config.ts
 COPY --from=build /app/packages/shared/dist/ packages/shared/dist/
 
 # Copy entrypoint script
