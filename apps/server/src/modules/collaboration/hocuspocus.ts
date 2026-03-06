@@ -188,32 +188,40 @@ export function createHocuspocusServer(): Hocuspocus {
           context.userId
         );
 
-        // Extract plain text from Yjs doc for search indexing
-        const plainContent = yjsDocToText(document);
-
-        // Update plainContent in PostgreSQL (triggers search_vector update)
-        const page = await prisma.page.update({
-          where: { id: parsed.pageId },
-          data: { plainContent },
-          select: { id: true, title: true, createdById: true, createdAt: true, updatedAt: true },
+        // Check if workspace has E2EE enabled — if so, skip text extraction and indexing
+        const org = await prisma.organization.findUnique({
+          where: { id: parsed.organizationId },
+          select: { isEncrypted: true },
         });
 
-        // Index to Meilisearch (fire-and-forget)
-        indexPage({
-          id: page.id,
-          title: page.title,
-          plainContent,
-          orgId: parsed.organizationId,
-          createdById: page.createdById,
-          createdAt: Math.floor(page.createdAt.getTime() / 1000),
-          updatedAt: Math.floor(page.updatedAt.getTime() / 1000),
-        }).catch((err) => {
-          logger.error(
-            err,
-            '[meilisearch] failed to index page from collaboration %s',
-            parsed.pageId
-          );
-        });
+        if (!org?.isEncrypted) {
+          // Extract plain text from Yjs doc for search indexing
+          const plainContent = yjsDocToText(document);
+
+          // Update plainContent in PostgreSQL (triggers search_vector update)
+          const page = await prisma.page.update({
+            where: { id: parsed.pageId },
+            data: { plainContent },
+            select: { id: true, title: true, createdById: true, createdAt: true, updatedAt: true },
+          });
+
+          // Index to Meilisearch (fire-and-forget)
+          indexPage({
+            id: page.id,
+            title: page.title,
+            plainContent,
+            orgId: parsed.organizationId,
+            createdById: page.createdById,
+            createdAt: Math.floor(page.createdAt.getTime() / 1000),
+            updatedAt: Math.floor(page.updatedAt.getTime() / 1000),
+          }).catch((err) => {
+            logger.error(
+              err,
+              '[meilisearch] failed to index page from collaboration %s',
+              parsed.pageId
+            );
+          });
+        }
       } catch (error) {
         logger.error(error, '[hocuspocus] error storing document %s', documentName);
         // Don't throw - this would disconnect all users
