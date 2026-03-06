@@ -32,7 +32,7 @@ cd /app/apps/server
 # 1. Push database schema
 # ------------------------------------------
 echo "Pushing database schema..."
-npx prisma db push
+npx prisma db push --accept-data-loss
 echo "Database schema up to date."
 
 # ------------------------------------------
