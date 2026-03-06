@@ -20,6 +20,11 @@ export { useSidebar } from './useSidebar';
 export { useOnboardingTour } from './useOnboardingTour';
 export { useMarkdownExport } from './useMarkdownExport';
 export { useEncryption } from './useEncryption';
+export {
+  useClientSearch,
+  type ClientSearchDocument,
+  type ClientSearchOptions,
+} from './useClientSearch';
 
 // Re-export design tokens for convenience
 export * from '@/styles/design-tokens';
