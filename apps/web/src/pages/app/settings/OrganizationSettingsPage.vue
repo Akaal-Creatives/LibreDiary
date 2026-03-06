@@ -6,11 +6,14 @@ import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
 import { filesService } from '@/services/files.service';
 import { useToast } from '@/composables/useToast';
+import { useEncryption } from '@/composables/useEncryption';
+import { encryptionService } from '@/services/encryption.service';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const orgsStore = useOrganizationsStore();
 const toast = useToast();
+const encryption = useEncryption();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -31,6 +34,71 @@ const form = ref({
 });
 
 const currentOrg = computed(() => authStore.currentOrganization);
+const isOrgEncrypted = computed(() => currentOrg.value?.isEncrypted ?? false);
+
+// E2EE state
+const showEncryptConfirm = ref(false);
+const encryptionEnabling = ref(false);
+
+async function handleEnableEncryption() {
+  if (!authStore.currentOrganizationId) return;
+
+  if (!encryption.isSetUp.value) {
+    toast.error('You must set up encryption first in your account settings.');
+    return;
+  }
+
+  if (!encryption.isUnlocked.value) {
+    toast.error('Please unlock your encryption keys first.');
+    return;
+  }
+
+  showEncryptConfirm.value = true;
+}
+
+async function confirmEnableEncryption() {
+  if (!authStore.currentOrganizationId) return;
+
+  encryptionEnabling.value = true;
+  try {
+    const { generateKey, encryptForRecipient } = await import('@librediary/shared/crypto');
+
+    // Generate a new workspace key
+    const workspaceKey = await generateKey();
+
+    // Fetch the owner's own public key to self-encrypt the workspace key share
+    const encData = await encryptionService.getData();
+    const publicKeyBytes = Uint8Array.from(atob(encData.publicKey), (c) => c.charCodeAt(0));
+
+    // Get the owner's private key for the sender side
+    const ownerPrivateKey = encryption.privateKey.value;
+    if (!ownerPrivateKey) throw new Error('Encryption not unlocked');
+
+    // Encrypt workspace key for self (owner) using X25519
+    const keyShare = await encryptForRecipient(workspaceKey, ownerPrivateKey, publicKeyBytes);
+
+    const toBase64 = (arr: Uint8Array) => btoa(String.fromCharCode(...arr));
+
+    await encryptionService.enableWorkspaceEncryption(authStore.currentOrganizationId, {
+      encryptedKey: toBase64(keyShare.encryptedKey),
+      nonce: toBase64(keyShare.nonce),
+      sharedByPublicKey: encData.publicKey,
+    });
+
+    // Refresh org data to pick up isEncrypted: true
+    await orgsStore.fetchOrganization();
+    toast.success('End-to-end encryption enabled for this workspace.');
+    showEncryptConfirm.value = false;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else {
+      toast.error('Failed to enable encryption.');
+    }
+  } finally {
+    encryptionEnabling.value = false;
+  }
+}
 
 // Load initial data
 async function loadData() {
@@ -410,6 +478,223 @@ async function handleDelete() {
             </div>
           </div>
         </section>
+
+        <!-- E2EE Encryption (Owner only) -->
+        <section v-if="orgsStore.isOwner" class="settings-section">
+          <div class="section-header">
+            <div class="section-icon section-icon--encryption">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect
+                  x="4"
+                  y="9"
+                  width="12"
+                  height="9"
+                  rx="2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M7 9V6a3 3 0 0 1 6 0v3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div class="section-header-text">
+              <h2 class="section-title">End-to-End Encryption</h2>
+              <p class="section-description">
+                Encrypt all page content so only workspace members can read it
+              </p>
+            </div>
+          </div>
+
+          <div class="section-content">
+            <div v-if="isOrgEncrypted" class="encryption-status encryption-status--active">
+              <svg
+                class="encryption-status-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+              >
+                <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M5.5 9L8 11.5L12.5 6.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div>
+                <div class="encryption-status-title">Encryption is active</div>
+                <p class="encryption-status-text">
+                  All new pages in this workspace are end-to-end encrypted. Only members with the
+                  workspace key can decrypt content.
+                </p>
+              </div>
+            </div>
+
+            <div v-else class="encryption-enable">
+              <p class="encryption-enable-text">
+                Enable end-to-end encryption to protect page content. Once enabled, the server will
+                never have access to plaintext content. Search for encrypted pages will be performed
+                client-side only.
+              </p>
+              <div class="encryption-enable-warnings">
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>This action cannot be undone</span>
+                </div>
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>AI features will not work on encrypted content</span>
+                </div>
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>Server-side search will be unavailable for encrypted pages</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn--encryption"
+                :disabled="saving || encryptionEnabling"
+                @click="handleEnableEncryption"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="3"
+                    y="7"
+                    width="10"
+                    height="7"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                  />
+                  <path
+                    d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <span>Enable End-to-End Encryption</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Encryption Confirmation Modal -->
+        <Teleport to="body">
+          <Transition name="modal">
+            <div
+              v-if="showEncryptConfirm"
+              class="modal-backdrop"
+              @click.self="showEncryptConfirm = false"
+            >
+              <div class="modal modal--encryption">
+                <div class="modal-header modal-header--encryption">
+                  <div class="modal-icon modal-icon--encryption">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="5"
+                        y="11"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
+                      <path
+                        d="M8 11V8a4 4 0 0 1 8 0v3"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <h2 class="modal-title">Enable Encryption</h2>
+                </div>
+
+                <div class="modal-body">
+                  <p class="modal-text">
+                    You are about to enable end-to-end encryption for
+                    <strong>{{ currentOrg?.name }}</strong
+                    >. This will:
+                  </p>
+                  <ul class="modal-list">
+                    <li>Encrypt all new page content client-side</li>
+                    <li>Disable server-side search for this workspace</li>
+                    <li>Disable AI features for encrypted content</li>
+                    <li>Require members to have encryption keys to view content</li>
+                  </ul>
+                  <p class="modal-text modal-text--warning">
+                    This action cannot be reversed. Existing pages will remain unencrypted.
+                  </p>
+                </div>
+
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn--ghost"
+                    :disabled="encryptionEnabling"
+                    @click="showEncryptConfirm = false"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--encryption"
+                    :disabled="encryptionEnabling"
+                    @click="confirmEnableEncryption"
+                  >
+                    {{ encryptionEnabling ? 'Enabling...' : 'Yes, enable encryption' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </Teleport>
 
         <!-- Features Settings -->
         <section class="settings-section">
@@ -916,6 +1201,11 @@ async function handleDelete() {
   background: rgba(196, 151, 59, 0.1);
 }
 
+.section-icon--encryption {
+  color: #7c6bc4;
+  background: rgba(124, 107, 196, 0.1);
+}
+
 .section-header-text {
   flex: 1;
   padding-top: 2px;
@@ -1384,5 +1674,105 @@ async function handleDelete() {
 .modal-enter-active .modal,
 .modal-leave-active .modal {
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Encryption Section */
+.encryption-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.encryption-status--active {
+  color: #5a9a6b;
+  background: linear-gradient(135deg, rgba(90, 154, 107, 0.08), rgba(90, 154, 107, 0.04));
+  border: 1px solid rgba(90, 154, 107, 0.2);
+}
+
+.encryption-status-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.encryption-status-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.encryption-status-text {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.encryption-enable-text {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.encryption-enable-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.encryption-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-warning, #c4973b);
+}
+
+.btn--encryption {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: white;
+  background: #7c6bc4;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn--encryption:hover:not(:disabled) {
+  background: #6b5ab3;
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn--encryption:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.modal--encryption {
+  border: 1px solid rgba(124, 107, 196, 0.3);
+}
+
+.modal-header--encryption {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #7c6bc4 6%, var(--color-surface)) 0%,
+    color-mix(in srgb, #7c6bc4 3%, var(--color-surface)) 100%
+  );
+}
+
+.modal-icon--encryption {
+  color: #7c6bc4;
+  background: rgba(124, 107, 196, 0.1);
+}
+
+.modal-text--warning {
+  font-weight: 500;
+  color: var(--color-warning, #c4973b);
 }
 </style>

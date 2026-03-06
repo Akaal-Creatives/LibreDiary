@@ -46,6 +46,7 @@ describe('useOrganizationsStore', () => {
     accentColor: null,
     allowedDomains: [],
     aiEnabled: false,
+    isEncrypted: false,
   };
 
   const mockMembership: OrganizationMember = {

@@ -131,6 +131,7 @@ describe('usePagesStore', () => {
           accentColor: null,
           allowedDomains: [],
           aiEnabled: false,
+          isEncrypted: false,
         },
       ],
       [{ organizationId: 'org-1', role: 'OWNER' }]

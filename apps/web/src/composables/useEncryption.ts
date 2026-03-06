@@ -189,7 +189,7 @@ export function useEncryption() {
       // Reconstruct the EncryptedKeyShare format
       const { decryptFromSender } = await import('@librediary/shared/crypto');
       const workspaceKey = decryptFromSender(
-        { nonce, ciphertext: encryptedKey },
+        { nonce, encryptedKey },
         privateKey.value,
         senderPublicKey
       );

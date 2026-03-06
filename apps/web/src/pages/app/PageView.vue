@@ -474,6 +474,31 @@ function formatDate(dateString: string): string {
               <span class="collab-dot"></span>
               {{ connectedUsers.length }} editing
             </span>
+            <!-- E2EE badge -->
+            <span
+              v-if="authStore.currentOrganization?.isEncrypted"
+              class="info-item encrypted-badge"
+              title="End-to-end encrypted"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <rect
+                  x="2.5"
+                  y="5.5"
+                  width="7"
+                  height="5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1"
+                />
+                <path
+                  d="M4 5.5V4a2 2 0 0 1 4 0v1.5"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Encrypted
+            </span>
           </div>
         </div>
         <div class="header-actions">
@@ -831,6 +856,13 @@ function formatDate(dateString: string): string {
   display: flex;
   gap: var(--space-1);
   align-items: center;
+}
+
+.encrypted-badge {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  color: #7c6bc4;
 }
 
 .collab-dot {

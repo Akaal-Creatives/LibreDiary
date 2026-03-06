@@ -41,6 +41,7 @@ const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
       slug: 'test-org',
       allowedDomains: ['example.com'],
       aiEnabled: true,
+      isEncrypted: false,
       accentColor: '#3b82f6',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
@@ -99,6 +100,7 @@ describe('OrganizationSettingsPage', () => {
       logoUrl: null,
       allowedDomains: ['example.com'],
       aiEnabled: true,
+      isEncrypted: false,
       accentColor: '#3b82f6',
     };
 

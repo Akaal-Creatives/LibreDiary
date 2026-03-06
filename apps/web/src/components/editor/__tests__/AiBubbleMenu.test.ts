@@ -107,6 +107,7 @@ function setupAuthStore(aiEnabled = true, orgId = 'org-123') {
       name: 'Test Org',
       slug: 'test-org',
       aiEnabled,
+      isEncrypted: false,
       allowedDomains: [],
       logoUrl: null,
       accentColor: null,
