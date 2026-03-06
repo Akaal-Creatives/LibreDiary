@@ -11,6 +11,11 @@
 import { CRYPTO_CONSTANTS, ENCRYPTION_VERSION } from './types.js';
 import type { EncryptedData, EncryptedBuffer } from './types.js';
 
+/** Convert Uint8Array to ArrayBuffer for Web Crypto API compatibility */
+function toBuffer(data: Uint8Array): ArrayBuffer {
+  return new Uint8Array(data).buffer as ArrayBuffer;
+}
+
 /**
  * Generate a random 256-bit AES key.
  */
@@ -24,7 +29,10 @@ export async function generateKey(): Promise<Uint8Array> {
  * Import a raw key into a CryptoKey for use with Web Crypto API.
  */
 async function importKey(rawKey: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  return crypto.subtle.importKey('raw', toBuffer(rawKey), { name: 'AES-GCM' }, false, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 /**
@@ -40,7 +48,11 @@ export async function encrypt(plaintext: Uint8Array, rawKey: Uint8Array): Promis
 
   const key = await importKey(rawKey);
 
-  const ciphertextBuffer = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
+  const ciphertextBuffer = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    toBuffer(plaintext)
+  );
 
   return {
     version: ENCRYPTION_VERSION,
@@ -61,9 +73,9 @@ export async function decrypt(encrypted: EncryptedData, rawKey: Uint8Array): Pro
   const key = await importKey(rawKey);
 
   const plaintextBuffer = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: encrypted.iv },
+    { name: 'AES-GCM', iv: toBuffer(encrypted.iv) },
     key,
-    encrypted.ciphertext
+    toBuffer(encrypted.ciphertext)
   );
 
   return new Uint8Array(plaintextBuffer);

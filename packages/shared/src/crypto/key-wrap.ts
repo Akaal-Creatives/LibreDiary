@@ -8,11 +8,16 @@
  * https://www.akaalcreatives.com
  */
 
+/** Convert Uint8Array to ArrayBuffer for Web Crypto API compatibility */
+function toBuffer(data: Uint8Array): ArrayBuffer {
+  return new Uint8Array(data).buffer as ArrayBuffer;
+}
+
 /**
  * Import a raw key for AES-KW operations.
  */
 async function importWrappingKey(rawKey: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', rawKey, { name: 'AES-KW' }, false, [
+  return crypto.subtle.importKey('raw', toBuffer(rawKey), { name: 'AES-KW' }, false, [
     'wrapKey',
     'unwrapKey',
   ]);
@@ -22,7 +27,10 @@ async function importWrappingKey(rawKey: Uint8Array): Promise<CryptoKey> {
  * Import a raw key as a CryptoKey that can be wrapped/unwrapped.
  */
 async function importKeyToWrap(rawKey: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+  return crypto.subtle.importKey('raw', toBuffer(rawKey), { name: 'AES-GCM' }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 /**
@@ -59,7 +67,7 @@ export async function unwrapKey(
 
   const unwrappedCryptoKey = await crypto.subtle.unwrapKey(
     'raw',
-    wrappedKey,
+    toBuffer(wrappedKey),
     wrapCryptoKey,
     { name: 'AES-KW' },
     { name: 'AES-GCM' },
