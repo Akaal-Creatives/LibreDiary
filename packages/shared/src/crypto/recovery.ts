@@ -39,15 +39,19 @@ async function deriveKeyFromRecovery(
   recoveryBytes: Uint8Array,
   salt: Uint8Array
 ): Promise<Uint8Array> {
-  const keyMaterial = await crypto.subtle.importKey('raw', recoveryBytes, 'HKDF', false, [
-    'deriveKey',
-  ]);
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new Uint8Array(recoveryBytes).buffer as ArrayBuffer,
+    'HKDF',
+    false,
+    ['deriveKey']
+  );
 
   const derivedKey = await crypto.subtle.deriveKey(
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt,
+      salt: new Uint8Array(salt).buffer as ArrayBuffer,
       info: new TextEncoder().encode('librediary-recovery-v1'),
     },
     keyMaterial,
