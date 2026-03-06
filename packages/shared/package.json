@@ -23,23 +23,32 @@
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
+    },
+    "./crypto": {
+      "types": "./dist/crypto/index.d.ts",
+      "import": "./dist/crypto/index.js"
     }
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "libsodium-wrappers-sumo": "^0.8.2",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@librediary/eslint-config": "workspace:*",
     "@librediary/tsconfig": "workspace:*",
+    "@types/libsodium-wrappers-sumo": "^0.8.2",
     "tsup": "^8.3.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }
