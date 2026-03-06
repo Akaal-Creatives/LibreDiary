@@ -97,7 +97,34 @@ const currentRole = computed(() => authStore.currentUserRole);
       </span>
 
       <span class="org-info">
-        <span class="org-name">{{ currentOrg?.name ?? 'Select Organization' }}</span>
+        <span class="org-name">
+          {{ currentOrg?.name ?? 'Select Organization' }}
+          <svg
+            v-if="currentOrg?.isEncrypted"
+            class="encrypted-icon"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            aria-label="Encrypted"
+          >
+            <rect
+              x="2.5"
+              y="5.5"
+              width="7"
+              height="5"
+              rx="1"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+            <path
+              d="M4 5.5V4a2 2 0 0 1 4 0v1.5"
+              stroke="currentColor"
+              stroke-width="1"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
         <span v-if="currentRole" class="role-badge" :class="getRoleBadgeClass(currentRole)">
           {{ getRoleLabel(currentRole) }}
         </span>
@@ -226,7 +253,34 @@ const currentRole = computed(() => authStore.currentUserRole);
                 {{ org.name.charAt(0).toUpperCase() }}
               </span>
               <span class="org-item-info">
-                <span class="org-item-name">{{ org.name }}</span>
+                <span class="org-item-name">
+                  {{ org.name }}
+                  <svg
+                    v-if="org.isEncrypted"
+                    class="encrypted-icon"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    aria-label="Encrypted"
+                  >
+                    <rect
+                      x="2.5"
+                      y="5.5"
+                      width="7"
+                      height="5"
+                      rx="1"
+                      stroke="currentColor"
+                      stroke-width="1"
+                    />
+                    <path
+                      d="M4 5.5V4a2 2 0 0 1 4 0v1.5"
+                      stroke="currentColor"
+                      stroke-width="1"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </span>
                 <span
                   v-if="authStore.getRoleForOrg(org.id)"
                   class="role-badge role-badge--xs"
@@ -592,5 +646,13 @@ const currentRole = computed(() => authStore.currentUserRole);
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+.encrypted-icon {
+  display: inline-block;
+  vertical-align: -1px;
+  margin-left: 2px;
+  color: #7c6bc4;
+  opacity: 0.8;
 }
 </style>

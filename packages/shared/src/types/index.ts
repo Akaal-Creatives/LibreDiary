@@ -116,6 +116,7 @@ export interface Organization {
   accentColor: string | null;
   allowedDomains: string[];
   aiEnabled: boolean;
+  isEncrypted: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -125,6 +125,7 @@ describe('PageTreeItem', () => {
           accentColor: null,
           allowedDomains: [],
           aiEnabled: false,
+          isEncrypted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

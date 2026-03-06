@@ -71,6 +71,7 @@ describe('SearchModal', () => {
           accentColor: null,
           allowedDomains: [],
           aiEnabled: true,
+          isEncrypted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

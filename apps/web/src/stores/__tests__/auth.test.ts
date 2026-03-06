@@ -46,6 +46,7 @@ const mockOrg: Organization = {
   accentColor: null,
   allowedDomains: [],
   aiEnabled: false,
+  isEncrypted: false,
 };
 
 const mockMembership: OrgMembership = {

@@ -30,6 +30,7 @@ describe('OrganizationSwitcher', () => {
     accentColor: '#6b8f71',
     allowedDomains: [],
     aiEnabled: false,
+    isEncrypted: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
