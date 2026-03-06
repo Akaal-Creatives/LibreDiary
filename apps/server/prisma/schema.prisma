@@ -61,6 +61,8 @@ model User {
   apiTokens          ApiToken[]
   createdWebhooks    Webhook[]            @relation("WebhookCreatedBy")
   dataExports        DataExport[]
+  encryption         UserEncryption?
+  keyShares          WorkspaceKeyShare[]
 
   @@index([email])
   @@index([deletedAt])
@@ -159,20 +161,24 @@ model Organization {
   // AI Settings
   aiEnabled Boolean @default(true)
 
+  // E2EE
+  isEncrypted Boolean @default(false)
+
   // Timestamps
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   // Relations
-  members   OrganizationMember[]
-  pages     Page[]
-  invites   Invite[]
-  databases Database[]
-  templates Template[]
-  files     File[]
-  backups   Backup[]
-  webhooks  Webhook[]
+  members        OrganizationMember[]
+  pages          Page[]
+  invites        Invite[]
+  databases      Database[]
+  templates      Template[]
+  files          File[]
+  backups        Backup[]
+  webhooks       Webhook[]
+  keyShares      WorkspaceKeyShare[]
 
   @@index([slug])
   @@index([deletedAt])
@@ -827,6 +833,72 @@ model DataExport {
 }
 
 // ============================================
+// E2EE (End-to-End Encryption)
+// ============================================
+
+model UserEncryption {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // X25519 public key (Base64-encoded, 32 bytes raw)
+  publicKey String
+
+  // X25519 private key encrypted with master key (Base64-encoded)
+  encryptedPrivateKey String
+
+  // Salt used for Argon2id key derivation (Base64-encoded, 16 bytes)
+  keySalt String
+
+  // Argon2id parameters (stored for future-proofing)
+  keyParams Json @default("{\"memoryLimit\":65536,\"opsLimit\":3}")
+
+  // Recovery: master key encrypted with recovery-derived key (JSON envelope)
+  recoveryEncryptedMasterKey Json?
+
+  // Recovery: salt used for HKDF from recovery key (Base64-encoded)
+  recoverySalt String?
+
+  // SHA-256 hash of recovery key for verification (Base64-encoded)
+  recoveryKeyHash String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model WorkspaceKeyShare {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+
+  // Workspace key encrypted for this user (Base64-encoded, X25519 box)
+  encryptedKey String
+
+  // Nonce used for the X25519 box encryption (Base64-encoded)
+  nonce String
+
+  // Public key of the user who shared the key (for decryption)
+  sharedByPublicKey String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+// ============================================
 // AUDIT LOGGING
 // ============================================
 
@@ -898,6 +970,15 @@ enum AuditAction {
   TEMPLATE_DELETED
   AI_TRANSLATION
   AI_WRITING
+
+  // E2EE
+  E2EE_SETUP_COMPLETED
+  E2EE_RECOVERY_KEY_GENERATED
+  E2EE_RECOVERY_USED
+  E2EE_WORKSPACE_ENCRYPTED
+  E2EE_WORKSPACE_DECRYPTED
+  E2EE_KEY_SHARED
+  E2EE_KEY_REVOKED
 
   // GDPR
   GDPR_DATA_EXPORT_REQUESTED
