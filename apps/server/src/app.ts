@@ -36,6 +36,7 @@ import { auditRoutes } from './modules/audit/index.js';
 import { translationRoutes, writingRoutes } from './modules/ai/index.js';
 import { gdprRoutes } from './modules/gdpr/index.js';
 import { markdownRoutes } from './modules/markdown/index.js';
+import { encryptionRoutes } from './modules/encryption/index.js';
 import { initMeilisearch } from './modules/search/meilisearch.init.js';
 
 export async function buildApp() {
@@ -186,6 +187,9 @@ export async function buildApp() {
       await api.register(writingRoutes, {
         prefix: '/organizations/:orgId/ai/write',
       });
+
+      // E2EE encryption routes
+      await api.register(encryptionRoutes, { prefix: '/encryption' });
 
       // GDPR routes (user-specific)
       await api.register(gdprRoutes, { prefix: '/gdpr' });
