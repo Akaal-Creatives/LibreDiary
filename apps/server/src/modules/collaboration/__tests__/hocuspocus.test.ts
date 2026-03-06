@@ -20,6 +20,7 @@ vi.mock('../../../lib/prisma.js', () => ({
   prisma: {
     $transaction: vi.fn(),
     page: { update: vi.fn() },
+    organization: { findUnique: vi.fn() },
   },
 }));
 
