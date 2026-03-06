@@ -71,6 +71,16 @@ export type { CreateBackupInput } from './backups.service';
 export { apiTokensService } from './api-tokens.service';
 export { webhooksService } from './webhooks.service';
 export { gdprService } from './gdpr.service';
+export { encryptionService } from './encryption.service';
+export type {
+  EncryptionSetupInput,
+  EncryptionStatus,
+  EncryptionData,
+  RecoveryUpdateInput,
+  EnableWorkspaceInput,
+  WorkspaceKeyShare,
+  ShareKeyInput,
+} from './encryption.service';
 export type { DataExport, DeletionStatus } from './gdpr.service';
 export type {
   CreateTemplateInput,
