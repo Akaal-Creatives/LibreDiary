@@ -1,65 +1,74 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted for proper hoisting (avoids importing real Prisma)
-const { mockPrisma, mockPrismaPage, resetMocks, mockPage, now } = vi.hoisted(() => {
-  const mockPrismaPage = {
-    create: vi.fn(),
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    updateMany: vi.fn(),
-    delete: vi.fn(),
-    aggregate: vi.fn(),
-  };
+const { mockPrisma, mockPrismaPage, mockPrismaOrganization, resetMocks, mockPage, now } =
+  vi.hoisted(() => {
+    const mockPrismaPage = {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      aggregate: vi.fn(),
+    };
 
-  const mockPrismaFavorite = {
-    create: vi.fn(),
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aggregate: vi.fn(),
-  };
+    const mockPrismaFavorite = {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      aggregate: vi.fn(),
+    };
 
-  const mockPrisma = {
-    page: mockPrismaPage,
-    favorite: mockPrismaFavorite,
-    $transaction: vi.fn(),
-    $queryRawUnsafe: vi.fn(),
-  };
+    const mockPrismaOrganization = {
+      findUnique: vi.fn(),
+    };
 
-  function resetMocks() {
-    Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
-    Object.values(mockPrismaFavorite).forEach((mock) => mock.mockReset());
-    mockPrisma.$transaction.mockReset();
-    mockPrisma.$queryRawUnsafe.mockReset();
-  }
+    const mockPrisma = {
+      page: mockPrismaPage,
+      favorite: mockPrismaFavorite,
+      organization: mockPrismaOrganization,
+      $transaction: vi.fn(),
+      $queryRawUnsafe: vi.fn(),
+    };
 
-  const now = new Date();
+    function resetMocks() {
+      Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
+      Object.values(mockPrismaFavorite).forEach((mock) => mock.mockReset());
+      Object.values(mockPrismaOrganization).forEach((mock) => mock.mockReset());
+      mockPrisma.$transaction.mockReset();
+      mockPrisma.$queryRawUnsafe.mockReset();
+      // Default: unencrypted workspace
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: false });
+    }
 
-  const mockPage = {
-    id: 'page-123',
-    organizationId: 'org-123',
-    parentId: null,
-    position: 0,
-    title: 'Test Page',
-    icon: null,
-    coverUrl: null,
-    yjsState: null,
-    htmlContent: null,
-    isPublic: false,
-    publicSlug: null,
-    trashedAt: null,
-    createdById: 'user-123',
-    updatedById: null,
-    createdAt: now,
-    updatedAt: now,
-  };
+    const now = new Date();
 
-  return { mockPrisma, mockPrismaPage, resetMocks, mockPage, now };
-});
+    const mockPage = {
+      id: 'page-123',
+      organizationId: 'org-123',
+      parentId: null,
+      position: 0,
+      title: 'Test Page',
+      icon: null,
+      coverUrl: null,
+      yjsState: null,
+      htmlContent: null,
+      isPublic: false,
+      publicSlug: null,
+      trashedAt: null,
+      createdById: 'user-123',
+      updatedById: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    return { mockPrisma, mockPrismaPage, mockPrismaOrganization, resetMocks, mockPage, now };
+  });
 
 // Mock the prisma module BEFORE importing pages.service
 vi.mock('../../../lib/prisma.js', () => ({
@@ -152,6 +161,48 @@ describe('Pages Service - Write Operations', () => {
           publicSlug: 'taken-slug',
         })
       ).rejects.toThrow('SLUG_ALREADY_EXISTS');
+    });
+
+    it('should skip plainContent computation for encrypted workspaces', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: true });
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPage.update.mockResolvedValue({
+        ...mockPage,
+        htmlContent: 'encrypted-blob-data',
+      });
+
+      await pagesService.updatePage('org-123', 'page-123', 'user-123', {
+        htmlContent: 'encrypted-blob-data',
+      });
+
+      // plainContent should NOT be set when workspace is encrypted
+      expect(mockPrismaPage.update).toHaveBeenCalledWith({
+        where: { id: 'page-123' },
+        data: expect.not.objectContaining({
+          plainContent: expect.any(String),
+        }),
+      });
+    });
+
+    it('should compute plainContent for unencrypted workspaces', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: false });
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPage.update.mockResolvedValue({
+        ...mockPage,
+        htmlContent: '<p>Hello World</p>',
+        plainContent: 'Hello World',
+      });
+
+      await pagesService.updatePage('org-123', 'page-123', 'user-123', {
+        htmlContent: '<p>Hello World</p>',
+      });
+
+      expect(mockPrismaPage.update).toHaveBeenCalledWith({
+        where: { id: 'page-123' },
+        data: expect.objectContaining({
+          plainContent: expect.any(String),
+        }),
+      });
     });
   });
 
