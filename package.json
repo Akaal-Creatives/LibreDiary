@@ -62,13 +62,13 @@
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "conventional-changelog-conventionalcommits": "^9.2.0",
+    "conventional-changelog-conventionalcommits": "^9.3.0",
     "husky": "^9.1.0",
     "lint-staged": "^16.3.2",
     "playwright": "^1.50.0",
     "prettier": "^3.4.0",
     "semantic-release": "^25.0.3",
-    "turbo": "^2.8.13"
+    "turbo": "^2.8.14"
   },
   "lint-staged": {
     "*.{ts,tsx,vue}": [
