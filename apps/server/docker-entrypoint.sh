@@ -61,6 +61,16 @@ if [ "$DEMO_MODE" = "true" ]; then
   }
 fi
 
+# ------------------------------------------
+# 5. Create/reset super admin with random password
+# ------------------------------------------
+if [ "$SEED_ADMIN" = "true" ]; then
+  echo "SEED_ADMIN enabled — creating super admin..."
+  npx tsx prisma/seed-admin.ts || {
+    echo "Warning: super admin seed failed."
+  }
+fi
+
 echo "=== Entrypoint complete, starting server ==="
 
 # Return to app root for the server process
