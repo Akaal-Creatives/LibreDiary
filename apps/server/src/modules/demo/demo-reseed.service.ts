@@ -60,6 +60,7 @@ export async function reseedDemoData(): Promise<void> {
       passwordHash,
       emailVerified: true,
       emailVerifiedAt: new Date(),
+      isSuperAdmin: true,
     },
   });
 
