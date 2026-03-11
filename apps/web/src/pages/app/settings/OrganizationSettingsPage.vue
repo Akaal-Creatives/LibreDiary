@@ -8,6 +8,7 @@ import { filesService } from '@/services/files.service';
 import { useToast } from '@/composables/useToast';
 import { useEncryption } from '@/composables/useEncryption';
 import { encryptionService } from '@/services/encryption.service';
+import RecoveryKeyModal from '@/components/RecoveryKeyModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -55,12 +56,40 @@ const otpVerifying = ref(false);
 const otpError = ref<string | null>(null);
 const otpVerified = ref(false);
 
+// Recovery key state
+const showRecoveryKeyModal = ref(false);
+const recoveryKeyValue = ref('');
+const pendingEnableAfterRecovery = ref(false);
+
 async function handleEnableEncryption() {
   if (!authStore.currentOrganizationId) return;
 
   if (!encryption.isSetUp.value) {
-    toast.error('You must set up encryption first in your account settings.');
-    return;
+    // Prompt for passphrase setup inline
+    const passphrase = prompt('Set your encryption passphrase:');
+    if (!passphrase || passphrase.length < 8) {
+      toast.error('Passphrase must be at least 8 characters.');
+      return;
+    }
+    const confirm = prompt('Confirm your encryption passphrase:');
+    if (passphrase !== confirm) {
+      toast.error('Passphrases do not match.');
+      return;
+    }
+
+    try {
+      encryptionEnabling.value = true;
+      const result = await encryption.setupEncryption(passphrase);
+      recoveryKeyValue.value = result.recoveryKey;
+      showRecoveryKeyModal.value = true;
+      pendingEnableAfterRecovery.value = true;
+      encryptionEnabling.value = false;
+      return;
+    } catch {
+      toast.error('Failed to set up encryption.');
+      encryptionEnabling.value = false;
+      return;
+    }
   }
 
   if (!encryption.isUnlocked.value) {
@@ -69,6 +98,15 @@ async function handleEnableEncryption() {
   }
 
   showEncryptConfirm.value = true;
+}
+
+function handleRecoveryKeyConfirmed() {
+  showRecoveryKeyModal.value = false;
+  recoveryKeyValue.value = '';
+  if (pendingEnableAfterRecovery.value) {
+    pendingEnableAfterRecovery.value = false;
+    showEncryptConfirm.value = true;
+  }
 }
 
 async function confirmEnableEncryption() {
@@ -1026,6 +1064,13 @@ async function handleDelete() {
             </div>
           </Transition>
         </Teleport>
+
+        <!-- Recovery Key Modal -->
+        <RecoveryKeyModal
+          :open="showRecoveryKeyModal"
+          :recovery-key="recoveryKeyValue"
+          @confirmed="handleRecoveryKeyConfirmed"
+        />
 
         <!-- Features Settings -->
         <section class="settings-section">
