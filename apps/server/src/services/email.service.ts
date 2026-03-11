@@ -360,6 +360,47 @@ export async function sendPageSharedNotificationEmail(
   });
 }
 
+export interface EncryptionChangeOtpEmailInput {
+  to: string;
+  recipientName: string;
+  workspaceName: string;
+  action: 'enable' | 'disable';
+  code: string;
+}
+
+/**
+ * Send OTP code for encryption enable/disable verification
+ */
+export async function sendEncryptionChangeOtpEmail(
+  input: EncryptionChangeOtpEmailInput
+): Promise<void> {
+  const greeting = input.recipientName ? `Hi ${input.recipientName},` : 'Hi,';
+  const actionText =
+    input.action === 'enable'
+      ? 'enable end-to-end encryption on'
+      : 'disable end-to-end encryption on';
+
+  const warningText =
+    input.action === 'enable'
+      ? 'Once enabled, server-side search, AI features, public page sharing, data exports, and backups of page content will be unavailable for this workspace.'
+      : 'Encrypted data will be retained for 7 days. After that, all encrypted content will be permanently deleted.';
+
+  await sendEmail({
+    to: input.to,
+    subject: `Verification code to ${input.action} encryption - LibreDiary`,
+    html: emailTemplate(`
+      <h1>Encryption Change Verification</h1>
+      <p>${greeting}</p>
+      <p>You requested to <strong>${actionText}</strong> the workspace <strong>"${input.workspaceName}"</strong>.</p>
+      <p>Your verification code is:</p>
+      <div class="code" style="text-align: center; font-size: 24px; letter-spacing: 4px; font-weight: 600;">${input.code}</div>
+      <p class="muted">${warningText}</p>
+      <p class="muted">This code will expire in 10 minutes.</p>
+      <p class="muted">If you did not request this change, you can safely ignore this email.</p>
+    `),
+  });
+}
+
 export interface CommentResolvedNotificationEmailInput {
   to: string;
   recipientName: string;

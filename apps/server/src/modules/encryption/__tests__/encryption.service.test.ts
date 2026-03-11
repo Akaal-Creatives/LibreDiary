@@ -27,11 +27,35 @@ const { mockPrisma, resetMocks } = vi.hoisted(() => {
     findUnique: vi.fn(),
   };
 
+  const mockPage = {
+    count: vi.fn(),
+    updateMany: vi.fn(),
+  };
+
+  const mockDatabase = {
+    findMany: vi.fn(),
+  };
+
+  const mockDatabaseRow = {
+    count: vi.fn(),
+  };
+
+  const mockEncryptionChangeRequest = {
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+  };
+
   const mockPrisma = {
     userEncryption: mockUserEncryption,
     workspaceKeyShare: mockWorkspaceKeyShare,
     organization: mockOrganization,
     organizationMember: mockOrganizationMember,
+    page: mockPage,
+    database: mockDatabase,
+    databaseRow: mockDatabaseRow,
+    encryptionChangeRequest: mockEncryptionChangeRequest,
     $transaction: vi.fn((callback: (tx: typeof mockPrisma) => Promise<unknown>) =>
       callback(mockPrisma)
     ),
@@ -42,6 +66,10 @@ const { mockPrisma, resetMocks } = vi.hoisted(() => {
     Object.values(mockWorkspaceKeyShare).forEach((mock) => mock.mockReset());
     Object.values(mockOrganization).forEach((mock) => mock.mockReset());
     Object.values(mockOrganizationMember).forEach((mock) => mock.mockReset());
+    Object.values(mockPage).forEach((mock) => mock.mockReset());
+    Object.values(mockDatabase).forEach((mock) => mock.mockReset());
+    Object.values(mockDatabaseRow).forEach((mock) => mock.mockReset());
+    Object.values(mockEncryptionChangeRequest).forEach((mock) => mock.mockReset());
     mockPrisma.$transaction.mockReset();
     mockPrisma.$transaction.mockImplementation(
       (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma)
@@ -487,6 +515,351 @@ describe('Encryption Service', () => {
       expect(result).toEqual(mockShares);
       expect(mockPrisma.workspaceKeyShare.findMany).toHaveBeenCalledWith({
         where: { organizationId: 'org-123' },
+      });
+    });
+  });
+
+  // =============================================
+  // hasWorkspaceData
+  // =============================================
+  describe('hasWorkspaceData', () => {
+    it('should return true when pages with content exist', async () => {
+      mockPrisma.page.count.mockResolvedValue(3);
+
+      const result = await encryptionService.hasWorkspaceData('org-123');
+
+      expect(result).toBe(true);
+      expect(mockPrisma.page.count).toHaveBeenCalledWith({
+        where: {
+          organizationId: 'org-123',
+          OR: [{ htmlContent: { not: null } }, { yjsState: { not: null } }],
+        },
+      });
+    });
+
+    it('should return true when databases with rows exist', async () => {
+      mockPrisma.page.count.mockResolvedValue(0);
+      mockPrisma.database.findMany.mockResolvedValue([{ id: 'db-1' }]);
+      mockPrisma.databaseRow.count.mockResolvedValue(5);
+
+      const result = await encryptionService.hasWorkspaceData('org-123');
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when no pages with content and no database rows', async () => {
+      mockPrisma.page.count.mockResolvedValue(0);
+      mockPrisma.database.findMany.mockResolvedValue([]);
+
+      const result = await encryptionService.hasWorkspaceData('org-123');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  // =============================================
+  // createEncryptionChangeRequest
+  // =============================================
+  describe('createEncryptionChangeRequest', () => {
+    it('should create a pending verification request and cancel existing ones', async () => {
+      mockPrisma.encryptionChangeRequest.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.encryptionChangeRequest.create.mockResolvedValue({
+        id: 'req-123',
+        organizationId: 'org-123',
+        requestedById: 'user-123',
+        type: 'ENABLE',
+        status: 'PENDING_VERIFICATION',
+        verificationCodeHash: 'hashed-code',
+        verificationExpiresAt: new Date('2026-03-11T10:10:00Z'),
+      });
+
+      const result = await encryptionService.createEncryptionChangeRequest({
+        organizationId: 'org-123',
+        requestedById: 'user-123',
+        type: 'ENABLE',
+        verificationCodeHash: 'hashed-code',
+        verificationExpiresAt: new Date('2026-03-11T10:10:00Z'),
+      });
+
+      expect(result.id).toBe('req-123');
+      expect(result.type).toBe('ENABLE');
+      expect(result.status).toBe('PENDING_VERIFICATION');
+      // Should cancel any existing pending requests for same org+type
+      expect(mockPrisma.encryptionChangeRequest.updateMany).toHaveBeenCalledWith({
+        where: {
+          organizationId: 'org-123',
+          type: 'ENABLE',
+          status: { in: ['PENDING_VERIFICATION', 'VERIFIED'] },
+        },
+        data: { status: 'CANCELLED' },
+      });
+    });
+  });
+
+  // =============================================
+  // verifyEncryptionChangeRequest
+  // =============================================
+  describe('verifyEncryptionChangeRequest', () => {
+    it('should verify a pending request with valid code', async () => {
+      const futureDate = new Date(Date.now() + 60_000);
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue({
+        id: 'req-123',
+        organizationId: 'org-123',
+        type: 'ENABLE',
+        status: 'PENDING_VERIFICATION',
+        verificationCodeHash: 'expected-hash',
+        verificationExpiresAt: futureDate,
+      });
+      mockPrisma.encryptionChangeRequest.update.mockResolvedValue({
+        id: 'req-123',
+        status: 'VERIFIED',
+      });
+
+      const result = await encryptionService.verifyEncryptionChangeRequest({
+        organizationId: 'org-123',
+        type: 'ENABLE',
+        codeHash: 'expected-hash',
+      });
+
+      expect(result.status).toBe('VERIFIED');
+      expect(mockPrisma.encryptionChangeRequest.update).toHaveBeenCalledWith({
+        where: { id: 'req-123' },
+        data: { status: 'VERIFIED' },
+      });
+    });
+
+    it('should throw if no pending request found', async () => {
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue(null);
+
+      await expect(
+        encryptionService.verifyEncryptionChangeRequest({
+          organizationId: 'org-123',
+          type: 'ENABLE',
+          codeHash: 'some-hash',
+        })
+      ).rejects.toThrow('No pending verification request found');
+    });
+
+    it('should throw if verification code is expired', async () => {
+      const pastDate = new Date(Date.now() - 60_000);
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue({
+        id: 'req-123',
+        organizationId: 'org-123',
+        type: 'ENABLE',
+        status: 'PENDING_VERIFICATION',
+        verificationCodeHash: 'expected-hash',
+        verificationExpiresAt: pastDate,
+      });
+
+      await expect(
+        encryptionService.verifyEncryptionChangeRequest({
+          organizationId: 'org-123',
+          type: 'ENABLE',
+          codeHash: 'expected-hash',
+        })
+      ).rejects.toThrow('Verification code has expired');
+    });
+
+    it('should throw if verification code does not match', async () => {
+      const futureDate = new Date(Date.now() + 60_000);
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue({
+        id: 'req-123',
+        organizationId: 'org-123',
+        type: 'ENABLE',
+        status: 'PENDING_VERIFICATION',
+        verificationCodeHash: 'expected-hash',
+        verificationExpiresAt: futureDate,
+      });
+
+      await expect(
+        encryptionService.verifyEncryptionChangeRequest({
+          organizationId: 'org-123',
+          type: 'ENABLE',
+          codeHash: 'wrong-hash',
+        })
+      ).rejects.toThrow('Invalid verification code');
+    });
+  });
+
+  // =============================================
+  // disableWorkspaceEncryption
+  // =============================================
+  describe('disableWorkspaceEncryption', () => {
+    it('should disable encryption and set grace period', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'OWNER',
+      });
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue({
+        id: 'req-123',
+        type: 'DISABLE',
+        status: 'VERIFIED',
+      });
+      mockPrisma.organization.update.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+        encryptionDisabledAt: new Date(),
+      });
+      mockPrisma.encryptionChangeRequest.update.mockResolvedValue({
+        id: 'req-123',
+        status: 'COMPLETED',
+      });
+
+      const result = await encryptionService.disableWorkspaceEncryption({
+        organizationId: 'org-123',
+        userId: 'user-123',
+      });
+
+      expect(result.isEncrypted).toBe(false);
+      expect(mockPrisma.organization.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'org-123' },
+          data: expect.objectContaining({
+            isEncrypted: false,
+          }),
+        })
+      );
+    });
+
+    it('should throw if workspace is not encrypted', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'OWNER',
+      });
+
+      await expect(
+        encryptionService.disableWorkspaceEncryption({
+          organizationId: 'org-123',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Workspace is not encrypted');
+    });
+
+    it('should throw if user is not an owner or admin', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'MEMBER',
+      });
+
+      await expect(
+        encryptionService.disableWorkspaceEncryption({
+          organizationId: 'org-123',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Only owners and admins can disable encryption');
+    });
+
+    it('should throw if no verified disable request exists', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'OWNER',
+      });
+      mockPrisma.encryptionChangeRequest.findFirst.mockResolvedValue(null);
+
+      await expect(
+        encryptionService.disableWorkspaceEncryption({
+          organizationId: 'org-123',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Verified disable request required');
+    });
+  });
+
+  // =============================================
+  // cancelDisableEncryption
+  // =============================================
+  describe('cancelDisableEncryption', () => {
+    it('should re-enable encryption and clear grace period', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+        encryptionDisabledAt: new Date(),
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'OWNER',
+      });
+      mockPrisma.organization.update.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+        encryptionDisabledAt: null,
+      });
+
+      const result = await encryptionService.cancelDisableEncryption({
+        organizationId: 'org-123',
+        userId: 'user-123',
+      });
+
+      expect(result.isEncrypted).toBe(true);
+      expect(mockPrisma.organization.update).toHaveBeenCalledWith({
+        where: { id: 'org-123' },
+        data: {
+          isEncrypted: true,
+          encryptionDisabledAt: null,
+        },
+      });
+    });
+
+    it('should throw if workspace is not in grace period', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+        encryptionDisabledAt: null,
+      });
+      mockPrisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'member-123',
+        role: 'OWNER',
+      });
+
+      await expect(
+        encryptionService.cancelDisableEncryption({
+          organizationId: 'org-123',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Workspace is not in encryption grace period');
+    });
+  });
+
+  // =============================================
+  // purgeEncryptedData
+  // =============================================
+  describe('purgeEncryptedData', () => {
+    it('should delete key shares and null out encrypted page content', async () => {
+      mockPrisma.workspaceKeyShare.deleteMany.mockResolvedValue({ count: 2 });
+      mockPrisma.page.updateMany.mockResolvedValue({ count: 5 });
+      mockPrisma.organization.update.mockResolvedValue({
+        id: 'org-123',
+        encryptionDisabledAt: null,
+      });
+
+      await encryptionService.purgeEncryptedData('org-123');
+
+      expect(mockPrisma.workspaceKeyShare.deleteMany).toHaveBeenCalledWith({
+        where: { organizationId: 'org-123' },
+      });
+      expect(mockPrisma.page.updateMany).toHaveBeenCalledWith({
+        where: { organizationId: 'org-123' },
+        data: { htmlContent: null, plainContent: null, yjsState: null },
+      });
+      expect(mockPrisma.organization.update).toHaveBeenCalledWith({
+        where: { id: 'org-123' },
+        data: { encryptionDisabledAt: null },
       });
     });
   });

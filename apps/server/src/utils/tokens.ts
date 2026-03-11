@@ -51,6 +51,16 @@ export function isExpired(date: Date): boolean {
   return new Date() > date;
 }
 
+/**
+ * Generate a 6-digit numeric OTP code and its SHA-256 hash.
+ * The hash is stored server-side; the plaintext code is sent via email.
+ */
+export function generateOtp(): { code: string; hash: string } {
+  const num = randomBytes(4).readUInt32BE(0) % 1_000_000;
+  const code = num.toString().padStart(6, '0');
+  return { code, hash: hashToken(code) };
+}
+
 // Common expiration times
 export const EXPIRATION = {
   SESSION: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -58,6 +68,8 @@ export const EXPIRATION = {
   PASSWORD_RESET: 60 * 60 * 1000, // 1 hour
   INVITE: 7 * 24 * 60 * 60 * 1000, // 7 days
   WS_TOKEN: 5 * 60 * 1000, // 5 minutes - short-lived for WebSocket auth
+  OTP: 10 * 60 * 1000, // 10 minutes
+  ENCRYPTION_GRACE_PERIOD: 7 * 24 * 60 * 60 * 1000, // 7 days
 } as const;
 
 /**

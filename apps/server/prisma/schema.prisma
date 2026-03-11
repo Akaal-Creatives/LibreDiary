@@ -61,8 +61,9 @@ model User {
   apiTokens          ApiToken[]
   createdWebhooks    Webhook[]            @relation("WebhookCreatedBy")
   dataExports        DataExport[]
-  encryption         UserEncryption?
-  keyShares          WorkspaceKeyShare[]
+  encryption                UserEncryption?
+  keyShares                 WorkspaceKeyShare[]
+  encryptionChangeRequests  EncryptionChangeRequest[]
 
   @@index([email])
   @@index([deletedAt])
@@ -162,7 +163,8 @@ model Organization {
   aiEnabled Boolean @default(true)
 
   // E2EE
-  isEncrypted Boolean @default(false)
+  isEncrypted        Boolean   @default(false)
+  encryptionDisabledAt DateTime? // Set when E2EE is disabled; triggers 7-day grace period before data purge
 
   // Timestamps
   createdAt DateTime  @default(now())
@@ -178,10 +180,12 @@ model Organization {
   files          File[]
   backups        Backup[]
   webhooks       Webhook[]
-  keyShares      WorkspaceKeyShare[]
+  keyShares              WorkspaceKeyShare[]
+  encryptionChangeRequests EncryptionChangeRequest[]
 
   @@index([slug])
   @@index([deletedAt])
+  @@index([encryptionDisabledAt])
 }
 
 model OrganizationMember {
@@ -896,6 +900,51 @@ model WorkspaceKeyShare {
   @@unique([organizationId, userId])
   @@index([organizationId])
   @@index([userId])
+}
+
+// ============================================
+// E2EE Change Requests (OTP verification)
+// ============================================
+
+enum EncryptionChangeType {
+  ENABLE
+  DISABLE
+}
+
+enum EncryptionChangeStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  COMPLETED
+  CANCELLED
+}
+
+model EncryptionChangeRequest {
+  id             String                 @id @default(cuid())
+  organizationId String
+  requestedById  String
+
+  type   EncryptionChangeType
+  status EncryptionChangeStatus @default(PENDING_VERIFICATION)
+
+  // OTP verification (hashed code + expiry)
+  verificationCodeHash String
+  verificationExpiresAt DateTime
+
+  // For DISABLE: scheduled purge date (7 days after verification)
+  scheduledPurgeAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedBy  User         @relation(fields: [requestedById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([requestedById])
+  @@index([organizationId, type, status])
+  @@index([scheduledPurgeAt])
 }
 
 // ============================================
