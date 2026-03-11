@@ -25,6 +25,7 @@ const { mockPrisma, resetMocks } = vi.hoisted(() => {
 
   const mockOrganizationMember = {
     findUnique: vi.fn(),
+    findMany: vi.fn(),
   };
 
   const mockPage = {
@@ -861,6 +862,98 @@ describe('Encryption Service', () => {
         where: { id: 'org-123' },
         data: { encryptionDisabledAt: null },
       });
+    });
+  });
+
+  // =============================================
+  // getMembersWithoutKeyShare
+  // =============================================
+  describe('getMembersWithoutKeyShare', () => {
+    it('should return members who do not have a key share', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+
+      const allMembers = [
+        {
+          id: 'mem-1',
+          userId: 'user-1',
+          user: {
+            id: 'user-1',
+            email: 'alice@test.com',
+            name: 'Alice',
+            userEncryption: { publicKey: 'pk-1' },
+          },
+        },
+        {
+          id: 'mem-2',
+          userId: 'user-2',
+          user: {
+            id: 'user-2',
+            email: 'bob@test.com',
+            name: 'Bob',
+            userEncryption: { publicKey: 'pk-2' },
+          },
+        },
+        {
+          id: 'mem-3',
+          userId: 'user-3',
+          user: {
+            id: 'user-3',
+            email: 'charlie@test.com',
+            name: 'Charlie',
+            userEncryption: null,
+          },
+        },
+      ];
+
+      mockPrisma.organizationMember.findMany.mockResolvedValue(allMembers);
+      mockPrisma.workspaceKeyShare.findMany.mockResolvedValue([
+        { userId: 'user-1', organizationId: 'org-123' },
+      ]);
+
+      const result = await encryptionService.getMembersWithoutKeyShare('org-123');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].userId).toBe('user-2');
+      expect(result[1].userId).toBe('user-3');
+    });
+
+    it('should throw if organisation is not encrypted', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+      });
+
+      await expect(encryptionService.getMembersWithoutKeyShare('org-123')).rejects.toThrow();
+    });
+
+    it('should return empty array when all members have key shares', async () => {
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+
+      mockPrisma.organizationMember.findMany.mockResolvedValue([
+        {
+          id: 'mem-1',
+          userId: 'user-1',
+          user: {
+            id: 'user-1',
+            email: 'alice@test.com',
+            name: 'Alice',
+            userEncryption: { publicKey: 'pk-1' },
+          },
+        },
+      ]);
+
+      mockPrisma.workspaceKeyShare.findMany.mockResolvedValue([
+        { userId: 'user-1', organizationId: 'org-123' },
+      ]);
+
+      const result = await encryptionService.getMembersWithoutKeyShare('org-123');
+      expect(result).toHaveLength(0);
     });
   });
 });

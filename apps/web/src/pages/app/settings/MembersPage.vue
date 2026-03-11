@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '@/stores';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
+import { encryptionService } from '@/services/encryption.service';
+import type { PendingMember } from '@/services/encryption.service';
 import type { OrgRole } from '@librediary/shared';
 import MemberRoleBadge from '@/components/MemberRoleBadge.vue';
 import InviteMemberModal from '@/components/InviteMemberModal.vue';
@@ -24,6 +26,9 @@ const actionLoading = ref(false);
 // Invite actions
 const inviteActionLoading = ref<string | null>(null);
 
+// Encryption pending members
+const pendingEncryptionMembers = ref<PendingMember[]>([]);
+
 // Load members and invites
 async function loadData() {
   loading.value = true;
@@ -34,6 +39,18 @@ async function loadData() {
       orgsStore.fetchMembers(),
       orgsStore.canManageInvites ? orgsStore.fetchInvites() : Promise.resolve(),
     ]);
+
+    // Fetch pending encryption members if workspace is encrypted and user can manage
+    if (authStore.currentOrganization?.isEncrypted && orgsStore.canManageMembers) {
+      try {
+        pendingEncryptionMembers.value = await encryptionService.getPendingMembers(
+          authStore.currentOrganizationId!
+        );
+      } catch {
+        // Silently fail — encryption banner is non-critical
+        pendingEncryptionMembers.value = [];
+      }
+    }
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.message;
@@ -237,6 +254,31 @@ function isExpiringSoon(expiresAt: string): boolean {
 
     <div v-if="error" class="alert alert-error">
       {{ error }}
+    </div>
+
+    <!-- Encryption Pending Members Banner -->
+    <div
+      v-if="pendingEncryptionMembers.length > 0 && orgsStore.canManageMembers"
+      class="encryption-pending-banner"
+    >
+      <svg class="banner-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="3" y="8" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+        <path
+          d="M6 8V5C6 3.34315 7.34315 2 9 2C10.6569 2 12 3.34315 12 5V8"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span class="banner-text">
+        <strong
+          >{{ pendingEncryptionMembers.length }} member{{
+            pendingEncryptionMembers.length !== 1 ? 's' : ''
+          }}</strong
+        >
+        {{ pendingEncryptionMembers.length !== 1 ? 'do' : 'does' }} not yet have encryption access.
+        Grant key shares so they can view encrypted content.
+      </span>
     </div>
 
     <SettingsListSkeleton v-if="loading" />
@@ -615,6 +657,28 @@ function isExpiringSoon(expiresAt: string): boolean {
 .alert-error {
   color: var(--color-error);
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.encryption-pending-banner {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.banner-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.banner-text {
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 /* Section Styles */

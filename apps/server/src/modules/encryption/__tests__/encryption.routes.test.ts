@@ -18,6 +18,7 @@ const mockEncryptionService = vi.hoisted(() => ({
   disableWorkspaceEncryption: vi.fn(),
   cancelDisableEncryption: vi.fn(),
   purgeEncryptedData: vi.fn(),
+  getMembersWithoutKeyShare: vi.fn(),
 }));
 
 const mockRequireAuth = vi.hoisted(() => vi.fn());
@@ -547,6 +548,54 @@ describe('Encryption Routes', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/encryption/workspace/org-123/cancel-disable',
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  // =============================================
+  // GET /encryption/workspace/:orgId/pending-members
+  // =============================================
+  describe('GET /encryption/workspace/:orgId/pending-members', () => {
+    it('should return members without key shares', async () => {
+      const pendingMembers = [
+        {
+          userId: 'user-2',
+          email: 'bob@test.com',
+          name: 'Bob',
+          publicKey: 'pk-2',
+          hasEncryptionSetup: true,
+        },
+        {
+          userId: 'user-3',
+          email: 'charlie@test.com',
+          name: 'Charlie',
+          publicKey: null,
+          hasEncryptionSetup: false,
+        },
+      ];
+      mockEncryptionService.getMembersWithoutKeyShare.mockResolvedValue(pendingMembers);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/encryption/workspace/org-123/pending-members',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.data).toHaveLength(2);
+      expect(body.data[0].userId).toBe('user-2');
+    });
+
+    it('should return 400 if workspace is not encrypted', async () => {
+      mockEncryptionService.getMembersWithoutKeyShare.mockRejectedValue(
+        new Error('Organisation is not encrypted')
+      );
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/encryption/workspace/org-456/pending-members',
       });
 
       expect(response.statusCode).toBe(400);

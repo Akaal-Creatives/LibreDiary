@@ -499,6 +499,57 @@ export async function cancelDisableEncryption(input: CancelDisableEncryptionInpu
  * Purge encrypted data after the 7-day grace period.
  * Deletes key shares and nulls out encrypted page content.
  */
+/**
+ * Get organisation members who do not have a workspace key share.
+ * Used to identify members who need to be granted encryption access.
+ */
+export async function getMembersWithoutKeyShare(organizationId: string) {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { id: true, isEncrypted: true },
+  });
+
+  if (!org || !org.isEncrypted) {
+    throw new Error('Organisation is not encrypted');
+  }
+
+  // Get all members with their user info and encryption setup
+  const members = await prisma.organizationMember.findMany({
+    where: { organizationId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          userEncryption: {
+            select: { publicKey: true },
+          },
+        },
+      },
+    },
+  });
+
+  // Get existing key shares for this workspace
+  const keyShares = await prisma.workspaceKeyShare.findMany({
+    where: { organizationId },
+    select: { userId: true },
+  });
+
+  const usersWithShares = new Set(keyShares.map((ks) => ks.userId));
+
+  // Return members without key shares
+  return members
+    .filter((m) => !usersWithShares.has(m.userId))
+    .map((m) => ({
+      userId: m.userId,
+      email: m.user.email,
+      name: m.user.name,
+      publicKey: m.user.userEncryption?.publicKey ?? null,
+      hasEncryptionSetup: !!m.user.userEncryption,
+    }));
+}
+
 export async function purgeEncryptedData(organizationId: string) {
   return prisma.$transaction(async (tx) => {
     await tx.workspaceKeyShare.deleteMany({

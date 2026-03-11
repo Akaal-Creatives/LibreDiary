@@ -3,13 +3,13 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
 // Hoist mocks so they are available before module imports
-const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
+const { mockAuthStore, mockOrgsStore, mockEncryptionService } = vi.hoisted(() => ({
   mockAuthStore: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: { id: 'user-1', name: 'Test User', email: 'test@example.com' } as any,
     currentOrganizationId: 'org-1',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    currentOrganization: { id: 'org-1', name: 'Test Org' } as any,
+    currentOrganization: { id: 'org-1', name: 'Test Org', isEncrypted: false } as any,
   },
   mockOrgsStore: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +27,9 @@ const { mockAuthStore, mockOrgsStore } = vi.hoisted(() => ({
     removeMember: vi.fn(),
     cancelInvite: vi.fn(),
     resendInvite: vi.fn(),
+  },
+  mockEncryptionService: {
+    getPendingMembers: vi.fn(),
   },
 }));
 
@@ -48,6 +51,10 @@ vi.mock('@/services', () => ({
       this.name = 'ApiError';
     }
   },
+}));
+
+vi.mock('@/services/encryption.service', () => ({
+  encryptionService: mockEncryptionService,
 }));
 
 vi.mock('@/components/MemberRoleBadge.vue', () => ({
@@ -92,7 +99,7 @@ describe('MembersPage', () => {
     // Reset store defaults
     mockAuthStore.user = { id: 'user-1', name: 'Test User', email: 'test@example.com' };
     mockAuthStore.currentOrganizationId = 'org-1';
-    mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org' };
+    mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: false };
 
     mockOrgsStore.members = [];
     mockOrgsStore.invites = [];
@@ -108,6 +115,8 @@ describe('MembersPage', () => {
     mockOrgsStore.removeMember.mockResolvedValue(undefined);
     mockOrgsStore.cancelInvite.mockResolvedValue(undefined);
     mockOrgsStore.resendInvite.mockResolvedValue(undefined);
+
+    mockEncryptionService.getPendingMembers.mockResolvedValue([]);
   });
 
   // ---- Page Header ----
@@ -381,6 +390,71 @@ describe('MembersPage', () => {
 
       expect(wrapper.find('.alert-error').exists()).toBe(true);
       expect(wrapper.text()).toContain('Failed to load members');
+    });
+  });
+
+  // ---- Encryption Pending Members ----
+
+  describe('encryption pending members', () => {
+    const pendingMembers = [
+      {
+        userId: 'user-2',
+        email: 'bob@test.com',
+        name: 'Bob',
+        publicKey: 'pk-2',
+        hasEncryptionSetup: true,
+      },
+      {
+        userId: 'user-3',
+        email: 'carol@test.com',
+        name: 'Carol',
+        publicKey: null,
+        hasEncryptionSetup: false,
+      },
+    ];
+
+    it('shows pending members banner when workspace is encrypted and members lack key shares', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = true;
+      mockEncryptionService.getPendingMembers.mockResolvedValue(pendingMembers);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.encryption-pending-banner').exists()).toBe(true);
+      expect(wrapper.text()).toContain('2 members');
+    });
+
+    it('does not show pending members banner when workspace is not encrypted', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: false };
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.encryption-pending-banner').exists()).toBe(false);
+      expect(mockEncryptionService.getPendingMembers).not.toHaveBeenCalled();
+    });
+
+    it('does not show pending members banner when user cannot manage members', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = false;
+      mockEncryptionService.getPendingMembers.mockResolvedValue(pendingMembers);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.encryption-pending-banner').exists()).toBe(false);
+    });
+
+    it('hides banner when there are no pending members', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = true;
+      mockEncryptionService.getPendingMembers.mockResolvedValue([]);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.find('.encryption-pending-banner').exists()).toBe(false);
     });
   });
 });

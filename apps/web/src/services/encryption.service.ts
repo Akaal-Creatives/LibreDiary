@@ -71,6 +71,14 @@ export interface ShareKeyInput {
   sharedByPublicKey: string;
 }
 
+export interface PendingMember {
+  userId: string;
+  email: string;
+  name: string | null;
+  publicKey: string | null;
+  hasEncryptionSetup: boolean;
+}
+
 // =============================================
 // Service
 // =============================================
@@ -150,5 +158,10 @@ export const encryptionService = {
   /** Cancel disable and re-enable encryption during grace period */
   cancelDisableEncryption(orgId: string) {
     return api.post(`/encryption/workspace/${orgId}/cancel-disable`);
+  },
+
+  /** Get members who do not yet have a workspace key share */
+  getPendingMembers(orgId: string) {
+    return api.get<PendingMember[]>(`/encryption/workspace/${orgId}/pending-members`);
   },
 };

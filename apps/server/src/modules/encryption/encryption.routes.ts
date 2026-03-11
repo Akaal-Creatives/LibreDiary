@@ -537,4 +537,28 @@ export async function encryptionRoutes(app: FastifyInstance) {
       }
     }
   );
+
+  // GET /encryption/workspace/:organizationId/pending-members
+  app.get(
+    '/workspace/:organizationId/pending-members',
+    async (
+      request: FastifyRequest<{ Params: { organizationId: string } }>,
+      reply: FastifyReply
+    ) => {
+      try {
+        const result = await encryptionService.getMembersWithoutKeyShare(
+          request.params.organizationId
+        );
+        return reply.send({ success: true, data: result });
+      } catch (error) {
+        return mapServiceError(error, reply, {
+          'Organisation is not encrypted': {
+            status: 400,
+            code: 'NOT_ENCRYPTED',
+            message: 'Organisation is not encrypted',
+          },
+        });
+      }
+    }
+  );
 }

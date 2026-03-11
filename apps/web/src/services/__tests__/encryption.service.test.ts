@@ -244,4 +244,36 @@ describe('Encryption Service', () => {
       expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/cancel-disable');
     });
   });
+
+  // =============================================
+  // Pending Members
+  // =============================================
+
+  describe('getPendingMembers', () => {
+    it('should GET members without key shares for a workspace', async () => {
+      const pendingMembers = [
+        {
+          userId: 'user-2',
+          email: 'bob@test.com',
+          name: 'Bob',
+          publicKey: 'pk-2',
+          hasEncryptionSetup: true,
+        },
+        {
+          userId: 'user-3',
+          email: 'carol@test.com',
+          name: 'Carol',
+          publicKey: null,
+          hasEncryptionSetup: false,
+        },
+      ];
+      mockApi.get.mockResolvedValue(pendingMembers);
+
+      const result = await encryptionService.getPendingMembers('org-123');
+
+      expect(mockApi.get).toHaveBeenCalledWith('/encryption/workspace/org-123/pending-members');
+      expect(result).toHaveLength(2);
+      expect(result[0].userId).toBe('user-2');
+    });
+  });
 });
