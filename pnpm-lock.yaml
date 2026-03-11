@@ -336,9 +336,6 @@ importers:
       '@testing-library/vue':
         specifier: ^8.1.0
         version: 8.1.0(@vue/compiler-sfc@3.5.29)(vue@3.5.29(typescript@5.9.3))
-      '@types/dompurify':
-        specifier: ^3.2.0
-        version: 3.2.0
       '@types/katex':
         specifier: ^0.16.8
         version: 0.16.8
@@ -2891,10 +2888,6 @@ packages:
   '@types/diff@8.0.0':
     resolution: {integrity: sha512-o7jqJM04gfaYrdCecCVMbZhNdG6T1MHg/oQoRFdERLV+4d+V7FijhiEAbFu0Usww84Yijk9yH58U4Jk4HbtzZw==}
     deprecated: This is a stub types definition. diff provides its own type definitions, so you do not need this installed.
-
-  '@types/dompurify@3.2.0':
-    resolution: {integrity: sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg==}
-    deprecated: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
 
   '@types/esrecurse@4.3.1':
     resolution: {integrity: sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw==}
@@ -10504,10 +10497,6 @@ snapshots:
   '@types/diff@8.0.0':
     dependencies:
       diff: 8.0.3
-
-  '@types/dompurify@3.2.0':
-    dependencies:
-      dompurify: 3.3.2
 
   '@types/esrecurse@4.3.1': {}
 

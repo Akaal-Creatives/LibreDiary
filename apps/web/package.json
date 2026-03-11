@@ -57,7 +57,6 @@
     "@librediary/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
-    "@types/dompurify": "^3.2.0",
     "@types/katex": "^0.16.8",
     "@types/markdown-it-footnote": "^3.0.4",
     "@vitejs/plugin-vue": "^6.0.0",

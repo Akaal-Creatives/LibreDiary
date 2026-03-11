@@ -4,6 +4,7 @@ import type { ChainedCommands } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import type { Component } from 'vue';
 import { defineComponent, ref, watch, onMounted, h } from 'vue';
+import DOMPurify from 'dompurify';
 
 /**
  * Vue component used as the NodeView for KaTeX math blocks.
@@ -39,11 +40,12 @@ const MathNodeView = defineComponent({
       }
       try {
         const katex = await loadKatex();
-        renderedHtml.value = katex.renderToString(latex, {
+        const rawHtml = katex.renderToString(latex, {
           displayMode: true,
           throwOnError: false,
           output: 'html',
         });
+        renderedHtml.value = DOMPurify.sanitize(rawHtml);
         errorMsg.value = '';
       } catch (err) {
         errorMsg.value = err instanceof Error ? err.message : String(err);

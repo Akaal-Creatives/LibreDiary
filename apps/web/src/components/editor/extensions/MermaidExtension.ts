@@ -3,6 +3,7 @@ import type { ChainedCommands } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import type { Component } from 'vue';
 import { defineComponent, ref, watch, onMounted, h } from 'vue';
+import DOMPurify from 'dompurify';
 
 /**
  * Vue component used as the NodeView for mermaid code blocks.
@@ -46,7 +47,7 @@ const MermaidNodeView = defineComponent({
         const mermaid = await loadMermaid();
         const id = `mermaid-${Date.now()}`;
         const { svg } = await mermaid.render(id, code);
-        diagramHtml.value = svg;
+        diagramHtml.value = DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } });
         errorMsg.value = '';
       } catch (err) {
         errorMsg.value = err instanceof Error ? err.message : String(err);
