@@ -215,4 +215,83 @@ describe('useEncryption', () => {
       expect(result).toBe('Hello World');
     });
   });
+
+  describe('recoverWithRecoveryKey', () => {
+    it('should recover master key and re-wrap with new passphrase', async () => {
+      const mockMasterKey = new Uint8Array(32).fill(5);
+      const mockNewSalt = new Uint8Array(16).fill(6);
+      const mockNewKey = new Uint8Array(32).fill(7);
+      const mockKeyPair = {
+        publicKey: new Uint8Array(32).fill(8),
+        privateKey: new Uint8Array(32).fill(9),
+      };
+      const mockWrappedPk = new Uint8Array(48).fill(10);
+      const mockRecovery = {
+        recoveryKey: 'NEW-RECO-VERY-KEY1',
+        encryptedMasterKey: { version: 1, iv: new Uint8Array(12), ciphertext: new Uint8Array(32) },
+        salt: new Uint8Array(16).fill(11),
+      };
+
+      // Server returns existing encryption data
+      mockEncryptionService.encryptionService.getData.mockResolvedValue({
+        publicKey: toBase64(mockKeyPair.publicKey),
+        encryptedPrivateKey: toBase64(mockWrappedPk),
+        keySalt: toBase64(mockNewSalt),
+        keyParams: { memoryLimit: 65536, opsLimit: 3 },
+        recoveryEncryptedMasterKey: { version: 1, iv: 'aWl2', ciphertext: 'Y3Q=' },
+        recoverySalt: toBase64(new Uint8Array(16).fill(12)),
+        recoveryKeyHash: toBase64(new Uint8Array(32).fill(13)),
+      });
+
+      // Recover master key from recovery key
+      mockCrypto.recoverMasterKey.mockResolvedValue(mockMasterKey);
+
+      // Derive new key from new passphrase
+      mockCrypto.deriveKeyFromPassphrase.mockResolvedValue({
+        key: mockNewKey,
+        salt: mockNewSalt,
+      });
+
+      // Generate new keypair
+      mockCrypto.generateKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Wrap private key with new master key
+      mockCrypto.wrapKey.mockResolvedValue(mockWrappedPk);
+
+      // Generate new recovery key
+      mockCrypto.generateRecoveryKey.mockResolvedValue(mockRecovery);
+
+      // Setup call succeeds
+      mockEncryptionService.encryptionService.setup.mockResolvedValue({});
+
+      const { recoverWithRecoveryKey } = useEncryption();
+      const result = await recoverWithRecoveryKey('OLD-RECO-VERY-KEY1', 'newPassphrase123');
+
+      expect(mockEncryptionService.encryptionService.getData).toHaveBeenCalled();
+      expect(mockCrypto.recoverMasterKey).toHaveBeenCalled();
+      expect(mockCrypto.deriveKeyFromPassphrase).toHaveBeenCalledWith('newPassphrase123');
+      expect(mockCrypto.generateKeyPair).toHaveBeenCalled();
+      expect(mockCrypto.wrapKey).toHaveBeenCalledWith(mockKeyPair.privateKey, mockNewKey);
+      expect(mockCrypto.generateRecoveryKey).toHaveBeenCalledWith(mockNewKey);
+      expect(mockEncryptionService.encryptionService.setup).toHaveBeenCalled();
+      expect(result.recoveryKey).toBe('NEW-RECO-VERY-KEY1');
+    });
+
+    it('should throw if recovery key is invalid', async () => {
+      mockEncryptionService.encryptionService.getData.mockResolvedValue({
+        publicKey: toBase64(new Uint8Array(32)),
+        encryptedPrivateKey: toBase64(new Uint8Array(48)),
+        keySalt: toBase64(new Uint8Array(16)),
+        keyParams: { memoryLimit: 65536, opsLimit: 3 },
+        recoveryEncryptedMasterKey: { version: 1, iv: 'aWl2', ciphertext: 'Y3Q=' },
+        recoverySalt: toBase64(new Uint8Array(16)),
+        recoveryKeyHash: toBase64(new Uint8Array(32)),
+      });
+
+      mockCrypto.recoverMasterKey.mockRejectedValue(new Error('Decryption failed'));
+
+      const { recoverWithRecoveryKey } = useEncryption();
+      await expect(recoverWithRecoveryKey('WRONG-KEY', 'newPass')).rejects.toThrow();
+    });
+  });
 });

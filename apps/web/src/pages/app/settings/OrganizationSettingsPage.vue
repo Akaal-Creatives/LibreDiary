@@ -9,6 +9,7 @@ import { useToast } from '@/composables/useToast';
 import { useEncryption } from '@/composables/useEncryption';
 import { encryptionService } from '@/services/encryption.service';
 import RecoveryKeyModal from '@/components/RecoveryKeyModal.vue';
+import EncryptionRecoveryModal from '@/components/EncryptionRecoveryModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -60,6 +61,7 @@ const otpVerified = ref(false);
 const showRecoveryKeyModal = ref(false);
 const recoveryKeyValue = ref('');
 const pendingEnableAfterRecovery = ref(false);
+const showRecoveryModal = ref(false);
 
 async function handleEnableEncryption() {
   if (!authStore.currentOrganizationId) return;
@@ -730,6 +732,13 @@ async function handleDelete() {
               >
                 {{ encryptionDisabling ? 'Requesting...' : 'Disable encryption' }}
               </button>
+              <button
+                type="button"
+                class="btn-link btn-link--muted"
+                @click="showRecoveryModal = true"
+              >
+                Forgot passphrase?
+              </button>
             </div>
 
             <!-- State 2: Grace period (disabling) -->
@@ -1070,6 +1079,13 @@ async function handleDelete() {
           :open="showRecoveryKeyModal"
           :recovery-key="recoveryKeyValue"
           @confirmed="handleRecoveryKeyConfirmed"
+        />
+
+        <!-- Encryption Recovery Modal -->
+        <EncryptionRecoveryModal
+          :open="showRecoveryModal"
+          @close="showRecoveryModal = false"
+          @recovered="showRecoveryModal = false"
         />
 
         <!-- Features Settings -->
@@ -2175,9 +2191,32 @@ async function handleDelete() {
 
 /* Disable link button */
 .encryption-disable-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   margin-top: var(--space-4);
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border-subtle);
+}
+
+.btn-link {
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition-fast);
+}
+
+.btn-link--muted {
+  color: var(--color-text-tertiary);
+}
+
+.btn-link--muted:hover {
+  color: var(--color-text-secondary);
 }
 
 .btn--sm {

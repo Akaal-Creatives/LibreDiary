@@ -22,6 +22,7 @@ import {
   wrapKey,
   unwrapKey,
   generateRecoveryKey,
+  recoverMasterKey,
   serialise,
   deserialise,
 } from '@librediary/shared/crypto';
@@ -201,6 +202,70 @@ export function useEncryption() {
     }
   }
 
+  /**
+   * Recover access using a recovery key and set a new passphrase.
+   * Returns the new recovery key for the user to save.
+   */
+  async function recoverWithRecoveryKey(
+    recoveryKey: string,
+    newPassphrase: string
+  ): Promise<{ recoveryKey: string }> {
+    // 1. Get existing encryption data (includes recovery-encrypted master key)
+    const data = await encryptionService.getData();
+
+    // 2. Reconstruct encrypted master key from server data
+    const recoveryEncMk = data.recoveryEncryptedMasterKey!;
+    const encryptedMasterKey = {
+      version: recoveryEncMk.version as number,
+      iv: fromBase64(recoveryEncMk.iv as string),
+      ciphertext: fromBase64(recoveryEncMk.ciphertext as string),
+    };
+    const recoverySalt = fromBase64(data.recoverySalt as string);
+
+    // 3. Recover master key using recovery key (validates the key; throws if wrong)
+    const recoveredMk = await recoverMasterKey(recoveryKey, encryptedMasterKey, recoverySalt);
+    recoveredMk.fill(0); // Clear recovered key — we derive a fresh one from the new passphrase
+
+    // 4. Derive new key from new passphrase
+    const { key: newKey, salt: newSalt } = await deriveKeyFromPassphrase(newPassphrase);
+
+    // 5. Generate new keypair
+    const keyPair = await generateKeyPair();
+
+    // 6. Wrap private key with new master key
+    const wrappedPrivateKey = await wrapKey(keyPair.privateKey, newKey);
+
+    // 7. Generate new recovery key
+    const recovery = await generateRecoveryKey(newKey);
+
+    // 8. Update server with new key material
+    await encryptionService.setup({
+      publicKey: toBase64(keyPair.publicKey),
+      encryptedPrivateKey: toBase64(wrappedPrivateKey),
+      keySalt: toBase64(newSalt),
+      keyParams: { memoryLimit: 65536, opsLimit: 3 },
+      recoveryEncryptedMasterKey: {
+        version: recovery.encryptedMasterKey.version,
+        iv: toBase64(recovery.encryptedMasterKey.iv),
+        ciphertext: toBase64(recovery.encryptedMasterKey.ciphertext),
+      },
+      recoverySalt: toBase64(recovery.salt),
+      recoveryKeyHash: toBase64(
+        new Uint8Array(
+          await crypto.subtle.digest('SHA-256', new TextEncoder().encode(recovery.recoveryKey))
+        )
+      ),
+    });
+
+    // 9. Store new keys in memory
+    masterKey.value = newKey;
+    privateKey.value = keyPair.privateKey;
+    isUnlocked.value = true;
+    isSetUp.value = true;
+
+    return { recoveryKey: recovery.recoveryKey };
+  }
+
   return {
     // State
     masterKey,
@@ -216,5 +281,6 @@ export function useEncryption() {
     encryptContent,
     decryptContent,
     getWorkspaceKey,
+    recoverWithRecoveryKey,
   };
 }
