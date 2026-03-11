@@ -25,6 +25,8 @@ import { ImageUploadExtension } from './extensions/ImageUploadExtension';
 import Typography from '@tiptap/extension-typography';
 import { FootnoteExtension } from './extensions/FootnoteExtension';
 import { MermaidExtension } from './extensions/MermaidExtension';
+import Superscript from '@tiptap/extension-superscript';
+import Subscript from '@tiptap/extension-subscript';
 import { Markdown } from 'tiptap-markdown';
 import { defineAsyncComponent } from 'vue';
 
@@ -259,6 +261,8 @@ function buildExtensions(
       allowBase64: false,
     }),
     Typography,
+    Superscript,
+    Subscript,
     FootnoteExtension,
     MermaidExtension,
     Markdown.configure({
