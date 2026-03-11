@@ -56,8 +56,14 @@ export function isExpired(date: Date): boolean {
  * The hash is stored server-side; the plaintext code is sent via email.
  */
 export function generateOtp(): { code: string; hash: string } {
-  const num = randomBytes(4).readUInt32BE(0) % 1_000_000;
-  const code = num.toString().padStart(6, '0');
+  // Rejection sampling to avoid modulo bias (CodeQL #27)
+  const limit = 1_000_000;
+  const maxUnbiased = Math.floor(0x100000000 / limit) * limit;
+  let num: number;
+  do {
+    num = randomBytes(4).readUInt32BE(0);
+  } while (num >= maxUnbiased);
+  const code = (num % limit).toString().padStart(6, '0');
   return { code, hash: hashToken(code) };
 }
 
