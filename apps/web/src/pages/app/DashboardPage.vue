@@ -7,6 +7,7 @@ import { useDialog, useToast } from '@/composables';
 import { useOnboardingTour } from '@/composables/useOnboardingTour';
 import type { Template } from '@librediary/shared';
 import TemplateLibrary from '@/components/TemplateLibrary.vue';
+import GettingStartedChecklist from '@/components/GettingStartedChecklist.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -71,6 +72,10 @@ async function handleUseTemplate(template: Template) {
   }
 }
 
+function handleChecklistNavigate(route: { name: string }) {
+  router.push(route);
+}
+
 function showComingSoon(feature: string) {
   alert({
     title: t('dashboard.comingSoon'),
@@ -98,6 +103,9 @@ function showComingSoon(feature: string) {
         <p class="welcome-subtitle">{{ $t('dashboard.whatToWorkOn') }}</p>
       </div>
     </section>
+
+    <!-- Getting Started Checklist -->
+    <GettingStartedChecklist @navigate="handleChecklistNavigate" />
 
     <!-- Quick Actions -->
     <section class="quick-actions">
