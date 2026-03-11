@@ -7,6 +7,7 @@ import TableView from '@/components/database/TableView.vue';
 import KanbanView from '@/components/database/KanbanView.vue';
 import CalendarView from '@/components/database/CalendarView.vue';
 import GalleryView from '@/components/database/GalleryView.vue';
+import TimeReportPanel from '@/components/database/TimeReportPanel.vue';
 
 const databasesStore = useDatabasesStore();
 
@@ -76,6 +77,7 @@ async function loadDatabase() {
           }}
         </span>
       </div>
+      <TimeReportPanel />
     </div>
   </div>
 </template>
