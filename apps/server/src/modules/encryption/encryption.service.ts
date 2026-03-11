@@ -47,6 +47,30 @@ interface UpdateRecoveryKeyInput {
   recoveryKeyHash: string;
 }
 
+interface CreateEncryptionChangeRequestInput {
+  organizationId: string;
+  requestedById: string;
+  type: 'ENABLE' | 'DISABLE';
+  verificationCodeHash: string;
+  verificationExpiresAt: Date;
+}
+
+interface VerifyEncryptionChangeRequestInput {
+  organizationId: string;
+  type: 'ENABLE' | 'DISABLE';
+  codeHash: string;
+}
+
+interface DisableWorkspaceEncryptionInput {
+  organizationId: string;
+  userId: string;
+}
+
+interface CancelDisableEncryptionInput {
+  organizationId: string;
+  userId: string;
+}
+
 // =============================================
 // User Encryption Setup
 // =============================================
@@ -263,5 +287,232 @@ export async function getWorkspaceKeyShare(organizationId: string, userId: strin
 export async function listWorkspaceKeyShares(organizationId: string) {
   return prisma.workspaceKeyShare.findMany({
     where: { organizationId },
+  });
+}
+
+// =============================================
+// Workspace Data Check
+// =============================================
+
+/**
+ * Check whether a workspace has any actual data (pages with content or databases with rows).
+ */
+export async function hasWorkspaceData(organizationId: string): Promise<boolean> {
+  const pageCount = await prisma.page.count({
+    where: {
+      organizationId,
+      OR: [{ htmlContent: { not: null } }, { yjsState: { not: null } }],
+    },
+  });
+
+  if (pageCount > 0) return true;
+
+  const databases = await prisma.database.findMany({
+    where: { organizationId },
+    select: { id: true },
+  });
+
+  if (databases.length === 0) return false;
+
+  const rowCount = await prisma.databaseRow.count({
+    where: {
+      databaseId: { in: databases.map((db) => db.id) },
+    },
+  });
+
+  return rowCount > 0;
+}
+
+// =============================================
+// Encryption Change Requests (OTP verification)
+// =============================================
+
+/**
+ * Create a new encryption change request (enable/disable).
+ * Cancels any existing pending requests for the same org+type.
+ */
+export async function createEncryptionChangeRequest(input: CreateEncryptionChangeRequestInput) {
+  // Cancel any existing pending/verified requests for the same org+type
+  await prisma.encryptionChangeRequest.updateMany({
+    where: {
+      organizationId: input.organizationId,
+      type: input.type,
+      status: { in: ['PENDING_VERIFICATION', 'VERIFIED'] },
+    },
+    data: { status: 'CANCELLED' },
+  });
+
+  return prisma.encryptionChangeRequest.create({
+    data: {
+      organizationId: input.organizationId,
+      requestedById: input.requestedById,
+      type: input.type,
+      verificationCodeHash: input.verificationCodeHash,
+      verificationExpiresAt: input.verificationExpiresAt,
+    },
+  });
+}
+
+/**
+ * Verify an encryption change request using the hashed OTP code.
+ */
+export async function verifyEncryptionChangeRequest(input: VerifyEncryptionChangeRequestInput) {
+  const request = await prisma.encryptionChangeRequest.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      type: input.type,
+      status: 'PENDING_VERIFICATION',
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!request) {
+    throw new Error('No pending verification request found');
+  }
+
+  if (new Date() > request.verificationExpiresAt) {
+    throw new Error('Verification code has expired');
+  }
+
+  if (request.verificationCodeHash !== input.codeHash) {
+    throw new Error('Invalid verification code');
+  }
+
+  return prisma.encryptionChangeRequest.update({
+    where: { id: request.id },
+    data: { status: 'VERIFIED' },
+  });
+}
+
+// =============================================
+// Disable Workspace Encryption
+// =============================================
+
+/**
+ * Disable E2EE on an organisation. Requires a verified DISABLE change request.
+ * Sets a grace period — encrypted data is not purged immediately.
+ */
+export async function disableWorkspaceEncryption(input: DisableWorkspaceEncryptionInput) {
+  const org = await prisma.organization.findUnique({
+    where: { id: input.organizationId },
+  });
+
+  if (!org) {
+    throw new Error('Organisation not found');
+  }
+
+  const membership = await prisma.organizationMember.findUnique({
+    where: {
+      organizationId_userId: {
+        organizationId: input.organizationId,
+        userId: input.userId,
+      },
+    },
+  });
+
+  if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
+    throw new Error('Only owners and admins can disable encryption');
+  }
+
+  if (!org.isEncrypted) {
+    throw new Error('Workspace is not encrypted');
+  }
+
+  // Require a verified disable request
+  const verifiedRequest = await prisma.encryptionChangeRequest.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      type: 'DISABLE',
+      status: 'VERIFIED',
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!verifiedRequest) {
+    throw new Error('Verified disable request required');
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const updatedOrg = await tx.organization.update({
+      where: { id: input.organizationId },
+      data: {
+        isEncrypted: false,
+        encryptionDisabledAt: new Date(),
+      },
+    });
+
+    await tx.encryptionChangeRequest.update({
+      where: { id: verifiedRequest.id },
+      data: {
+        status: 'COMPLETED',
+        scheduledPurgeAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return updatedOrg;
+  });
+}
+
+/**
+ * Cancel a pending disable — re-enable encryption during grace period.
+ */
+export async function cancelDisableEncryption(input: CancelDisableEncryptionInput) {
+  const org = await prisma.organization.findUnique({
+    where: { id: input.organizationId },
+  });
+
+  if (!org) {
+    throw new Error('Organisation not found');
+  }
+
+  const membership = await prisma.organizationMember.findUnique({
+    where: {
+      organizationId_userId: {
+        organizationId: input.organizationId,
+        userId: input.userId,
+      },
+    },
+  });
+
+  if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
+    throw new Error('Only owners and admins can manage encryption');
+  }
+
+  if (!org.encryptionDisabledAt) {
+    throw new Error('Workspace is not in encryption grace period');
+  }
+
+  return prisma.organization.update({
+    where: { id: input.organizationId },
+    data: {
+      isEncrypted: true,
+      encryptionDisabledAt: null,
+    },
+  });
+}
+
+// =============================================
+// Data Purge (after grace period)
+// =============================================
+
+/**
+ * Purge encrypted data after the 7-day grace period.
+ * Deletes key shares and nulls out encrypted page content.
+ */
+export async function purgeEncryptedData(organizationId: string) {
+  return prisma.$transaction(async (tx) => {
+    await tx.workspaceKeyShare.deleteMany({
+      where: { organizationId },
+    });
+
+    await tx.page.updateMany({
+      where: { organizationId },
+      data: { htmlContent: null, plainContent: null, yjsState: null },
+    });
+
+    await tx.organization.update({
+      where: { id: organizationId },
+      data: { encryptionDisabledAt: null },
+    });
   });
 }

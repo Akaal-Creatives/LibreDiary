@@ -12,14 +12,25 @@ const mockEncryptionService = vi.hoisted(() => ({
   shareWorkspaceKey: vi.fn(),
   getWorkspaceKeyShare: vi.fn(),
   listWorkspaceKeyShares: vi.fn(),
+  hasWorkspaceData: vi.fn(),
+  createEncryptionChangeRequest: vi.fn(),
+  verifyEncryptionChangeRequest: vi.fn(),
+  disableWorkspaceEncryption: vi.fn(),
+  cancelDisableEncryption: vi.fn(),
+  purgeEncryptedData: vi.fn(),
 }));
 
 const mockRequireAuth = vi.hoisted(() => vi.fn());
+
+const mockEmailService = vi.hoisted(() => ({
+  sendEncryptionChangeOtpEmail: vi.fn(),
+}));
 
 vi.mock('../encryption.service.js', () => mockEncryptionService);
 vi.mock('../../auth/auth.middleware.js', () => ({
   requireAuth: mockRequireAuth,
 }));
+vi.mock('../../../services/email.service.js', () => mockEmailService);
 
 // Import routes after mocking
 import { encryptionRoutes } from '../encryption.routes.js';
@@ -31,9 +42,15 @@ describe('Encryption Routes', () => {
     vi.clearAllMocks();
 
     // Mock auth middleware to set request.user
-    mockRequireAuth.mockImplementation(async (request: { user: { id: string } }) => {
-      request.user = { id: 'user-123' } as { id: string };
-    });
+    mockRequireAuth.mockImplementation(
+      async (request: { user: { id: string; email: string; name: string | null } }) => {
+        request.user = { id: 'user-123', email: 'test@example.com', name: 'Test User' } as {
+          id: string;
+          email: string;
+          name: string | null;
+        };
+      }
+    );
 
     app = Fastify();
     await app.register(encryptionRoutes, { prefix: '/encryption' });
@@ -353,6 +370,186 @@ describe('Encryption Routes', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json().data).toHaveLength(2);
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/request-enable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/request-enable', () => {
+    it('should return requiresVerification: false when workspace has no data', async () => {
+      mockEncryptionService.hasWorkspaceData.mockResolvedValue(false);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/request-enable',
+        payload: { workspaceName: 'My Workspace' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.requiresVerification).toBe(false);
+    });
+
+    it('should send OTP and return requiresVerification: true when workspace has data', async () => {
+      mockEncryptionService.hasWorkspaceData.mockResolvedValue(true);
+      mockEncryptionService.createEncryptionChangeRequest.mockResolvedValue({
+        id: 'req-123',
+        status: 'PENDING_VERIFICATION',
+      });
+      mockEmailService.sendEncryptionChangeOtpEmail.mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/request-enable',
+        payload: { workspaceName: 'My Workspace' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.requiresVerification).toBe(true);
+      expect(mockEmailService.sendEncryptionChangeOtpEmail).toHaveBeenCalled();
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/verify-enable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/verify-enable', () => {
+    it('should verify enable request with valid code', async () => {
+      mockEncryptionService.verifyEncryptionChangeRequest.mockResolvedValue({
+        id: 'req-123',
+        status: 'VERIFIED',
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/verify-enable',
+        payload: { code: '123456' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().success).toBe(true);
+    });
+
+    it('should return 400 for missing code', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/verify-enable',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/request-disable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/request-disable', () => {
+    it('should send OTP for disable request', async () => {
+      mockEncryptionService.createEncryptionChangeRequest.mockResolvedValue({
+        id: 'req-456',
+        status: 'PENDING_VERIFICATION',
+      });
+      mockEmailService.sendEncryptionChangeOtpEmail.mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/request-disable',
+        payload: { workspaceName: 'My Workspace' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.requiresVerification).toBe(true);
+      expect(mockEmailService.sendEncryptionChangeOtpEmail).toHaveBeenCalled();
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/verify-disable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/verify-disable', () => {
+    it('should verify disable request with valid code', async () => {
+      mockEncryptionService.verifyEncryptionChangeRequest.mockResolvedValue({
+        id: 'req-456',
+        status: 'VERIFIED',
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/verify-disable',
+        payload: { code: '654321' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().success).toBe(true);
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/disable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/disable', () => {
+    it('should disable workspace encryption', async () => {
+      mockEncryptionService.disableWorkspaceEncryption.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+        encryptionDisabledAt: new Date().toISOString(),
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/disable',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.isEncrypted).toBe(false);
+    });
+
+    it('should return error when service throws', async () => {
+      mockEncryptionService.disableWorkspaceEncryption.mockRejectedValue(
+        new Error('Workspace is not encrypted')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/disable',
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  // =============================================
+  // POST /encryption/workspace/:organizationId/cancel-disable
+  // =============================================
+  describe('POST /encryption/workspace/:organizationId/cancel-disable', () => {
+    it('should cancel disable and re-enable encryption', async () => {
+      mockEncryptionService.cancelDisableEncryption.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+        encryptionDisabledAt: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/cancel-disable',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.isEncrypted).toBe(true);
+    });
+
+    it('should return error when not in grace period', async () => {
+      mockEncryptionService.cancelDisableEncryption.mockRejectedValue(
+        new Error('Workspace is not in encryption grace period')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/cancel-disable',
+      });
+
+      expect(response.statusCode).toBe(400);
     });
   });
 });
