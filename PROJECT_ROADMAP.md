@@ -485,6 +485,14 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Implement Formula properties
 - [x] Add database templates
 
+### 10.9 Time Tracking
+
+- [x] Add DURATION property type with formatting utilities
+- [x] Add duration CellRenderer and CellEditor
+- [x] Add timer controls to database rows and duration cells
+- [x] Add useTimer composable and floating TimerWidget component
+- [x] Add time reports panel with per-user breakdown and CSV export
+
 ---
 
 ## Phase 11: Templates
@@ -694,6 +702,10 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add Divider block
 - [x] Add Table of Contents block
 - [x] Add Toggle/Collapsible block
+- [x] Add KaTeX math blocks with LaTeX rendering
+- [x] Add Superscript and Subscript marks
+- [x] Add H4-H6 heading levels with slash commands and TOC support
+- [x] Add Markdown round-trip serialisation for all custom extensions
 
 ### 18.3 Drag & Drop
 
@@ -731,6 +743,9 @@ LibreDiary is an open-source, self-hosted, local-first workspace platform (Notio
 - [x] Add keyboard shortcuts
 - [x] Improve mobile responsiveness
 - [x] Add onboarding tour
+- [x] Add onboarding wizard with Getting Started checklist
+- [x] Add built-in starter templates with Yjs state generation
+- [x] Add user account settings page (profile, email, password management)
 
 ### 20.2 Performance
 

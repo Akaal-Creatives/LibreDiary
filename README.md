@@ -33,6 +33,9 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - Page version history with diff comparison
 - Auto-delete trash after 30 days
 - Guest share links with access tracking
+- Time tracking with floating timer widget and time reports
+- Onboarding wizard with getting started checklist
+- KaTeX math blocks and markdown round-trip serialisation
 - PWA support with offline viewing
 
 ## Tech Stack
@@ -68,7 +71,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Data Management
 
-- [x] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views, relations, rollups, formulas, file attachments
+- [x] **Phase 10: Databases** — Tables, Kanban, Calendar, Gallery views, relations, rollups, formulas, file attachments, time tracking with timer widget
 - [x] **Phase 11: Templates** — Template library, create from page, categories, quick-start templates
 - [x] **Phase 12: File Storage** — Local, MinIO, S3 storage providers, file type validation
 - [x] **Phase 13: Backup System** — Per-org and system backups, encryption, scheduled backups, retention
@@ -82,9 +85,9 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Compliance & Polish
 
-- [x] **Phase 18: Editor Enhancements** — Slash commands, code blocks, callouts, toggles, drag & drop
+- [x] **Phase 18: Editor Enhancements** — Slash commands, code blocks, callouts, toggles, drag & drop, KaTeX math blocks, superscript/subscript, markdown round-trip
 - [x] **Phase 19: GDPR Compliance** — Data export, account deletion with 30-day grace period
-- [ ] **Phase 20: Production Ready** — UI/UX polish (done), performance (done), accessibility (done), documentation (done), Docker deployment
+- [x] **Phase 20: Production Ready** — Onboarding wizard, account settings, Docker deployment, documentation
 
 ### Integrations
 
