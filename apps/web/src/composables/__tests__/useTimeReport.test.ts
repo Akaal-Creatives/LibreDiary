@@ -147,4 +147,41 @@ describe('useTimeReport', () => {
     expect(summary.value.rowCount).toBe(0);
     expect(summary.value.perUser).toHaveLength(0);
   });
+
+  it('includes rows on the exact dateFrom boundary', () => {
+    const { dateFrom, summary } = useTimeReport();
+    dateFrom.value = '2026-03-01';
+    // r1 is exactly on 2026-03-01 — should be included
+    expect(summary.value.rowCount).toBe(3);
+  });
+
+  it('includes rows on the exact dateTo boundary', () => {
+    const { dateTo, summary } = useTimeReport();
+    dateTo.value = '2026-03-10';
+    // r3 is exactly on 2026-03-10 — should be included (dateTo is inclusive)
+    expect(summary.value.rowCount).toBe(3);
+  });
+
+  it('filters single-day range correctly', () => {
+    const { dateFrom, dateTo, summary } = useTimeReport();
+    dateFrom.value = '2026-03-05';
+    dateTo.value = '2026-03-05';
+    // Only r2 (2026-03-05) should match
+    expect(summary.value.rowCount).toBe(1);
+    expect(summary.value.totalMs).toBe(1_800_000);
+  });
+
+  it('returns empty when dateFrom is after all rows', () => {
+    const { dateFrom, summary } = useTimeReport();
+    dateFrom.value = '2026-12-01';
+    expect(summary.value.rowCount).toBe(0);
+    expect(summary.value.totalMs).toBe(0);
+  });
+
+  it('returns empty when dateTo is before all rows', () => {
+    const { dateTo, summary } = useTimeReport();
+    dateTo.value = '2026-01-01';
+    expect(summary.value.rowCount).toBe(0);
+    expect(summary.value.totalMs).toBe(0);
+  });
 });
