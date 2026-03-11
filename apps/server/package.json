@@ -46,7 +46,7 @@
     "argon2": "^0.44.0",
     "codemirror": "^6.0.2",
     "diff": "^8.0.3",
-    "fastify": "^5.8.1",
+    "fastify": "^5.8.2",
     "fastify-plugin": "^5.1.0",
     "file-type": "^21.3.1",
     "marked": "^17.0.3",
