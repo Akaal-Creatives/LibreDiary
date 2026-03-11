@@ -38,6 +38,7 @@ const propertyTypeSchema = z.enum([
   'CREATED_BY',
   'UPDATED_TIME',
   'UPDATED_BY',
+  'DURATION',
 ]);
 
 const createPropertySchema = z.object({

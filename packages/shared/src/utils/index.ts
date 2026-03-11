@@ -192,6 +192,111 @@ export function randomString(length: number): string {
   return result;
 }
 
+// ===========================================
+// DURATION FORMATTING
+// ===========================================
+
+export type DurationPrecision = 'seconds' | 'minutes' | 'hours';
+export type DurationFormat = 'hms' | 'decimal';
+
+export interface DurationConfig {
+  precision?: DurationPrecision;
+  format?: DurationFormat;
+}
+
+/**
+ * Format a duration in milliseconds to a human-readable string.
+ *
+ * With `format: 'hms'` (default):
+ *   - 0 → "0s" / "0m" / "0h" (depends on precision)
+ *   - 5025000 → "1h 23m 45s" (seconds precision)
+ *   - 5025000 → "1h 23m" (minutes precision)
+ *   - 5025000 → "1h" (hours precision)
+ *
+ * With `format: 'decimal'`:
+ *   - 5025000 → "1.40h"
+ */
+export function formatDuration(ms: number, config?: DurationConfig): string {
+  const precision = config?.precision ?? 'seconds';
+  const format = config?.format ?? 'hms';
+
+  const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (format === 'decimal') {
+    const decimalHours = totalSeconds / 3600;
+    return `${decimalHours.toFixed(2)}h`;
+  }
+
+  // HMS format
+  const parts: string[] = [];
+
+  if (hours > 0) parts.push(`${hours}h`);
+
+  if (precision === 'seconds' || precision === 'minutes') {
+    if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
+  }
+
+  if (precision === 'seconds') {
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+  }
+
+  if (parts.length === 0) {
+    return precision === 'hours' ? '0h' : precision === 'minutes' ? '0m' : '0s';
+  }
+
+  return parts.join(' ');
+}
+
+/**
+ * Parse a duration string (e.g. "1h 23m 45s", "1:23:45", "1.5h") to milliseconds.
+ * Returns null if the string cannot be parsed.
+ */
+export function parseDuration(input: string): number | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // Try "Xh Ym Zs" format
+  const hmsMatch = trimmed.match(/^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$/i);
+  if (hmsMatch && (hmsMatch[1] || hmsMatch[2] || hmsMatch[3])) {
+    const h = parseInt(hmsMatch[1] || '0', 10);
+    const m = parseInt(hmsMatch[2] || '0', 10);
+    const s = parseInt(hmsMatch[3] || '0', 10);
+    return (h * 3600 + m * 60 + s) * 1000;
+  }
+
+  // Try "H:MM:SS" or "H:MM" format
+  const colonMatch = trimmed.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
+  if (colonMatch) {
+    const h = parseInt(colonMatch[1] || '0', 10);
+    const m = parseInt(colonMatch[2] || '0', 10);
+    const s = parseInt(colonMatch[3] || '0', 10);
+    return (h * 3600 + m * 60 + s) * 1000;
+  }
+
+  // Try decimal hours "1.5h"
+  const decimalMatch = trimmed.match(/^(\d+(?:\.\d+)?)h$/i);
+  if (decimalMatch && decimalMatch[1]) {
+    return Math.round(parseFloat(decimalMatch[1]) * 3600 * 1000);
+  }
+
+  // Try plain minutes "90m"
+  const minMatch = trimmed.match(/^(\d+)m$/i);
+  if (minMatch && minMatch[1]) {
+    return parseInt(minMatch[1], 10) * 60 * 1000;
+  }
+
+  // Try plain seconds "45s"
+  const secMatch = trimmed.match(/^(\d+)s$/i);
+  if (secMatch && secMatch[1]) {
+    return parseInt(secMatch[1], 10) * 1000;
+  }
+
+  return null;
+}
+
 /**
  * Omit specified keys from an object
  */

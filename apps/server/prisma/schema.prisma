@@ -515,6 +515,7 @@ enum PropertyType {
   CREATED_BY
   UPDATED_TIME
   UPDATED_BY
+  DURATION
 }
 
 enum ViewType {

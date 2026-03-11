@@ -35,7 +35,8 @@ export type PropertyType =
   | 'CREATED_TIME'
   | 'CREATED_BY'
   | 'UPDATED_TIME'
-  | 'UPDATED_BY';
+  | 'UPDATED_BY'
+  | 'DURATION';
 
 export type ViewType = 'TABLE' | 'KANBAN' | 'CALENDAR' | 'GALLERY';
 
