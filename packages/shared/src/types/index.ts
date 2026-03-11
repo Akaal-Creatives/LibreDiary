@@ -73,6 +73,7 @@ export interface User {
   locale: string;
   isSuperAdmin: boolean;
   emailVerified: boolean;
+  onboardingCompletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

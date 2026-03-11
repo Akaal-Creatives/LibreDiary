@@ -24,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
   const currentUserRole = computed<OrgRole | null>(() => currentMembership.value?.role ?? null);
   const isSuperAdmin = computed(() => user.value?.isSuperAdmin ?? false);
   const isEmailVerified = computed(() => user.value?.emailVerified ?? false);
+  const isOnboardingCompleted = computed(() => !!user.value?.onboardingCompletedAt);
 
   // Helper to get role for any organization
   function getRoleForOrg(orgId: string): OrgRole | null {
@@ -147,6 +148,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * Mark onboarding as completed
+   */
+  async function completeOnboarding(): Promise<void> {
+    const data = await authService.completeOnboarding();
+    if (user.value) {
+      user.value = { ...user.value, onboardingCompletedAt: data.user.onboardingCompletedAt };
+    }
+  }
+
+  /**
    * Refresh user data
    */
   async function refreshUser(): Promise<void> {
@@ -177,6 +188,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentUserRole,
     isSuperAdmin,
     isEmailVerified,
+    isOnboardingCompleted,
     // Actions
     setUser,
     setOrganizations,
@@ -188,6 +200,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     verifyEmail,
     resendVerificationEmail,
+    completeOnboarding,
     refreshUser,
   };
 });

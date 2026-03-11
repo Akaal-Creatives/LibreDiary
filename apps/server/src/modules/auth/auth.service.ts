@@ -516,6 +516,16 @@ export async function updateUserProfile(
 }
 
 /**
+ * Mark onboarding as completed for a user
+ */
+export async function completeOnboarding(userId: string): Promise<User> {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { onboardingCompletedAt: new Date() },
+  });
+}
+
+/**
  * Get invite by token
  */
 export async function getInviteByToken(token: string): Promise<{

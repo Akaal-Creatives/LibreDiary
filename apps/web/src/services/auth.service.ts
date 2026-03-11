@@ -120,6 +120,13 @@ export const authService = {
   },
 
   /**
+   * Mark onboarding as completed
+   */
+  async completeOnboarding(): Promise<{ user: User }> {
+    return api.patch<{ user: User }>('/auth/onboarding');
+  },
+
+  /**
    * Get invite info by token
    */
   async getInvite(token: string): Promise<InviteInfo> {

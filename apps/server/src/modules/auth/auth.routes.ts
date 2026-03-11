@@ -275,6 +275,44 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
   );
 
   /**
+   * PATCH /auth/onboarding
+   * Mark onboarding as completed for the current user
+   */
+  fastify.patch(
+    '/onboarding',
+    { preHandler: [requireAuth] },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const user = getAuthUser(request);
+        const updated = await authService.completeOnboarding(user.id);
+
+        logAudit({
+          action: 'USER_ONBOARDING_COMPLETED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+        });
+
+        return {
+          success: true,
+          data: {
+            user: sanitizeUser(updated),
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Onboarding update failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'ONBOARDING_ERROR',
+            message,
+          },
+        });
+      }
+    }
+  );
+
+  /**
    * POST /auth/verify-email
    * Verify email with token
    */
@@ -547,6 +585,7 @@ function sanitizeUser(user: {
   avatarUrl: string | null;
   locale: string;
   isSuperAdmin: boolean;
+  onboardingCompletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   passwordHash?: string | null;

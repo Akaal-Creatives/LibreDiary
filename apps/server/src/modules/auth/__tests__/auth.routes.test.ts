@@ -16,6 +16,7 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
       emailVerifiedAt: now,
       locale: 'en',
       isSuperAdmin: false,
+      onboardingCompletedAt: null as Date | null,
       createdAt: now,
       updatedAt: now,
       passwordHash: 'hashed',
@@ -60,6 +61,7 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
       revokeSession: vi.fn(),
       getInviteByToken: vi.fn(),
       updateUserProfile: vi.fn(),
+      completeOnboarding: vi.fn(),
     };
 
     function resetMocks() {
@@ -763,6 +765,42 @@ describe('Auth Routes', () => {
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('PROFILE_UPDATE_ERROR');
+    });
+  });
+
+  // ===========================================
+  // COMPLETE ONBOARDING
+  // ===========================================
+
+  describe('PATCH /auth/onboarding', () => {
+    it('should mark onboarding as completed', async () => {
+      const now = new Date();
+      const updatedUser = { ...mockUser, onboardingCompletedAt: now };
+      mockAuthService.completeOnboarding.mockResolvedValue(updatedUser);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/onboarding',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.user.onboardingCompletedAt).toBeTruthy();
+      expect(body.data.user).not.toHaveProperty('passwordHash');
+    });
+
+    it('should return 400 on service error', async () => {
+      mockAuthService.completeOnboarding.mockRejectedValue(new Error('Update failed'));
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/onboarding',
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('ONBOARDING_ERROR');
     });
   });
 });

@@ -88,6 +88,7 @@ import {
   createInvite,
   getInviteByToken,
   updateUserProfile,
+  completeOnboarding,
 } from '../auth.service.js';
 
 // ===========================================
@@ -841,6 +842,31 @@ describe('Auth Service', () => {
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         data: { locale: 'en-GB' },
+      });
+    });
+  });
+
+  // -----------------------------------------
+  // completeOnboarding
+  // -----------------------------------------
+
+  describe('completeOnboarding', () => {
+    it('should set onboardingCompletedAt to current date', async () => {
+      const now = new Date();
+      const mockUser = {
+        id: 'user-1',
+        email: 'test@example.com',
+        name: 'Test User',
+        onboardingCompletedAt: now,
+      };
+      mockPrisma.user.update.mockResolvedValue(mockUser);
+
+      const result = await completeOnboarding('user-1');
+
+      expect(result).toEqual(mockUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { onboardingCompletedAt: expect.any(Date) },
       });
     });
   });

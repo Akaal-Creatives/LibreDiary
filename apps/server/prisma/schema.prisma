@@ -32,6 +32,9 @@ model User {
   // Super Admin flag (platform-wide)
   isSuperAdmin Boolean @default(false)
 
+  // Onboarding: set when user completes the onboarding wizard
+  onboardingCompletedAt DateTime?
+
   // Timestamps
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
