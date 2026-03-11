@@ -61,6 +61,7 @@
   },
   "invites": {
     "noPendingInvitesDescription": "Send an invite to add new members to your organization.",
+    "inviteCancelled": "Invite canceled",
     "memberDescription": "Members can view and contribute to the organization.",
     "adminDescription": "Admins can manage members and organization settings."
   },
@@ -125,6 +126,17 @@
     "deleteAccountWarning": "This action cannot be undone after the 30-day grace period. Your pages and comments will be anonymized (attributed to \"Deleted User\") but not removed from shared organizations.",
     "cancelDeletionSuccess": "Account deletion has been canceled",
     "soleOwnerError": "You are the sole owner of one or more organizations. Please transfer ownership before deleting your account."
+  },
+  "a11y": {
+    "toggleTheme": "Toggle color theme"
+  },
+  "tour": {
+    "sidebarDescription": "Browse your pages, databases, and favorites from the sidebar. Everything is organized in a tree structure."
+  },
+  "pageTitle": {
+    "organisationSettings": "Organization Settings",
+    "createOrganisation": "Create Organization",
+    "adminOrganisations": "Admin Organizations"
   },
   "account": {
     "title": "Account Settings",
