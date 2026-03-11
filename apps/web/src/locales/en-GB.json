@@ -696,7 +696,8 @@
     "adminBackups": "Admin Backups",
     "adminTranslations": "Admin Translations",
     "adminAuditLogs": "Admin Audit Logs",
-    "notFound": "Page Not Found"
+    "notFound": "Page Not Found",
+    "onboarding": "Welcome"
   },
   "gdpr": {
     "title": "Data & Privacy",

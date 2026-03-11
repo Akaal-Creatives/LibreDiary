@@ -57,6 +57,12 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
+    path: '/onboarding',
+    name: 'onboarding',
+    component: () => import('@/pages/OnboardingPage.vue'),
+    meta: { requiresAuth: true, title: 'pageTitle.onboarding' },
+  },
+  {
     path: '/app',
     component: () => import('@/layouts/AppLayout.vue'),
     meta: { requiresAuth: true },
@@ -315,6 +321,18 @@ router.beforeEach(async (to, _from, next) => {
   // Redirect authenticated users away from guest-only pages
   if (to.meta.guest && authStore.isAuthenticated) {
     return next({ name: 'app-home' });
+  }
+
+  // Redirect new users to onboarding if not completed (skip if already going there)
+  if (
+    authStore.isAuthenticated &&
+    authStore.user &&
+    !authStore.user.onboardingCompletedAt &&
+    to.name !== 'onboarding' &&
+    to.meta.requiresAuth &&
+    !to.meta.requiresSuperAdmin
+  ) {
+    return next({ name: 'onboarding' });
   }
 
   // Check if route requires super admin access
