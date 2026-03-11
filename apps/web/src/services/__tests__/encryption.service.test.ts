@@ -170,4 +170,78 @@ describe('Encryption Service', () => {
       expect(result).toHaveLength(2);
     });
   });
+
+  // =============================================
+  // Enable/Disable Encryption Flow
+  // =============================================
+
+  describe('requestEnableEncryption', () => {
+    it('should POST request to enable encryption with workspace name', async () => {
+      mockApi.post.mockResolvedValue({ requiresVerification: true });
+
+      const result = await encryptionService.requestEnableEncryption('org-123', 'My Workspace');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/request-enable', {
+        workspaceName: 'My Workspace',
+      });
+      expect(result.requiresVerification).toBe(true);
+    });
+  });
+
+  describe('verifyEnableEncryption', () => {
+    it('should POST verification code for enable encryption', async () => {
+      mockApi.post.mockResolvedValue({ success: true });
+
+      await encryptionService.verifyEnableEncryption('org-123', '123456');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/verify-enable', {
+        code: '123456',
+      });
+    });
+  });
+
+  describe('requestDisableEncryption', () => {
+    it('should POST request to disable encryption with workspace name', async () => {
+      mockApi.post.mockResolvedValue({ requiresVerification: true });
+
+      const result = await encryptionService.requestDisableEncryption('org-123', 'My Workspace');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/request-disable', {
+        workspaceName: 'My Workspace',
+      });
+      expect(result.requiresVerification).toBe(true);
+    });
+  });
+
+  describe('verifyDisableEncryption', () => {
+    it('should POST verification code for disable encryption', async () => {
+      mockApi.post.mockResolvedValue({ success: true });
+
+      await encryptionService.verifyDisableEncryption('org-123', '654321');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/verify-disable', {
+        code: '654321',
+      });
+    });
+  });
+
+  describe('disableWorkspaceEncryption', () => {
+    it('should POST to disable workspace encryption', async () => {
+      mockApi.post.mockResolvedValue({ success: true });
+
+      await encryptionService.disableWorkspaceEncryption('org-123');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/disable');
+    });
+  });
+
+  describe('cancelDisableEncryption', () => {
+    it('should POST to cancel disable and re-enable encryption', async () => {
+      mockApi.post.mockResolvedValue({ success: true });
+
+      await encryptionService.cancelDisableEncryption('org-123');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/encryption/workspace/org-123/cancel-disable');
+    });
+  });
 });
