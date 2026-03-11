@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores';
 import { useTheme } from '@/composables';
 import { authService, templatesService } from '@/services';
 
+const SUCCESS_REDIRECT_DELAY_MS = 2400;
+
 const router = useRouter();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
@@ -125,7 +127,7 @@ async function completeOnboarding() {
       } else {
         router.push({ name: 'dashboard' });
       }
-    }, 2400);
+    }, SUCCESS_REDIRECT_DELAY_MS);
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong';
   } finally {

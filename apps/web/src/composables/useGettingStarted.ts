@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuthStore, usePagesStore } from '@/stores';
 
 const STORAGE_KEY = 'librediary-getting-started';
@@ -92,13 +92,6 @@ export function useGettingStarted() {
     state.value.dismissed = true;
     saveState(state.value);
   }
-
-  // Persist whenever state changes reactively
-  watch(
-    () => state.value,
-    (val) => saveState(val),
-    { deep: true }
-  );
 
   return {
     items,
