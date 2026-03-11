@@ -35,10 +35,25 @@ const form = ref({
 
 const currentOrg = computed(() => authStore.currentOrganization);
 const isOrgEncrypted = computed(() => currentOrg.value?.isEncrypted ?? false);
+const isInGracePeriod = computed(() => !!currentOrg.value?.encryptionDisabledAt);
+const gracePeriodDaysRemaining = computed(() => {
+  if (!currentOrg.value?.encryptionDisabledAt) return 0;
+  const disabledAt = new Date(currentOrg.value.encryptionDisabledAt);
+  const purgeAt = new Date(disabledAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const remaining = Math.ceil((purgeAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  return Math.max(0, remaining);
+});
 
 // E2EE state
 const showEncryptConfirm = ref(false);
 const encryptionEnabling = ref(false);
+const encryptionDisabling = ref(false);
+const showOtpModal = ref(false);
+const otpAction = ref<'enable' | 'disable'>('enable');
+const otpCode = ref('');
+const otpVerifying = ref(false);
+const otpError = ref<string | null>(null);
+const otpVerified = ref(false);
 
 async function handleEnableEncryption() {
   if (!authStore.currentOrganizationId) return;
@@ -57,26 +72,92 @@ async function handleEnableEncryption() {
 }
 
 async function confirmEnableEncryption() {
+  if (!authStore.currentOrganizationId || !currentOrg.value) return;
+
+  encryptionEnabling.value = true;
+  try {
+    // Check if workspace has data — may require OTP verification
+    const result = await encryptionService.requestEnableEncryption(
+      authStore.currentOrganizationId,
+      currentOrg.value.name
+    );
+
+    if (result.requiresVerification) {
+      // Close confirm modal, open OTP modal
+      showEncryptConfirm.value = false;
+      otpAction.value = 'enable';
+      otpCode.value = '';
+      otpError.value = null;
+      otpVerified.value = false;
+      showOtpModal.value = true;
+      encryptionEnabling.value = false;
+      return;
+    }
+
+    // No verification needed — proceed directly
+    await performEnableEncryption();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else {
+      toast.error('Failed to enable encryption.');
+    }
+    encryptionEnabling.value = false;
+  }
+}
+
+async function handleVerifyOtp() {
+  if (!authStore.currentOrganizationId) return;
+
+  otpVerifying.value = true;
+  otpError.value = null;
+  try {
+    if (otpAction.value === 'enable') {
+      await encryptionService.verifyEnableEncryption(
+        authStore.currentOrganizationId,
+        otpCode.value
+      );
+      otpVerified.value = true;
+      showOtpModal.value = false;
+      // Proceed with enabling encryption
+      encryptionEnabling.value = true;
+      await performEnableEncryption();
+    } else {
+      await encryptionService.verifyDisableEncryption(
+        authStore.currentOrganizationId,
+        otpCode.value
+      );
+      otpVerified.value = true;
+      showOtpModal.value = false;
+      // Proceed with disabling encryption
+      await performDisableEncryption();
+    }
+  } catch (err) {
+    if (err instanceof ApiError) {
+      otpError.value = err.message;
+    } else {
+      otpError.value = 'Invalid verification code. Please try again.';
+    }
+  } finally {
+    otpVerifying.value = false;
+  }
+}
+
+async function performEnableEncryption() {
   if (!authStore.currentOrganizationId) return;
 
   encryptionEnabling.value = true;
   try {
     const { generateKey, encryptForRecipient } = await import('@librediary/shared/crypto');
 
-    // Generate a new workspace key
     const workspaceKey = await generateKey();
-
-    // Fetch the owner's own public key to self-encrypt the workspace key share
     const encData = await encryptionService.getData();
     const publicKeyBytes = Uint8Array.from(atob(encData.publicKey), (c) => c.charCodeAt(0));
 
-    // Get the owner's private key for the sender side
     const ownerPrivateKey = encryption.privateKey.value;
     if (!ownerPrivateKey) throw new Error('Encryption not unlocked');
 
-    // Encrypt workspace key for self (owner) using X25519
     const keyShare = await encryptForRecipient(workspaceKey, ownerPrivateKey, publicKeyBytes);
-
     const toBase64 = (arr: Uint8Array) => btoa(String.fromCharCode(...arr));
 
     await encryptionService.enableWorkspaceEncryption(authStore.currentOrganizationId, {
@@ -85,7 +166,6 @@ async function confirmEnableEncryption() {
       sharedByPublicKey: encData.publicKey,
     });
 
-    // Refresh org data to pick up isEncrypted: true
     await orgsStore.fetchOrganization();
     toast.success('End-to-end encryption enabled for this workspace.');
     showEncryptConfirm.value = false;
@@ -94,6 +174,70 @@ async function confirmEnableEncryption() {
       toast.error(err.message);
     } else {
       toast.error('Failed to enable encryption.');
+    }
+  } finally {
+    encryptionEnabling.value = false;
+  }
+}
+
+async function handleDisableEncryption() {
+  if (!authStore.currentOrganizationId || !currentOrg.value) return;
+
+  encryptionDisabling.value = true;
+  try {
+    await encryptionService.requestDisableEncryption(
+      authStore.currentOrganizationId,
+      currentOrg.value.name
+    );
+    // Open OTP modal for disable
+    otpAction.value = 'disable';
+    otpCode.value = '';
+    otpError.value = null;
+    otpVerified.value = false;
+    showOtpModal.value = true;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else {
+      toast.error('Failed to request encryption disable.');
+    }
+  } finally {
+    encryptionDisabling.value = false;
+  }
+}
+
+async function performDisableEncryption() {
+  if (!authStore.currentOrganizationId) return;
+
+  encryptionDisabling.value = true;
+  try {
+    await encryptionService.disableWorkspaceEncryption(authStore.currentOrganizationId);
+    await orgsStore.fetchOrganization();
+    toast.success('Encryption disabled. Data will be retained for 7 days.');
+  } catch (err) {
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else {
+      toast.error('Failed to disable encryption.');
+    }
+  } finally {
+    encryptionDisabling.value = false;
+  }
+}
+
+async function handleCancelDisable() {
+  if (!authStore.currentOrganizationId) return;
+
+  encryptionEnabling.value = true;
+  try {
+    await encryptionService.cancelDisableEncryption(authStore.currentOrganizationId);
+    await orgsStore.fetchOrganization();
+    toast.success('Encryption re-enabled. Data purge cancelled.');
+  } catch (err) {
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else {
+      toast.error('Failed to cancel encryption disable.');
     }
   } finally {
     encryptionEnabling.value = false;
@@ -510,7 +654,11 @@ async function handleDelete() {
           </div>
 
           <div class="section-content">
-            <div v-if="isOrgEncrypted" class="encryption-status encryption-status--active">
+            <!-- State 1: Encryption is active -->
+            <div
+              v-if="isOrgEncrypted && !isInGracePeriod"
+              class="encryption-status encryption-status--active"
+            >
               <svg
                 class="encryption-status-icon"
                 width="18"
@@ -535,14 +683,66 @@ async function handleDelete() {
                 </p>
               </div>
             </div>
+            <div v-if="isOrgEncrypted && !isInGracePeriod" class="encryption-disable-section">
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm"
+                :disabled="saving || encryptionDisabling"
+                @click="handleDisableEncryption"
+              >
+                {{ encryptionDisabling ? 'Requesting...' : 'Disable encryption' }}
+              </button>
+            </div>
 
+            <!-- State 2: Grace period (disabling) -->
+            <div v-else-if="isInGracePeriod" class="encryption-status encryption-status--warning">
+              <svg
+                class="encryption-status-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+              >
+                <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" />
+                <path
+                  d="M9 5V10M9 12.5V13"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <div>
+                <div class="encryption-status-title">Encryption disabled — grace period active</div>
+                <p class="encryption-status-text">
+                  Encrypted data will be permanently deleted in
+                  <strong
+                    >{{ gracePeriodDaysRemaining }} day{{
+                      gracePeriodDaysRemaining !== 1 ? 's' : ''
+                    }}</strong
+                  >. New pages are no longer encrypted. You can cancel this to re-enable encryption
+                  and keep all encrypted data.
+                </p>
+              </div>
+            </div>
+            <div v-if="isInGracePeriod" class="encryption-grace-actions">
+              <button
+                type="button"
+                class="btn btn--encryption"
+                :disabled="saving || encryptionEnabling"
+                @click="handleCancelDisable"
+              >
+                {{ encryptionEnabling ? 'Re-enabling...' : 'Cancel and re-enable encryption' }}
+              </button>
+            </div>
+
+            <!-- State 3: Encryption not enabled -->
             <div v-else class="encryption-enable">
               <p class="encryption-enable-text">
                 Enable end-to-end encryption to protect page content. Once enabled, the server will
-                never have access to plaintext content. Search for encrypted pages will be performed
-                client-side only.
+                never have access to plaintext content.
               </p>
               <div class="encryption-enable-warnings">
+                <p class="encryption-warnings-title">The following features will be unavailable:</p>
                 <div class="encryption-warning">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path
@@ -558,7 +758,7 @@ async function handleDelete() {
                       stroke-linecap="round"
                     />
                   </svg>
-                  <span>This action cannot be undone</span>
+                  <span>Server-side full-text search (client-side search still works)</span>
                 </div>
                 <div class="encryption-warning">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -575,7 +775,7 @@ async function handleDelete() {
                       stroke-linecap="round"
                     />
                   </svg>
-                  <span>AI features will not work on encrypted content</span>
+                  <span>AI-powered writing (generate, expand, summarise, improve)</span>
                 </div>
                 <div class="encryption-warning">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -592,7 +792,58 @@ async function handleDelete() {
                       stroke-linecap="round"
                     />
                   </svg>
-                  <span>Server-side search will be unavailable for encrypted pages</span>
+                  <span>AI translation</span>
+                </div>
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>Public page sharing and share-token access</span>
+                </div>
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>Server-side data exports (GDPR exports will contain ciphertext)</span>
+                </div>
+                <div class="encryption-warning">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L13 12H1L7 1Z"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 5V7.5M7 9.5V10"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>Server-side backups (backup content will be ciphertext)</span>
                 </div>
               </div>
               <button
@@ -660,16 +911,17 @@ async function handleDelete() {
                   <p class="modal-text">
                     You are about to enable end-to-end encryption for
                     <strong>{{ currentOrg?.name }}</strong
-                    >. This will:
+                    >. The following features will become unavailable:
                   </p>
                   <ul class="modal-list">
-                    <li>Encrypt all new page content client-side</li>
-                    <li>Disable server-side search for this workspace</li>
-                    <li>Disable AI features for encrypted content</li>
-                    <li>Require members to have encryption keys to view content</li>
+                    <li>Server-side full-text search</li>
+                    <li>AI-powered writing and translation</li>
+                    <li>Public page sharing and share-token access</li>
+                    <li>Server-side data exports and backups of page content</li>
+                    <li>Members will need encryption keys to view content</li>
                   </ul>
                   <p class="modal-text modal-text--warning">
-                    This action cannot be reversed. Existing pages will remain unencrypted.
+                    Disabling encryption later will result in data loss after a 7-day grace period.
                   </p>
                 </div>
 
@@ -689,6 +941,85 @@ async function handleDelete() {
                     @click="confirmEnableEncryption"
                   >
                     {{ encryptionEnabling ? 'Enabling...' : 'Yes, enable encryption' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </Teleport>
+
+        <!-- OTP Verification Modal -->
+        <Teleport to="body">
+          <Transition name="modal">
+            <div v-if="showOtpModal" class="modal-backdrop" @click.self="showOtpModal = false">
+              <div class="modal modal--encryption">
+                <div class="modal-header modal-header--encryption">
+                  <div class="modal-icon modal-icon--encryption">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="3"
+                        y="11"
+                        width="18"
+                        height="11"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
+                      <path
+                        d="M7 11V7a5 5 0 0 1 10 0v4"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <h2 class="modal-title">Verify your identity</h2>
+                </div>
+
+                <div class="modal-body">
+                  <p class="modal-text">
+                    A 6-digit verification code has been sent to your email address. Enter it below
+                    to
+                    <strong>{{ otpAction === 'enable' ? 'enable' : 'disable' }}</strong>
+                    encryption for <strong>{{ currentOrg?.name }}</strong
+                    >.
+                  </p>
+
+                  <div class="field">
+                    <label class="field-label" for="otp-code">Verification code</label>
+                    <input
+                      id="otp-code"
+                      v-model="otpCode"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      maxlength="6"
+                      autocomplete="one-time-code"
+                      class="field-input field-input--otp"
+                      placeholder="000000"
+                      @keyup.enter="handleVerifyOtp"
+                    />
+                    <p v-if="otpError" class="field-error">{{ otpError }}</p>
+                    <p class="field-hint">This code expires in 10 minutes.</p>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn--ghost"
+                    :disabled="otpVerifying"
+                    @click="showOtpModal = false"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--encryption"
+                    :disabled="otpCode.length !== 6 || otpVerifying"
+                    @click="handleVerifyOtp"
+                  >
+                    {{ otpVerifying ? 'Verifying...' : 'Verify and proceed' }}
                   </button>
                 </div>
               </div>
@@ -1774,5 +2105,53 @@ async function handleDelete() {
 .modal-text--warning {
   font-weight: 500;
   color: var(--color-warning, #c4973b);
+}
+
+/* Encryption warnings title */
+.encryption-warnings-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Grace period status */
+.encryption-status--warning {
+  color: var(--color-warning, #c4973b);
+  background: linear-gradient(135deg, rgba(196, 151, 59, 0.08), rgba(196, 151, 59, 0.04));
+  border: 1px solid rgba(196, 151, 59, 0.2);
+}
+
+.encryption-grace-actions {
+  margin-top: var(--space-4);
+}
+
+/* Disable link button */
+.encryption-disable-section {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.btn--sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+/* OTP input */
+.field-input--otp {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+
+.field-error {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
 }
 </style>

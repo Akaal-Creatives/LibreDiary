@@ -115,4 +115,40 @@ export const encryptionService = {
   listWorkspaceKeyShares(orgId: string) {
     return api.get<WorkspaceKeyShare[]>(`/encryption/workspace/${orgId}/key-shares`);
   },
+
+  /** Request to enable encryption (sends OTP if workspace has data) */
+  requestEnableEncryption(orgId: string, workspaceName: string) {
+    return api.post<{ requiresVerification: boolean }>(
+      `/encryption/workspace/${orgId}/request-enable`,
+      { workspaceName }
+    );
+  },
+
+  /** Verify enable encryption OTP code */
+  verifyEnableEncryption(orgId: string, code: string) {
+    return api.post(`/encryption/workspace/${orgId}/verify-enable`, { code });
+  },
+
+  /** Request to disable encryption (always sends OTP) */
+  requestDisableEncryption(orgId: string, workspaceName: string) {
+    return api.post<{ requiresVerification: boolean }>(
+      `/encryption/workspace/${orgId}/request-disable`,
+      { workspaceName }
+    );
+  },
+
+  /** Verify disable encryption OTP code */
+  verifyDisableEncryption(orgId: string, code: string) {
+    return api.post(`/encryption/workspace/${orgId}/verify-disable`, { code });
+  },
+
+  /** Disable workspace encryption (requires verified OTP) */
+  disableWorkspaceEncryption(orgId: string) {
+    return api.post(`/encryption/workspace/${orgId}/disable`);
+  },
+
+  /** Cancel disable and re-enable encryption during grace period */
+  cancelDisableEncryption(orgId: string) {
+    return api.post(`/encryption/workspace/${orgId}/cancel-disable`);
+  },
 };
