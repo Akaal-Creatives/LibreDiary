@@ -4,6 +4,10 @@ import { startBackupScheduler, stopBackupScheduler } from './modules/backups/ind
 import { startGdprScheduler, stopGdprScheduler } from './modules/gdpr/index.js';
 import { startTrashCleanupScheduler, stopTrashCleanupScheduler } from './modules/pages/index.js';
 import { startDemoReseedScheduler, stopDemoReseedScheduler } from './modules/demo/index.js';
+import {
+  startEncryptionPurgeScheduler,
+  stopEncryptionPurgeScheduler,
+} from './modules/encryption/index.js';
 
 async function main() {
   const app = await buildApp();
@@ -24,6 +28,7 @@ async function main() {
     startGdprScheduler();
     startTrashCleanupScheduler();
     startDemoReseedScheduler();
+    startEncryptionPurgeScheduler();
   } catch (error) {
     app.log.error(error);
     process.exit(1);
@@ -41,6 +46,7 @@ async function main() {
         stopGdprScheduler();
         stopTrashCleanupScheduler();
         stopDemoReseedScheduler();
+        stopEncryptionPurgeScheduler();
         await app.close();
         app.log.info('Server closed');
         process.exit(0);
