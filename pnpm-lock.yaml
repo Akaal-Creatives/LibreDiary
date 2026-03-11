@@ -290,6 +290,9 @@ importers:
       dompurify:
         specifier: ^3.3.2
         version: 3.3.2
+      katex:
+        specifier: ^0.16.38
+        version: 0.16.38
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
@@ -336,6 +339,9 @@ importers:
       '@types/dompurify':
         specifier: ^3.2.0
         version: 3.2.0
+      '@types/katex':
+        specifier: ^0.16.8
+        version: 0.16.8
       '@vitejs/plugin-vue':
         specifier: ^6.0.0
         version: 6.0.4(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
@@ -2896,6 +2902,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/katex@0.16.8':
+    resolution: {integrity: sha512-trgaNyfU+Xh2Tc+ABIb44a5AYUpicB3uwirOioeOkNPPbmgRNtcWyDeeFRzjPZENO9Vq8gvVqfhaaXWLlevVwg==}
+
   '@types/libsodium-wrappers-sumo@0.8.2':
     resolution: {integrity: sha512-uFOBpg/r21hExVlh2ty8YpDfSR+Yy3Jn8XS4+SSjitbhTxdYq+pBz/49XRxyUFe8SzqujHf/Wu0/O4d+FUtNfQ==}
     deprecated: This is a stub types definition. libsodium-wrappers-sumo provides its own type definitions, so you do not need this installed.
@@ -5057,8 +5066,8 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
-  katex@0.16.28:
-    resolution: {integrity: sha512-YHzO7721WbmAL6Ov1uzN/l5mY5WWWhJBSW+jq4tkfZfsxmo1hu6frS0EOswvjBUnWE6NtjEs48SFn5CQESRLZg==}
+  katex@0.16.38:
+    resolution: {integrity: sha512-cjHooZUmIAUmDsHBN+1n8LaZdpmbj03LtYeYPyuYB7OuloiaeaV6N4LcfjcnHVzGWjVQmKrxxTrpDcmSzEZQwQ==}
     hasBin: true
 
   keyv@4.5.4:
@@ -10490,6 +10499,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/katex@0.16.8': {}
+
   '@types/libsodium-wrappers-sumo@0.8.2':
     dependencies:
       libsodium-wrappers-sumo: 0.8.2
@@ -12911,7 +12922,7 @@ snapshots:
 
   jsonpointer@5.0.1: {}
 
-  katex@0.16.28:
+  katex@0.16.38:
     dependencies:
       commander: 8.3.0
 
@@ -13150,7 +13161,7 @@ snapshots:
       dagre-d3-es: 7.0.13
       dayjs: 1.11.19
       dompurify: 3.3.2
-      katex: 0.16.28
+      katex: 0.16.38
       khroma: 2.1.0
       lodash-es: 4.17.23
       marked: 16.4.2

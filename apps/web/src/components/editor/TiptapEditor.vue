@@ -25,6 +25,7 @@ import { ImageUploadExtension } from './extensions/ImageUploadExtension';
 import Typography from '@tiptap/extension-typography';
 import { FootnoteExtension } from './extensions/FootnoteExtension';
 import { MermaidExtension } from './extensions/MermaidExtension';
+import { MathBlockExtension } from './extensions/MathBlockExtension';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import { Markdown } from 'tiptap-markdown';
@@ -265,6 +266,7 @@ function buildExtensions(
     Subscript,
     FootnoteExtension,
     MermaidExtension,
+    MathBlockExtension,
     Markdown.configure({
       html: true,
       tightLists: true,
@@ -1157,6 +1159,82 @@ defineExpose({
 }
 
 .editor-content .ProseMirror .mermaid-placeholder {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Math Block (KaTeX)
+   ========================================================================== */
+
+.editor-content .ProseMirror .math-block {
+  position: relative;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.editor-content .ProseMirror .math-edit-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.editor-content .ProseMirror .math-edit-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+.editor-content .ProseMirror .math-code-input {
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  resize: vertical;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.editor-content .ProseMirror .math-code-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.editor-content .ProseMirror .math-rendered {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+  font-size: var(--text-lg);
+  overflow-x: auto;
+}
+
+.editor-content .ProseMirror .math-error {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.editor-content .ProseMirror .math-placeholder {
   padding: var(--space-4);
   text-align: center;
   color: var(--color-text-tertiary);

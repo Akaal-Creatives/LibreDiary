@@ -3,8 +3,8 @@ import type { Editor } from '@tiptap/core';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 23 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(23);
+  it('has 24 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(24);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -50,6 +50,7 @@ describe('SLASH_COMMANDS', () => {
       'tableOfContents',
       'toggle',
       'mermaidDiagram',
+      'mathBlock',
       'footnote',
     ]);
   });
@@ -130,7 +131,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(23);
+    expect(result).toHaveLength(24);
   });
 
   it('filters by id match', () => {
@@ -428,6 +429,14 @@ describe('command actions', () => {
     expect(chainMethods['setImage']).toHaveBeenCalledWith({ src: 'https://example.com/img.png' });
     expect(run).toHaveBeenCalled();
     window.prompt = undefined as unknown as typeof window.prompt;
+  });
+
+  it('mathBlock action calls insertMathBlock', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'mathBlock')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['insertMathBlock']).toHaveBeenCalled();
+    expect(run).toHaveBeenCalled();
   });
 
   it('mermaidDiagram action calls insertMermaidDiagram', () => {

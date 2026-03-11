@@ -321,7 +321,9 @@
     "footnote": "Footnote",
     "footnoteDescription": "Add a footnote reference and content",
     "mermaidDiagram": "Mermaid Diagram",
-    "mermaidDiagramDescription": "Insert a Mermaid flowchart or diagram"
+    "mermaidDiagramDescription": "Insert a Mermaid flowchart or diagram",
+    "mathBlock": "Math Block",
+    "mathBlockDescription": "Insert a LaTeX equation rendered with KaTeX"
   },
   "comments": {
     "title": "Comments",

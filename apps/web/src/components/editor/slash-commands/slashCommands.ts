@@ -267,6 +267,17 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
   },
   {
+    id: 'mathBlock',
+    labelKey: 'slashCommands.mathBlock',
+    descriptionKey: 'slashCommands.mathBlockDescription',
+    icon: 'M7 4v16M17 4v16M4 12h16M6 4h2M6 20h2M16 4h2M16 20h2',
+    group: 'advanced',
+    keywords: ['math', 'latex', 'katex', 'equation', 'formula'],
+    action: (editor) => {
+      custom(editor.chain().focus()).insertMathBlock().run();
+    },
+  },
+  {
     id: 'footnote',
     labelKey: 'slashCommands.footnote',
     descriptionKey: 'slashCommands.footnoteDescription',
