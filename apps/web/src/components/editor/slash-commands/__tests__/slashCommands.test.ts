@@ -3,8 +3,8 @@ import type { Editor } from '@tiptap/core';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 20 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(20);
+  it('has 23 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(23);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -32,6 +32,9 @@ describe('SLASH_COMMANDS', () => {
       'heading1',
       'heading2',
       'heading3',
+      'heading4',
+      'heading5',
+      'heading6',
       'blockquote',
       'codeBlock',
       'divider',
@@ -55,6 +58,9 @@ describe('SLASH_COMMANDS', () => {
     const groups = Object.fromEntries(SLASH_COMMANDS.map((c) => [c.id, c.group]));
     expect(groups.paragraph).toBe('basic');
     expect(groups.heading1).toBe('basic');
+    expect(groups.heading4).toBe('basic');
+    expect(groups.heading5).toBe('basic');
+    expect(groups.heading6).toBe('basic');
     expect(groups.bulletList).toBe('lists');
     expect(groups.orderedList).toBe('lists');
     expect(groups.taskList).toBe('lists');
@@ -124,7 +130,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(20);
+    expect(result).toHaveLength(23);
   });
 
   it('filters by id match', () => {
@@ -143,6 +149,9 @@ describe('filterCommands', () => {
     expect(result.some((c) => c.id === 'heading1')).toBe(true);
     expect(result.some((c) => c.id === 'heading2')).toBe(true);
     expect(result.some((c) => c.id === 'heading3')).toBe(true);
+    expect(result.some((c) => c.id === 'heading4')).toBe(true);
+    expect(result.some((c) => c.id === 'heading5')).toBe(true);
+    expect(result.some((c) => c.id === 'heading6')).toBe(true);
   });
 
   it('filters by resolved label when provided', () => {
@@ -276,6 +285,30 @@ describe('command actions', () => {
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading3')!;
     cmd.action(editor as unknown as Editor);
     expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 3 });
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('heading4 action calls setHeading with level 4', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading4')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 4 });
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('heading5 action calls setHeading with level 5', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading5')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 5 });
+    expect(run).toHaveBeenCalled();
+  });
+
+  it('heading6 action calls setHeading with level 6', () => {
+    const { editor, run, chainMethods } = createMockEditor();
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'heading6')!;
+    cmd.action(editor as unknown as Editor);
+    expect(chainMethods['setHeading']).toHaveBeenCalledWith({ level: 6 });
     expect(run).toHaveBeenCalled();
   });
 

@@ -220,7 +220,7 @@ function buildExtensions(
   const baseExtensions: any[] = [
     StarterKit.configure({
       heading: {
-        levels: [1, 2, 3],
+        levels: [1, 2, 3, 4, 5, 6],
       },
       bulletList: {
         keepMarks: true,
@@ -618,6 +618,32 @@ defineExpose({
   font-weight: 600;
   line-height: 1.4;
   color: var(--color-text-primary);
+}
+
+.editor-content .ProseMirror h4 {
+  margin-top: 0.75em;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.editor-content .ProseMirror h5 {
+  margin-top: 0.5em;
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.editor-content .ProseMirror h6 {
+  margin-top: 0.5em;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Paragraph */
@@ -1029,6 +1055,18 @@ defineExpose({
 
 .editor-content .ProseMirror .toc-block .toc-level-3 {
   padding-left: var(--space-8);
+}
+
+.editor-content .ProseMirror .toc-block .toc-level-4 {
+  padding-left: calc(var(--space-8) + var(--space-4));
+}
+
+.editor-content .ProseMirror .toc-block .toc-level-5 {
+  padding-left: calc(var(--space-8) + var(--space-8));
+}
+
+.editor-content .ProseMirror .toc-block .toc-level-6 {
+  padding-left: calc(var(--space-8) + var(--space-8) + var(--space-4));
 }
 
 .editor-content .ProseMirror .toc-block .toc-empty {

@@ -65,6 +65,39 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
   },
   {
+    id: 'heading4',
+    labelKey: 'slashCommands.heading4',
+    descriptionKey: 'slashCommands.heading4Description',
+    icon: 'M4 12h8M4 4v16M12 4v16M17 10v8M15 10h4',
+    group: 'basic',
+    keywords: ['h4', 'heading', 'subsection'],
+    action: (editor) => {
+      editor.chain().focus().setHeading({ level: 4 }).run();
+    },
+  },
+  {
+    id: 'heading5',
+    labelKey: 'slashCommands.heading5',
+    descriptionKey: 'slashCommands.heading5Description',
+    icon: 'M4 12h8M4 4v16M12 4v16M17 10h3l-3 4h3',
+    group: 'basic',
+    keywords: ['h5', 'heading', 'minor heading'],
+    action: (editor) => {
+      editor.chain().focus().setHeading({ level: 5 }).run();
+    },
+  },
+  {
+    id: 'heading6',
+    labelKey: 'slashCommands.heading6',
+    descriptionKey: 'slashCommands.heading6Description',
+    icon: 'M4 12h8M4 4v16M12 4v16M17.5 13a2 2 0 110 4 2 2 0 010-4zM19 10l-2 3',
+    group: 'basic',
+    keywords: ['h6', 'heading', 'smallest heading'],
+    action: (editor) => {
+      editor.chain().focus().setHeading({ level: 6 }).run();
+    },
+  },
+  {
     id: 'blockquote',
     labelKey: 'slashCommands.blockquote',
     descriptionKey: 'slashCommands.blockquoteDescription',

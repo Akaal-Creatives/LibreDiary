@@ -62,7 +62,7 @@ export const TableOfContentsExtension = Node.create({
         const headings: HeadingItem[] = [];
 
         doc.descendants((node, pos) => {
-          if (node.type.name === 'heading' && node.attrs.level >= 1 && node.attrs.level <= 3) {
+          if (node.type.name === 'heading' && node.attrs.level >= 1 && node.attrs.level <= 6) {
             headings.push({
               level: node.attrs.level,
               text: node.textContent,
