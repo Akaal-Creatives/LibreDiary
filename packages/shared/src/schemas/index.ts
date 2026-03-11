@@ -170,7 +170,75 @@ export const propertyTypeSchema = z.enum([
   'CREATED_BY',
   'UPDATED_TIME',
   'UPDATED_BY',
+  'DURATION',
 ]);
+
+// ===========================================
+// PROPERTY CONFIG SCHEMAS (per-type validation)
+// ===========================================
+
+const selectOptionSchema = z.object({
+  label: z.string().min(1).max(100),
+  colour: z.string().max(30).optional(),
+});
+
+export const selectConfigSchema = z.object({
+  options: z.array(selectOptionSchema).max(200),
+});
+
+export const numberConfigSchema = z.object({
+  format: z.enum(['number', 'percent', 'currency']).optional(),
+});
+
+export const durationConfigSchema = z.object({
+  precision: z.enum(['seconds', 'minutes', 'hours']).optional(),
+  format: z.enum(['hms', 'decimal']).optional(),
+});
+
+export const filesConfigSchema = z.object({
+  allowedMimeTypes: z.array(z.string().max(100)).max(50).optional(),
+});
+
+export const relationConfigSchema = z.object({
+  targetDatabaseId: z.string().min(1),
+});
+
+export const rollupConfigSchema = z.object({
+  relationPropertyId: z.string().min(1),
+  targetPropertyId: z.string().min(1),
+  aggregation: z.enum(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']),
+});
+
+export const formulaConfigSchema = z.object({
+  expression: z.string().max(5000),
+});
+
+/** Map of property types to their config schemas. Types not listed accept no config. */
+const propertyConfigSchemas: Partial<Record<z.infer<typeof propertyTypeSchema>, z.ZodType>> = {
+  SELECT: selectConfigSchema,
+  MULTI_SELECT: selectConfigSchema,
+  NUMBER: numberConfigSchema,
+  DURATION: durationConfigSchema,
+  FILES: filesConfigSchema,
+  RELATION: relationConfigSchema,
+  ROLLUP: rollupConfigSchema,
+  FORMULA: formulaConfigSchema,
+};
+
+/**
+ * Validate property config against its type-specific schema.
+ * Returns the validated config, or null if the type has no config schema.
+ * Throws ZodError if config is invalid.
+ */
+export function validatePropertyConfig(
+  type: z.infer<typeof propertyTypeSchema>,
+  config: unknown
+): Record<string, unknown> | null {
+  const schema = propertyConfigSchemas[type];
+  if (!schema) return null;
+  if (config == null) return null;
+  return schema.parse(config) as Record<string, unknown>;
+}
 
 export const createPropertySchema = z.object({
   name: z.string().min(1).max(100).trim(),

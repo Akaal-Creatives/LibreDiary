@@ -4,6 +4,16 @@ import * as databasesService from './databases.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import {
+  createPropertySchema,
+  updatePropertySchema,
+  createViewSchema,
+  updateViewSchema,
+  createRowSchema,
+  updateRowSchema,
+  reorderSchema,
+  validatePropertyConfig,
+} from '@librediary/shared/schemas';
 
 // ===========================================
 // REQUEST SCHEMAS
@@ -17,66 +27,6 @@ const createDatabaseSchema = z.object({
 const updateDatabaseSchema = z.object({
   name: z.string().min(1).max(200).trim().optional(),
   pageId: z.string().nullable().optional(),
-});
-
-const propertyTypeSchema = z.enum([
-  'TEXT',
-  'NUMBER',
-  'SELECT',
-  'MULTI_SELECT',
-  'DATE',
-  'CHECKBOX',
-  'URL',
-  'EMAIL',
-  'PHONE',
-  'PERSON',
-  'FILES',
-  'RELATION',
-  'ROLLUP',
-  'FORMULA',
-  'CREATED_TIME',
-  'CREATED_BY',
-  'UPDATED_TIME',
-  'UPDATED_BY',
-  'DURATION',
-]);
-
-const createPropertySchema = z.object({
-  name: z.string().min(1).max(100).trim(),
-  type: propertyTypeSchema,
-  config: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updatePropertySchema = z.object({
-  name: z.string().min(1).max(100).trim().optional(),
-  type: propertyTypeSchema.optional(),
-  config: z.record(z.string(), z.unknown()).nullable().optional(),
-});
-
-const viewTypeSchema = z.enum(['TABLE', 'KANBAN', 'CALENDAR', 'GALLERY']);
-
-const createViewSchema = z.object({
-  name: z.string().min(1).max(100).trim(),
-  type: viewTypeSchema,
-  config: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updateViewSchema = z.object({
-  name: z.string().min(1).max(100).trim().optional(),
-  type: viewTypeSchema.optional(),
-  config: z.record(z.string(), z.unknown()).nullable().optional(),
-});
-
-const createRowSchema = z.object({
-  cells: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updateRowSchema = z.object({
-  cells: z.record(z.string(), z.unknown()).optional(),
-});
-
-const reorderSchema = z.object({
-  orderedIds: z.array(z.string().min(1)).min(1),
 });
 
 const bulkDeleteSchema = z.object({
@@ -279,6 +229,23 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      // Validate config against the property type schema
+      if (body.data.config != null) {
+        try {
+          body.data.config =
+            validatePropertyConfig(body.data.type, body.data.config) ?? body.data.config;
+        } catch (configError) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Invalid property config',
+              details: configError instanceof z.ZodError ? configError.flatten().fieldErrors : {},
+            },
+          });
+        }
+      }
+
       try {
         const property = await databasesService.createProperty(
           request.params.orgId,
@@ -308,6 +275,23 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
             details: body.error.flatten().fieldErrors,
           },
         });
+      }
+
+      // Validate config against the property type when both are provided
+      if (body.data.config != null && body.data.type) {
+        try {
+          body.data.config =
+            validatePropertyConfig(body.data.type, body.data.config) ?? body.data.config;
+        } catch (configError) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Invalid property config',
+              details: configError instanceof z.ZodError ? configError.flatten().fieldErrors : {},
+            },
+          });
+        }
       }
 
       try {
