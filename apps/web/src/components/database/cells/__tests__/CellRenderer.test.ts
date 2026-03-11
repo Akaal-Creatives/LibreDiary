@@ -744,4 +744,48 @@ describe('CellRenderer', () => {
       expect(wrapper.text()).toBe('25');
     });
   });
+
+  describe('DURATION type', () => {
+    it('renders duration in HMS format with seconds precision by default', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 5_025_000, type: 'DURATION' },
+      });
+      expect(wrapper.text()).toBe('1h 23m 45s');
+    });
+
+    it('renders duration with minutes precision', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 5_025_000, type: 'DURATION', config: { precision: 'minutes' } },
+      });
+      expect(wrapper.text()).toBe('1h 23m');
+    });
+
+    it('renders duration with hours precision', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 5_025_000, type: 'DURATION', config: { precision: 'hours' } },
+      });
+      expect(wrapper.text()).toBe('1h');
+    });
+
+    it('renders duration in decimal format', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 5_400_000, type: 'DURATION', config: { format: 'decimal' } },
+      });
+      expect(wrapper.text()).toBe('1.50h');
+    });
+
+    it('renders empty string for null value', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: null, type: 'DURATION' },
+      });
+      expect(wrapper.text()).toBe('');
+    });
+
+    it('renders 0ms as "0s"', () => {
+      const wrapper = mount(CellRenderer, {
+        props: { value: 0, type: 'DURATION' },
+      });
+      expect(wrapper.text()).toBe('0s');
+    });
+  });
 });

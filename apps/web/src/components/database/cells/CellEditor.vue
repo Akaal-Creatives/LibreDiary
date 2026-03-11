@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 import type { PropertyType, FilesCellItem } from '@librediary/shared';
+import { formatDuration, parseDuration } from '@librediary/shared/utils';
+import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
 import { useFilesStore } from '@/stores/files';
@@ -158,6 +160,17 @@ onMounted(async () => {
   if (props.type === 'SELECT' || props.type === 'MULTI_SELECT') {
     showSelectDropdown.value = true;
     editValue.value = String(props.value ?? '');
+  } else if (props.type === 'DURATION') {
+    if (props.value != null) {
+      const ms = Number(props.value);
+      const durationConfig: DurationConfig = {
+        precision: (props.config?.precision as DurationConfig['precision']) ?? 'seconds',
+        format: (props.config?.format as DurationConfig['format']) ?? 'hms',
+      };
+      editValue.value = isNaN(ms) ? '' : formatDuration(ms, durationConfig);
+    } else {
+      editValue.value = '';
+    }
   } else {
     editValue.value = props.value != null ? String(props.value) : '';
   }
@@ -173,6 +186,8 @@ function save() {
   if (props.type === 'NUMBER') {
     const num = Number(editValue.value);
     finalValue = editValue.value === '' ? null : isNaN(num) ? null : num;
+  } else if (props.type === 'DURATION') {
+    finalValue = editValue.value === '' ? null : parseDuration(editValue.value);
   }
 
   emit('save', finalValue);
@@ -364,6 +379,18 @@ function getInputType(): string {
         Done
       </button>
     </div>
+
+    <!-- Duration input -->
+    <input
+      v-else-if="type === 'DURATION'"
+      ref="inputRef"
+      v-model="editValue"
+      class="cell-input"
+      type="text"
+      placeholder="e.g. 1h 30m 45s"
+      @blur="save"
+      @keydown="handleKeydown"
+    />
 
     <!-- Standard text/number/date input -->
     <input

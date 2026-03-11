@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { PropertyType, FilesCellItem } from '@librediary/shared';
+import { formatDuration } from '@librediary/shared/utils';
+import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
 
@@ -184,6 +186,16 @@ function formatValue(): string {
       const date = new Date(ts);
       if (isNaN(date.getTime())) return ts;
       return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    case 'DURATION': {
+      const ms = Number(props.value);
+      if (isNaN(ms)) return '';
+      const durationConfig: DurationConfig = {
+        precision: (props.config?.precision as DurationConfig['precision']) ?? 'seconds',
+        format: (props.config?.format as DurationConfig['format']) ?? 'hms',
+      };
+      return formatDuration(ms, durationConfig);
     }
 
     default:

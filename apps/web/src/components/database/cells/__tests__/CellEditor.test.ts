@@ -628,4 +628,76 @@ describe('CellEditor', () => {
       expect(emitted[1]!.id).toBe('new-f2');
     });
   });
+
+  describe('DURATION type', () => {
+    it('shows formatted duration in input on mount', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: 5_025_000, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      expect(input.exists()).toBe(true);
+      expect((input.element as HTMLInputElement).value).toBe('1h 23m 45s');
+    });
+
+    it('shows empty input for null value', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: null, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      expect((input.element as HTMLInputElement).value).toBe('');
+    });
+
+    it('has duration placeholder', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: null, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[placeholder="e.g. 1h 30m 45s"]');
+      expect(input.exists()).toBe(true);
+    });
+
+    it('parses duration string on save', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: null, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      await input.setValue('1h 30m');
+      await input.trigger('blur');
+      expect(wrapper.emitted('save')![0]![0]).toBe(5_400_000);
+    });
+
+    it('saves null for empty input', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: 5_025_000, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      await input.setValue('');
+      await input.trigger('blur');
+      expect(wrapper.emitted('save')![0]![0]).toBeNull();
+    });
+
+    it('saves null for unparseable input', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: null, type: 'DURATION' },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      await input.setValue('invalid');
+      await input.trigger('blur');
+      expect(wrapper.emitted('save')![0]![0]).toBeNull();
+    });
+
+    it('uses config precision when formatting', async () => {
+      const wrapper = mount(CellEditor, {
+        props: { value: 5_025_000, type: 'DURATION', config: { precision: 'minutes' } },
+      });
+      await flushPromises();
+      const input = wrapper.find('input[type="text"]');
+      expect((input.element as HTMLInputElement).value).toBe('1h 23m');
+    });
+  });
 });

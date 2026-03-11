@@ -38,6 +38,29 @@ const isSelectType = computed(
 );
 const isNumberType = computed(() => localType.value === 'NUMBER');
 const isFilesType = computed(() => localType.value === 'FILES');
+const isDurationType = computed(() => localType.value === 'DURATION');
+
+const localDurationPrecision = ref(getInitialDurationPrecision());
+const localDurationFormat = ref(getInitialDurationFormat());
+
+function getInitialDurationPrecision(): string {
+  const config = props.property.config as Record<string, unknown> | null;
+  return (config?.precision as string) ?? 'seconds';
+}
+
+function getInitialDurationFormat(): string {
+  const config = props.property.config as Record<string, unknown> | null;
+  return (config?.format as string) ?? 'hms';
+}
+
+async function saveDurationConfig() {
+  const config = {
+    ...((props.property.config as Record<string, unknown>) ?? {}),
+    precision: localDurationPrecision.value,
+    format: localDurationFormat.value,
+  };
+  await databasesStore.updateProperty(props.property.id, { config });
+}
 
 const localAllowedMimeTypes = ref(getInitialAllowedMimeTypes());
 
@@ -66,6 +89,8 @@ watch(
     localType.value = props.property.type;
     localOptions.value = getInitialOptions();
     localNumberFormat.value = getInitialNumberFormat();
+    localDurationPrecision.value = getInitialDurationPrecision();
+    localDurationFormat.value = getInitialDurationFormat();
     localAllowedMimeTypes.value = getInitialAllowedMimeTypes();
   }
 );
@@ -116,6 +141,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'EMAIL', label: 'Email' },
   { value: 'PHONE', label: 'Phone' },
   { value: 'FILES', label: 'Files' },
+  { value: 'DURATION', label: 'Duration' },
 ];
 </script>
 
@@ -206,6 +232,28 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
         @keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
       />
       <span class="config-hint">Comma-separated MIME types. Leave empty to allow all.</span>
+    </div>
+
+    <!-- DURATION Config -->
+    <div v-if="isDurationType" class="config-field">
+      <label class="config-label">Precision</label>
+      <select
+        v-model="localDurationPrecision"
+        class="config-type-select"
+        @change="saveDurationConfig"
+      >
+        <option value="seconds">Seconds (1h 23m 45s)</option>
+        <option value="minutes">Minutes (1h 23m)</option>
+        <option value="hours">Hours (1h)</option>
+      </select>
+    </div>
+
+    <div v-if="isDurationType" class="config-field">
+      <label class="config-label">Format</label>
+      <select v-model="localDurationFormat" class="config-type-select" @change="saveDurationConfig">
+        <option value="hms">Hours, minutes, seconds</option>
+        <option value="decimal">Decimal hours (1.50h)</option>
+      </select>
     </div>
   </div>
 </template>

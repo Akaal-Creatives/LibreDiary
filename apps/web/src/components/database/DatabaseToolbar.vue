@@ -110,6 +110,7 @@ function getOperatorsForProperty(propertyId: string): Array<{ value: string; lab
         { value: 'is_not_empty', label: t('databases.filterOperators.isNotEmpty') },
       ];
     case 'NUMBER':
+    case 'DURATION':
       return [
         { value: 'equals', label: t('databases.filterOperators.equals') },
         { value: 'not_equals', label: t('databases.filterOperators.doesNotEqual') },
