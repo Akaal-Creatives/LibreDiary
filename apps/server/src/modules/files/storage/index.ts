@@ -21,7 +21,7 @@ export function createStorageProvider(type?: string): StorageProvider {
       return new S3StorageProvider();
     case 'LOCAL':
     default:
-      return new LocalStorageProvider(env.STORAGE_LOCAL_PATH);
+      return new LocalStorageProvider(env.STORAGE_LOCAL_PATH, env.APP_URL);
   }
 }
 

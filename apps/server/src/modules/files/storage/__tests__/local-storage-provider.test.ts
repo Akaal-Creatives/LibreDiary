@@ -230,16 +230,30 @@ describe('LocalStorageProvider', () => {
   // ===========================================
 
   describe('getUrl', () => {
-    it('should return /uploads/{key} for a simple key', async () => {
+    it('should return /uploads/{key} when no baseUrl is configured', async () => {
       const url = await provider.getUrl('org-1/file.txt');
 
       expect(url).toBe('/uploads/org-1/file.txt');
     });
 
-    it('should return /uploads/{key} for a deeply nested key', async () => {
-      const url = await provider.getUrl('org-1/sub/deep/photo.jpg');
+    it('should prepend baseUrl when configured', async () => {
+      const providerWithBase = new LocalStorageProvider(basePath, 'https://api.example.com');
+      vi.clearAllMocks();
+      mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
 
-      expect(url).toBe('/uploads/org-1/sub/deep/photo.jpg');
+      const url = await providerWithBase.getUrl('org-1/file.txt');
+
+      expect(url).toBe('https://api.example.com/uploads/org-1/file.txt');
+    });
+
+    it('should return absolute URL for a deeply nested key', async () => {
+      const providerWithBase = new LocalStorageProvider(basePath, 'https://api.example.com');
+      vi.clearAllMocks();
+      mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
+
+      const url = await providerWithBase.getUrl('org-1/sub/deep/photo.jpg');
+
+      expect(url).toBe('https://api.example.com/uploads/org-1/sub/deep/photo.jpg');
     });
 
     it('should return /uploads/{key} for a root-level key', async () => {
