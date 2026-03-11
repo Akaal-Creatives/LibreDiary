@@ -46,7 +46,7 @@ const MathNodeView = defineComponent({
         });
         errorMsg.value = '';
       } catch (err) {
-        errorMsg.value = String(err);
+        errorMsg.value = err instanceof Error ? err.message : String(err);
         renderedHtml.value = '';
       }
     }

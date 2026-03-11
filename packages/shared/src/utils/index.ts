@@ -255,7 +255,7 @@ export function formatDuration(ms: number, config?: DurationConfig): string {
  * Returns null if the string cannot be parsed.
  */
 export function parseDuration(input: string): number | null {
-  const trimmed = input.trim();
+  const trimmed = input.trim().slice(0, 100);
   if (!trimmed) return null;
 
   // Try "Xh Ym Zs" format

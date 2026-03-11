@@ -115,8 +115,8 @@ export function useTimer() {
   }
 
   function pause(): void {
-    if (!target.value || isPaused.value) return;
-    accumulatedMs.value += Date.now() - (startedAt.value ?? Date.now());
+    if (!target.value || isPaused.value || !startedAt.value) return;
+    accumulatedMs.value += Date.now() - startedAt.value;
     isPaused.value = true;
     pausedAt.value = Date.now();
     stopTicking();

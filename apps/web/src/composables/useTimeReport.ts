@@ -62,6 +62,10 @@ export function useTimeReport() {
     return rows;
   });
 
+  const memberMap = computed(() => {
+    return new Map(organizationsStore.members.map((m) => [m.user.id, m]));
+  });
+
   const summary = computed<TimeReportSummary>(() => {
     const propId = activeProperty.value?.id;
     if (!propId) {
@@ -90,7 +94,7 @@ export function useTimeReport() {
     }
 
     const perUser: TimeReportEntry[] = Array.from(userMap.entries()).map(([userId, data]) => {
-      const member = organizationsStore.members.find((m) => m.user.id === userId);
+      const member = memberMap.value.get(userId);
       return {
         userId,
         userName: member?.user?.name ?? member?.user?.email ?? userId,
@@ -126,9 +130,15 @@ export function useTimeReport() {
     rows.push(['Total', formatMs(summary.value.totalMs), String(summary.value.rowCount)]);
     rows.push(['Average', formatMs(summary.value.averageMs), '']);
 
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(','))
-      .join('\n');
+    const escapeCsvCell = (cell: string): string => {
+      // Escape double quotes by doubling them
+      const escaped = cell.replace(/"/g, '""');
+      // Prevent formula injection — prefix with single quote if cell starts with =, +, -, @, tab
+      if (/^[=+\-@\t]/.test(escaped)) return `"'${escaped}"`;
+      return `"${escaped}"`;
+    };
+
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

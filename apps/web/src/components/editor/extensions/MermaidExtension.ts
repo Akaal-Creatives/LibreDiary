@@ -49,7 +49,7 @@ const MermaidNodeView = defineComponent({
         diagramHtml.value = svg;
         errorMsg.value = '';
       } catch (err) {
-        errorMsg.value = String(err);
+        errorMsg.value = err instanceof Error ? err.message : String(err);
         diagramHtml.value = '';
       }
     }

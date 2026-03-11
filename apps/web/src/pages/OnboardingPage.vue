@@ -112,8 +112,8 @@ async function completeOnboarding() {
       if (orgId) {
         await templatesService.seedBuiltInTemplates(orgId);
       }
-    } catch {
-      // Non-critical — templates can be seeded later
+    } catch (err) {
+      console.warn('Failed to seed templates:', err instanceof Error ? err.message : String(err));
     }
 
     currentStep.value = 4;

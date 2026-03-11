@@ -119,8 +119,8 @@ async function handleFileUpload(event: Event) {
       size: fileInfo.size,
     };
     emit('save', [...currentFiles.value, newItem]);
-  } catch {
-    // Upload failed — error is already set in filesStore
+  } catch (err) {
+    console.error('File upload failed:', err instanceof Error ? err.message : String(err));
   } finally {
     localUploading.value = false;
     localUploadProgress.value = 0;
