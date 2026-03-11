@@ -16,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   save: [value: unknown];
   cancel: [];
+  startTimer: [];
 }>();
 
 const editValue = ref<string>('');
@@ -380,17 +381,35 @@ function getInputType(): string {
       </button>
     </div>
 
-    <!-- Duration input -->
-    <input
-      v-else-if="type === 'DURATION'"
-      ref="inputRef"
-      v-model="editValue"
-      class="cell-input"
-      type="text"
-      placeholder="e.g. 1h 30m 45s"
-      @blur="save"
-      @keydown="handleKeydown"
-    />
+    <!-- Duration input with timer quick-start -->
+    <div v-else-if="type === 'DURATION'" class="duration-editor">
+      <input
+        ref="inputRef"
+        v-model="editValue"
+        class="cell-input duration-input"
+        type="text"
+        placeholder="e.g. 1h 30m 45s"
+        @blur="save"
+        @keydown="handleKeydown"
+      />
+      <button
+        class="duration-timer-btn"
+        aria-label="Start timer"
+        title="Start timer"
+        @mousedown.prevent="emit('startTimer')"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2" />
+          <path
+            d="M7 4V7L9 9"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
 
     <!-- Standard text/number/date input -->
     <input
@@ -770,5 +789,38 @@ function getInputType(): string {
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+}
+
+/* Duration Editor */
+.duration-editor {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  width: 100%;
+}
+
+.duration-input {
+  flex: 1;
+}
+
+.duration-timer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.duration-timer-btn:hover {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 </style>

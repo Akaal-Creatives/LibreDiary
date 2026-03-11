@@ -5,8 +5,10 @@ import { CellRenderer, CellEditor } from './cells';
 import ColumnHeaderMenu from './ColumnHeaderMenu.vue';
 import PropertyConfigPanel from './PropertyConfigPanel.vue';
 import type { PropertyType } from '@librediary/shared';
+import { useTimer, type TimerTarget } from '@/composables/useTimer';
 
 const databasesStore = useDatabasesStore();
+const timer = useTimer();
 
 const editingCell = ref<{ rowId: string; propertyId: string } | null>(null);
 const selectedRows = ref<Set<string>>(new Set());
@@ -293,6 +295,33 @@ function onColDragEnd() {
   dragOverColId.value = null;
 }
 
+function isTimerActiveForRow(rowId: string): boolean {
+  return timer.target.value?.rowId === rowId;
+}
+
+function startTimerForRow(rowId: string, propertyId: string) {
+  const row = databasesStore.filteredAndSortedRows.find((r) => r.id === rowId);
+  const prop = databasesStore.properties.find((p) => p.id === propertyId);
+  if (!row || !prop) return;
+
+  // Get first TEXT property value as task name, fallback to "Row"
+  const firstTextProp = databasesStore.sortedProperties[0];
+  const cells = row.cells as Record<string, unknown>;
+  const taskName = firstTextProp ? String(cells[firstTextProp.id] ?? 'Row') : 'Row';
+
+  const target: TimerTarget = {
+    databaseId: databasesStore.currentDatabaseId!,
+    rowId,
+    propertyId,
+    taskName,
+  };
+  timer.start(target);
+}
+
+function getDurationPropertyForRow(): { id: string } | undefined {
+  return databasesStore.sortedProperties.find((p) => p.type === 'DURATION');
+}
+
 const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'TEXT', label: 'Text' },
   { value: 'NUMBER', label: 'Number' },
@@ -308,6 +337,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'RELATION', label: 'Relation' },
   { value: 'ROLLUP', label: 'Rollup' },
   { value: 'FORMULA', label: 'Formula' },
+  { value: 'DURATION', label: 'Duration' },
 ];
 </script>
 
@@ -464,14 +494,43 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 @change="toggleSelectRow(row.id)"
               />
             </td>
-            <!-- Drag handle -->
+            <!-- Drag handle / timer indicator -->
             <td
               class="cell-drag"
               draggable="true"
               @dragstart="onRowDragStart($event, row.id)"
               @dragend="onRowDragEnd"
             >
-              <span class="drag-handle">
+              <!-- Timer active indicator -->
+              <span
+                v-if="isTimerActiveForRow(row.id)"
+                class="timer-row-indicator"
+                title="Timer running"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2" />
+                  <path
+                    d="M6 3.5V6L7.5 7.5"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <!-- Start timer button (shows on hover if DURATION property exists) -->
+              <button
+                v-else-if="getDurationPropertyForRow() && !timer.isActive.value"
+                class="start-timer-btn"
+                title="Start timer"
+                @click.stop="startTimerForRow(row.id, getDurationPropertyForRow()!.id)"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2.5 1.5V8.5L8 5L2.5 1.5Z" fill="currentColor" />
+                </svg>
+              </button>
+              <!-- Default drag handle -->
+              <span v-else class="drag-handle">
                 <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
                   <circle cx="2" cy="2" r="1" fill="currentColor" />
                   <circle cx="6" cy="2" r="1" fill="currentColor" />
@@ -496,6 +555,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 :config="(prop.config as Record<string, unknown>) ?? null"
                 @save="(v) => saveCell(row.id, prop.id, v)"
                 @cancel="cancelEdit"
+                @start-timer="startTimerForRow(row.id, prop.id)"
               />
               <CellRenderer
                 v-else
@@ -527,6 +587,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
                 :config="(prop.config as Record<string, unknown>) ?? null"
                 @save="(v) => saveDraftCell(prop.id, v)"
                 @cancel="cancelEdit"
+                @start-timer="() => {}"
               />
               <CellRenderer
                 v-else
@@ -781,6 +842,49 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
 
 .data-row:hover .drag-handle {
   opacity: 1;
+}
+
+.timer-row-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  animation: timer-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.start-timer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.data-row:hover .start-timer-btn {
+  opacity: 1;
+}
+
+.start-timer-btn:hover {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
 .data-cell {
