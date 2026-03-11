@@ -557,8 +557,10 @@ export async function createInvite(
     },
   });
 
-  // Send invite email
-  await sendInviteEmail(email, token, organization.name, inviter.name ?? inviter.email);
+  // Send invite email (fire-and-forget so a mail failure doesn't break the invite)
+  sendInviteEmail(email, token, organization.name, inviter.name ?? inviter.email).catch((err) => {
+    logger.error({ err, email, orgId }, 'Failed to send invite email');
+  });
 
   logAudit({
     action: 'MEMBER_INVITED',
@@ -675,13 +677,15 @@ export async function resendInvite(orgId: string, inviteId: string): Promise<Inv
     },
   });
 
-  // Resend email
-  await sendInviteEmail(
+  // Resend email (fire-and-forget so a mail failure doesn't break the resend)
+  sendInviteEmail(
     invite.email,
     newToken,
     invite.organization.name,
     invite.invitedBy.name ?? invite.invitedBy.email
-  );
+  ).catch((err) => {
+    logger.error({ err, email: invite.email, orgId }, 'Failed to resend invite email');
+  });
 
   return updatedInvite;
 }
