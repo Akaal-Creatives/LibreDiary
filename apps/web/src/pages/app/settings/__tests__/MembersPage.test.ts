@@ -3,7 +3,13 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
 // Hoist mocks so they are available before module imports
-const { mockAuthStore, mockOrgsStore, mockEncryptionService } = vi.hoisted(() => ({
+const {
+  mockAuthStore,
+  mockOrgsStore,
+  mockEncryptionService,
+  mockUseEncryption,
+  mockEncryptForRecipient,
+} = vi.hoisted(() => ({
   mockAuthStore: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: { id: 'user-1', name: 'Test User', email: 'test@example.com' } as any,
@@ -30,7 +36,15 @@ const { mockAuthStore, mockOrgsStore, mockEncryptionService } = vi.hoisted(() =>
   },
   mockEncryptionService: {
     getPendingMembers: vi.fn(),
+    shareWorkspaceKey: vi.fn(),
+    getStatus: vi.fn(),
   },
+  mockUseEncryption: {
+    isUnlocked: { value: false },
+    privateKey: { value: null },
+    getWorkspaceKey: vi.fn(),
+  },
+  mockEncryptForRecipient: vi.fn(),
 }));
 
 vi.mock('@/stores', () => ({
@@ -55,6 +69,14 @@ vi.mock('@/services', () => ({
 
 vi.mock('@/services/encryption.service', () => ({
   encryptionService: mockEncryptionService,
+}));
+
+vi.mock('@/composables/useEncryption', () => ({
+  useEncryption: () => mockUseEncryption,
+}));
+
+vi.mock('@librediary/shared/crypto', () => ({
+  encryptForRecipient: mockEncryptForRecipient,
 }));
 
 vi.mock('@/components/MemberRoleBadge.vue', () => ({
@@ -117,6 +139,16 @@ describe('MembersPage', () => {
     mockOrgsStore.resendInvite.mockResolvedValue(undefined);
 
     mockEncryptionService.getPendingMembers.mockResolvedValue([]);
+    mockEncryptionService.shareWorkspaceKey.mockResolvedValue(undefined);
+    mockEncryptionService.getStatus.mockResolvedValue({ isSetUp: true, publicKey: 'my-pk' });
+
+    mockUseEncryption.isUnlocked = { value: false };
+    mockUseEncryption.privateKey = { value: null };
+    mockUseEncryption.getWorkspaceKey.mockResolvedValue(null);
+    mockEncryptForRecipient.mockResolvedValue({
+      encryptedKey: new Uint8Array([1, 2, 3]),
+      nonce: new Uint8Array([4, 5, 6]),
+    });
   });
 
   // ---- Page Header ----
@@ -455,6 +487,70 @@ describe('MembersPage', () => {
       await flushPromises();
 
       expect(wrapper.find('.encryption-pending-banner').exists()).toBe(false);
+    });
+
+    it('shows "Grant Access" button for pending members who have encryption set up', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = true;
+      mockUseEncryption.isUnlocked = { value: true };
+      mockEncryptionService.getPendingMembers.mockResolvedValue(pendingMembers);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const grantButtons = wrapper.findAll('[data-testid="grant-access-btn"]');
+      // Only Bob has hasEncryptionSetup: true
+      expect(grantButtons).toHaveLength(1);
+    });
+
+    it('shows "Setup Required" label for pending members without encryption setup', async () => {
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = true;
+      mockUseEncryption.isUnlocked = { value: true };
+      mockEncryptionService.getPendingMembers.mockResolvedValue(pendingMembers);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('Setup required');
+    });
+
+    it('calls shareWorkspaceKey when "Grant Access" is clicked', async () => {
+      const validBase64Key = btoa('test-public-key-data');
+      const membersWithValidKeys = [
+        {
+          userId: 'user-2',
+          email: 'bob@test.com',
+          name: 'Bob',
+          publicKey: validBase64Key,
+          hasEncryptionSetup: true,
+        },
+      ];
+
+      mockAuthStore.currentOrganization = { id: 'org-1', name: 'Test Org', isEncrypted: true };
+      mockOrgsStore.canManageMembers = true;
+      mockUseEncryption.isUnlocked = { value: true };
+      mockUseEncryption.privateKey = { value: new Uint8Array([10, 20, 30]) };
+      mockUseEncryption.getWorkspaceKey.mockResolvedValue(new Uint8Array([7, 8, 9]));
+      mockEncryptionService.getStatus.mockResolvedValue({
+        isSetUp: true,
+        publicKey: validBase64Key,
+      });
+      mockEncryptionService.getPendingMembers.mockResolvedValue(membersWithValidKeys);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const grantBtn = wrapper.find('[data-testid="grant-access-btn"]');
+      await grantBtn.trigger('click');
+      await flushPromises();
+
+      expect(mockEncryptionService.shareWorkspaceKey).toHaveBeenCalledWith(
+        'org-1',
+        expect.objectContaining({
+          targetUserId: 'user-2',
+        })
+      );
     });
   });
 });

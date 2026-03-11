@@ -5,10 +5,21 @@ import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
 import { encryptionService } from '@/services/encryption.service';
 import type { PendingMember } from '@/services/encryption.service';
+import { useEncryption } from '@/composables/useEncryption';
+import { encryptForRecipient } from '@librediary/shared/crypto';
 import type { OrgRole } from '@librediary/shared';
 import MemberRoleBadge from '@/components/MemberRoleBadge.vue';
 import InviteMemberModal from '@/components/InviteMemberModal.vue';
 import SettingsListSkeleton from '@/components/skeletons/SettingsListSkeleton.vue';
+
+function toBase64(data: Uint8Array): string {
+  return btoa(String.fromCharCode(...data));
+}
+
+function fromBase64(b64: string): Uint8Array {
+  const binary = atob(b64);
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
 
 const authStore = useAuthStore();
 const orgsStore = useOrganizationsStore();
@@ -26,8 +37,10 @@ const actionLoading = ref(false);
 // Invite actions
 const inviteActionLoading = ref<string | null>(null);
 
-// Encryption pending members
+// Encryption
+const { isUnlocked, privateKey, getWorkspaceKey } = useEncryption();
 const pendingEncryptionMembers = ref<PendingMember[]>([]);
+const grantingAccessFor = ref<string | null>(null);
 
 // Load members and invites
 async function loadData() {
@@ -216,6 +229,45 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString();
 }
 
+// Handle granting encryption access to a pending member
+async function handleGrantAccess(member: PendingMember) {
+  if (!privateKey.value || !member.publicKey) return;
+
+  grantingAccessFor.value = member.userId;
+  error.value = null;
+
+  try {
+    const orgId = authStore.currentOrganizationId!;
+    const workspaceKey = await getWorkspaceKey(orgId);
+    if (!workspaceKey) throw new Error('Could not retrieve workspace key');
+
+    const status = await encryptionService.getStatus();
+    const recipientPublicKey = fromBase64(member.publicKey);
+
+    const encrypted = await encryptForRecipient(workspaceKey, privateKey.value, recipientPublicKey);
+
+    await encryptionService.shareWorkspaceKey(orgId, {
+      targetUserId: member.userId,
+      encryptedKey: toBase64(encrypted.encryptedKey),
+      nonce: toBase64(encrypted.nonce),
+      sharedByPublicKey: status.publicKey!,
+    });
+
+    // Remove from pending list
+    pendingEncryptionMembers.value = pendingEncryptionMembers.value.filter(
+      (m) => m.userId !== member.userId
+    );
+  } catch (err) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to grant encryption access';
+    }
+  } finally {
+    grantingAccessFor.value = null;
+  }
+}
+
 // Check if invite is expiring soon (within 2 days)
 function isExpiringSoon(expiresAt: string): boolean {
   const expiry = new Date(expiresAt);
@@ -261,24 +313,48 @@ function isExpiringSoon(expiresAt: string): boolean {
       v-if="pendingEncryptionMembers.length > 0 && orgsStore.canManageMembers"
       class="encryption-pending-banner"
     >
-      <svg class="banner-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="3" y="8" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
-        <path
-          d="M6 8V5C6 3.34315 7.34315 2 9 2C10.6569 2 12 3.34315 12 5V8"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-      <span class="banner-text">
-        <strong
-          >{{ pendingEncryptionMembers.length }} member{{
-            pendingEncryptionMembers.length !== 1 ? 's' : ''
-          }}</strong
+      <div class="banner-header">
+        <svg class="banner-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="3" y="8" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+          <path
+            d="M6 8V5C6 3.34315 7.34315 2 9 2C10.6569 2 12 3.34315 12 5V8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span class="banner-text">
+          <strong
+            >{{ pendingEncryptionMembers.length }} member{{
+              pendingEncryptionMembers.length !== 1 ? 's' : ''
+            }}</strong
+          >
+          {{ pendingEncryptionMembers.length !== 1 ? 'do' : 'does' }} not yet have encryption
+          access.
+        </span>
+      </div>
+      <div v-if="isUnlocked" class="pending-members-list">
+        <div
+          v-for="member in pendingEncryptionMembers"
+          :key="member.userId"
+          class="pending-member-item"
         >
-        {{ pendingEncryptionMembers.length !== 1 ? 'do' : 'does' }} not yet have encryption access.
-        Grant key shares so they can view encrypted content.
-      </span>
+          <div class="pending-member-info">
+            <span class="pending-member-name">{{ member.name || member.email }}</span>
+            <span class="pending-member-email">{{ member.email }}</span>
+          </div>
+          <button
+            v-if="member.hasEncryptionSetup && member.publicKey"
+            data-testid="grant-access-btn"
+            class="btn btn-sm btn-primary"
+            :disabled="grantingAccessFor === member.userId"
+            @click="handleGrantAccess(member)"
+          >
+            {{ grantingAccessFor === member.userId ? 'Granting...' : 'Grant Access' }}
+          </button>
+          <span v-else class="pending-member-no-setup">Setup required</span>
+        </div>
+      </div>
     </div>
 
     <SettingsListSkeleton v-if="loading" />
@@ -671,14 +747,67 @@ function isExpiringSoon(expiresAt: string): boolean {
   border-radius: var(--radius-md);
 }
 
+.banner-header {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
 .banner-icon {
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .banner-text {
   font-size: var(--text-sm);
   line-height: 1.5;
+}
+
+.pending-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+}
+
+.pending-member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--color-warning) 5%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.pending-member-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pending-member-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.pending-member-email {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.pending-member-no-setup {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
 }
 
 /* Section Styles */
