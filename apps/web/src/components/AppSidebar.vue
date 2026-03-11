@@ -486,7 +486,11 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
     <!-- Footer -->
     <div class="sidebar-footer">
-      <div class="user-section">
+      <router-link
+        :to="{ name: 'account-settings' }"
+        class="user-section"
+        :title="$t('account.title')"
+      >
         <div class="user-avatar">
           {{ authStore.user?.name?.charAt(0).toUpperCase() ?? '?' }}
         </div>
@@ -494,7 +498,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
           <span class="user-name">{{ authStore.user?.name ?? 'User' }}</span>
           <span class="user-email">{{ authStore.user?.email ?? '' }}</span>
         </div>
-      </div>
+      </router-link>
       <div class="footer-actions">
         <NotificationBell />
         <LanguageSwitcher />
@@ -853,6 +857,8 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   gap: var(--space-3);
   align-items: center;
   min-width: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 .user-avatar {

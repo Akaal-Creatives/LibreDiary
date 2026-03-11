@@ -59,7 +59,7 @@ describe('GettingStartedChecklist', () => {
 
     // The "Explore templates" item (index 2) has a route
     const clickableItems = wrapper.findAll('.clickable .item-inner');
-    await clickableItems[1].trigger('click'); // explore-templates
+    await clickableItems[2].trigger('click'); // explore-templates
 
     expect(wrapper.emitted('navigate')).toBeTruthy();
     expect(wrapper.emitted('navigate')![0]).toEqual([{ name: 'templates' }]);

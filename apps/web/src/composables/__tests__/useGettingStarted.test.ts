@@ -110,7 +110,7 @@ describe('useGettingStarted', () => {
     const routes = items.value.map((i) => ({ id: i.id, route: i.route }));
     expect(routes).toEqual([
       { id: 'create-page', route: { name: 'dashboard' } },
-      { id: 'set-profile', route: undefined },
+      { id: 'set-profile', route: { name: 'account-settings' } },
       { id: 'explore-templates', route: { name: 'templates' } },
       { id: 'invite-member', route: { name: 'organization-invites' } },
     ]);

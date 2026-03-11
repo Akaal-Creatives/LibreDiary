@@ -53,6 +53,7 @@ export function useGettingStarted() {
         title: 'Set up your profile',
         description: 'Add your name so team members know who you are.',
         completed: !!authStore.user?.name || manual.includes('set-profile'),
+        route: { name: 'account-settings' },
       },
       {
         id: 'explore-templates',

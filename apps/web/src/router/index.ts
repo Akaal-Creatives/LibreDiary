@@ -137,6 +137,12 @@ const routes: RouteRecordRaw[] = [
       },
       // User Settings
       {
+        path: 'settings/account',
+        name: 'account-settings',
+        component: () => import('@/pages/app/settings/AccountSettingsPage.vue'),
+        meta: { title: 'pageTitle.accountSettings' },
+      },
+      {
         path: 'settings/sessions',
         name: 'user-sessions',
         component: () => import('@/pages/app/settings/SessionsPage.vue'),
