@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores';
 import { useTheme } from '@/composables';
+import { authService, templatesService } from '@/services';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -100,11 +101,21 @@ async function completeOnboarding() {
 
     // Update display name if changed
     if (displayName.value.trim() !== (authStore.user?.name || '')) {
-      const { authService } = await import('@/services');
       await authService.updateProfile({ name: displayName.value.trim() });
     }
 
     await authStore.completeOnboarding();
+
+    // Seed built-in templates for the user's organisation (best-effort, don't block)
+    try {
+      const orgId = localStorage.getItem('currentOrganizationId');
+      if (orgId) {
+        await templatesService.seedBuiltInTemplates(orgId);
+      }
+    } catch {
+      // Non-critical — templates can be seeded later
+    }
+
     currentStep.value = 4;
 
     // Redirect to dashboard after a brief moment on success screen

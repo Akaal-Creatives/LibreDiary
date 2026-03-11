@@ -84,6 +84,10 @@ export const templatesService = {
     return api.delete<{ message: string }>(`/organizations/${orgId}/templates/${templateId}`);
   },
 
+  async seedBuiltInTemplates(orgId: string): Promise<{ created: number }> {
+    return api.post<{ created: number }>(`/organizations/${orgId}/templates/seed`, {});
+  },
+
   async createPageFromTemplate(
     orgId: string,
     templateId: string,

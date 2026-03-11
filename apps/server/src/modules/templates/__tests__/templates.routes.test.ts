@@ -34,6 +34,14 @@ const { mockService, resetMocks } = vi.hoisted(() => {
 
 vi.mock('../templates.service.js', () => mockService);
 
+const { mockSeedService } = vi.hoisted(() => ({
+  mockSeedService: {
+    seedBuiltInTemplates: vi.fn(),
+  },
+}));
+
+vi.mock('../templates-seed.service.js', () => mockSeedService);
+
 import Fastify from 'fastify';
 import { templatesRoutes } from '../templates.routes.js';
 
@@ -42,6 +50,7 @@ describe('Templates Routes', () => {
 
   beforeEach(async () => {
     resetMocks();
+    mockSeedService.seedBuiltInTemplates.mockReset();
     app = Fastify();
     app.decorateRequest('user', null);
     app.decorateRequest('organizationId', null);
@@ -301,6 +310,41 @@ describe('Templates Routes', () => {
       });
 
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  // ===========================================
+  // POST /seed — Seed built-in templates
+  // ===========================================
+
+  describe('POST /organizations/:orgId/templates/seed', () => {
+    it('should seed built-in templates and return 201', async () => {
+      mockSeedService.seedBuiltInTemplates.mockResolvedValue(4);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/templates/seed',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.created).toBe(4);
+    });
+
+    it('should return 201 with 0 when all templates already exist', async () => {
+      mockSeedService.seedBuiltInTemplates.mockResolvedValue(0);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/organizations/org-123/templates/seed',
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.data.created).toBe(0);
     });
   });
 });

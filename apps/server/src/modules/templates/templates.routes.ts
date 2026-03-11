@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import * as templatesService from './templates.service.js';
+import { seedBuiltInTemplates } from './templates-seed.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
@@ -239,6 +240,24 @@ export async function templatesRoutes(fastify: FastifyInstance): Promise<void> {
           success: true,
           data: { message: 'Template deleted' },
         };
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
+
+  // --- Seed built-in templates ---
+
+  fastify.post<{ Params: OrgParams }>(
+    '/seed',
+    async (request: FastifyRequest<{ Params: OrgParams }>, reply: FastifyReply) => {
+      try {
+        const created = await seedBuiltInTemplates(request.params.orgId, getAuthUser(request).id);
+
+        return reply.status(201).send({
+          success: true,
+          data: { created },
+        });
       } catch (error) {
         return mapServiceError(error, reply, errorMap);
       }

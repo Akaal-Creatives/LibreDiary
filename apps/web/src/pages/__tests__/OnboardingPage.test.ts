@@ -40,6 +40,9 @@ vi.mock('@/services', () => ({
   authService: {
     updateProfile: vi.fn().mockResolvedValue({}),
   },
+  templatesService: {
+    seedBuiltInTemplates: vi.fn().mockResolvedValue({ created: 4 }),
+  },
 }));
 
 import OnboardingPage from '../OnboardingPage.vue';
@@ -66,6 +69,7 @@ describe('OnboardingPage', () => {
     mockAuthStore.isOnboardingCompleted = false;
     mockAuthStore.completeOnboarding.mockResolvedValue(undefined);
     localStorage.clear();
+    localStorage.setItem('currentOrganizationId', 'org-test');
   });
 
   // ---- Step 1: Use Case ----
