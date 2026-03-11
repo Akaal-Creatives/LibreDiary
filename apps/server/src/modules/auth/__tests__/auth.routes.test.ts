@@ -62,6 +62,7 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
       getInviteByToken: vi.fn(),
       updateUserProfile: vi.fn(),
       completeOnboarding: vi.fn(),
+      changePassword: vi.fn(),
     };
 
     function resetMocks() {
@@ -801,6 +802,119 @@ describe('Auth Routes', () => {
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('ONBOARDING_ERROR');
+    });
+  });
+
+  // ===========================================
+  // CHANGE PASSWORD
+  // ===========================================
+
+  describe('POST /auth/change-password', () => {
+    it('should change password with valid current and new password', async () => {
+      mockAuthService.changePassword.mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: {
+          currentPassword: 'OldPass123!',
+          newPassword: 'NewPass456!',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.message).toContain('changed');
+      expect(mockAuthService.changePassword).toHaveBeenCalledWith(
+        'user-123',
+        'OldPass123!',
+        'NewPass456!'
+      );
+    });
+
+    it('should return 400 for missing currentPassword', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: { newPassword: 'NewPass456!' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 400 for missing newPassword', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: { currentPassword: 'OldPass123!' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 for newPassword too short', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: {
+          currentPassword: 'OldPass123!',
+          newPassword: 'short',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 for newPassword too long', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: {
+          currentPassword: 'OldPass123!',
+          newPassword: 'a'.repeat(129),
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 when current password is incorrect', async () => {
+      mockAuthService.changePassword.mockRejectedValue(new Error('Current password is incorrect'));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: {
+          currentPassword: 'WrongPass!',
+          newPassword: 'NewPass456!',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('CHANGE_PASSWORD_ERROR');
+    });
+
+    it('should return 400 when new password is same as current', async () => {
+      mockAuthService.changePassword.mockRejectedValue(
+        new Error('New password must be different from current password')
+      );
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/auth/change-password',
+        payload: {
+          currentPassword: 'SamePass123!',
+          newPassword: 'SamePass123!',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('CHANGE_PASSWORD_ERROR');
     });
   });
 });

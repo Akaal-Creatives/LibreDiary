@@ -47,6 +47,11 @@ const resetPasswordSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(128),
+});
+
 // Stricter rate limit config for sensitive auth endpoints
 const authRateLimit = {
   config: {
@@ -537,6 +542,55 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           expiresIn: EXPIRATION.WS_TOKEN,
         },
       };
+    }
+  );
+
+  /**
+   * POST /auth/change-password
+   * Change password for authenticated user
+   */
+  fastify.post(
+    '/change-password',
+    { preHandler: [requireAuth], ...authRateLimit },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = changePasswordSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        const user = getAuthUser(request);
+        await authService.changePassword(user.id, body.data.currentPassword, body.data.newPassword);
+
+        logAudit({
+          action: 'USER_PROFILE_UPDATED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+          metadata: { field: 'password' },
+        });
+
+        return {
+          success: true,
+          data: { message: 'Password changed successfully' },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Password change failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'CHANGE_PASSWORD_ERROR',
+            message,
+          },
+        });
+      }
     }
   );
 

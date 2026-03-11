@@ -89,6 +89,7 @@ import {
   getInviteByToken,
   updateUserProfile,
   completeOnboarding,
+  changePassword,
 } from '../auth.service.js';
 
 // ===========================================
@@ -868,6 +869,74 @@ describe('Auth Service', () => {
         where: { id: 'user-1' },
         data: { onboardingCompletedAt: expect.any(Date) },
       });
+    });
+  });
+
+  // -----------------------------------------
+  // changePassword
+  // -----------------------------------------
+
+  describe('changePassword', () => {
+    const mockUser = {
+      id: 'user-1',
+      email: 'test@example.com',
+      passwordHash: 'old-hashed-password',
+      deletedAt: null,
+    };
+
+    it('should change password when current password is correct', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerify.mockResolvedValueOnce(true); // current password valid
+      mockVerify.mockResolvedValueOnce(false); // new password is different
+      mockHash.mockResolvedValue('new-hashed-password');
+      mockPrisma.user.update.mockResolvedValue({
+        ...mockUser,
+        passwordHash: 'new-hashed-password',
+      });
+
+      await changePassword('user-1', 'OldPass123!', 'NewPass456!');
+
+      expect(mockVerify).toHaveBeenCalledWith('old-hashed-password', 'OldPass123!');
+      expect(mockHash).toHaveBeenCalledWith('NewPass456!', expect.any(Object));
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { passwordHash: 'new-hashed-password' },
+      });
+    });
+
+    it('should throw if user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(changePassword('user-999', 'OldPass123!', 'NewPass456!')).rejects.toThrow(
+        'User not found'
+      );
+    });
+
+    it('should throw if user has no password (OAuth-only account)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, passwordHash: null });
+
+      await expect(changePassword('user-1', 'OldPass123!', 'NewPass456!')).rejects.toThrow(
+        'Account does not have a password'
+      );
+    });
+
+    it('should throw if current password is incorrect', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerify.mockResolvedValue(false);
+
+      await expect(changePassword('user-1', 'WrongPass!', 'NewPass456!')).rejects.toThrow(
+        'Current password is incorrect'
+      );
+    });
+
+    it('should throw if new password is the same as current password', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerify.mockResolvedValueOnce(true); // current password check
+      mockVerify.mockResolvedValueOnce(true); // same password check
+
+      await expect(changePassword('user-1', 'SamePass123!', 'SamePass123!')).rejects.toThrow(
+        'New password must be different from current password'
+      );
     });
   });
 });
