@@ -117,6 +117,7 @@ export interface Organization {
   allowedDomains: string[];
   aiEnabled: boolean;
   isEncrypted: boolean;
+  encryptionDisabledAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
