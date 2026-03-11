@@ -127,6 +127,23 @@ export const authService = {
   },
 
   /**
+   * Change password for authenticated user
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+  },
+
+  /**
+   * Change email for authenticated user (requires password)
+   */
+  async changeEmail(newEmail: string, password: string): Promise<{ user: User }> {
+    return api.patch<{ user: User }>('/auth/email', { newEmail, password });
+  },
+
+  /**
    * Get invite info by token
    */
   async getInvite(token: string): Promise<InviteInfo> {

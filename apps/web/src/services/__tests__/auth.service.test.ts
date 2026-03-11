@@ -186,6 +186,40 @@ describe('Auth Service', () => {
   });
 
   // ===========================================
+  // CHANGE PASSWORD
+  // ===========================================
+
+  describe('changePassword', () => {
+    it('should POST to correct endpoint with current and new password', async () => {
+      mockApi.post.mockResolvedValue({ message: 'Password changed successfully' });
+
+      await authService.changePassword('OldPass123!', 'NewPass456!');
+
+      expect(mockApi.post).toHaveBeenCalledWith('/auth/change-password', {
+        currentPassword: 'OldPass123!',
+        newPassword: 'NewPass456!',
+      });
+    });
+  });
+
+  // ===========================================
+  // CHANGE EMAIL
+  // ===========================================
+
+  describe('changeEmail', () => {
+    it('should PATCH to correct endpoint with new email and password', async () => {
+      mockApi.patch.mockResolvedValue({ user: { id: 'u-1', email: 'new@example.com' } });
+
+      await authService.changeEmail('new@example.com', 'ValidPass123!');
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/auth/email', {
+        newEmail: 'new@example.com',
+        password: 'ValidPass123!',
+      });
+    });
+  });
+
+  // ===========================================
   // INVITES
   // ===========================================
 
