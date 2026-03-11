@@ -83,6 +83,7 @@ export function createMockClient(): LibreDiaryClient {
     orgDelete: vi.fn(),
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   } as unknown as LibreDiaryClient;
 }
 

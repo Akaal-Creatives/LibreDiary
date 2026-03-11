@@ -17,16 +17,20 @@ describe('Organisation tools', () => {
   });
 
   describe('registration', () => {
-    it('should register exactly 5 organisation tools', () => {
-      expect(server.tools).toHaveLength(5);
+    it('should register exactly 6 organisation tools', () => {
+      expect(server.tools).toHaveLength(6);
     });
 
-    it.each(['org_get', 'org_list_all', 'org_list_members', 'org_invite_member', 'auth_me'])(
-      'should register tool: %s',
-      (name) => {
-        expect(() => findTool(server.tools, name)).not.toThrow();
-      }
-    );
+    it.each([
+      'org_get',
+      'org_list_all',
+      'org_list_members',
+      'org_invite_member',
+      'auth_me',
+      'user_update_profile',
+    ])('should register tool: %s', (name) => {
+      expect(() => findTool(server.tools, name)).not.toThrow();
+    });
   });
 
   describe('org_get', () => {
@@ -96,6 +100,17 @@ describe('Organisation tools', () => {
       await tool.handler({}, {});
 
       expect(client.get).toHaveBeenCalledWith('/auth/me');
+    });
+  });
+
+  describe('user_update_profile', () => {
+    it('should PATCH /auth/profile with name', async () => {
+      vi.mocked(client.patch).mockResolvedValueOnce({ user: { id: 'u1', name: 'Updated' } });
+
+      const tool = findTool(server.tools, 'user_update_profile');
+      await tool.handler({ name: 'Updated' }, {});
+
+      expect(client.patch).toHaveBeenCalledWith('/auth/profile', { name: 'Updated' });
     });
   });
 

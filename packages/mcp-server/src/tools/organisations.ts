@@ -1,5 +1,5 @@
 /**
- * MCP tools for LibreDiary organisation management (5 tools).
+ * MCP tools for LibreDiary organisation and user management (6 tools).
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -93,4 +93,25 @@ export function registerOrganisationTools(server: McpServer, client: LibreDiaryC
       return handleToolError(error);
     }
   });
+
+  // -----------------------------------------------
+  // user_update_profile — Update user profile
+  // -----------------------------------------------
+  server.tool(
+    'user_update_profile',
+    'Update the authenticated user profile (display name)',
+    {
+      name: z.string().min(1).max(100).describe('New display name'),
+    },
+    async (params) => {
+      try {
+        const data = await client.patch('/auth/profile', { name: params.name });
+        return {
+          content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+        };
+      } catch (error) {
+        return handleToolError(error);
+      }
+    }
+  );
 }

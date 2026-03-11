@@ -183,6 +183,16 @@ describe('LibreDiaryClient', () => {
       const callArgs = mockFetch.mock.calls[0] as [string, RequestInit];
       expect(callArgs[1].method).toBe('POST');
     });
+
+    it('patch should use PATCH method for non-org requests', async () => {
+      mockSuccessResponse({});
+
+      await client.patch('/auth/profile', { name: 'Updated' });
+
+      const callArgs = mockFetch.mock.calls[0] as [string, RequestInit];
+      expect(callArgs[1].method).toBe('PATCH');
+      expect(callArgs[0]).toBe('http://localhost:3000/api/auth/profile');
+    });
   });
 
   // ===========================================

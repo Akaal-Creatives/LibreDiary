@@ -91,7 +91,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 
 ### Integrations
 
-- [ ] **Phase 21: MCP Server** — Model Context Protocol server for managing LibreDiary from AI assistants (pages, databases, search, organisations)
+- [x] **Phase 21: MCP Server** — Model Context Protocol server for managing LibreDiary from AI assistants (32 tools for pages, databases, search, files, organisations)
 
 ## Quick Start
 
