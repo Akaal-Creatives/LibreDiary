@@ -90,6 +90,7 @@ import {
   updateUserProfile,
   completeOnboarding,
   changePassword,
+  changeEmail,
 } from '../auth.service.js';
 
 // ===========================================
@@ -937,6 +938,112 @@ describe('Auth Service', () => {
       await expect(changePassword('user-1', 'SamePass123!', 'SamePass123!')).rejects.toThrow(
         'New password must be different from current password'
       );
+    });
+  });
+
+  // -----------------------------------------
+  // changeEmail
+  // -----------------------------------------
+
+  describe('changeEmail', () => {
+    const mockUser = {
+      id: 'user-1',
+      email: 'old@example.com',
+      passwordHash: 'hashed-password',
+      name: 'Test User',
+      deletedAt: null,
+    };
+
+    it('should update email and send verification when password is correct', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(mockUser); // fetch user
+      mockVerify.mockResolvedValue(true);
+      mockPrisma.user.findUnique.mockResolvedValueOnce(null); // no existing user with new email
+      mockPrisma.user.update.mockResolvedValue({
+        ...mockUser,
+        email: 'new@example.com',
+        emailVerified: false,
+      });
+      mockPrisma.verificationToken.deleteMany.mockResolvedValue({});
+      mockGenerateVerificationToken.mockReturnValue('new-verify-token');
+      mockExpiresIn.mockReturnValue(new Date());
+      mockPrisma.verificationToken.create.mockResolvedValue({});
+      mockSendVerificationEmail.mockResolvedValue(undefined);
+
+      const result = await changeEmail('user-1', 'new@example.com', 'ValidPass123!');
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { email: 'new@example.com', emailVerified: false, emailVerifiedAt: null },
+      });
+      expect(mockSendVerificationEmail).toHaveBeenCalledWith(
+        'new@example.com',
+        'new-verify-token',
+        'Test User'
+      );
+      expect(result.email).toBe('new@example.com');
+    });
+
+    it('should throw if user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(changeEmail('user-999', 'new@example.com', 'pass')).rejects.toThrow(
+        'User not found'
+      );
+    });
+
+    it('should throw if user has no password (OAuth-only)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, passwordHash: null });
+
+      await expect(changeEmail('user-1', 'new@example.com', 'pass')).rejects.toThrow(
+        'Account does not have a password'
+      );
+    });
+
+    it('should throw if password is incorrect', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerify.mockResolvedValue(false);
+
+      await expect(changeEmail('user-1', 'new@example.com', 'WrongPass!')).rejects.toThrow(
+        'Password is incorrect'
+      );
+    });
+
+    it('should throw if new email is the same as current', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerify.mockResolvedValue(true);
+
+      await expect(changeEmail('user-1', 'old@example.com', 'ValidPass123!')).rejects.toThrow(
+        'New email must be different from current email'
+      );
+    });
+
+    it('should throw if new email is already taken', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(mockUser); // fetch user
+      mockVerify.mockResolvedValue(true);
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'user-2' }); // email taken
+
+      await expect(changeEmail('user-1', 'taken@example.com', 'ValidPass123!')).rejects.toThrow(
+        'Email is already in use'
+      );
+    });
+
+    it('should normalise email to lowercase', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(mockUser);
+      mockVerify.mockResolvedValue(true);
+      mockPrisma.user.findUnique.mockResolvedValueOnce(null);
+      mockPrisma.user.update.mockResolvedValue({ ...mockUser, email: 'new@example.com' });
+      mockPrisma.verificationToken.deleteMany.mockResolvedValue({});
+      mockGenerateVerificationToken.mockReturnValue('token');
+      mockExpiresIn.mockReturnValue(new Date());
+      mockPrisma.verificationToken.create.mockResolvedValue({});
+      mockSendVerificationEmail.mockResolvedValue(undefined);
+
+      await changeEmail('user-1', '  NEW@Example.COM  ', 'ValidPass123!');
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { email: 'new@example.com', emailVerified: false, emailVerifiedAt: null },
+      });
     });
   });
 });

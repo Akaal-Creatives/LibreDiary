@@ -52,6 +52,11 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(8).max(128),
 });
 
+const changeEmailSchema = z.object({
+  newEmail: z.string().email(),
+  password: z.string().min(1),
+});
+
 // Stricter rate limit config for sensitive auth endpoints
 const authRateLimit = {
   config: {
@@ -587,6 +592,59 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           success: false,
           error: {
             code: 'CHANGE_PASSWORD_ERROR',
+            message,
+          },
+        });
+      }
+    }
+  );
+
+  /**
+   * PATCH /auth/email
+   * Change email for authenticated user (requires password)
+   */
+  fastify.patch(
+    '/email',
+    { preHandler: [requireAuth], ...authRateLimit },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = changeEmailSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        const user = getAuthUser(request);
+        const updatedUser = await authService.changeEmail(
+          user.id,
+          body.data.newEmail,
+          body.data.password
+        );
+
+        logAudit({
+          action: 'USER_PROFILE_UPDATED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+          metadata: { field: 'email', newEmail: body.data.newEmail },
+        });
+
+        return {
+          success: true,
+          data: { user: sanitizeUser(updatedUser) },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Email change failed';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'CHANGE_EMAIL_ERROR',
             message,
           },
         });

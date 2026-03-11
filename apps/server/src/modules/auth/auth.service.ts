@@ -541,6 +541,51 @@ export async function changePassword(
 }
 
 /**
+ * Change email for an authenticated user (requires password confirmation)
+ */
+export async function changeEmail(
+  userId: string,
+  newEmail: string,
+  password: string
+): Promise<User> {
+  const normalised = newEmail.trim().toLowerCase();
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
+  if (!user.passwordHash) throw new Error('Account does not have a password');
+
+  const isPasswordValid = await verify(user.passwordHash, password);
+  if (!isPasswordValid) throw new Error('Password is incorrect');
+
+  if (user.email === normalised) throw new Error('New email must be different from current email');
+
+  const existing = await prisma.user.findUnique({ where: { email: normalised } });
+  if (existing) throw new Error('Email is already in use');
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { email: normalised, emailVerified: false, emailVerifiedAt: null },
+  });
+
+  // Send verification email for the new address
+  await prisma.verificationToken.deleteMany({
+    where: { identifier: normalised, type: 'EMAIL_VERIFICATION' },
+  });
+  const token = generateVerificationToken();
+  await prisma.verificationToken.create({
+    data: {
+      token,
+      identifier: normalised,
+      type: 'EMAIL_VERIFICATION',
+      expiresAt: expiresIn(EXPIRATION.EMAIL_VERIFICATION),
+    },
+  });
+  await sendVerificationEmail(normalised, token, user.name ?? undefined);
+
+  return updatedUser;
+}
+
+/**
  * Mark onboarding as completed for a user
  */
 export async function completeOnboarding(userId: string): Promise<User> {

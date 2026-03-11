@@ -63,6 +63,7 @@ const { mockAuthService, mockUser, mockSession, mockOrganization, mockMembership
       updateUserProfile: vi.fn(),
       completeOnboarding: vi.fn(),
       changePassword: vi.fn(),
+      changeEmail: vi.fn(),
     };
 
     function resetMocks() {
@@ -915,6 +916,106 @@ describe('Auth Routes', () => {
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('CHANGE_PASSWORD_ERROR');
+    });
+  });
+
+  // ===========================================
+  // CHANGE EMAIL
+  // ===========================================
+
+  describe('PATCH /auth/email', () => {
+    it('should change email with valid password', async () => {
+      const updatedUser = { ...mockUser, email: 'new@example.com', emailVerified: false };
+      mockAuthService.changeEmail.mockResolvedValue(updatedUser);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: {
+          newEmail: 'new@example.com',
+          password: 'ValidPass123!',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.user.email).toBe('new@example.com');
+      expect(body.data.user).not.toHaveProperty('passwordHash');
+      expect(mockAuthService.changeEmail).toHaveBeenCalledWith(
+        'user-123',
+        'new@example.com',
+        'ValidPass123!'
+      );
+    });
+
+    it('should return 400 for invalid email format', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: {
+          newEmail: 'not-an-email',
+          password: 'ValidPass123!',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 400 for missing password', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: { newEmail: 'new@example.com' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 for missing newEmail', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: { password: 'ValidPass123!' },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should return 400 when email is already taken', async () => {
+      mockAuthService.changeEmail.mockRejectedValue(new Error('Email is already in use'));
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: {
+          newEmail: 'taken@example.com',
+          password: 'ValidPass123!',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('CHANGE_EMAIL_ERROR');
+    });
+
+    it('should return 400 when password is incorrect', async () => {
+      mockAuthService.changeEmail.mockRejectedValue(new Error('Password is incorrect'));
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/auth/email',
+        payload: {
+          newEmail: 'new@example.com',
+          password: 'WrongPass!',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('CHANGE_EMAIL_ERROR');
     });
   });
 });
