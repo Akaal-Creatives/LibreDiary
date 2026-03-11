@@ -157,6 +157,82 @@ export const MathBlockExtension = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mathBlock' }), 0];
   },
 
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('$$\n');
+          state.text(node.attrs.latex || '', false);
+          state.ensureNewLine();
+          state.write('$$');
+          state.closeBlock(node);
+        },
+        parse: {
+          setup(markdownit: any) {
+            // Add a block rule to parse $$...$$ as math blocks
+            markdownit.block.ruler.before(
+              'fence',
+              'math_block',
+              (state: any, startLine: number, endLine: number, silent: boolean) => {
+                const startPos = state.bMarks[startLine] + state.tShift[startLine];
+                const maxPos = state.eMarks[startLine];
+
+                if (startPos + 2 > maxPos) return false;
+                if (state.src.slice(startPos, startPos + 2) !== '$$') return false;
+
+                // Check there's nothing else on the opening line (or just whitespace)
+                const restOfLine = state.src.slice(startPos + 2, maxPos).trim();
+                if (restOfLine.length > 0) return false;
+
+                if (silent) return true;
+
+                let nextLine = startLine;
+                let hasEnding = false;
+
+                while (++nextLine < endLine) {
+                  const lineStart = state.bMarks[nextLine] + state.tShift[nextLine];
+                  const lineMax = state.eMarks[nextLine];
+                  const lineText = state.src.slice(lineStart, lineMax).trim();
+
+                  if (lineText === '$$') {
+                    hasEnding = true;
+                    break;
+                  }
+                }
+
+                if (!hasEnding) return false;
+
+                // Collect content between $$ markers
+                const contentLines: string[] = [];
+                for (let i = startLine + 1; i < nextLine; i++) {
+                  contentLines.push(
+                    state.src.slice(state.bMarks[i] + state.tShift[i], state.eMarks[i])
+                  );
+                }
+
+                const token = state.push('math_block', 'div', 0);
+                token.content = contentLines.join('\n');
+                token.map = [startLine, nextLine + 1];
+                token.attrSet('data-type', 'mathBlock');
+                token.attrSet('latex', token.content);
+
+                state.line = nextLine + 1;
+                return true;
+              }
+            );
+
+            // Renderer for math_block tokens
+            markdownit.renderer.rules.math_block = (tokens: any[], idx: number) => {
+              const token = tokens[idx];
+              const latex = token.attrGet('latex') || token.content || '';
+              return `<div data-type="mathBlock" latex="${latex.replace(/"/g, '&quot;')}"></div>`;
+            };
+          },
+        },
+      },
+    };
+  },
+
   addNodeView() {
     return VueNodeViewRenderer(MathNodeView as Component);
   },

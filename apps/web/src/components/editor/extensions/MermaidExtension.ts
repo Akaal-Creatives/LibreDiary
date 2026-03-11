@@ -165,6 +165,35 @@ export const MermaidExtension = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mermaidDiagram' }), 0];
   },
 
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('```mermaid\n');
+          state.text(node.attrs.code || '', false);
+          state.ensureNewLine();
+          state.write('```');
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(element: HTMLElement) {
+            element.querySelectorAll('pre > code.language-mermaid').forEach((codeEl) => {
+              const pre = codeEl.parentElement;
+              if (!pre) return;
+
+              const code = codeEl.textContent || '';
+              const div = element.ownerDocument.createElement('div');
+              div.setAttribute('data-type', 'mermaidDiagram');
+              div.setAttribute('code', code);
+
+              pre.replaceWith(div);
+            });
+          },
+        },
+      },
+    };
+  },
+
   addNodeView() {
     return VueNodeViewRenderer(MermaidNodeView as Component);
   },

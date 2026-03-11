@@ -28,6 +28,25 @@ export const ToggleNode = Node.create({
     return ['details', mergeAttributes(HTMLAttributes, { class: 'toggle-block', open: true }), 0];
   },
 
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('<details>\n');
+          // Render children (toggleSummary + toggleContent)
+          node.content.forEach((child: any) => {
+            state.render(child, node, 0);
+          });
+          state.write('</details>');
+          state.closeBlock(node);
+        },
+        parse: {
+          // Parsed via HTML — details tag is handled by parseHTML
+        },
+      },
+    };
+  },
+
   addNodeView() {
     return ({ HTMLAttributes }) => {
       const details = document.createElement('details');
@@ -215,6 +234,19 @@ export const ToggleSummaryNode = Node.create({
   renderHTML({ HTMLAttributes }) {
     return ['summary', mergeAttributes(HTMLAttributes, { class: 'toggle-summary' }), 0];
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('<summary>');
+          state.renderInline(node);
+          state.write('</summary>\n');
+        },
+        parse: {},
+      },
+    };
+  },
 });
 
 export const ToggleContentNode = Node.create({
@@ -234,5 +266,18 @@ export const ToggleContentNode = Node.create({
       mergeAttributes(HTMLAttributes, { 'data-toggle-content': '', class: 'toggle-content' }),
       0,
     ];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('<div data-toggle-content>\n');
+          state.renderContent(node);
+          state.write('</div>\n');
+        },
+        parse: {},
+      },
+    };
   },
 });

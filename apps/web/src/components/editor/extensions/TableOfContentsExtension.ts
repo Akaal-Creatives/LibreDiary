@@ -40,6 +40,30 @@ export const TableOfContentsExtension = Node.create({
     ];
   },
 
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          state.write('[TOC]');
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(element: HTMLElement) {
+            // Find paragraphs containing only [TOC] and convert them
+            element.querySelectorAll('p').forEach((p) => {
+              if (p.textContent?.trim() === '[TOC]') {
+                const div = element.ownerDocument.createElement('div');
+                div.setAttribute('data-table-of-contents', '');
+                div.className = 'table-of-contents';
+                p.replaceWith(div);
+              }
+            });
+          },
+        },
+      },
+    };
+  },
+
   addCommands() {
     return {
       setTableOfContents:

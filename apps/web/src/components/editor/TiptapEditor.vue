@@ -26,8 +26,8 @@ import Typography from '@tiptap/extension-typography';
 import { FootnoteExtension } from './extensions/FootnoteExtension';
 import { MermaidExtension } from './extensions/MermaidExtension';
 import { MathBlockExtension } from './extensions/MathBlockExtension';
-import Superscript from '@tiptap/extension-superscript';
-import Subscript from '@tiptap/extension-subscript';
+import { SuperscriptMarkdown as Superscript } from './extensions/SuperSubMarkdown';
+import { SubscriptMarkdown as Subscript } from './extensions/SuperSubMarkdown';
 import { Markdown } from 'tiptap-markdown';
 import { defineAsyncComponent } from 'vue';
 
