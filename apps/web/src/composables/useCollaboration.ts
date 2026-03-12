@@ -81,12 +81,12 @@ export function useCollaboration(options: UseCollaborationOptions) {
   const ydoc = shallowRef<Y.Doc | null>(null);
   const provider = shallowRef<HocuspocusProvider | null>(null);
 
-  // Get WebSocket URL based on current location
+  // Derive WebSocket URL from VITE_API_URL (strips /api/v1 suffix)
   function getWebSocketUrl(docName: string): string {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // In development, the API is on port 3000
-    const host = import.meta.env.DEV ? `${window.location.hostname}:3000` : window.location.host;
-    return `${protocol}//${host}/collaboration/${docName}`;
+    const apiUrl = import.meta.env.VITE_API_URL || `${window.location.origin}/api/v1`;
+    const url = new URL(apiUrl);
+    const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${url.host}/collaboration/${docName}`;
   }
 
   // Initialize collaboration
