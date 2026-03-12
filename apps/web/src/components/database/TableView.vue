@@ -1,175 +1,96 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import { CellRenderer, CellEditor } from './cells';
 import ColumnHeaderMenu from './ColumnHeaderMenu.vue';
 import PropertyConfigPanel from './PropertyConfigPanel.vue';
 import type { PropertyType } from '@librediary/shared';
 import { useTimer, type TimerTarget } from '@/composables/useTimer';
+import { useColumnResize } from '@/composables/useColumnResize';
+import { useTableCellEditing } from '@/composables/useTableCellEditing';
+import { useRowSelection } from '@/composables/useRowSelection';
+import { useRowDragDrop } from '@/composables/useRowDragDrop';
+import { useColumnDragDrop } from '@/composables/useColumnDragDrop';
 
 const databasesStore = useDatabasesStore();
 const timer = useTimer();
 
-const editingCell = ref<{ rowId: string; propertyId: string } | null>(null);
-const selectedRows = ref<Set<string>>(new Set());
-const showAddPropertyPopover = ref(false);
-const newPropertyName = ref('');
-const newPropertyType = ref<PropertyType>('TEXT');
+const { isResizing, getColumnWidth, onResizeStart, onResizeHandleDblClick } =
+  useColumnResize(databasesStore);
+const {
+  editingCell,
+  draftRow,
+  startEdit,
+  saveCell,
+  cancelEdit,
+  getCellValue,
+  addRow,
+  saveDraftCell,
+} = useTableCellEditing(databasesStore);
+const { selectedRows, allSelected, toggleSelectAll, toggleSelectRow, bulkDelete } =
+  useRowSelection(databasesStore);
+const {
+  dragRowId,
+  dragOverRowId,
+  onRowDragStart,
+  onRowDragOver,
+  onRowDragLeave,
+  onRowDrop,
+  onRowDragEnd,
+} = useRowDragDrop(databasesStore);
+const {
+  dragColId,
+  dragOverColId,
+  onColDragStart,
+  onColDragOver,
+  onColDragLeave,
+  onColDrop,
+  onColDragEnd,
+} = useColumnDragDrop(databasesStore);
+
+// Column menu
 const columnMenuTarget = ref<string | null>(null);
 const configureTarget = ref<string | null>(null);
 
-// Column resizing
-const DEFAULT_COL_WIDTH = 200;
-const MIN_COL_WIDTH = 80;
-const resizingColId = ref<string | null>(null);
-const resizeStartX = ref(0);
-const resizeStartWidth = ref(0);
-const localColumnWidths = ref<Record<string, number>>({});
-const isResizing = computed(() => resizingColId.value !== null);
-
-const viewConfig = computed(() => {
-  const view = databasesStore.activeView;
-  if (!view?.config) return {} as Record<string, unknown>;
-  return view.config as Record<string, unknown>;
-});
-
-const savedColumnWidths = computed(() => {
-  return (viewConfig.value.columnWidths as Record<string, number> | undefined) ?? {};
-});
-
-function getColumnWidth(propertyId: string): number {
-  if (localColumnWidths.value[propertyId] !== undefined) {
-    return localColumnWidths.value[propertyId]!;
-  }
-  return savedColumnWidths.value[propertyId] ?? DEFAULT_COL_WIDTH;
+function toggleColumnMenu(propertyId: string) {
+  columnMenuTarget.value = columnMenuTarget.value === propertyId ? null : propertyId;
 }
 
-function onResizeStart(event: MouseEvent, propertyId: string) {
-  event.preventDefault();
-  event.stopPropagation();
-  resizingColId.value = propertyId;
-  resizeStartX.value = event.clientX;
-  resizeStartWidth.value = getColumnWidth(propertyId);
-  document.addEventListener('mousemove', onResizeMove);
-  document.addEventListener('mouseup', onResizeEnd);
+function closeColumnMenu() {
+  columnMenuTarget.value = null;
 }
 
-function onResizeMove(event: MouseEvent) {
-  if (!resizingColId.value) return;
-  const delta = event.clientX - resizeStartX.value;
-  const newWidth = Math.max(MIN_COL_WIDTH, resizeStartWidth.value + delta);
-  localColumnWidths.value = { ...localColumnWidths.value, [resizingColId.value]: newWidth };
+function openConfigure(propertyId: string) {
+  columnMenuTarget.value = null;
+  configureTarget.value = propertyId;
 }
 
-async function onResizeEnd() {
-  document.removeEventListener('mousemove', onResizeMove);
-  document.removeEventListener('mouseup', onResizeEnd);
-
-  if (!resizingColId.value) return;
-  resizingColId.value = null;
-
-  // Persist column widths
-  const view = databasesStore.activeView;
-  if (!view) return;
-  const widths = { ...savedColumnWidths.value, ...localColumnWidths.value };
-  const config = { ...viewConfig.value, columnWidths: widths };
-  await databasesStore.updateView(view.id, { config });
-  localColumnWidths.value = {};
+function closeConfigure() {
+  configureTarget.value = null;
 }
 
-async function onResizeHandleDblClick(event: MouseEvent, propertyId: string) {
-  event.preventDefault();
-  event.stopPropagation();
-  // Reset to default width
-  const view = databasesStore.activeView;
-  if (!view) return;
-  const widths = { ...savedColumnWidths.value };
-  delete widths[propertyId];
-  localColumnWidths.value = { ...localColumnWidths.value };
-  delete localColumnWidths.value[propertyId];
-  const config = { ...viewConfig.value, columnWidths: widths };
-  await databasesStore.updateView(view.id, { config });
-}
+// Add property
+const showAddPropertyPopover = ref(false);
+const newPropertyName = ref('');
+const newPropertyType = ref<PropertyType>('TEXT');
 
-onBeforeUnmount(() => {
-  document.removeEventListener('mousemove', onResizeMove);
-  document.removeEventListener('mouseup', onResizeEnd);
-});
-
-// Draft row (local only, not yet persisted)
-interface DraftRow {
-  id: string;
-  cells: Record<string, unknown>;
-}
-const draftRow = ref<DraftRow | null>(null);
-
-// Drag state for row reorder
-const dragRowId = ref<string | null>(null);
-const dragOverRowId = ref<string | null>(null);
-
-// Drag state for column reorder
-const dragColId = ref<string | null>(null);
-const dragOverColId = ref<string | null>(null);
-
-const allSelected = computed(() => {
-  const rows = databasesStore.filteredAndSortedRows;
-  return rows.length > 0 && selectedRows.value.size === rows.length;
-});
-
-function toggleSelectAll() {
-  if (allSelected.value) {
-    selectedRows.value.clear();
-  } else {
-    selectedRows.value = new Set(databasesStore.filteredAndSortedRows.map((r) => r.id));
-  }
-}
-
-function toggleSelectRow(rowId: string) {
-  if (selectedRows.value.has(rowId)) {
-    selectedRows.value.delete(rowId);
-  } else {
-    selectedRows.value.add(rowId);
-  }
-}
-
-function startEdit(rowId: string, propertyId: string) {
-  const prop = databasesStore.properties.find((p) => p.id === propertyId);
-  // Don't edit system columns
-  if (prop && ['CREATED_TIME', 'UPDATED_TIME', 'CREATED_BY', 'UPDATED_BY'].includes(prop.type))
-    return;
-  editingCell.value = { rowId, propertyId };
-}
-
-async function saveCell(rowId: string, propertyId: string, value: unknown) {
-  editingCell.value = null;
-  await databasesStore.updateRowCell(rowId, propertyId, value);
-}
-
-function cancelEdit() {
-  editingCell.value = null;
-}
-
-function getCellValue(row: { cells: unknown }, propertyId: string): unknown {
-  return (row.cells as Record<string, unknown>)[propertyId] ?? null;
-}
-
-function addRow() {
-  // Discard existing empty draft
-  draftRow.value = { id: 'draft', cells: {} };
-}
-
-async function saveDraftCell(propertyId: string, value: unknown) {
-  editingCell.value = null;
-  if (!draftRow.value) return;
-
-  // Only persist if the value is non-empty
-  const hasValue = value !== null && value !== undefined && value !== '';
-  if (!hasValue) return;
-
-  const cells = { ...draftRow.value.cells, [propertyId]: value };
-  draftRow.value = null;
-  await databasesStore.createRow({ cells });
-}
+const propertyTypes: Array<{ value: PropertyType; label: string }> = [
+  { value: 'TEXT', label: 'Text' },
+  { value: 'NUMBER', label: 'Number' },
+  { value: 'SELECT', label: 'Select' },
+  { value: 'MULTI_SELECT', label: 'Multi-select' },
+  { value: 'DATE', label: 'Date' },
+  { value: 'CHECKBOX', label: 'Checkbox' },
+  { value: 'URL', label: 'URL' },
+  { value: 'EMAIL', label: 'Email' },
+  { value: 'PHONE', label: 'Phone' },
+  { value: 'PERSON', label: 'Person' },
+  { value: 'FILES', label: 'Files' },
+  { value: 'RELATION', label: 'Relation' },
+  { value: 'ROLLUP', label: 'Rollup' },
+  { value: 'FORMULA', label: 'Formula' },
+  { value: 'DURATION', label: 'Duration' },
+];
 
 async function addProperty() {
   const name = newPropertyName.value.trim();
@@ -190,111 +111,7 @@ function handleAddPropertyKeydown(event: KeyboardEvent) {
   }
 }
 
-async function bulkDelete() {
-  if (selectedRows.value.size === 0) return;
-  await databasesStore.bulkDeleteRows([...selectedRows.value]);
-  selectedRows.value.clear();
-}
-
-function toggleColumnMenu(propertyId: string) {
-  columnMenuTarget.value = columnMenuTarget.value === propertyId ? null : propertyId;
-}
-
-function closeColumnMenu() {
-  columnMenuTarget.value = null;
-}
-
-function openConfigure(propertyId: string) {
-  columnMenuTarget.value = null;
-  configureTarget.value = propertyId;
-}
-
-function closeConfigure() {
-  configureTarget.value = null;
-}
-
-// Row drag-and-drop
-function onRowDragStart(event: DragEvent, rowId: string) {
-  dragRowId.value = rowId;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', rowId);
-  }
-}
-
-function onRowDragOver(event: DragEvent, rowId: string) {
-  event.preventDefault();
-  if (dragRowId.value && dragRowId.value !== rowId) {
-    dragOverRowId.value = rowId;
-  }
-}
-
-function onRowDragLeave() {
-  dragOverRowId.value = null;
-}
-
-async function onRowDrop(event: DragEvent, targetRowId: string) {
-  event.preventDefault();
-  dragOverRowId.value = null;
-  if (!dragRowId.value || dragRowId.value === targetRowId) return;
-
-  const rows = databasesStore.filteredAndSortedRows.map((r) => r.id);
-  const fromIdx = rows.indexOf(dragRowId.value);
-  const toIdx = rows.indexOf(targetRowId);
-  if (fromIdx < 0 || toIdx < 0) return;
-
-  rows.splice(fromIdx, 1);
-  rows.splice(toIdx, 0, dragRowId.value);
-  dragRowId.value = null;
-  await databasesStore.reorderRows(rows);
-}
-
-function onRowDragEnd() {
-  dragRowId.value = null;
-  dragOverRowId.value = null;
-}
-
-// Column drag-and-drop
-function onColDragStart(event: DragEvent, colId: string) {
-  dragColId.value = colId;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', colId);
-  }
-}
-
-function onColDragOver(event: DragEvent, colId: string) {
-  event.preventDefault();
-  if (dragColId.value && dragColId.value !== colId) {
-    dragOverColId.value = colId;
-  }
-}
-
-function onColDragLeave() {
-  dragOverColId.value = null;
-}
-
-async function onColDrop(event: DragEvent, targetColId: string) {
-  event.preventDefault();
-  dragOverColId.value = null;
-  if (!dragColId.value || dragColId.value === targetColId) return;
-
-  const cols = databasesStore.sortedProperties.map((p) => p.id);
-  const fromIdx = cols.indexOf(dragColId.value);
-  const toIdx = cols.indexOf(targetColId);
-  if (fromIdx < 0 || toIdx < 0) return;
-
-  cols.splice(fromIdx, 1);
-  cols.splice(toIdx, 0, dragColId.value);
-  dragColId.value = null;
-  await databasesStore.reorderProperties(cols);
-}
-
-function onColDragEnd() {
-  dragColId.value = null;
-  dragOverColId.value = null;
-}
-
+// Timer glue
 function isTimerActiveForRow(rowId: string): boolean {
   return timer.target.value?.rowId === rowId;
 }
@@ -304,7 +121,6 @@ function startTimerForRow(rowId: string, propertyId: string) {
   const prop = databasesStore.properties.find((p) => p.id === propertyId);
   if (!row || !prop) return;
 
-  // Get first TEXT property value as task name, fallback to "Row"
   const firstTextProp = databasesStore.sortedProperties[0];
   const cells = row.cells as Record<string, unknown>;
   const taskName = firstTextProp ? String(cells[firstTextProp.id] ?? 'Row') : 'Row';
@@ -321,24 +137,6 @@ function startTimerForRow(rowId: string, propertyId: string) {
 function getDurationPropertyForRow(): { id: string } | undefined {
   return databasesStore.sortedProperties.find((p) => p.type === 'DURATION');
 }
-
-const propertyTypes: Array<{ value: PropertyType; label: string }> = [
-  { value: 'TEXT', label: 'Text' },
-  { value: 'NUMBER', label: 'Number' },
-  { value: 'SELECT', label: 'Select' },
-  { value: 'MULTI_SELECT', label: 'Multi-select' },
-  { value: 'DATE', label: 'Date' },
-  { value: 'CHECKBOX', label: 'Checkbox' },
-  { value: 'URL', label: 'URL' },
-  { value: 'EMAIL', label: 'Email' },
-  { value: 'PHONE', label: 'Phone' },
-  { value: 'PERSON', label: 'Person' },
-  { value: 'FILES', label: 'Files' },
-  { value: 'RELATION', label: 'Relation' },
-  { value: 'ROLLUP', label: 'Rollup' },
-  { value: 'FORMULA', label: 'Formula' },
-  { value: 'DURATION', label: 'Duration' },
-];
 </script>
 
 <template>
