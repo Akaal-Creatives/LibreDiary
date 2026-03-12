@@ -180,7 +180,7 @@
     "emailNotifications": "Notifiche email",
     "emailNotificationsDescription": "Riceva avvisi email per le attività che La coinvolgono",
     "mentions": "Menzioni",
-    "mentionsDescription": "Quando qualcuno La menziona in un commento con @",
+    "mentionsDescription": "Quando qualcuno La menziona in un commento con {'@'}",
     "commentReplies": "Risposte ai commenti",
     "commentRepliesDescription": "Quando qualcuno risponde a un Suo commento",
     "pageSharing": "Condivisione pagina",

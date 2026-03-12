@@ -180,7 +180,7 @@
     "emailNotifications": "邮件通知",
     "emailNotificationsDescription": "接收与您相关的活动邮件提醒",
     "mentions": "提及",
-    "mentionsDescription": "当有人在评论中使用 @ 提及您时",
+    "mentionsDescription": "当有人在评论中使用 {'@'} 提及您时",
     "commentReplies": "评论回复",
     "commentRepliesDescription": "当有人回复您的评论时",
     "pageSharing": "页面分享",

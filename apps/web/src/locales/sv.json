@@ -180,7 +180,7 @@
     "emailNotifications": "E-postaviseringar",
     "emailNotificationsDescription": "Få e-postmeddelanden om aktivitet som involverar dig",
     "mentions": "Omnämnanden",
-    "mentionsDescription": "När någon nämner dig i en kommentar med @",
+    "mentionsDescription": "När någon nämner dig i en kommentar med {'@'}",
     "commentReplies": "Kommentarssvar",
     "commentRepliesDescription": "När någon svarar på en av dina kommentarer",
     "pageSharing": "Siddelning",

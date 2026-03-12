@@ -180,7 +180,7 @@
     "emailNotifications": "Уведомления по эл. почте",
     "emailNotificationsDescription": "Получайте уведомления по эл. почте об активности, связанной с вами",
     "mentions": "Упоминания",
-    "mentionsDescription": "Когда кто-то упоминает вас в комментарии с помощью @",
+    "mentionsDescription": "Когда кто-то упоминает вас в комментарии с помощью {'@'}",
     "commentReplies": "Ответы на комментарии",
     "commentRepliesDescription": "Когда кто-то отвечает на ваш комментарий",
     "pageSharing": "Общий доступ к странице",

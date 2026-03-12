@@ -180,7 +180,7 @@
     "emailNotifications": "E-mailmeldingen",
     "emailNotificationsDescription": "Ontvang e-mailwaarschuwingen voor activiteit waarbij u betrokken bent",
     "mentions": "Vermeldingen",
-    "mentionsDescription": "Wanneer iemand u vermeldt in een opmerking met @",
+    "mentionsDescription": "Wanneer iemand u vermeldt in een opmerking met {'@'}",
     "commentReplies": "Reacties op opmerkingen",
     "commentRepliesDescription": "Wanneer iemand reageert op een van uw opmerkingen",
     "pageSharing": "Pagina delen",

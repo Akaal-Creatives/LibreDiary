@@ -6,6 +6,60 @@ import type { Component } from 'vue';
 import { defineComponent, ref, watch, onMounted, h } from 'vue';
 import DOMPurify from 'dompurify';
 
+/** Minimal KaTeX interface for dynamic import */
+interface KaTeX {
+  renderToString(latex: string, options?: Record<string, unknown>): string;
+}
+
+/** Markdown serialiser state (prosemirror-markdown) */
+interface MarkdownSerializerState {
+  write(text: string): void;
+  text(text: string, escape?: boolean): void;
+  ensureNewLine(): void;
+  closeBlock(node: MarkdownNode): void;
+}
+
+interface MarkdownNode {
+  attrs: Record<string, unknown>;
+}
+
+/** Minimal MarkdownIt interfaces for block rule and renderer */
+interface MarkdownItBlockState {
+  bMarks: number[];
+  tShift: number[];
+  eMarks: number[];
+  src: string;
+  line: number;
+  push(type: string, tag: string, nesting: number): MarkdownItToken;
+}
+
+interface MarkdownItToken {
+  content: string;
+  map: [number, number] | null;
+  attrSet(name: string, value: string): void;
+  attrGet(name: string): string | null;
+}
+
+interface MarkdownItInstance {
+  block: {
+    ruler: {
+      before(
+        beforeName: string,
+        ruleName: string,
+        fn: (
+          state: MarkdownItBlockState,
+          startLine: number,
+          endLine: number,
+          silent: boolean
+        ) => boolean
+      ): void;
+    };
+  };
+  renderer: {
+    rules: Record<string, (tokens: MarkdownItToken[], idx: number) => string>;
+  };
+}
+
 /**
  * Vue component used as the NodeView for KaTeX math blocks.
  * Renders LaTeX expressions with KaTeX, with edit/preview toggle.
@@ -22,13 +76,12 @@ const MathNodeView = defineComponent({
     const errorMsg = ref('');
     const editing = ref(false);
     const latexInput = ref(props.node.attrs.latex || '');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let katexLib: any = null;
+    let katexLib: KaTeX | null = null;
 
-    async function loadKatex() {
+    async function loadKatex(): Promise<KaTeX> {
       if (katexLib) return katexLib;
       const k = await import('katex');
-      katexLib = k.default;
+      katexLib = k.default as KaTeX;
       return katexLib;
     }
 
@@ -162,7 +215,7 @@ export const MathBlockExtension = Node.create({
   addStorage() {
     return {
       markdown: {
-        serialize(state: any, node: any) {
+        serialize(state: MarkdownSerializerState, node: MarkdownNode) {
           state.write('$$\n');
           state.text(node.attrs.latex || '', false);
           state.ensureNewLine();
@@ -170,12 +223,17 @@ export const MathBlockExtension = Node.create({
           state.closeBlock(node);
         },
         parse: {
-          setup(markdownit: any) {
+          setup(markdownit: MarkdownItInstance) {
             // Add a block rule to parse $$...$$ as math blocks
             markdownit.block.ruler.before(
               'fence',
               'math_block',
-              (state: any, startLine: number, endLine: number, silent: boolean) => {
+              (
+                state: MarkdownItBlockState,
+                startLine: number,
+                endLine: number,
+                silent: boolean
+              ) => {
                 const startPos = state.bMarks[startLine] + state.tShift[startLine];
                 const maxPos = state.eMarks[startLine];
 
@@ -224,7 +282,7 @@ export const MathBlockExtension = Node.create({
             );
 
             // Renderer for math_block tokens
-            markdownit.renderer.rules.math_block = (tokens: any[], idx: number) => {
+            markdownit.renderer.rules.math_block = (tokens: MarkdownItToken[], idx: number) => {
               const token = tokens[idx];
               const latex = token.attrGet('latex') || token.content || '';
               return `<div data-type="mathBlock" latex="${latex.replace(/"/g, '&quot;')}"></div>`;

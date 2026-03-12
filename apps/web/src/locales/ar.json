@@ -180,7 +180,7 @@
     "emailNotifications": "إشعارات البريد الإلكتروني",
     "emailNotificationsDescription": "تلقّي تنبيهات بالبريد الإلكتروني للنشاط المتعلق بك",
     "mentions": "الإشارات",
-    "mentionsDescription": "عندما يشير إليك شخص ما في تعليق باستخدام @",
+    "mentionsDescription": "عندما يشير إليك شخص ما في تعليق باستخدام {'@'}",
     "commentReplies": "الردود على التعليقات",
     "commentRepliesDescription": "عندما يرد شخص ما على أحد تعليقاتك",
     "pageSharing": "مشاركة الصفحات",

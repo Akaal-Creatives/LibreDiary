@@ -180,7 +180,7 @@
     "emailNotifications": "メール通知",
     "emailNotificationsDescription": "あなたに関連するアクティビティのメール通知を受け取ります",
     "mentions": "メンション",
-    "mentionsDescription": "コメントで @ を使ってあなたがメンションされたとき",
+    "mentionsDescription": "コメントで {'@'} を使ってあなたがメンションされたとき",
     "commentReplies": "コメントの返信",
     "commentRepliesDescription": "あなたのコメントに返信があったとき",
     "pageSharing": "ページの共有",

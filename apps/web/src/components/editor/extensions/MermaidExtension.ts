@@ -5,6 +5,24 @@ import type { Component } from 'vue';
 import { defineComponent, ref, watch, onMounted, h } from 'vue';
 import DOMPurify from 'dompurify';
 
+/** Minimal Mermaid interface for dynamic import */
+interface MermaidAPI {
+  initialize(config: Record<string, unknown>): void;
+  render(id: string, code: string): Promise<{ svg: string }>;
+}
+
+/** Markdown serialiser state (prosemirror-markdown) */
+interface MarkdownSerializerState {
+  write(text: string): void;
+  text(text: string, escape?: boolean): void;
+  ensureNewLine(): void;
+  closeBlock(node: MarkdownNode): void;
+}
+
+interface MarkdownNode {
+  attrs: Record<string, unknown>;
+}
+
 /**
  * Vue component used as the NodeView for mermaid code blocks.
  * Lazy-loads mermaid and renders diagrams with debouncing.
@@ -22,13 +40,12 @@ const MermaidNodeView = defineComponent({
     const editing = ref(false);
     const codeInput = ref(props.node.attrs.code || '');
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let mermaidLib: any = null;
+    let mermaidLib: MermaidAPI | null = null;
 
-    async function loadMermaid() {
+    async function loadMermaid(): Promise<MermaidAPI> {
       if (mermaidLib) return mermaidLib;
       const m = await import('mermaid');
-      mermaidLib = m.default;
+      mermaidLib = m.default as MermaidAPI;
       mermaidLib.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
@@ -169,7 +186,7 @@ export const MermaidExtension = Node.create({
   addStorage() {
     return {
       markdown: {
-        serialize(state: any, node: any) {
+        serialize(state: MarkdownSerializerState, node: MarkdownNode) {
           state.write('```mermaid\n');
           state.text(node.attrs.code || '', false);
           state.ensureNewLine();
