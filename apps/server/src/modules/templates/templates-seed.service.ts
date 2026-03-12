@@ -42,7 +42,7 @@ export async function seedBuiltInTemplates(orgId: string, userId: string): Promi
         icon: template.icon,
         category: template.category,
         isBuiltIn: true,
-        yjsState,
+        yjsState: new Uint8Array(yjsState),
       },
     });
 

@@ -297,7 +297,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         const updated = await authService.completeOnboarding(user.id);
 
         logAudit({
-          action: 'USER_ONBOARDING_COMPLETED',
+          action: 'USER_PROFILE_UPDATED',
           userId: user.id,
           ipAddress: getClientIp(request),
           userAgent: request.headers['user-agent'],

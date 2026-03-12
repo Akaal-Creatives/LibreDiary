@@ -179,12 +179,21 @@ function resetAllMocks() {
 
 describe('App Integration Tests', () => {
   let app: FastifyInstance;
+  let csrfToken: string;
+
+  /** Fetch a CSRF token by making a GET request and extracting the cookie */
+  async function getCsrfToken(): Promise<string> {
+    const res = await app.inject({ method: 'GET', url: '/health' });
+    const csrfCookie = res.cookies.find((c) => c.name === 'csrf_token');
+    return csrfCookie?.value ?? '';
+  }
 
   beforeAll(async () => {
     // Use the actual buildApp function - this is the critical difference
     // from unit tests that register plugins directly
     app = await buildApp();
     await app.ready();
+    csrfToken = await getCsrfToken();
   });
 
   afterAll(async () => {
@@ -270,6 +279,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/login',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: {
           email: 'test@example.com',
           password: 'password123',
@@ -306,7 +319,8 @@ describe('App Integration Tests', () => {
         method: 'POST',
         url: '/api/v1/auth/logout',
         headers: {
-          cookie: 'session_token=valid-session-token',
+          cookie: `session_token=valid-session-token; csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
       });
 
@@ -412,6 +426,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/login',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: {
           email: 'test@example.com',
           password: 'wrong-password',
@@ -428,6 +446,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/login',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: {
           email: 'not-an-email',
           password: 'password123',
@@ -523,7 +545,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/organizations',
-        headers: { cookie: 'session_token=valid-token' },
+        headers: {
+          cookie: `session_token=valid-token; csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { name: 'Test Organization' },
       });
 
@@ -539,6 +564,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/organizations',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { name: 'Test Organization' },
       });
 
@@ -553,6 +582,8 @@ describe('App Integration Tests', () => {
         url: '/api/v1/auth/login',
         headers: {
           'content-type': 'application/json',
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: 'not valid json',
       });
@@ -564,6 +595,10 @@ describe('App Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/login',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: {},
       });
 

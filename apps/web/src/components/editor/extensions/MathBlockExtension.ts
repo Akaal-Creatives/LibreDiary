@@ -217,7 +217,7 @@ export const MathBlockExtension = Node.create({
       markdown: {
         serialize(state: MarkdownSerializerState, node: MarkdownNode) {
           state.write('$$\n');
-          state.text(node.attrs.latex || '', false);
+          state.text(String(node.attrs.latex ?? ''), false);
           state.ensureNewLine();
           state.write('$$');
           state.closeBlock(node);
@@ -234,8 +234,8 @@ export const MathBlockExtension = Node.create({
                 endLine: number,
                 silent: boolean
               ) => {
-                const startPos = state.bMarks[startLine] + state.tShift[startLine];
-                const maxPos = state.eMarks[startLine];
+                const startPos = state.bMarks[startLine]! + state.tShift[startLine]!;
+                const maxPos = state.eMarks[startLine]!;
 
                 if (startPos + 2 > maxPos) return false;
                 if (state.src.slice(startPos, startPos + 2) !== '$$') return false;
@@ -250,8 +250,8 @@ export const MathBlockExtension = Node.create({
                 let hasEnding = false;
 
                 while (++nextLine < endLine) {
-                  const lineStart = state.bMarks[nextLine] + state.tShift[nextLine];
-                  const lineMax = state.eMarks[nextLine];
+                  const lineStart = state.bMarks[nextLine]! + state.tShift[nextLine]!;
+                  const lineMax = state.eMarks[nextLine]!;
                   const lineText = state.src.slice(lineStart, lineMax).trim();
 
                   if (lineText === '$$') {
@@ -266,7 +266,7 @@ export const MathBlockExtension = Node.create({
                 const contentLines: string[] = [];
                 for (let i = startLine + 1; i < nextLine; i++) {
                   contentLines.push(
-                    state.src.slice(state.bMarks[i] + state.tShift[i], state.eMarks[i])
+                    state.src.slice(state.bMarks[i]! + state.tShift[i]!, state.eMarks[i]!)
                   );
                 }
 
@@ -283,7 +283,7 @@ export const MathBlockExtension = Node.create({
 
             // Renderer for math_block tokens
             markdownit.renderer.rules.math_block = (tokens: MarkdownItToken[], idx: number) => {
-              const token = tokens[idx];
+              const token = tokens[idx]!;
               const latex = token.attrGet('latex') || token.content || '';
               return `<div data-type="mathBlock" latex="${latex.replace(/"/g, '&quot;')}"></div>`;
             };

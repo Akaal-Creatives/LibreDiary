@@ -142,10 +142,18 @@ import { buildApp } from '../../../app.js';
 
 describe('Admin Routes', () => {
   let app: FastifyInstance;
+  let csrfToken: string;
+
+  async function getCsrfToken(): Promise<string> {
+    const res = await app.inject({ method: 'GET', url: '/health' });
+    const csrfCookie = res.cookies.find((c) => c.name === 'csrf_token');
+    return csrfCookie?.value ?? '';
+  }
 
   beforeAll(async () => {
     app = await buildApp();
     await app.ready();
+    csrfToken = await getCsrfToken();
   });
 
   afterAll(async () => {
@@ -329,6 +337,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: {
           isSuperAdmin: true,
         },
@@ -346,6 +358,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/users/admin-1',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: {
           isSuperAdmin: false,
@@ -380,6 +396,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(200);
@@ -393,6 +413,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/users/admin-1',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
       });
 
@@ -498,6 +522,10 @@ describe('Admin Routes', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/api/v1/admin/settings',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { siteName: 'New Name' },
       });
 
@@ -510,6 +538,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/settings',
         cookies: {
           session_token: 'regular-user-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: { siteName: 'New Name' },
       });
@@ -527,6 +559,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { siteName: 'My Diary' },
       });
 
@@ -543,6 +579,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { siteName: '' },
       });
 
@@ -555,6 +595,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/settings',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: { sessionMaxAge: -1 },
       });
@@ -569,6 +613,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { sessionMaxAge: 100000 },
       });
 
@@ -582,6 +630,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { sessionMaxAge: 3000000000 },
       });
 
@@ -594,6 +646,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/settings',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: { unknownField: 'value' },
       });
@@ -609,6 +665,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/settings',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: { allowSignups: true },
       });
@@ -636,6 +696,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { aiEnabled: true },
       });
 
@@ -656,6 +720,10 @@ describe('Admin Routes', () => {
         cookies: {
           session_token: 'super-admin-token',
         },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
         payload: { openrouterApiKey: null },
       });
 
@@ -673,6 +741,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/settings',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
         payload: { openrouterModel: 'anthropic/claude-3-haiku' },
       });
@@ -692,6 +764,10 @@ describe('Admin Routes', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/ai/test',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(401);
@@ -703,6 +779,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/ai/test',
         cookies: {
           session_token: 'regular-user-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
       });
 
@@ -721,6 +801,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/ai/test',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
       });
 
@@ -743,6 +827,10 @@ describe('Admin Routes', () => {
         url: '/api/v1/admin/ai/test',
         cookies: {
           session_token: 'super-admin-token',
+        },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
         },
       });
 

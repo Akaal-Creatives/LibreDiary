@@ -43,7 +43,7 @@ describe('seedBuiltInTemplates', () => {
     expect(firstCall.data.createdById).toBe('user-1');
     expect(firstCall.data.isBuiltIn).toBe(true);
     expect(firstCall.data.name).toBe(BUILTIN_TEMPLATES[0].name);
-    expect(firstCall.data.yjsState).toBeInstanceOf(Buffer);
+    expect(firstCall.data.yjsState).toBeInstanceOf(Uint8Array);
     expect(firstCall.data.yjsState.length).toBeGreaterThan(0);
   });
 
@@ -100,7 +100,7 @@ describe('seedBuiltInTemplates', () => {
 
     for (const call of mockPrisma.template.create.mock.calls) {
       const data = call[0].data;
-      expect(data.yjsState).toBeInstanceOf(Buffer);
+      expect(data.yjsState).toBeInstanceOf(Uint8Array);
       expect(data.yjsState.length).toBeGreaterThan(10); // Non-trivial content
       expect(data.category).toBeTruthy();
       expect(data.icon).toBeTruthy();

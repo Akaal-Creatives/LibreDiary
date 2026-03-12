@@ -52,7 +52,7 @@ function parseTrustProxy(value: string): boolean | string | string[] {
     .split(',')
     .map((ip) => ip.trim())
     .filter(Boolean);
-  return proxies.length === 1 ? proxies[0] : proxies;
+  return proxies.length === 1 ? proxies[0]! : proxies;
 }
 
 export async function buildApp() {

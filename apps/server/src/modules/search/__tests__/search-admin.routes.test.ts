@@ -114,10 +114,18 @@ import { buildApp } from '../../../app.js';
 
 describe('Search Admin Routes', () => {
   let app: FastifyInstance;
+  let csrfToken: string;
+
+  async function getCsrfToken(): Promise<string> {
+    const res = await app.inject({ method: 'GET', url: '/health' });
+    const csrfCookie = res.cookies.find((c) => c.name === 'csrf_token');
+    return csrfCookie?.value ?? '';
+  }
 
   beforeAll(async () => {
     app = await buildApp();
     await app.ready();
+    csrfToken = await getCsrfToken();
   });
 
   afterAll(async () => {
@@ -141,6 +149,10 @@ describe('Search Admin Routes', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/search/reindex',
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(401);
@@ -151,6 +163,10 @@ describe('Search Admin Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/search/reindex',
         cookies: { session_token: 'regular-user-token' },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(403);
@@ -161,6 +177,10 @@ describe('Search Admin Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/search/reindex',
         cookies: { session_token: 'super-admin-token' },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(200);
@@ -178,6 +198,10 @@ describe('Search Admin Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/search/reindex',
         cookies: { session_token: 'super-admin-token' },
+        headers: {
+          cookie: `csrf_token=${csrfToken}`,
+          'x-csrf-token': csrfToken,
+        },
       });
 
       expect(response.statusCode).toBe(409);

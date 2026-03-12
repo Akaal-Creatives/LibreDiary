@@ -298,34 +298,14 @@ describe('Auth Middleware', () => {
   });
 
   describe('getClientIp', () => {
-    it('should return X-Forwarded-For IP when present', () => {
-      const request = createMockRequest({
-        headers: { 'x-forwarded-for': '203.0.113.50, 70.41.3.18' },
-      });
-
+    it('should return request.ip (Fastify handles trustProxy resolution)', () => {
+      const request = createMockRequest({ ip: '203.0.113.50' });
       expect(getClientIp(request)).toBe('203.0.113.50');
     });
 
-    it('should return X-Real-IP when X-Forwarded-For is absent', () => {
-      const request = createMockRequest({
-        headers: { 'x-real-ip': '203.0.113.50' },
-      });
-
-      expect(getClientIp(request)).toBe('203.0.113.50');
-    });
-
-    it('should fall back to request.ip', () => {
-      const request = createMockRequest({ ip: '192.168.1.1' });
-
-      expect(getClientIp(request)).toBe('192.168.1.1');
-    });
-
-    it('should handle array X-Forwarded-For header', () => {
-      const request = createMockRequest({
-        headers: { 'x-forwarded-for': ['10.0.0.1', '10.0.0.2'] },
-      });
-
-      expect(getClientIp(request)).toBe('10.0.0.1');
+    it('should return undefined when ip is not set', () => {
+      const request = createMockRequest({ ip: undefined });
+      expect(getClientIp(request)).toBeUndefined();
     });
   });
 });

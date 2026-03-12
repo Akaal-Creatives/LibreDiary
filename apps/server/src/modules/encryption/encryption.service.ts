@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '../../lib/prisma.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 // =============================================
 // Types
@@ -94,8 +95,10 @@ export async function setupEncryption(input: SetupEncryptionInput) {
       publicKey: input.publicKey,
       encryptedPrivateKey: input.encryptedPrivateKey,
       keySalt: input.keySalt,
-      keyParams: input.keyParams,
-      recoveryEncryptedMasterKey: input.recoveryEncryptedMasterKey ?? undefined,
+      keyParams: input.keyParams as Prisma.InputJsonValue,
+      recoveryEncryptedMasterKey: (input.recoveryEncryptedMasterKey ?? undefined) as
+        | Prisma.InputJsonValue
+        | undefined,
       recoverySalt: input.recoverySalt ?? undefined,
       recoveryKeyHash: input.recoveryKeyHash ?? undefined,
     },
@@ -148,7 +151,7 @@ export async function updateRecoveryKey(userId: string, input: UpdateRecoveryKey
   return prisma.userEncryption.update({
     where: { userId },
     data: {
-      recoveryEncryptedMasterKey: input.recoveryEncryptedMasterKey,
+      recoveryEncryptedMasterKey: input.recoveryEncryptedMasterKey as Prisma.InputJsonValue,
       recoverySalt: input.recoverySalt,
       recoveryKeyHash: input.recoveryKeyHash,
     },
@@ -522,7 +525,7 @@ export async function getMembersWithoutKeyShare(organizationId: string) {
           id: true,
           email: true,
           name: true,
-          userEncryption: {
+          encryption: {
             select: { publicKey: true },
           },
         },
@@ -545,8 +548,8 @@ export async function getMembersWithoutKeyShare(organizationId: string) {
       userId: m.userId,
       email: m.user.email,
       name: m.user.name,
-      publicKey: m.user.userEncryption?.publicKey ?? null,
-      hasEncryptionSetup: !!m.user.userEncryption,
+      publicKey: m.user.encryption?.publicKey ?? null,
+      hasEncryptionSetup: !!m.user.encryption,
     }));
 }
 

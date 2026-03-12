@@ -188,7 +188,7 @@ export const MermaidExtension = Node.create({
       markdown: {
         serialize(state: MarkdownSerializerState, node: MarkdownNode) {
           state.write('```mermaid\n');
-          state.text(node.attrs.code || '', false);
+          state.text(String(node.attrs.code ?? ''), false);
           state.ensureNewLine();
           state.write('```');
           state.closeBlock(node);

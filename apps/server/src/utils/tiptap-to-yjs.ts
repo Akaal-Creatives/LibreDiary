@@ -47,7 +47,7 @@ function insertNode(parent: Y.XmlFragment | Y.XmlElement, node: TiptapNode): voi
   if (node.attrs) {
     for (const [key, value] of Object.entries(node.attrs)) {
       if (value !== null && value !== undefined) {
-        element.setAttribute(key, value);
+        element.setAttribute(key, value as string);
       }
     }
   }
