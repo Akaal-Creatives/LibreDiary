@@ -8,6 +8,7 @@ import {
   corsPlugin,
   helmetPlugin,
   cookiePlugin,
+  csrfPlugin,
   sensiblePlugin,
   errorHandlerPlugin,
   rateLimitPlugin,
@@ -77,6 +78,7 @@ export async function buildApp() {
   await fastify.register(corsPlugin);
   await fastify.register(helmetPlugin);
   await fastify.register(cookiePlugin);
+  await fastify.register(csrfPlugin);
   await fastify.register(sensiblePlugin);
   await fastify.register(errorHandlerPlugin);
   await fastify.register(rateLimitPlugin);

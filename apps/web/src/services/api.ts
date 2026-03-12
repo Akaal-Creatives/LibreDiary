@@ -1,6 +1,12 @@
 import type { ApiResponse } from '@librediary/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+const CSRF_COOKIE_NAME = 'csrf_token';
+
+function getCsrfToken(): string | undefined {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${CSRF_COOKIE_NAME}=([^;]*)`));
+  return match?.[1];
+}
 
 export class ApiError extends Error {
   constructor(
@@ -22,17 +28,25 @@ interface RequestOptions {
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {} } = options;
 
+  const allHeaders: Record<string, string> = { ...headers };
+
+  // Attach CSRF token for state-changing requests
+  if (method !== 'GET') {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      allHeaders['X-CSRF-Token'] = csrfToken;
+    }
+  }
+
   const config: RequestInit = {
     method,
-    headers: {
-      ...headers,
-    },
+    headers: allHeaders,
     credentials: 'include',
   };
 
   // Only set Content-Type and body when there's actually a body to send
   if (body !== undefined) {
-    (config.headers as Record<string, string>)['Content-Type'] = 'application/json';
+    allHeaders['Content-Type'] = 'application/json';
     config.body = JSON.stringify(body);
   }
 
@@ -87,6 +101,11 @@ export const api = {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${API_BASE}${endpoint}`);
       xhr.withCredentials = true;
+
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+      }
 
       if (onProgress) {
         xhr.upload.addEventListener('progress', (event) => {
