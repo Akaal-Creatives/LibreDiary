@@ -378,7 +378,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.post(
     '/resend-verification',
-    { preHandler: [requireAuth] },
+    { preHandler: [requireAuth], ...authRateLimit },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         await authService.resendVerificationEmail(getAuthUser(request).id);
@@ -658,6 +658,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.get(
     '/invite/:token',
+    authRateLimit,
     async (request: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) => {
       const invite = await authService.getInviteByToken(request.params.token);
 
