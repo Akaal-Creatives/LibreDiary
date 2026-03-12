@@ -80,14 +80,14 @@ describe('AdminTranslationsPage', () => {
       expect(enGBRow!.find('.status-badge--complete').exists()).toBe(true);
     });
 
-    it('shows skeleton locales as 0% with skeleton badge', () => {
+    it('shows fully translated locales as 100% with complete badge', () => {
       const wrapper = mountPage();
       const rows = wrapper.findAll('.translation-row');
-      // Find a skeleton locale (e.g. French, which has empty JSON)
+      // French is now fully translated
       const frRow = rows.find((row) => row.text().includes('Français'));
       expect(frRow).toBeDefined();
-      expect(frRow!.text()).toContain('0%');
-      expect(frRow!.find('.status-badge--skeleton').exists()).toBe(true);
+      expect(frRow!.text()).toContain('100%');
+      expect(frRow!.find('.status-badge--complete').exists()).toBe(true);
     });
 
     it('shows progress bar for each locale', () => {

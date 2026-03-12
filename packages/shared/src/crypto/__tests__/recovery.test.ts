@@ -65,7 +65,7 @@ describe('Recovery Key', () => {
         ...recovery.encryptedMasterKey,
         ciphertext: new Uint8Array(recovery.encryptedMasterKey.ciphertext),
       };
-      tampered.ciphertext[0] ^= 0xff;
+      tampered.ciphertext[0]! ^= 0xff;
 
       await expect(
         recoverMasterKey(recovery.recoveryKey, tampered, recovery.salt)

@@ -44,7 +44,7 @@ describe('E2EE Full Key Hierarchy Integration', () => {
     const workspaceKey = await generateKey();
 
     // 2. Owner wraps workspace key (stored server-side for the owner)
-    const _ownerWrappedKey = await wrapKey(workspaceKey, ownerMasterKey);
+    await wrapKey(workspaceKey, ownerMasterKey);
 
     // 3. Collaborator sets up encryption
     const collabKeyPair = await generateKeyPair();

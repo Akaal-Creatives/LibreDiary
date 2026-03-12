@@ -92,7 +92,7 @@ describe('Asymmetric Key Exchange (X25519 + XSalsa20-Poly1305)', () => {
         ...encrypted,
         encryptedKey: new Uint8Array(encrypted.encryptedKey),
       };
-      tampered.encryptedKey[0] ^= 0xff;
+      tampered.encryptedKey[0]! ^= 0xff;
 
       expect(() => decryptFromSender(tampered, recipient.privateKey, sender.publicKey)).toThrow();
     });

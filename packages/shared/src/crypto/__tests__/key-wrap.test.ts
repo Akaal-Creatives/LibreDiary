@@ -51,7 +51,7 @@ describe('Key Wrapping (AES-256-KW)', () => {
 
       const wrapped = await wrapKey(workspaceKey, masterKey);
       const tampered = new Uint8Array(wrapped);
-      tampered[0] ^= 0xff;
+      tampered[0]! ^= 0xff;
 
       await expect(unwrapKey(tampered, masterKey)).rejects.toThrow();
     });

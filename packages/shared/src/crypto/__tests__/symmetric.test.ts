@@ -67,7 +67,7 @@ describe('Symmetric Encryption (AES-256-GCM)', () => {
 
       // Flip a byte in the ciphertext
       const tampered = { ...encrypted, ciphertext: new Uint8Array(encrypted.ciphertext) };
-      tampered.ciphertext[0] ^= 0xff;
+      tampered.ciphertext[0]! ^= 0xff;
 
       await expect(decrypt(tampered, key)).rejects.toThrow();
     });
