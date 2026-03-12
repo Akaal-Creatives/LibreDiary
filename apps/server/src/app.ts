@@ -39,6 +39,21 @@ import { markdownRoutes } from './modules/markdown/index.js';
 import { encryptionRoutes } from './modules/encryption/index.js';
 import { initMeilisearch } from './modules/search/meilisearch.init.js';
 
+/**
+ * Parse TRUSTED_PROXY_IPS into Fastify's trustProxy option.
+ * Accepts 'true' (trust all), 'false', or a comma-separated list of IPs/CIDRs.
+ */
+function parseTrustProxy(value: string): boolean | string | string[] {
+  const trimmed = value.trim();
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  const proxies = trimmed
+    .split(',')
+    .map((ip) => ip.trim())
+    .filter(Boolean);
+  return proxies.length === 1 ? proxies[0] : proxies;
+}
+
 export async function buildApp() {
   const fastify = Fastify({
     logger: {
@@ -55,7 +70,7 @@ export async function buildApp() {
             }
           : undefined,
     },
-    trustProxy: true,
+    trustProxy: parseTrustProxy(env.TRUSTED_PROXY_IPS),
   });
 
   // Register plugins

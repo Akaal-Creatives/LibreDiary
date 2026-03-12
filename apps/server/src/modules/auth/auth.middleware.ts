@@ -147,13 +147,14 @@ export function setSessionCookie(
   token: string,
   maxAge: number = 7 * 24 * 60 * 60 * 1000 // 7 days
 ): void {
+  // Cross-origin deployment (frontend on different subdomain) requires
+  // SameSite=none + Secure. In development, use 'lax' for cross-port requests.
+  const isProduction = process.env.NODE_ENV === 'production';
   reply.setCookie(SESSION_COOKIE_NAME, token, {
     path: '/',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    // Use 'lax' in development to allow cross-port requests (5173 -> 3000)
-    // Use 'strict' in production where same-origin is expected
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: maxAge / 1000, // Convert to seconds
   });
 }
@@ -166,22 +167,11 @@ export function clearSessionCookie(reply: FastifyReply): void {
 }
 
 /**
- * Get client IP address from request
+ * Get client IP address from request.
+ * Relies on Fastify's trustProxy configuration to resolve the correct IP
+ * from X-Forwarded-For / X-Real-IP headers. Only trusted proxies' headers
+ * are honoured — no manual header parsing needed.
  */
 export function getClientIp(request: FastifyRequest): string | undefined {
-  // Check X-Forwarded-For header (from proxies/load balancers)
-  const forwarded = request.headers['x-forwarded-for'];
-  if (forwarded) {
-    const ips = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
-    return ips?.trim();
-  }
-
-  // Check X-Real-IP header
-  const realIp = request.headers['x-real-ip'];
-  if (realIp) {
-    return Array.isArray(realIp) ? realIp[0] : realIp;
-  }
-
-  // Fall back to request.ip (set by trustProxy)
   return request.ip;
 }

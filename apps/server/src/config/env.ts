@@ -16,6 +16,9 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().min(32).optional(),
   SESSION_MAX_AGE: z.coerce.number().default(604800000), // 7 days
 
+  // Trusted Proxies (comma-separated IPs/CIDRs, or 'true' to trust all)
+  TRUSTED_PROXY_IPS: z.string().default('true'),
+
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
