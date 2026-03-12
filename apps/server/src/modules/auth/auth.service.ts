@@ -21,6 +21,11 @@ import {
   EXPIRATION,
 } from '../../utils/tokens.js';
 import type { User, Session, Organization } from '../../generated/prisma/client.js';
+import {
+  getAccountLockoutRemaining,
+  recordFailedLogin,
+  clearFailedLogins,
+} from '../../services/login-lockout.service.js';
 
 // Argon2 options for password hashing
 const ARGON2_OPTIONS = {
@@ -179,12 +184,21 @@ export async function login(
 ): Promise<AuthResult> {
   const email = input.email.toLowerCase().trim();
 
+  // Check account lockout
+  const lockoutRemaining = getAccountLockoutRemaining(email);
+  if (lockoutRemaining > 0) {
+    throw new Error(
+      `Account is temporarily locked. Try again in ${Math.ceil(lockoutRemaining / 60)} minutes`
+    );
+  }
+
   // Find user
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
   if (!user || !user.passwordHash) {
+    recordFailedLogin(email, meta);
     throw new Error('Invalid credentials');
   }
 
@@ -195,8 +209,15 @@ export async function login(
   // Verify password
   const validPassword = await verify(user.passwordHash, input.password, ARGON2_OPTIONS);
   if (!validPassword) {
+    const delayMs = recordFailedLogin(email, meta);
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
     throw new Error('Invalid credentials');
   }
+
+  // Clear failed attempts on successful login
+  clearFailedLogins(email);
 
   // Create session
   const session = await createSession({
