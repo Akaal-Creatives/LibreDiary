@@ -67,7 +67,9 @@ export const useFilesStore = defineStore('files', () => {
         const { encryptBinary } = useEncryption();
         const plainBytes = new Uint8Array(await file.arrayBuffer());
         const encryptedBytes = await encryptBinary(plainBytes, key);
-        fileToUpload = new File([encryptedBytes], file.name, { type: file.type });
+        fileToUpload = new File([encryptedBytes.buffer as ArrayBuffer], file.name, {
+          type: file.type,
+        });
       }
 
       const data = await filesService.uploadFile(orgId, fileToUpload, options, (loaded, total) => {
@@ -94,7 +96,7 @@ export const useFilesStore = defineStore('files', () => {
       const { decryptBinary } = useEncryption();
       const encryptedBytes = new Uint8Array(await blob.arrayBuffer());
       const decryptedBytes = await decryptBinary(encryptedBytes, key);
-      return new Blob([decryptedBytes], { type: blob.type });
+      return new Blob([decryptedBytes.buffer as ArrayBuffer], { type: blob.type });
     }
 
     return blob;

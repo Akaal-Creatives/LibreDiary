@@ -99,6 +99,7 @@ describe('Pages Store — E2EE integration', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       avatarUrl: null,
+      onboardingCompletedAt: null,
     });
     authStore.setOrganizations(
       [
@@ -113,6 +114,7 @@ describe('Pages Store — E2EE integration', () => {
           allowedDomains: [],
           aiEnabled: false,
           isEncrypted,
+          encryptionDisabledAt: null,
         },
       ],
       [{ organizationId: 'org-1', role: 'OWNER' }]
