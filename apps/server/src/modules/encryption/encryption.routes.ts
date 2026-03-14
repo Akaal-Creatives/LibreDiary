@@ -156,6 +156,16 @@ const changeRequestErrorMap: ErrorMap = {
   },
 };
 
+// Stricter rate limit for OTP verification endpoints to prevent brute-force
+const otpVerifyRateLimit = {
+  config: {
+    rateLimit: {
+      max: 5,
+      timeWindow: '5 minutes',
+    },
+  },
+};
+
 // ===========================================
 // ROUTES
 // ===========================================
@@ -395,6 +405,7 @@ export async function encryptionRoutes(app: FastifyInstance) {
   // POST /encryption/workspace/:organizationId/verify-enable
   app.post(
     '/workspace/:organizationId/verify-enable',
+    otpVerifyRateLimit,
     async (
       request: FastifyRequest<{ Params: { organizationId: string } }>,
       reply: FastifyReply
@@ -469,6 +480,7 @@ export async function encryptionRoutes(app: FastifyInstance) {
   // POST /encryption/workspace/:organizationId/verify-disable
   app.post(
     '/workspace/:organizationId/verify-disable',
+    otpVerifyRateLimit,
     async (
       request: FastifyRequest<{ Params: { organizationId: string } }>,
       reply: FastifyReply

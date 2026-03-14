@@ -412,6 +412,43 @@ describe('Encryption Routes', () => {
   });
 
   // =============================================
+  // Rate limiting on OTP verification endpoints
+  // =============================================
+  describe('rate limiting on verification endpoints', () => {
+    it('should have rate limit config on verify-enable and verify-disable routes', async () => {
+      // Register the rate-limit plugin so Fastify processes the route config
+      const rateLimitedApp = Fastify();
+      const rateLimit = await import('@fastify/rate-limit');
+      await rateLimitedApp.register(rateLimit.default, { max: 100, timeWindow: '1 minute' });
+      await rateLimitedApp.register(encryptionRoutes, { prefix: '/encryption' });
+      await rateLimitedApp.ready();
+
+      mockEncryptionService.verifyEncryptionChangeRequest.mockResolvedValue({
+        id: 'req-1',
+        status: 'VERIFIED',
+      });
+
+      // Send 6 requests to verify-enable — the 6th should be rate-limited
+      for (let i = 0; i < 5; i++) {
+        await rateLimitedApp.inject({
+          method: 'POST',
+          url: '/encryption/workspace/org-123/verify-enable',
+          payload: { code: '123456' },
+        });
+      }
+
+      const rateLimited = await rateLimitedApp.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/verify-enable',
+        payload: { code: '123456' },
+      });
+
+      expect(rateLimited.statusCode).toBe(429);
+      await rateLimitedApp.close();
+    });
+  });
+
+  // =============================================
   // POST /encryption/workspace/:organizationId/verify-enable
   // =============================================
   describe('POST /encryption/workspace/:organizationId/verify-enable', () => {
