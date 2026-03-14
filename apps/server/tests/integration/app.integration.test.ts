@@ -378,6 +378,30 @@ describe('App Integration Tests', () => {
     });
   });
 
+  describe('CSRF Token Response Header (cross-origin support)', () => {
+    it('should include X-CSRF-Token in response headers on GET requests', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      expect(response.headers['x-csrf-token']).toBeDefined();
+      expect(typeof response.headers['x-csrf-token']).toBe('string');
+      expect((response.headers['x-csrf-token'] as string).length).toBeGreaterThan(0);
+    });
+
+    it('should return the same token as set in the cookie', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      const csrfCookie = response.cookies.find((c) => c.name === 'csrf_token');
+      expect(csrfCookie).toBeDefined();
+      expect(response.headers['x-csrf-token']).toBe(csrfCookie?.value);
+    });
+  });
+
   describe('API Route Structure', () => {
     it('GET /api/v1 should return API info', async () => {
       const response = await app.inject({

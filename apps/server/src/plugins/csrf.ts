@@ -41,9 +41,16 @@ async function csrfPluginImpl(fastify: FastifyInstance) {
         maxAge: 7 * 24 * 60 * 60, // 7 days (seconds)
       });
 
+      // Expose token in response header for cross-origin deployments
+      // where document.cookie cannot read third-party cookies
+      reply.header('X-CSRF-Token', token);
+
       // Store the token on the request so the validation hook can read it
       // even though the cookie wasn't sent with this request
       (request as FastifyRequest & { _csrfToken?: string })._csrfToken = token;
+    } else {
+      // Always expose the existing token in the response header
+      reply.header('X-CSRF-Token', existing);
     }
   });
 

@@ -2,10 +2,22 @@ import type { ApiResponse } from '@librediary/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 const CSRF_COOKIE_NAME = 'csrf_token';
+const CSRF_HEADER_NAME = 'x-csrf-token';
+
+// In-memory fallback for cross-origin deployments where
+// document.cookie cannot read third-party cookies from the API domain
+let csrfTokenFromHeader: string | undefined;
 
 function getCsrfToken(): string | undefined {
   const match = document.cookie.match(new RegExp(`(?:^|; )${CSRF_COOKIE_NAME}=([^;]*)`));
-  return match?.[1];
+  return match?.[1] ?? csrfTokenFromHeader;
+}
+
+function captureCsrfToken(response: Response): void {
+  const token = response.headers.get(CSRF_HEADER_NAME);
+  if (token) {
+    csrfTokenFromHeader = token;
+  }
 }
 
 export class ApiError extends Error {
@@ -51,6 +63,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, config);
+
+  // Capture CSRF token from response header for cross-origin deployments
+  captureCsrfToken(response);
 
   let data: ApiResponse<T>;
   try {

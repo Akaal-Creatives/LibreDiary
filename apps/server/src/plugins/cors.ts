@@ -24,6 +24,7 @@ export const corsPlugin = fp(
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+      exposedHeaders: ['X-CSRF-Token'],
     });
   },
   { name: 'cors-plugin' }

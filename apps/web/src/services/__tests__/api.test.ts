@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Helper to create a mock fetch response
-function mockFetchResponse(data: unknown, ok = true) {
+function mockFetchResponse(data: unknown, ok = true, headers: Record<string, string> = {}) {
   return Promise.resolve({
     ok,
+    headers: new Headers(headers),
     json: () => Promise.resolve(data),
   });
 }
@@ -257,6 +258,73 @@ describe('api module', () => {
       const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const config = callArgs[1];
       expect(config.credentials).toBe('include');
+    });
+  });
+
+  // ===========================================
+  // CSRF TOKEN (CROSS-ORIGIN SUPPORT)
+  // ===========================================
+
+  describe('CSRF token from response header', () => {
+    it('should capture X-CSRF-Token from GET response and send it on subsequent POST', async () => {
+      const mockHeaders = new Headers({ 'x-csrf-token': 'server-csrf-token-123' });
+
+      // First request (GET) — server returns CSRF token in header
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        headers: mockHeaders,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      });
+
+      const { api } = await loadApi();
+      await api.get('/setup/status');
+
+      // Second request (POST) — should include the captured token
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        headers: mockHeaders,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      });
+
+      await api.post('/setup/complete', { admin: {} });
+
+      const postCallArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[1];
+      const postConfig = postCallArgs[1];
+      expect(postConfig.headers['X-CSRF-Token']).toBe('server-csrf-token-123');
+    });
+
+    it('should prefer cookie token over header token when cookie is available', async () => {
+      // Set cookie
+      Object.defineProperty(document, 'cookie', {
+        writable: true,
+        value: 'csrf_token=cookie-token-456',
+      });
+
+      const mockHeaders = new Headers({ 'x-csrf-token': 'header-token-789' });
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        headers: mockHeaders,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      });
+
+      const { api } = await loadApi();
+      await api.get('/some-endpoint');
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        headers: mockHeaders,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      });
+
+      await api.post('/some-endpoint', {});
+
+      const postCallArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[1];
+      const postConfig = postCallArgs[1];
+      expect(postConfig.headers['X-CSRF-Token']).toBe('cookie-token-456');
+
+      // Clean up
+      Object.defineProperty(document, 'cookie', { writable: true, value: '' });
     });
   });
 
