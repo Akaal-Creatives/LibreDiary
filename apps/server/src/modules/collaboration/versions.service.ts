@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { diffLines } from 'diff';
 import { yjsStateToText } from '../../utils/yjs-to-text.js';
+import { isEncryptedYjsState, decryptYjsState } from './yjs-encrypt.js';
 
 // ===========================================
 // TYPES
@@ -238,8 +239,17 @@ export async function diffVersions(
     toId = toVersion.id;
   }
 
+  // Decrypt yjsState if stored encrypted (encrypted workspaces)
+  let fromYjsState: Uint8Array | Buffer | null = fromVersion.yjsState;
+  if (fromYjsState && isEncryptedYjsState(fromYjsState as Buffer)) {
+    fromYjsState = decryptYjsState(fromYjsState as Buffer, organizationId);
+  }
+  if (toYjsState && isEncryptedYjsState(toYjsState as Buffer)) {
+    toYjsState = decryptYjsState(toYjsState as Buffer, organizationId);
+  }
+
   // Extract plain text from Yjs states
-  const fromText = fromVersion.yjsState ? yjsStateToText(fromVersion.yjsState as Uint8Array) : '';
+  const fromText = fromYjsState ? yjsStateToText(fromYjsState as Uint8Array) : '';
   const toText = toYjsState ? yjsStateToText(toYjsState as Uint8Array) : '';
 
   // Compute line-level diff

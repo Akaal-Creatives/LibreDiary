@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // Mock setup using vi.hoisted
-const { mockPrisma, mockPrismaPageVersion, mockPrismaPage, mockYjsStateToText } = vi.hoisted(() => {
+const {
+  mockPrisma,
+  mockPrismaPageVersion,
+  mockPrismaPage,
+  mockYjsStateToText,
+  mockIsEncryptedYjsState,
+  mockDecryptYjsState,
+} = vi.hoisted(() => {
   const mockPrismaPageVersion = {
     findFirst: vi.fn(),
   };
@@ -20,6 +27,8 @@ const { mockPrisma, mockPrismaPageVersion, mockPrismaPage, mockYjsStateToText } 
     mockPrismaPageVersion,
     mockPrismaPage,
     mockYjsStateToText: vi.fn(),
+    mockIsEncryptedYjsState: vi.fn(),
+    mockDecryptYjsState: vi.fn(),
   };
 });
 
@@ -29,6 +38,11 @@ vi.mock('../../../lib/prisma.js', () => ({
 
 vi.mock('../../../utils/yjs-to-text.js', () => ({
   yjsStateToText: mockYjsStateToText,
+}));
+
+vi.mock('../yjs-encrypt.js', () => ({
+  isEncryptedYjsState: mockIsEncryptedYjsState,
+  decryptYjsState: mockDecryptYjsState,
 }));
 
 import { diffVersions } from '../versions.service.js';
@@ -74,6 +88,10 @@ describe('Version Diff Service', () => {
     mockPrismaPageVersion.findFirst.mockReset();
     mockPrismaPage.findFirst.mockReset();
     mockYjsStateToText.mockReset();
+    mockIsEncryptedYjsState.mockReset();
+    mockDecryptYjsState.mockReset();
+    // Default: not encrypted
+    mockIsEncryptedYjsState.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -244,6 +262,70 @@ describe('Version Diff Service', () => {
       await expect(diffVersions('org-123', 'page-123', 'version-1', 'nonexistent')).rejects.toThrow(
         'VERSION_NOT_FOUND'
       );
+    });
+
+    // ===========================================
+    // ENCRYPTED YJSSTATE HANDLING
+    // ===========================================
+
+    it('should decrypt encrypted yjsState before extracting text', async () => {
+      const encryptedState = Buffer.from('LDYE-encrypted-data');
+      const decryptedState = Buffer.from([10, 11, 12]);
+
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPageVersion.findFirst
+        .mockResolvedValueOnce({ ...mockVersionA, yjsState: encryptedState })
+        .mockResolvedValueOnce({ ...mockVersionB, yjsState: encryptedState });
+
+      mockIsEncryptedYjsState.mockReturnValue(true);
+      mockDecryptYjsState.mockReturnValue(decryptedState);
+      mockYjsStateToText.mockReturnValue('decrypted text');
+
+      await diffVersions('org-123', 'page-123', 'version-1', 'version-2');
+
+      // Should have called decrypt for both states
+      expect(mockDecryptYjsState).toHaveBeenCalledTimes(2);
+      expect(mockDecryptYjsState).toHaveBeenCalledWith(encryptedState, 'org-123');
+      // yjsStateToText should receive the decrypted state
+      expect(mockYjsStateToText).toHaveBeenCalledWith(decryptedState);
+    });
+
+    it('should not decrypt unencrypted yjsState', async () => {
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPageVersion.findFirst
+        .mockResolvedValueOnce(mockVersionA)
+        .mockResolvedValueOnce(mockVersionB);
+      mockIsEncryptedYjsState.mockReturnValue(false);
+      mockYjsStateToText.mockReturnValue('plain text');
+
+      await diffVersions('org-123', 'page-123', 'version-1', 'version-2');
+
+      expect(mockDecryptYjsState).not.toHaveBeenCalled();
+      expect(mockYjsStateToText).toHaveBeenCalledWith(yjsStateA);
+      expect(mockYjsStateToText).toHaveBeenCalledWith(yjsStateB);
+    });
+
+    it('should decrypt encrypted current page yjsState when comparing to "current"', async () => {
+      const encryptedPageState = Buffer.from('LDYE-page-encrypted');
+      const decryptedPageState = Buffer.from([20, 21, 22]);
+
+      mockPrismaPage.findFirst.mockResolvedValue({
+        ...mockPage,
+        yjsState: encryptedPageState,
+      });
+      mockPrismaPageVersion.findFirst.mockResolvedValueOnce(mockVersionA);
+
+      // fromVersion.yjsState is not encrypted, but page.yjsState is
+      mockIsEncryptedYjsState
+        .mockReturnValueOnce(false) // fromVersion.yjsState
+        .mockReturnValueOnce(true); // page.yjsState (current)
+      mockDecryptYjsState.mockReturnValue(decryptedPageState);
+      mockYjsStateToText.mockReturnValue('text content');
+
+      await diffVersions('org-123', 'page-123', 'version-1', 'current');
+
+      expect(mockDecryptYjsState).toHaveBeenCalledTimes(1);
+      expect(mockDecryptYjsState).toHaveBeenCalledWith(encryptedPageState, 'org-123');
     });
   });
 });
