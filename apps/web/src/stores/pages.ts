@@ -4,6 +4,7 @@ import type { Page, PageWithChildren } from '@librediary/shared';
 import { pagesService } from '@/services';
 import type { CreatePageInput, UpdatePageInput, MovePageInput, FavoriteWithPage } from '@/services';
 import { useAuthStore } from './auth';
+import { useEncryption } from '@/composables/useEncryption';
 
 export const usePagesStore = defineStore('pages', () => {
   // ===========================================
@@ -48,6 +49,57 @@ export const usePagesStore = defineStore('pages', () => {
       throw new Error('No organization selected');
     }
     return authStore.currentOrganizationId;
+  }
+
+  // ===========================================
+  // E2EE HELPERS
+  // ===========================================
+
+  /**
+   * Check if the current org is encrypted and encryption is unlocked.
+   * Returns the workspace key if available, null otherwise.
+   */
+  async function getEncryptionKey(): Promise<Uint8Array | null> {
+    const authStore = useAuthStore();
+    if (!authStore.currentOrganization?.isEncrypted) return null;
+
+    const { isUnlocked, getWorkspaceKey } = useEncryption();
+    if (!isUnlocked.value) return null;
+
+    const orgId = authStore.currentOrganizationId;
+    if (!orgId) return null;
+
+    return getWorkspaceKey(orgId);
+  }
+
+  /**
+   * Decrypt page htmlContent if the workspace is encrypted.
+   * Returns the page with decrypted content, or as-is if not encrypted.
+   */
+  async function decryptPageContent(page: Page): Promise<Page> {
+    if (!page.htmlContent) return page;
+
+    const key = await getEncryptionKey();
+    if (!key) return page;
+
+    const { decryptContent } = useEncryption();
+    const decrypted = await decryptContent(page.htmlContent, key);
+    return { ...page, htmlContent: decrypted };
+  }
+
+  /**
+   * Encrypt htmlContent in an update payload if the workspace is encrypted.
+   * Returns the input as-is if not encrypted or no htmlContent is present.
+   */
+  async function encryptUpdateInput(input: UpdatePageInput): Promise<UpdatePageInput> {
+    if (!input.htmlContent) return input;
+
+    const key = await getEncryptionKey();
+    if (!key) return input;
+
+    const { encryptContent } = useEncryption();
+    const encrypted = await encryptContent(input.htmlContent, key);
+    return { ...input, htmlContent: encrypted };
   }
 
   /**
@@ -203,7 +255,10 @@ export const usePagesStore = defineStore('pages', () => {
       // Background refresh — no loading state
       pagesService
         .getPage(orgId, pageId)
-        .then((data) => updatePage(data.page))
+        .then(async (data) => {
+          const decrypted = await decryptPageContent(data.page);
+          updatePage(decrypted);
+        })
         .catch(() => {}); // silent — cached data is good enough
       return cached;
     }
@@ -212,9 +267,10 @@ export const usePagesStore = defineStore('pages', () => {
     loading.value = true;
     try {
       const data = await pagesService.getPage(orgId, pageId);
-      updatePage(data.page);
+      const decrypted = await decryptPageContent(data.page);
+      updatePage(decrypted);
       fetchedPageIds.value.add(pageId);
-      return data.page;
+      return decrypted;
     } finally {
       loading.value = false;
     }
@@ -236,14 +292,16 @@ export const usePagesStore = defineStore('pages', () => {
 
   async function updatePageData(pageId: string, input: UpdatePageInput): Promise<Page> {
     const orgId = getOrgId();
-    const data = await pagesService.updatePage(orgId, pageId, input);
-    updatePage(data.page);
+    const encryptedInput = await encryptUpdateInput(input);
+    const data = await pagesService.updatePage(orgId, pageId, encryptedInput);
+    const decrypted = await decryptPageContent(data.page);
+    updatePage(decrypted);
     // Update in favorites if present
     const favIndex = favorites.value.findIndex((f) => f.pageId === pageId);
     if (favIndex !== -1) {
-      favorites.value[favIndex] = { ...favorites.value[favIndex]!, page: data.page };
+      favorites.value[favIndex] = { ...favorites.value[favIndex]!, page: decrypted };
     }
-    return data.page;
+    return decrypted;
   }
 
   async function trashPage(pageId: string): Promise<void> {
