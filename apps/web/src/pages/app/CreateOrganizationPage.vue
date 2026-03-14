@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
 
 const router = useRouter();
 const orgsStore = useOrganizationsStore();
+
+const hostPrefix = computed(() => `${window.location.host}/`);
 
 const form = ref({
   name: '',
@@ -91,7 +93,7 @@ function handleCancel() {
         <div class="form-group">
           <label for="org-slug" class="form-label">{{ $t('organisation.urlSlug') }}</label>
           <div class="input-prefix-wrapper">
-            <span class="input-prefix">librediary.app/</span>
+            <span class="input-prefix">{{ hostPrefix }}</span>
             <input
               id="org-slug"
               v-model="form.slug"

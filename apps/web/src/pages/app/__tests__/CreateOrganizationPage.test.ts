@@ -94,10 +94,10 @@ describe('CreateOrganizationPage', () => {
       expect(buttons[1].text()).toBe('Create Organisation');
     });
 
-    it('should display URL prefix "librediary.app/" before the slug input', () => {
+    it('should display URL prefix with current host before the slug input', () => {
       const wrapper = mountPage();
 
-      expect(wrapper.find('.input-prefix').text()).toBe('librediary.app/');
+      expect(wrapper.find('.input-prefix').text()).toBe(`${window.location.host}/`);
     });
   });
 

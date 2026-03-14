@@ -8,6 +8,8 @@ import { resetSetupStatus } from '@/router';
 const router = useRouter();
 const { theme, toggleTheme } = useTheme();
 
+const hostPrefix = computed(() => `${window.location.host}/`);
+
 // Wizard state
 const currentStep = ref(1);
 const totalSteps = 4;
@@ -470,7 +472,7 @@ function goToLogin() {
               <div class="form-field">
                 <label for="orgSlug">{{ $t('setup.urlSlug') }}</label>
                 <div class="slug-input-wrapper">
-                  <span class="slug-prefix">librediary.app/</span>
+                  <span class="slug-prefix">{{ hostPrefix }}</span>
                   <input
                     id="orgSlug"
                     v-model="orgSlug"

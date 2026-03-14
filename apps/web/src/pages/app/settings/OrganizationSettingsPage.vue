@@ -35,6 +35,7 @@ const form = ref({
   aiEnabled: true,
 });
 
+const hostPrefix = computed(() => `${window.location.host}/`);
 const currentOrg = computed(() => authStore.currentOrganization);
 const isOrgEncrypted = computed(() => currentOrg.value?.isEncrypted ?? false);
 const isInGracePeriod = computed(() => !!currentOrg.value?.encryptionDisabledAt);
@@ -600,7 +601,7 @@ async function handleDelete() {
             <div class="field">
               <label for="org-slug" class="field-label">URL slug</label>
               <div class="field-input-group">
-                <span class="field-prefix">librediary.app/</span>
+                <span class="field-prefix">{{ hostPrefix }}</span>
                 <input
                   id="org-slug"
                   v-model="form.slug"
