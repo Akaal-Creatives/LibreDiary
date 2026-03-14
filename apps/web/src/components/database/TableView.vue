@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import { CellRenderer, CellEditor } from './cells';
-import ColumnHeaderMenu from './ColumnHeaderMenu.vue';
-import PropertyConfigPanel from './PropertyConfigPanel.vue';
+import TableBulkActions from './TableBulkActions.vue';
+import TableColumnHeader from './TableColumnHeader.vue';
+import AddPropertyPopover from './AddPropertyPopover.vue';
+import TableRowDragCell from './TableRowDragCell.vue';
 import type { PropertyType } from '@librediary/shared';
 import { useTimer, type TimerTarget } from '@/composables/useTimer';
 import { useColumnResize } from '@/composables/useColumnResize';
@@ -48,67 +49,9 @@ const {
   onColDragEnd,
 } = useColumnDragDrop(databasesStore);
 
-// Column menu
-const columnMenuTarget = ref<string | null>(null);
-const configureTarget = ref<string | null>(null);
-
-function toggleColumnMenu(propertyId: string) {
-  columnMenuTarget.value = columnMenuTarget.value === propertyId ? null : propertyId;
-}
-
-function closeColumnMenu() {
-  columnMenuTarget.value = null;
-}
-
-function openConfigure(propertyId: string) {
-  columnMenuTarget.value = null;
-  configureTarget.value = propertyId;
-}
-
-function closeConfigure() {
-  configureTarget.value = null;
-}
-
-// Add property
-const showAddPropertyPopover = ref(false);
-const newPropertyName = ref('');
-const newPropertyType = ref<PropertyType>('TEXT');
-
-const propertyTypes: Array<{ value: PropertyType; label: string }> = [
-  { value: 'TEXT', label: 'Text' },
-  { value: 'NUMBER', label: 'Number' },
-  { value: 'SELECT', label: 'Select' },
-  { value: 'MULTI_SELECT', label: 'Multi-select' },
-  { value: 'DATE', label: 'Date' },
-  { value: 'CHECKBOX', label: 'Checkbox' },
-  { value: 'URL', label: 'URL' },
-  { value: 'EMAIL', label: 'Email' },
-  { value: 'PHONE', label: 'Phone' },
-  { value: 'PERSON', label: 'Person' },
-  { value: 'FILES', label: 'Files' },
-  { value: 'RELATION', label: 'Relation' },
-  { value: 'ROLLUP', label: 'Rollup' },
-  { value: 'FORMULA', label: 'Formula' },
-  { value: 'DURATION', label: 'Duration' },
-];
-
-async function addProperty() {
-  const name = newPropertyName.value.trim();
-  if (!name) return;
-  await databasesStore.createProperty({ name, type: newPropertyType.value });
-  newPropertyName.value = '';
-  newPropertyType.value = 'TEXT';
-  showAddPropertyPopover.value = false;
-}
-
-function handleAddPropertyKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    addProperty();
-  }
-  if (event.key === 'Escape') {
-    showAddPropertyPopover.value = false;
-  }
+// Add property handler
+async function handleAddProperty(payload: { name: string; type: PropertyType }) {
+  await databasesStore.createProperty({ name: payload.name, type: payload.type });
 }
 
 // Timer glue
@@ -142,25 +85,7 @@ function getDurationPropertyForRow(): { id: string } | undefined {
 <template>
   <div class="table-view" :class="{ 'table-view--resizing': isResizing }">
     <!-- Bulk Actions Bar -->
-    <div v-if="selectedRows.size > 0" class="bulk-actions">
-      <span class="bulk-count">{{ selectedRows.size }} selected</span>
-      <button class="bulk-btn delete-btn" @click="bulkDelete">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2.5 4.5H11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
-          <path
-            d="M5 4.5V3.5C5 2.94772 5.44772 2.5 6 2.5H8C8.55228 2.5 9 2.94772 9 3.5V4.5"
-            stroke="currentColor"
-            stroke-width="1.2"
-          />
-          <path
-            d="M3.5 4.5L4 11.5C4.02 11.776 4.24772 12 4.5 12H9.5C9.75228 12 9.98 11.776 10 11.5L10.5 4.5"
-            stroke="currentColor"
-            stroke-width="1.2"
-          />
-        </svg>
-        Delete
-      </button>
-    </div>
+    <TableBulkActions :selected-count="selectedRows.size" @delete="bulkDelete" />
 
     <!-- Table Container -->
     <div class="table-container">
@@ -180,93 +105,23 @@ function getDurationPropertyForRow(): { id: string } | undefined {
             <!-- Drag handle column -->
             <th class="col-drag"></th>
             <!-- Property columns -->
-            <th
+            <TableColumnHeader
               v-for="prop in databasesStore.sortedProperties"
               :key="prop.id"
-              class="col-header"
-              :class="{
-                'drag-over': dragOverColId === prop.id,
-                dragging: dragColId === prop.id,
-              }"
-              :style="{ width: getColumnWidth(prop.id) + 'px' }"
-              draggable="true"
-              @dragstart="onColDragStart($event, prop.id)"
-              @dragover="onColDragOver($event, prop.id)"
-              @dragleave="onColDragLeave"
-              @drop="onColDrop($event, prop.id)"
-              @dragend="onColDragEnd"
-            >
-              <div class="col-header-content">
-                <span class="col-name">{{ prop.name }}</span>
-                <button class="col-menu-btn" @click.stop="toggleColumnMenu(prop.id)">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path
-                      d="M3 5L6 8L9 5"
-                      stroke="currentColor"
-                      stroke-width="1.2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div
-                class="col-resize-handle"
-                @mousedown="onResizeStart($event, prop.id)"
-                @dblclick="onResizeHandleDblClick($event, prop.id)"
-              ></div>
-              <ColumnHeaderMenu
-                v-if="columnMenuTarget === prop.id"
-                :property="prop"
-                @close="closeColumnMenu"
-                @configure="openConfigure(prop.id)"
-              />
-              <PropertyConfigPanel
-                v-if="configureTarget === prop.id"
-                :property="prop"
-                @close="closeConfigure"
-              />
-            </th>
+              :property="prop"
+              :width="getColumnWidth(prop.id)"
+              :is-drag-over="dragOverColId === prop.id"
+              :is-dragging="dragColId === prop.id"
+              @resize-start="onResizeStart($event, prop.id)"
+              @resize-dblclick="onResizeHandleDblClick($event, prop.id)"
+              @col-dragstart="onColDragStart($event, prop.id)"
+              @col-dragover="onColDragOver($event, prop.id)"
+              @col-dragleave="onColDragLeave"
+              @col-drop="onColDrop($event, prop.id)"
+              @col-dragend="onColDragEnd"
+            />
             <!-- Add property column -->
-            <th class="col-add">
-              <div class="add-property-wrapper">
-                <button
-                  class="add-property-btn"
-                  @click="showAddPropertyPopover = !showAddPropertyPopover"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M7 2.5V11.5"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M2.5 7H11.5"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </button>
-                <div v-if="showAddPropertyPopover" class="add-property-popover">
-                  <input
-                    v-model="newPropertyName"
-                    class="add-property-input"
-                    type="text"
-                    placeholder="Property name"
-                    autofocus
-                    @keydown="handleAddPropertyKeydown"
-                  />
-                  <select v-model="newPropertyType" class="add-property-select">
-                    <option v-for="pt in propertyTypes" :key="pt.value" :value="pt.value">
-                      {{ pt.label }}
-                    </option>
-                  </select>
-                  <button class="add-property-submit" @click="addProperty">Add</button>
-                </div>
-              </div>
-            </th>
+            <AddPropertyPopover @add="handleAddProperty" />
           </tr>
         </thead>
         <tbody>
@@ -293,52 +148,13 @@ function getDurationPropertyForRow(): { id: string } | undefined {
               />
             </td>
             <!-- Drag handle / timer indicator -->
-            <td
-              class="cell-drag"
-              draggable="true"
+            <TableRowDragCell
+              :timer-active="isTimerActiveForRow(row.id)"
+              :show-start-timer="!!getDurationPropertyForRow() && !timer.isActive.value"
               @dragstart="onRowDragStart($event, row.id)"
               @dragend="onRowDragEnd"
-            >
-              <!-- Timer active indicator -->
-              <span
-                v-if="isTimerActiveForRow(row.id)"
-                class="timer-row-indicator"
-                title="Timer running"
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2" />
-                  <path
-                    d="M6 3.5V6L7.5 7.5"
-                    stroke="currentColor"
-                    stroke-width="1.2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-              <!-- Start timer button (shows on hover if DURATION property exists) -->
-              <button
-                v-else-if="getDurationPropertyForRow() && !timer.isActive.value"
-                class="start-timer-btn"
-                title="Start timer"
-                @click.stop="startTimerForRow(row.id, getDurationPropertyForRow()!.id)"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M2.5 1.5V8.5L8 5L2.5 1.5Z" fill="currentColor" />
-                </svg>
-              </button>
-              <!-- Default drag handle -->
-              <span v-else class="drag-handle">
-                <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
-                  <circle cx="2" cy="2" r="1" fill="currentColor" />
-                  <circle cx="6" cy="2" r="1" fill="currentColor" />
-                  <circle cx="2" cy="6" r="1" fill="currentColor" />
-                  <circle cx="6" cy="6" r="1" fill="currentColor" />
-                  <circle cx="2" cy="10" r="1" fill="currentColor" />
-                  <circle cx="6" cy="10" r="1" fill="currentColor" />
-                </svg>
-              </span>
-            </td>
+              @start-timer="startTimerForRow(row.id, getDurationPropertyForRow()!.id)"
+            />
             <!-- Data cells -->
             <td
               v-for="prop in databasesStore.sortedProperties"
@@ -420,47 +236,6 @@ function getDurationPropertyForRow(): { id: string } | undefined {
   min-height: 0;
 }
 
-/* Bulk Actions */
-.bulk-actions {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-2) var(--space-6);
-  background: var(--color-accent-subtle);
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.bulk-count {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-accent);
-}
-
-.bulk-btn {
-  display: flex;
-  gap: var(--space-1);
-  align-items: center;
-  padding: var(--space-1) var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.bulk-btn:hover {
-  background: var(--color-hover);
-}
-
-.delete-btn:hover {
-  color: var(--color-error);
-  border-color: var(--color-error);
-}
-
 /* Table Container */
 .table-container {
   flex: 1;
@@ -503,91 +278,9 @@ function getDurationPropertyForRow(): { id: string } | undefined {
   width: 24px;
 }
 
-.col-header {
-  min-width: 140px;
-  position: relative;
-  cursor: grab;
-  transition: background var(--transition-fast);
-}
-
-.col-header:hover {
-  background: var(--color-hover);
-}
-
-.col-header.drag-over {
-  background: var(--color-accent-subtle);
-  border-left: 2px solid var(--color-accent);
-}
-
-.col-header.dragging {
-  opacity: 0.5;
-}
-
-/* Column Resize Handle */
-.col-resize-handle {
-  position: absolute;
-  top: 0;
-  right: -2px;
-  z-index: 1;
-  width: 5px;
-  height: 100%;
-  cursor: col-resize;
-  background: transparent;
-  transition: background var(--transition-fast);
-}
-
-.col-resize-handle:hover,
-.table-view--resizing .col-resize-handle {
-  background: var(--color-accent);
-}
-
 .table-view--resizing {
   cursor: col-resize;
   user-select: none;
-}
-
-.col-header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-1);
-}
-
-.col-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Touch target: 36px minimum clickable area with padding (WCAG 2.5.5) */
-.col-menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 9px;
-  margin: -9px;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: all var(--transition-fast);
-}
-
-.col-header:hover .col-menu-btn {
-  opacity: 1;
-}
-
-.col-menu-btn:hover {
-  color: var(--color-text-primary);
-  background: var(--color-hover);
-}
-
-.col-add {
-  width: 40px;
-  text-align: center;
 }
 
 /* Body */
@@ -629,62 +322,6 @@ function getDurationPropertyForRow(): { id: string } | undefined {
   cursor: grab;
 }
 
-.drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-tertiary);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.data-row:hover .drag-handle {
-  opacity: 1;
-}
-
-.timer-row-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-accent);
-  animation: timer-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes timer-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-.start-timer-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: all var(--transition-fast);
-}
-
-.data-row:hover .start-timer-btn {
-  opacity: 1;
-}
-
-.start-timer-btn:hover {
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-}
-
 .data-cell {
   cursor: text;
   position: relative;
@@ -700,96 +337,6 @@ function getDurationPropertyForRow(): { id: string } | undefined {
   height: 14px;
   cursor: pointer;
   accent-color: var(--color-accent);
-}
-
-/* Add Property Popover */
-.add-property-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.add-property-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.add-property-btn:hover {
-  color: var(--color-text-primary);
-  background: var(--color-hover);
-}
-
-.add-property-popover {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: var(--z-dropdown);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 220px;
-  padding: var(--space-3);
-  margin-top: var(--space-1);
-  background: var(--color-surface-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-}
-
-.add-property-input {
-  width: 100%;
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  outline: none;
-}
-
-.add-property-input:focus {
-  border-color: var(--color-accent);
-}
-
-.add-property-select {
-  width: 100%;
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  outline: none;
-  cursor: pointer;
-}
-
-.add-property-submit {
-  padding: var(--space-2);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-inverse);
-  cursor: pointer;
-  background: var(--color-accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.add-property-submit:hover {
-  background: var(--color-accent-hover);
 }
 
 /* Add Row */
@@ -832,17 +379,9 @@ function getDurationPropertyForRow(): { id: string } | undefined {
     min-width: max-content;
   }
 
-  .col-header {
-    min-width: 100px;
-  }
-
   .data-table th,
   .data-table td {
     padding: var(--space-1) var(--space-2);
-  }
-
-  .bulk-actions {
-    padding: var(--space-2) var(--space-3);
   }
 
   .add-row-btn {
