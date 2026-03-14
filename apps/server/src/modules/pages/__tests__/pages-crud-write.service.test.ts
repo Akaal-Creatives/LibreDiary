@@ -204,6 +204,42 @@ describe('Pages Service - Write Operations', () => {
         }),
       });
     });
+
+    it('should reject making page public when org is encrypted', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: true });
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+
+      await expect(
+        pagesService.updatePage('org-123', 'page-123', 'user-123', {
+          isPublic: true,
+        })
+      ).rejects.toThrow('PUBLIC_SHARING_DISABLED_ENCRYPTED');
+    });
+
+    it('should allow making page private even when org is encrypted', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: true });
+      const publicPage = { ...mockPage, isPublic: true, publicSlug: 'test-slug' };
+      mockPrismaPage.findFirst.mockResolvedValue(publicPage);
+      mockPrismaPage.update.mockResolvedValue({ ...publicPage, isPublic: false });
+
+      const result = await pagesService.updatePage('org-123', 'page-123', 'user-123', {
+        isPublic: false,
+      });
+
+      expect(result.isPublic).toBe(false);
+    });
+
+    it('should allow non-public updates when org is encrypted', async () => {
+      mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: true });
+      mockPrismaPage.findFirst.mockResolvedValue(mockPage);
+      mockPrismaPage.update.mockResolvedValue({ ...mockPage, title: 'New Title' });
+
+      const result = await pagesService.updatePage('org-123', 'page-123', 'user-123', {
+        title: 'New Title',
+      });
+
+      expect(result.title).toBe('New Title');
+    });
   });
 
   describe('trashPage', () => {

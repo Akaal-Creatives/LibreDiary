@@ -88,11 +88,22 @@ export async function togglePublicAccess(
 ): Promise<{ id: string; isPublic: boolean; publicSlug: string | null }> {
   const page = await prisma.page.findUnique({
     where: { id: pageId },
-    select: { id: true, title: true, isPublic: true, publicSlug: true },
+    select: { id: true, title: true, isPublic: true, publicSlug: true, organizationId: true },
   });
 
   if (!page) {
     throw new Error('PAGE_NOT_FOUND');
+  }
+
+  // Block public sharing for encrypted workspaces — content is E2EE and cannot be viewed publicly
+  if (isPublic) {
+    const org = await prisma.organization.findUnique({
+      where: { id: page.organizationId },
+      select: { isEncrypted: true },
+    });
+    if (org?.isEncrypted) {
+      throw new Error('PUBLIC_SHARING_DISABLED_ENCRYPTED');
+    }
   }
 
   // If enabling public access and no slug exists, generate one
