@@ -27,11 +27,14 @@ const mockEmailService = vi.hoisted(() => ({
   sendEncryptionChangeOtpEmail: vi.fn(),
 }));
 
+const mockLogAudit = vi.hoisted(() => vi.fn());
+
 vi.mock('../encryption.service.js', () => mockEncryptionService);
 vi.mock('../../auth/auth.middleware.js', () => ({
   requireAuth: mockRequireAuth,
 }));
 vi.mock('../../../services/email.service.js', () => mockEmailService);
+vi.mock('../../audit/audit.service.js', () => ({ logAudit: mockLogAudit }));
 
 // Import routes after mocking
 import { encryptionRoutes } from '../encryption.routes.js';
@@ -636,6 +639,122 @@ describe('Encryption Routes', () => {
       });
 
       expect(response.statusCode).toBe(400);
+    });
+  });
+
+  // =============================================
+  // E2EE AUDIT LOGGING
+  // =============================================
+  describe('E2EE audit logging', () => {
+    it('should log E2EE_SETUP_COMPLETED on successful setup', async () => {
+      mockEncryptionService.setupEncryption.mockResolvedValue({ id: 'enc-123' });
+
+      await app.inject({
+        method: 'POST',
+        url: '/encryption/setup',
+        payload: {
+          publicKey: 'pk',
+          encryptedPrivateKey: 'epk',
+          keySalt: 'salt',
+          keyParams: { memoryLimit: 65536, opsLimit: 3 },
+        },
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'E2EE_SETUP_COMPLETED',
+          userId: 'user-123',
+        })
+      );
+    });
+
+    it('should log E2EE_RECOVERY_KEY_GENERATED on recovery key update', async () => {
+      mockEncryptionService.updateRecoveryKey.mockResolvedValue({ id: 'enc-123' });
+
+      await app.inject({
+        method: 'POST',
+        url: '/encryption/recovery',
+        payload: {
+          recoveryEncryptedMasterKey: { version: 1, iv: 'iv', ciphertext: 'ct' },
+          recoverySalt: 'salt',
+          recoveryKeyHash: 'hash',
+        },
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'E2EE_RECOVERY_KEY_GENERATED',
+          userId: 'user-123',
+        })
+      );
+    });
+
+    it('should log E2EE_WORKSPACE_ENCRYPTED on workspace enable', async () => {
+      mockEncryptionService.enableWorkspaceEncryption.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: true,
+      });
+
+      await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/enable',
+        payload: {
+          encryptedKey: 'key',
+          nonce: 'nonce',
+          sharedByPublicKey: 'pk',
+        },
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'E2EE_WORKSPACE_ENCRYPTED',
+          userId: 'user-123',
+          organizationId: 'org-123',
+        })
+      );
+    });
+
+    it('should log E2EE_KEY_SHARED on workspace key share', async () => {
+      mockEncryptionService.shareWorkspaceKey.mockResolvedValue({ id: 'share-1' });
+
+      await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/key-shares',
+        payload: {
+          targetUserId: 'collab-456',
+          encryptedKey: 'key',
+          nonce: 'nonce',
+          sharedByPublicKey: 'pk',
+        },
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'E2EE_KEY_SHARED',
+          organizationId: 'org-123',
+          metadata: expect.objectContaining({ targetUserId: 'collab-456' }),
+        })
+      );
+    });
+
+    it('should log E2EE_WORKSPACE_DECRYPTED on workspace disable', async () => {
+      mockEncryptionService.disableWorkspaceEncryption.mockResolvedValue({
+        id: 'org-123',
+        isEncrypted: false,
+      });
+
+      await app.inject({
+        method: 'POST',
+        url: '/encryption/workspace/org-123/disable',
+      });
+
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'E2EE_WORKSPACE_DECRYPTED',
+          userId: 'user-123',
+          organizationId: 'org-123',
+        })
+      );
     });
   });
 });
