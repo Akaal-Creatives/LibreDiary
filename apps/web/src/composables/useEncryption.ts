@@ -171,6 +171,24 @@ export function useEncryption() {
   }
 
   /**
+   * Encrypt binary data with a workspace key.
+   * Returns the serialised encrypted envelope as Uint8Array.
+   */
+  async function encryptBinary(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+    const encrypted = await encrypt(data, key);
+    return serialise(encrypted);
+  }
+
+  /**
+   * Decrypt binary data that was encrypted with encryptBinary.
+   * Returns the original Uint8Array.
+   */
+  async function decryptBinary(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+    const envelope = deserialise(data);
+    return decrypt(envelope, key);
+  }
+
+  /**
    * Get or fetch a decrypted workspace key for an organisation.
    */
   async function getWorkspaceKey(orgId: string): Promise<Uint8Array | null> {
@@ -280,6 +298,8 @@ export function useEncryption() {
     lock,
     encryptContent,
     decryptContent,
+    encryptBinary,
+    decryptBinary,
     getWorkspaceKey,
     recoverWithRecoveryKey,
   };

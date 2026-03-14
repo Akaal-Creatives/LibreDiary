@@ -8,6 +8,7 @@ import { yjsDocToText } from '../../utils/yjs-to-text.js';
 import { prisma } from '../../lib/prisma.js';
 import { indexPage } from '../search/meilisearch.service.js';
 import { logger } from '../../lib/logger.js';
+import { encryptYjsState, decryptYjsState, isEncryptedYjsState } from './yjs-encrypt.js';
 
 const SESSION_COOKIE_NAME = 'session_token';
 
@@ -148,12 +149,17 @@ export function createHocuspocusServer(): Hocuspocus {
       }
 
       try {
-        const yjsState = await collaborationService.loadDocument(
+        let yjsState = await collaborationService.loadDocument(
           parsed.organizationId,
           parsed.pageId
         );
 
         if (yjsState) {
+          // Decrypt if stored encrypted (for encrypted workspaces)
+          if (isEncryptedYjsState(yjsState)) {
+            yjsState = decryptYjsState(yjsState, parsed.organizationId);
+          }
+
           // Apply stored state to the Yjs document
           const update = new Uint8Array(yjsState);
           Y.applyUpdate(data.document, update);
@@ -179,7 +185,18 @@ export function createHocuspocusServer(): Hocuspocus {
 
       try {
         // Encode current document state
-        const yjsState = Buffer.from(Y.encodeStateAsUpdate(document));
+        let yjsState = Buffer.from(Y.encodeStateAsUpdate(document));
+
+        // Check if workspace has E2EE enabled — if so, encrypt at rest and skip text extraction
+        const org = await prisma.organization.findUnique({
+          where: { id: parsed.organizationId },
+          select: { isEncrypted: true },
+        });
+
+        if (org?.isEncrypted) {
+          // Encrypt yjsState at rest before storing to database
+          yjsState = encryptYjsState(yjsState, parsed.organizationId);
+        }
 
         await collaborationService.storeDocument(
           parsed.organizationId,
@@ -187,12 +204,6 @@ export function createHocuspocusServer(): Hocuspocus {
           yjsState,
           context.userId
         );
-
-        // Check if workspace has E2EE enabled — if so, skip text extraction and indexing
-        const org = await prisma.organization.findUnique({
-          where: { id: parsed.organizationId },
-          select: { isEncrypted: true },
-        });
 
         if (!org?.isEncrypted) {
           // Extract plain text from Yjs doc for search indexing

@@ -13,6 +13,7 @@ import { z } from 'zod';
 import * as encryptionService from './encryption.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
+import { logAudit } from '../audit/audit.service.js';
 import { generateOtp, hashToken, expiresIn, EXPIRATION } from '../../utils/tokens.js';
 import { sendEncryptionChangeOtpEmail } from '../../services/email.service.js';
 
@@ -194,6 +195,7 @@ export async function encryptionRoutes(app: FastifyInstance) {
         userId: user.id,
         ...parsed.data,
       });
+      logAudit({ action: 'E2EE_SETUP_COMPLETED', userId: user.id });
       return reply.status(201).send({ success: true, data: result });
     } catch (error) {
       return mapServiceError(error, reply, setupErrorMap);
@@ -242,6 +244,7 @@ export async function encryptionRoutes(app: FastifyInstance) {
     try {
       const user = getAuthUser(request);
       await encryptionService.updateRecoveryKey(user.id, parsed.data);
+      logAudit({ action: 'E2EE_RECOVERY_KEY_GENERATED', userId: user.id });
       return reply.send({ success: true });
     } catch (error) {
       return mapServiceError(error, reply, recoveryErrorMap);
@@ -273,6 +276,11 @@ export async function encryptionRoutes(app: FastifyInstance) {
           organizationId: request.params.organizationId,
           userId: user.id,
           ...parsed.data,
+        });
+        logAudit({
+          action: 'E2EE_WORKSPACE_ENCRYPTED',
+          userId: user.id,
+          organizationId: request.params.organizationId,
         });
         return reply.send({ success: true, data: result });
       } catch (error) {
@@ -328,9 +336,16 @@ export async function encryptionRoutes(app: FastifyInstance) {
       }
 
       try {
+        const user = getAuthUser(request);
         const result = await encryptionService.shareWorkspaceKey({
           organizationId: request.params.organizationId,
           ...parsed.data,
+        });
+        logAudit({
+          action: 'E2EE_KEY_SHARED',
+          userId: user.id,
+          organizationId: request.params.organizationId,
+          metadata: { targetUserId: parsed.data.targetUserId },
         });
         return reply.status(201).send({ success: true, data: result });
       } catch (error) {
@@ -522,6 +537,11 @@ export async function encryptionRoutes(app: FastifyInstance) {
         const result = await encryptionService.disableWorkspaceEncryption({
           organizationId: request.params.organizationId,
           userId: user.id,
+        });
+        logAudit({
+          action: 'E2EE_WORKSPACE_DECRYPTED',
+          userId: user.id,
+          organizationId: request.params.organizationId,
         });
         return reply.send({ success: true, data: result });
       } catch (error) {

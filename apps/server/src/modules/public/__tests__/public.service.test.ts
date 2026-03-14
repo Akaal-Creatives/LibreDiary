@@ -13,15 +13,23 @@ const { mockPrisma, resetMocks, mockPage, _now } = vi.hoisted(() => {
     update: vi.fn(),
   };
 
+  const mockPrismaOrganization = {
+    findUnique: vi.fn(),
+  };
+
   const mockPrisma = {
     page: mockPrismaPage,
     pagePermission: mockPrismaPagePermission,
+    organization: mockPrismaOrganization,
   };
 
   function resetMocks() {
     Object.values(mockPrismaPage).forEach((mock) => mock.mockReset());
     Object.values(mockPrismaPagePermission).forEach((mock) => mock.mockReset());
+    Object.values(mockPrismaOrganization).forEach((mock) => mock.mockReset());
     mockPrismaPagePermission.update.mockResolvedValue({});
+    // Default: unencrypted
+    mockPrismaOrganization.findUnique.mockResolvedValue({ isEncrypted: false });
   }
 
   const now = new Date();
@@ -159,6 +167,36 @@ describe('Public Service', () => {
       await expect(publicService.togglePublicAccess('nonexistent', true)).rejects.toThrow(
         'PAGE_NOT_FOUND'
       );
+    });
+
+    it('should reject enabling public access when org is encrypted', async () => {
+      mockPrisma.page.findUnique.mockResolvedValue({
+        ...mockPage,
+        isPublic: false,
+        publicSlug: null,
+        organizationId: 'org-123',
+      });
+      mockPrisma.organization.findUnique.mockResolvedValue({ isEncrypted: true });
+
+      await expect(publicService.togglePublicAccess('page-123', true)).rejects.toThrow(
+        'PUBLIC_SHARING_DISABLED_ENCRYPTED'
+      );
+    });
+
+    it('should allow disabling public access when org is encrypted', async () => {
+      mockPrisma.page.findUnique.mockResolvedValue({
+        ...mockPage,
+        isPublic: true,
+        organizationId: 'org-123',
+      });
+      mockPrisma.organization.findUnique.mockResolvedValue({ isEncrypted: true });
+      mockPrisma.page.update.mockResolvedValue({
+        ...mockPage,
+        isPublic: false,
+      });
+
+      const result = await publicService.togglePublicAccess('page-123', false);
+      expect(result.isPublic).toBe(false);
     });
   });
 
