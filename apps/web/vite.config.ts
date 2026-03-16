@@ -72,13 +72,31 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('@tiptap/')) return 'vendor-tiptap';
-          if (id.includes('yjs') || id.includes('@hocuspocus/')) return 'vendor-yjs';
-          if (id.includes('vuestic-ui')) return 'vendor-vuestic';
-          if (id.includes('lowlight') || id.includes('highlight.js')) return 'vendor-lowlight';
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-tiptap',
+              test: /@tiptap\//,
+              priority: 20,
+            },
+            {
+              name: 'vendor-yjs',
+              test: /yjs|@hocuspocus\//,
+              priority: 20,
+            },
+            {
+              name: 'vendor-vuestic',
+              test: /vuestic-ui/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-lowlight',
+              test: /lowlight|highlight\.js/,
+              priority: 20,
+            },
+          ],
         },
       },
     },
