@@ -195,7 +195,7 @@ export function createHocuspocusServer(): Hocuspocus {
 
         if (org?.isEncrypted) {
           // Encrypt yjsState at rest before storing to database
-          yjsState = encryptYjsState(yjsState, parsed.organizationId);
+          yjsState = encryptYjsState(yjsState, parsed.organizationId) as Buffer<ArrayBuffer>;
         }
 
         await collaborationService.storeDocument(
