@@ -71,7 +71,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/tar": "^6.1.13",
     "@types/turndown": "^5.0.6",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "prisma": "^7.4.2",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
