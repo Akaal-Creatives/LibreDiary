@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Speichern",
+    "saving": "Wird gespeichert",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -717,7 +718,7 @@
     "deleteAccount": "Konto löschen",
     "deleteAccountTitle": "Ihr Konto löschen",
     "deleteAccountDescription": "Sobald Sie die Löschung anfordern, beginnt eine 30-tägige Frist. Danach werden Ihre persönlichen Daten dauerhaft entfernt und Ihre Inhalte anonymisiert.",
-    "deleteAccountWarning": "Diese Aktion kann nach der 30-tägigen Frist nicht rückgängig gemacht werden. Ihre Seiten und Kommentare werden anonymisiert (als \u201EGelöschter Benutzer\u201C gekennzeichnet), aber nicht aus gemeinsamen Organisationen entfernt.",
+    "deleteAccountWarning": "Diese Aktion kann nach der 30-tägigen Frist nicht rückgängig gemacht werden. Ihre Seiten und Kommentare werden anonymisiert (als „Gelöschter Benutzer“ gekennzeichnet), aber nicht aus gemeinsamen Organisationen entfernt.",
     "deleteAccountConfirmation": "Geben Sie KONTO LÖSCHEN ein, um zu bestätigen",
     "deleteAccountButton": "Mein Konto löschen",
     "deletionPending": "Kontolöschung ausstehend",

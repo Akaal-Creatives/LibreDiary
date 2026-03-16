@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Zapisz",
+    "saving": "Zapisywanie",
     "cancel": "Anuluj",
     "delete": "Usuń",
     "edit": "Edytuj",
@@ -717,7 +718,7 @@
     "deleteAccount": "Usuń konto",
     "deleteAccountTitle": "Usuń swoje konto",
     "deleteAccountDescription": "Po złożeniu wniosku o usunięcie Twoje konto wejdzie w 30-dniowy okres karencji. Po tym czasie Twoje dane osobowe zostaną trwale usunięte, a Twoja zawartość zostanie zanonimizowana.",
-    "deleteAccountWarning": "Tej czynności nie można cofnąć po upływie 30-dniowego okresu karencji. Twoje strony i komentarze zostaną zanonimizowane (przypisane do \u201eUsunięty użytkownik\u201d), ale nie zostaną usunięte z udostępnionych organizacji.",
+    "deleteAccountWarning": "Tej czynności nie można cofnąć po upływie 30-dniowego okresu karencji. Twoje strony i komentarze zostaną zanonimizowane (przypisane do „Usunięty użytkownik”), ale nie zostaną usunięte z udostępnionych organizacji.",
     "deleteAccountConfirmation": "Wpisz USUŃ MOJE KONTO aby potwierdzić",
     "deleteAccountButton": "Usuń moje konto",
     "deletionPending": "Oczekiwanie na usunięcie konta",

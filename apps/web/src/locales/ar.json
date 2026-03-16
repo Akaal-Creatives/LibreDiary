@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "حفظ",
+    "saving": "جارٍ الحفظ",
     "cancel": "إلغاء",
     "delete": "حذف",
     "edit": "تعديل",

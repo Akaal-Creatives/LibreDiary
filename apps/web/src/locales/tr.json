@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Kaydet",
+    "saving": "Kaydediliyor",
     "cancel": "İptal",
     "delete": "Sil",
     "edit": "Düzenle",

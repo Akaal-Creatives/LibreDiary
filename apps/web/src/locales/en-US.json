@@ -104,22 +104,7 @@
     "closeMenu": "Close menu"
   },
   "tour": {
-    "title": "Welcome to LibreDiary",
-    "skip": "Skip tour",
-    "next": "Next",
-    "previous": "Back",
-    "finish": "Get started",
-    "stepIndicator": "{current} of {total}",
-    "sidebarTitle": "Sidebar Navigation",
-    "sidebarDescription": "Browse your pages, databases, and favorites from the sidebar. Everything is organized in a tree structure.",
-    "createPageTitle": "Create a Page",
-    "createPageDescription": "Click here to create a new page. You can also use the keyboard shortcut to quickly add pages.",
-    "searchTitle": "Quick Search",
-    "searchDescription": "Find any page instantly using the search. Press the shortcut key to open it from anywhere.",
-    "editorTitle": "The Editor",
-    "editorDescription": "Write freely with our block editor. Use '/' commands for headings, lists, code blocks, and more.",
-    "settingsTitle": "Your Settings",
-    "settingsDescription": "Manage your profile, theme preferences, and workspace settings from the footer area."
+    "sidebarDescription": "Browse your pages, databases, and favorites from the sidebar. Everything is organized in a tree structure."
   },
   "gdpr": {
     "deleteAccountDescription": "Once you request deletion, your account will enter a 30-day grace period. After that, your personal data will be permanently removed and your content will be anonymized.",
@@ -129,9 +114,6 @@
   },
   "a11y": {
     "toggleTheme": "Toggle color theme"
-  },
-  "tour": {
-    "sidebarDescription": "Browse your pages, databases, and favorites from the sidebar. Everything is organized in a tree structure."
   },
   "pageTitle": {
     "organisationSettings": "Organization Settings",
@@ -172,5 +154,6 @@
     "passwordChangeError": "Failed to change password",
     "passwordMinLength": "Password must be at least 8 characters",
     "passwordsMustMatch": "Passwords do not match"
-  }
+  },
+  "common": {}
 }
