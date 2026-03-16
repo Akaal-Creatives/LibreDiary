@@ -186,9 +186,10 @@ services:
       - "7700"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:7700/health"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:7700/health"]
       interval: 30s
       timeout: 10s
+      start_period: 30s
       retries: 3
     deploy:
       resources:
