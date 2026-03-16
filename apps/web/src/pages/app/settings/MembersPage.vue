@@ -6,7 +6,6 @@ import { ApiError } from '@/services';
 import { encryptionService } from '@/services/encryption.service';
 import type { PendingMember } from '@/services/encryption.service';
 import { useEncryption } from '@/composables/useEncryption';
-import { encryptForRecipient } from '@librediary/shared/crypto';
 import type { OrgRole } from '@librediary/shared';
 import MemberRoleBadge from '@/components/MemberRoleBadge.vue';
 import InviteMemberModal from '@/components/InviteMemberModal.vue';
@@ -244,6 +243,7 @@ async function handleGrantAccess(member: PendingMember) {
     const status = await encryptionService.getStatus();
     const recipientPublicKey = fromBase64(member.publicKey);
 
+    const { encryptForRecipient } = await import('@librediary/shared/crypto');
     const encrypted = await encryptForRecipient(workspaceKey, privateKey.value, recipientPublicKey);
 
     await encryptionService.shareWorkspaceKey(orgId, {

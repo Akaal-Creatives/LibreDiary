@@ -13,20 +13,23 @@
  */
 
 import { ref } from 'vue';
-import {
-  deriveKeyFromPassphrase,
-  deriveKeyFromPassphraseWithSalt,
-  encrypt,
-  decrypt,
-  generateKeyPair,
-  wrapKey,
-  unwrapKey,
-  generateRecoveryKey,
-  recoverMasterKey,
-  serialise,
-  deserialise,
-} from '@librediary/shared/crypto';
 import { encryptionService } from '../services/encryption.service';
+
+/**
+ * Lazy-load the crypto module on first use.
+ * The module contains libsodium (~1.2 MB) and should only be
+ * fetched when E2EE is actually needed.
+ */
+import type * as CryptoModuleType from '@librediary/shared/crypto';
+
+let cryptoModulePromise: Promise<typeof CryptoModuleType> | null = null;
+
+function loadCrypto() {
+  if (!cryptoModulePromise) {
+    cryptoModulePromise = import('@librediary/shared/crypto');
+  }
+  return cryptoModulePromise;
+}
 
 // =============================================
 // Helpers
@@ -71,17 +74,19 @@ export function useEncryption() {
    * Returns the recovery key string for the user to save.
    */
   async function setupEncryption(passphrase: string) {
+    const e2ee = await loadCrypto();
+
     // 1. Derive master key from passphrase
-    const { key: mk, salt } = await deriveKeyFromPassphrase(passphrase);
+    const { key: mk, salt } = await e2ee.deriveKeyFromPassphrase(passphrase);
 
     // 2. Generate X25519 keypair for key sharing
-    const keyPair = await generateKeyPair();
+    const keyPair = await e2ee.generateKeyPair();
 
     // 3. Wrap private key with master key for server storage
-    const wrappedPrivateKey = await wrapKey(keyPair.privateKey, mk);
+    const wrappedPrivateKey = await e2ee.wrapKey(keyPair.privateKey, mk);
 
     // 4. Generate recovery key
-    const recovery = await generateRecoveryKey(mk);
+    const recovery = await e2ee.generateRecoveryKey(mk);
 
     // 5. Send to server
     await encryptionService.setup({
@@ -115,16 +120,18 @@ export function useEncryption() {
    * Unlock E2EE by deriving master key from passphrase.
    */
   async function unlock(passphrase: string): Promise<void> {
+    const e2ee = await loadCrypto();
+
     // 1. Get encryption data from server (salt, encrypted private key, etc.)
     const data = await encryptionService.getData();
 
     // 2. Re-derive master key
     const salt = fromBase64(data.keySalt);
-    const mk = await deriveKeyFromPassphraseWithSalt(passphrase, salt);
+    const mk = await e2ee.deriveKeyFromPassphraseWithSalt(passphrase, salt);
 
     // 3. Unwrap private key
     const encryptedPk = fromBase64(data.encryptedPrivateKey);
-    const pk = await unwrapKey(encryptedPk, mk);
+    const pk = await e2ee.unwrapKey(encryptedPk, mk);
 
     // 4. Store in memory
     masterKey.value = mk;
@@ -153,9 +160,10 @@ export function useEncryption() {
    * Returns base64-encoded encrypted buffer.
    */
   async function encryptContent(content: string, key: Uint8Array): Promise<string> {
+    const e2ee = await loadCrypto();
     const plaintext = new TextEncoder().encode(content);
-    const encrypted = await encrypt(plaintext, key);
-    const buffer = serialise(encrypted);
+    const encrypted = await e2ee.encrypt(plaintext, key);
+    const buffer = e2ee.serialise(encrypted);
     return toBase64(buffer);
   }
 
@@ -164,9 +172,10 @@ export function useEncryption() {
    * Returns the original string.
    */
   async function decryptContent(encryptedBase64: string, key: Uint8Array): Promise<string> {
+    const e2ee = await loadCrypto();
     const buffer = fromBase64(encryptedBase64);
-    const envelope = deserialise(buffer);
-    const plaintext = await decrypt(envelope, key);
+    const envelope = e2ee.deserialise(buffer);
+    const plaintext = await e2ee.decrypt(envelope, key);
     return new TextDecoder().decode(plaintext);
   }
 
@@ -175,8 +184,9 @@ export function useEncryption() {
    * Returns the serialised encrypted envelope as Uint8Array.
    */
   async function encryptBinary(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
-    const encrypted = await encrypt(data, key);
-    return serialise(encrypted);
+    const e2ee = await loadCrypto();
+    const encrypted = await e2ee.encrypt(data, key);
+    return e2ee.serialise(encrypted);
   }
 
   /**
@@ -184,8 +194,9 @@ export function useEncryption() {
    * Returns the original Uint8Array.
    */
   async function decryptBinary(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
-    const envelope = deserialise(data);
-    return decrypt(envelope, key);
+    const e2ee = await loadCrypto();
+    const envelope = e2ee.deserialise(data);
+    return e2ee.decrypt(envelope, key);
   }
 
   /**
@@ -206,8 +217,8 @@ export function useEncryption() {
       const encryptedKey = fromBase64(keyShare.encryptedKey);
 
       // Reconstruct the EncryptedKeyShare format
-      const { decryptFromSender } = await import('@librediary/shared/crypto');
-      const workspaceKey = decryptFromSender(
+      const e2ee = await loadCrypto();
+      const workspaceKey = e2ee.decryptFromSender(
         { nonce, encryptedKey },
         privateKey.value,
         senderPublicKey
@@ -241,20 +252,21 @@ export function useEncryption() {
     const recoverySalt = fromBase64(data.recoverySalt as string);
 
     // 3. Recover master key using recovery key (validates the key; throws if wrong)
-    const recoveredMk = await recoverMasterKey(recoveryKey, encryptedMasterKey, recoverySalt);
+    const e2ee = await loadCrypto();
+    const recoveredMk = await e2ee.recoverMasterKey(recoveryKey, encryptedMasterKey, recoverySalt);
     recoveredMk.fill(0); // Clear recovered key — we derive a fresh one from the new passphrase
 
     // 4. Derive new key from new passphrase
-    const { key: newKey, salt: newSalt } = await deriveKeyFromPassphrase(newPassphrase);
+    const { key: newKey, salt: newSalt } = await e2ee.deriveKeyFromPassphrase(newPassphrase);
 
     // 5. Generate new keypair
-    const keyPair = await generateKeyPair();
+    const keyPair = await e2ee.generateKeyPair();
 
     // 6. Wrap private key with new master key
-    const wrappedPrivateKey = await wrapKey(keyPair.privateKey, newKey);
+    const wrappedPrivateKey = await e2ee.wrapKey(keyPair.privateKey, newKey);
 
     // 7. Generate new recovery key
-    const recovery = await generateRecoveryKey(newKey);
+    const recovery = await e2ee.generateRecoveryKey(newKey);
 
     // 8. Update server with new key material
     await encryptionService.setup({
