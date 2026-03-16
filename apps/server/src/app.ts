@@ -14,7 +14,7 @@ import {
   rateLimitPlugin,
   websocketPlugin,
 } from './plugins/index.js';
-import { healthRoutes, devRoutes } from './routes/index.js';
+import { healthRoutes, devRoutes, versionRoutes } from './routes/index.js';
 import { authRoutes, oauthRoutes } from './modules/auth/index.js';
 import { organizationRoutes } from './modules/organizations/index.js';
 import { pagesRoutes, trashRoutes, favoritesRoutes } from './modules/pages/index.js';
@@ -101,6 +101,7 @@ export async function buildApp() {
   // Register routes
   await fastify.register(healthRoutes);
   await fastify.register(devRoutes);
+  await fastify.register(versionRoutes);
 
   // Setup routes (no auth required, used for initial setup)
   await fastify.register(setupRoutes, { prefix: '/api/v1/setup' });

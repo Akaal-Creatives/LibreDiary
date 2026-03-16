@@ -1,11 +1,19 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const rootPkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf-8')
+);
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(rootPkg.version),
+  },
   plugins: [
     vue(),
     compression({ algorithm: 'gzip' }),
