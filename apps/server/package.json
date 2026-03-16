@@ -66,7 +66,7 @@
     "@librediary/tsconfig": "workspace:*",
     "@types/archiver": "^7.0.0",
     "@types/diff": "^8.0.0",
-    "@types/node": "^25.3.5",
+    "@types/node": "^25.5.0",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.11",
     "@types/tar": "^6.1.13",
