@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores';
 import { useOrganizationsStore } from '@/stores/organizations';
 import type { OrgRole } from '@librediary/shared';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -86,7 +87,7 @@ const currentRole = computed(() => authStore.currentUserRole);
       <span
         v-if="currentOrg?.logoUrl"
         class="org-logo"
-        :style="{ backgroundImage: `url(${currentOrg.logoUrl})` }"
+        :style="{ backgroundImage: `url(${resolveUploadUrl(currentOrg.logoUrl)})` }"
       ></span>
       <span
         v-else
@@ -156,7 +157,7 @@ const currentRole = computed(() => authStore.currentUserRole);
               <span
                 v-if="currentOrg.logoUrl"
                 class="section-logo"
-                :style="{ backgroundImage: `url(${currentOrg.logoUrl})` }"
+                :style="{ backgroundImage: `url(${resolveUploadUrl(currentOrg.logoUrl)})` }"
               ></span>
               <span
                 v-else
@@ -243,7 +244,7 @@ const currentRole = computed(() => authStore.currentUserRole);
               <span
                 v-if="org.logoUrl"
                 class="org-item-logo"
-                :style="{ backgroundImage: `url(${org.logoUrl})` }"
+                :style="{ backgroundImage: `url(${resolveUploadUrl(org.logoUrl)})` }"
               ></span>
               <span
                 v-else

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/stores';
 import { useToast } from '@/composables/useToast';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
@@ -139,7 +140,7 @@ async function savePassword() {
             <div
               v-if="authStore.user?.avatarUrl"
               class="avatar"
-              :style="{ backgroundImage: `url(${authStore.user.avatarUrl})` }"
+              :style="{ backgroundImage: `url(${resolveUploadUrl(authStore.user.avatarUrl)})` }"
               role="img"
               :aria-label="$t('account.avatar')"
             />

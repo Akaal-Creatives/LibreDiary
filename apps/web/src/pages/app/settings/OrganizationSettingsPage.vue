@@ -6,6 +6,7 @@ import { useOrganizationsStore } from '@/stores/organizations';
 import { ApiError } from '@/services';
 import { filesService } from '@/services/files.service';
 import { useToast } from '@/composables/useToast';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 import { useEncryption } from '@/composables/useEncryption';
 import { encryptionService } from '@/services/encryption.service';
 import RecoveryKeyModal from '@/components/RecoveryKeyModal.vue';
@@ -451,7 +452,7 @@ async function handleDelete() {
         >
           <img
             v-if="currentOrg.logoUrl"
-            :src="currentOrg.logoUrl"
+            :src="resolveUploadUrl(currentOrg.logoUrl)"
             :alt="currentOrg.name"
             class="org-avatar-img"
           />
@@ -559,7 +560,7 @@ async function handleDelete() {
                 <div class="logo-preview">
                   <img
                     v-if="currentOrg?.logoUrl"
-                    :src="currentOrg.logoUrl"
+                    :src="resolveUploadUrl(currentOrg.logoUrl)"
                     :alt="currentOrg.name"
                     class="logo-image"
                   />

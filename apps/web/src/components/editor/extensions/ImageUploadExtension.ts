@@ -1,5 +1,6 @@
 import Image from '@tiptap/extension-image';
 import type { ChainedCommands } from '@tiptap/core';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 /**
  * ImageUploadExtension wraps the standard Tiptap Image extension and adds
@@ -26,7 +27,8 @@ export const ImageUploadExtension = Image.extend({
           const formData = new FormData();
           formData.append('file', file);
 
-          return fetch(`/api/v1/organizations/${orgId}/files`, {
+          const apiBase = import.meta.env.VITE_API_URL || '/api/v1';
+          return fetch(`${apiBase}/organizations/${orgId}/files`, {
             method: 'POST',
             body: formData,
             credentials: 'include',
@@ -34,7 +36,10 @@ export const ImageUploadExtension = Image.extend({
             .then((res) => res.json())
             .then((data) => {
               if (data.success && data.data?.url) {
-                chain().focus().setImage({ src: data.data.url, alt: file.name }).run();
+                chain()
+                  .focus()
+                  .setImage({ src: resolveUploadUrl(data.data.url), alt: file.name })
+                  .run();
               }
             })
             .catch((err) => {

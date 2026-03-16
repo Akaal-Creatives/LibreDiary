@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { mentionsService, type MentionUser } from '@/services';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const props = defineProps<{
   modelValue: string;
@@ -271,7 +272,11 @@ onUnmounted(() => {
             @mouseenter="selectedIndex = index"
           >
             <div class="user-avatar">
-              <img v-if="user.avatarUrl" :src="user.avatarUrl" :alt="user.name || ''" />
+              <img
+                v-if="user.avatarUrl"
+                :src="resolveUploadUrl(user.avatarUrl)"
+                :alt="user.name || ''"
+              />
               <span v-else class="avatar-initials">{{ getInitials(user.name) }}</span>
             </div>
             <div class="user-info">

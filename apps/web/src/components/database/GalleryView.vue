@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useDatabasesStore } from '@/stores';
 import { CellRenderer } from './cells';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const databasesStore = useDatabasesStore();
 
@@ -135,7 +136,7 @@ async function setCardSize(size: string) {
         <div v-if="coverPropertyId" class="gallery-card-cover">
           <img
             v-if="getCoverUrl(row)"
-            :src="getCoverUrl(row)!"
+            :src="resolveUploadUrl(getCoverUrl(row)!)"
             :alt="String(getCellValue(row, titleProperty?.id ?? '') ?? '')"
             class="cover-image"
             @error="onImageError(row.id)"

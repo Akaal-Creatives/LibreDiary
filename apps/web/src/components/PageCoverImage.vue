@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { usePagesStore } from '@/stores';
 import { useToast } from '@/composables/useToast';
 import { filesService } from '@/services/files.service';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const props = defineProps<{
   coverUrl: string | null;
@@ -84,7 +85,10 @@ async function removeCover() {
 
     <!-- Cover Image Display -->
     <div v-if="coverUrl" class="cover-container">
-      <div class="cover-image" :style="{ backgroundImage: `url(${coverUrl})` }"></div>
+      <div
+        class="cover-image"
+        :style="{ backgroundImage: `url(${resolveUploadUrl(coverUrl)})` }"
+      ></div>
 
       <!-- Upload progress overlay -->
       <div v-if="uploading" class="cover-upload-progress">

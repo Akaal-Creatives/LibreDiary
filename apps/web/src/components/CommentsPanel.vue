@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import DOMPurify from 'dompurify';
 import { commentsService, type Comment } from '@/services';
 import { useOrganizationsStore, useAuthStore } from '@/stores';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import MentionAutocomplete from '@/components/MentionAutocomplete.vue';
 
@@ -469,7 +470,7 @@ function close() {
                   >
                     <img
                       v-if="comment.createdBy.avatarUrl"
-                      :src="comment.createdBy.avatarUrl"
+                      :src="resolveUploadUrl(comment.createdBy.avatarUrl)"
                       :alt="comment.createdBy.name || ''"
                     />
                     <span v-else class="avatar-initials">
@@ -576,7 +577,7 @@ function close() {
                     >
                       <img
                         v-if="reply.createdBy.avatarUrl"
-                        :src="reply.createdBy.avatarUrl"
+                        :src="resolveUploadUrl(reply.createdBy.avatarUrl)"
                         :alt="reply.createdBy.name || ''"
                       />
                       <span v-else class="avatar-initials">

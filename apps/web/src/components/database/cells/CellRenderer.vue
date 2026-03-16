@@ -5,6 +5,7 @@ import { formatDuration } from '@librediary/shared/utils';
 import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const props = defineProps<{
   value: unknown;
@@ -270,7 +271,7 @@ function getSelectColour(val: string): string {
         <img
           v-if="personUser?.avatarUrl"
           class="person-avatar"
-          :src="personUser.avatarUrl"
+          :src="resolveUploadUrl(personUser.avatarUrl)"
           :alt="personUser.name ?? ''"
         />
         <span v-else class="person-initials">{{ personInitials }}</span>
@@ -291,7 +292,7 @@ function getSelectColour(val: string): string {
         v-for="file in filesItems"
         :key="file.id"
         class="file-pill"
-        :href="file.url"
+        :href="resolveUploadUrl(file.url)"
         target="_blank"
         rel="noopener"
         :title="`${file.name} (${formatFileSize(file.size)})`"

@@ -6,6 +6,7 @@ import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
 import { useDatabasesStore } from '@/stores/databases';
 import { useFilesStore } from '@/stores/files';
+import { resolveUploadUrl } from '@/utils/uploadUrl';
 
 const props = defineProps<{
   value: unknown;
@@ -270,7 +271,7 @@ function getInputType(): string {
         <img
           v-if="member.avatarUrl"
           class="person-option-avatar"
-          :src="member.avatarUrl"
+          :src="resolveUploadUrl(member.avatarUrl)"
           :alt="member.name"
         />
         <span v-else class="person-option-initials">{{ getPersonInitials(member.name) }}</span>
