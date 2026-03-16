@@ -16,7 +16,6 @@ import NotificationBell from './NotificationBell.vue';
 import LanguageSwitcher from './LanguageSwitcher.vue';
 import SearchModal from './SearchModal.vue';
 import SidebarSkeleton from './skeletons/SidebarSkeleton.vue';
-import { APP_VERSION } from '@/utils/version';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -33,8 +32,6 @@ const { t } = useI18n();
 
 const { register: registerShortcut } = useKeyboardShortcuts();
 const sidebar = useSidebar();
-const appVersion = APP_VERSION;
-
 // Auto-close sidebar on navigation when in overlay mode
 watch(
   () => route.fullPath,
@@ -586,16 +583,6 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       </div>
     </div>
 
-    <!-- Version -->
-    <a
-      class="sidebar-version"
-      href="https://github.com/Akaal-Creatives/LibreDiary/blob/main/CHANGELOG.md"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      v{{ appVersion }}
-    </a>
-
     <!-- Search Modal -->
     <SearchModal :visible="showSearchModal" @close="closeSearch" @navigate="handleSearchNavigate" />
 
@@ -956,24 +943,6 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 .theme-toggle:hover {
   color: var(--color-text-primary);
   background: var(--color-hover);
-}
-
-/* Version */
-.sidebar-version {
-  display: block;
-  padding: var(--space-1) 0 var(--space-2);
-  font-family: var(--font-family-mono, monospace);
-  font-size: 10px;
-  color: var(--color-text-tertiary);
-  text-align: center;
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  opacity: 0.5;
-  transition: opacity var(--transition-fast);
-}
-
-.sidebar-version:hover {
-  opacity: 1;
 }
 
 /* Scrollbar */

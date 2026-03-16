@@ -8,6 +8,7 @@ import OfflineIndicator from '@/components/OfflineIndicator.vue';
 import { useTheme } from '@/composables';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { useSidebar } from '@/composables/useSidebar';
+import { APP_VERSION } from '@/utils/version';
 
 // Initialize theme on app load
 useTheme();
@@ -98,7 +99,29 @@ function handleBackdropClick() {
     <div class="app-main">
       <AppHeader class="app-header" />
       <main id="main-content" class="app-content">
-        <RouterView />
+        <div class="app-content-body">
+          <RouterView />
+        </div>
+        <footer class="app-footer">
+          <span class="app-footer-text">
+            <a
+              href="https://github.com/Akaal-Creatives/LibreDiary/blob/main/CHANGELOG.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="app-footer-link"
+              >LibreDiary v{{ APP_VERSION }}</a
+            >
+            <span class="app-footer-sep">&middot;</span>
+            Developed by
+            <a
+              href="https://www.akaalcreatives.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="app-footer-link"
+              >Akaal Creatives</a
+            >
+          </span>
+        </footer>
       </main>
     </div>
     <KeyboardShortcutsModal />
@@ -157,15 +180,59 @@ function handleBackdropClick() {
 }
 
 .app-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.app-content-body {
   flex: 1;
   padding: var(--space-8);
-  overflow: auto;
+}
+
+/* Footer */
+.app-footer {
+  padding: var(--space-4) var(--space-8);
+  text-align: center;
+  border-top: 1px solid var(--color-border-subtle, var(--color-border));
+}
+
+.app-footer-text {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.01em;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.app-footer:hover .app-footer-text {
+  opacity: 1;
+}
+
+.app-footer-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.app-footer-link:hover {
+  color: var(--color-accent);
+}
+
+.app-footer-sep {
+  margin: 0 var(--space-1);
+  opacity: 0.5;
 }
 
 /* Responsive padding */
 @media (max-width: 767px) {
-  .app-content {
+  .app-content-body {
     padding: var(--space-4);
+  }
+
+  .app-footer {
+    padding: var(--space-3) var(--space-4);
   }
 }
 
