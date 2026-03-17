@@ -9,5 +9,5 @@ export async function writeText(
   action: WritingAction,
   text: string
 ): Promise<{ content: string }> {
-  return api.post('/organizations/' + orgId + '/ai/write', { action, text });
+  return api.post(`/organizations/${orgId}/ai/write`, { action, text });
 }

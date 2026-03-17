@@ -21,10 +21,23 @@ const callbackQuerySchema = z.object({
 });
 
 // Store for OAuth state validation (in production, use Redis or database)
+const OAUTH_STATE_MAX_SIZE = 1000;
 const oauthStateStore = new Map<
   string,
   { codeVerifier?: string; timestamp: number; linkingUserId?: string }
 >();
+
+function setOAuthState(
+  key: string,
+  value: { codeVerifier?: string; timestamp: number; linkingUserId?: string }
+): void {
+  if (oauthStateStore.size >= OAUTH_STATE_MAX_SIZE) {
+    // Delete the oldest entry (first key in insertion order)
+    const oldestKey = oauthStateStore.keys().next().value;
+    if (oldestKey) oauthStateStore.delete(oldestKey);
+  }
+  oauthStateStore.set(key, value);
+}
 
 // Cleanup old state entries periodically
 setInterval(
@@ -94,7 +107,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
       const result = await oauthService.getAuthorizationUrl(provider);
 
       // Store state for validation in callback
-      oauthStateStore.set(result.state, {
+      setOAuthState(result.state, {
         codeVerifier: result.codeVerifier,
         timestamp: Date.now(),
       });
@@ -271,7 +284,7 @@ export async function oauthRoutes(fastify: FastifyInstance): Promise<void> {
         const result = await oauthService.getAuthorizationUrl(provider);
 
         // Store state with user ID for linking — binds the OAuth flow to this user
-        oauthStateStore.set(result.state, {
+        setOAuthState(result.state, {
           codeVerifier: result.codeVerifier,
           timestamp: Date.now(),
           linkingUserId: userId,

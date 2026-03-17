@@ -41,5 +41,5 @@ export async function translateText(
   text: string,
   targetLanguage: SupportedLanguage
 ): Promise<{ translatedText: string }> {
-  return api.post('/organizations/' + orgId + '/ai/translate', { text, targetLanguage });
+  return api.post(`/organizations/${orgId}/ai/translate`, { text, targetLanguage });
 }

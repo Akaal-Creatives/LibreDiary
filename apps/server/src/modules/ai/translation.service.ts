@@ -17,10 +17,7 @@ export interface TranslateResult {
 const translationCache = new TtlCache<TranslateResult>(60 * 60 * 1000);
 
 function cacheKey(text: string, targetLanguage: string): string {
-  return crypto
-    .createHash('sha256')
-    .update(text + '\0' + targetLanguage)
-    .digest('hex');
+  return crypto.createHash('sha256').update(`${text}\0${targetLanguage}`).digest('hex');
 }
 
 /** Clear the translation cache (for testing) */

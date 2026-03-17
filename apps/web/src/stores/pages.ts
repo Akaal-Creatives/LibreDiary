@@ -259,7 +259,9 @@ export const usePagesStore = defineStore('pages', () => {
           const decrypted = await decryptPageContent(data.page);
           updatePage(decrypted);
         })
-        .catch(() => {}); // silent — cached data is good enough
+        .catch((error: unknown) => {
+          console.debug('Background page refresh failed — using cached data', error);
+        });
       return cached;
     }
 

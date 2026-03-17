@@ -71,8 +71,8 @@ export async function deleteSession(sessionId: string): Promise<void> {
     .delete({
       where: { id: sessionId },
     })
-    .catch(() => {
-      // Session may already be deleted
+    .catch((error: unknown) => {
+      console.warn(`Failed to delete session ${sessionId} — it may already be deleted`, error);
     });
 }
 
@@ -84,8 +84,8 @@ export async function deleteSessionByToken(token: string): Promise<void> {
     .delete({
       where: { token },
     })
-    .catch(() => {
-      // Session may already be deleted
+    .catch((error: unknown) => {
+      console.warn('Failed to delete session by token — it may already be deleted', error);
     });
 }
 
