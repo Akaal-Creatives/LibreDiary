@@ -17,6 +17,9 @@
   <a href="https://github.com/Akaal-Creatives/LibreDiary/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
 </p>
 
+> [!WARNING]
+> **Active Development** — LibreDiary is under active development and has not yet reached a stable release. APIs, database schemas, and configuration formats may change between versions without prior notice. You may encounter incomplete features, unexpected behaviour, or breaking changes when upgrading. We recommend pinning to a specific version in production and reviewing the [changelog](CHANGELOG.md) before updating. Bug reports and feedback are very welcome — please [open an issue](https://github.com/Akaal-Creatives/LibreDiary/issues) if something breaks.
+
 ## Overview
 
 LibreDiary is an open-source alternative to Notion, designed for complete data sovereignty. Unlike cloud-dependent tools, LibreDiary is engineered for self-hosting, ensuring your information remains private and accessible offline.
