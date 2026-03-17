@@ -77,146 +77,154 @@ async function deleteView(viewId: string) {
     </div>
 
     <!-- View Tabs -->
-    <div class="view-tabs">
-      <button
-        v-for="view in databasesStore.views"
-        :key="view.id"
-        class="view-tab"
-        :class="{ active: databasesStore.activeView?.id === view.id }"
-        @click="switchView(view.id)"
-        @contextmenu.prevent="deleteView(view.id)"
-      >
-        <span class="view-tab-icon">
-          <!-- Table icon -->
-          <svg v-if="view.type === 'TABLE'" width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect
-              x="1"
-              y="1"
-              width="12"
-              height="12"
-              rx="1.5"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <line x1="1" y1="4.5" x2="13" y2="4.5" stroke="currentColor" stroke-width="1.2" />
-            <line x1="5" y1="4.5" x2="5" y2="13" stroke="currentColor" stroke-width="1.2" />
-            <line x1="9" y1="4.5" x2="9" y2="13" stroke="currentColor" stroke-width="1.2" />
-          </svg>
-          <!-- Kanban icon -->
-          <svg
-            v-else-if="view.type === 'KANBAN'"
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-          >
-            <rect
-              x="1"
-              y="1"
-              width="3.5"
-              height="8"
-              rx="0.75"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <rect
-              x="5.25"
-              y="1"
-              width="3.5"
-              height="11"
-              rx="0.75"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <rect
-              x="9.5"
-              y="1"
-              width="3.5"
-              height="6"
-              rx="0.75"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-          </svg>
-          <!-- Calendar icon -->
-          <svg
-            v-else-if="view.type === 'CALENDAR'"
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-          >
-            <rect
-              x="1"
-              y="2.5"
-              width="12"
-              height="10.5"
-              rx="1.5"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <line x1="1" y1="5.5" x2="13" y2="5.5" stroke="currentColor" stroke-width="1.2" />
-            <line
-              x1="4"
-              y1="1"
-              x2="4"
-              y2="3.5"
-              stroke="currentColor"
-              stroke-width="1.2"
-              stroke-linecap="round"
-            />
-            <line
-              x1="10"
-              y1="1"
-              x2="10"
-              y2="3.5"
-              stroke="currentColor"
-              stroke-width="1.2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <!-- Gallery icon -->
-          <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect
-              x="1"
-              y="1"
-              width="5"
-              height="5"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <rect
-              x="8"
-              y="1"
-              width="5"
-              height="5"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <rect
-              x="1"
-              y="8"
-              width="5"
-              height="5"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-            <rect
-              x="8"
-              y="8"
-              width="5"
-              height="5"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="1.2"
-            />
-          </svg>
-        </span>
-        <span class="view-tab-label">{{ view.name }}</span>
-      </button>
+    <div class="view-tabs-bar">
+      <div class="view-tabs">
+        <button
+          v-for="view in databasesStore.views"
+          :key="view.id"
+          class="view-tab"
+          :class="{ active: databasesStore.activeView?.id === view.id }"
+          @click="switchView(view.id)"
+          @contextmenu.prevent="deleteView(view.id)"
+        >
+          <span class="view-tab-icon">
+            <!-- Table icon -->
+            <svg
+              v-if="view.type === 'TABLE'"
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+            >
+              <rect
+                x="1"
+                y="1"
+                width="12"
+                height="12"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <line x1="1" y1="4.5" x2="13" y2="4.5" stroke="currentColor" stroke-width="1.2" />
+              <line x1="5" y1="4.5" x2="5" y2="13" stroke="currentColor" stroke-width="1.2" />
+              <line x1="9" y1="4.5" x2="9" y2="13" stroke="currentColor" stroke-width="1.2" />
+            </svg>
+            <!-- Kanban icon -->
+            <svg
+              v-else-if="view.type === 'KANBAN'"
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+            >
+              <rect
+                x="1"
+                y="1"
+                width="3.5"
+                height="8"
+                rx="0.75"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <rect
+                x="5.25"
+                y="1"
+                width="3.5"
+                height="11"
+                rx="0.75"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <rect
+                x="9.5"
+                y="1"
+                width="3.5"
+                height="6"
+                rx="0.75"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+            </svg>
+            <!-- Calendar icon -->
+            <svg
+              v-else-if="view.type === 'CALENDAR'"
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+            >
+              <rect
+                x="1"
+                y="2.5"
+                width="12"
+                height="10.5"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <line x1="1" y1="5.5" x2="13" y2="5.5" stroke="currentColor" stroke-width="1.2" />
+              <line
+                x1="4"
+                y1="1"
+                x2="4"
+                y2="3.5"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+              />
+              <line
+                x1="10"
+                y1="1"
+                x2="10"
+                y2="3.5"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <!-- Gallery icon -->
+            <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect
+                x="1"
+                y="1"
+                width="5"
+                height="5"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <rect
+                x="8"
+                y="1"
+                width="5"
+                height="5"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <rect
+                x="1"
+                y="8"
+                width="5"
+                height="5"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <rect
+                x="8"
+                y="8"
+                width="5"
+                height="5"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+            </svg>
+          </span>
+          <span class="view-tab-label">{{ view.name }}</span>
+        </button>
+      </div>
 
       <!-- Add View Button -->
       <div class="add-view-wrapper">
@@ -400,11 +408,18 @@ async function deleteView(viewId: string) {
 }
 
 /* View Tabs */
+.view-tabs-bar {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
 .view-tabs {
   display: flex;
   gap: var(--space-1);
   align-items: center;
   overflow-x: auto;
+  min-width: 0;
 }
 
 .view-tabs::-webkit-scrollbar {
