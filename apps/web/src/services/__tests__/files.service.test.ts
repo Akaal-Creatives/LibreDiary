@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -12,6 +12,7 @@ const { mockApi } = vi.hoisted(() => ({
 
 vi.mock('../api', () => ({
   api: mockApi,
+  API_BASE: 'http://localhost:3000/api/v1',
 }));
 
 import { filesService } from '../files.service';
@@ -80,6 +81,56 @@ describe('Files Service', () => {
       await filesService.listFiles('org-1', { pageId: 'page-1' });
 
       expect(mockApi.get).toHaveBeenCalledWith('/organizations/org-1/files?pageId=page-1');
+    });
+  });
+
+  describe('downloadFile', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should use API_BASE to construct the download URL', async () => {
+      const mockBlob = new Blob(['content']);
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response(mockBlob, { status: 200 }));
+
+      await filesService.downloadFile('org-1', 'file-1');
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'http://localhost:3000/api/v1/organizations/org-1/files/file-1/download',
+        { credentials: 'include' }
+      );
+    });
+
+    it('should NOT hardcode /api/v1/ in the URL', async () => {
+      const mockBlob = new Blob(['content']);
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response(mockBlob, { status: 200 }));
+
+      await filesService.downloadFile('org-1', 'file-1');
+
+      const calledUrl = fetchSpy.mock.calls[0][0] as string;
+      // Should start with API_BASE, not a hardcoded relative path
+      expect(calledUrl).toMatch(/^https?:\/\//);
+    });
+
+    it('should throw when response is not ok', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }));
+
+      await expect(filesService.downloadFile('org-1', 'file-1')).rejects.toThrow(
+        'Failed to download file'
+      );
+    });
+
+    it('should return a Blob on success', async () => {
+      const mockBlob = new Blob(['file content']);
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(mockBlob, { status: 200 }));
+
+      const result = await filesService.downloadFile('org-1', 'file-1');
+
+      expect(result).toBeInstanceOf(Blob);
     });
   });
 

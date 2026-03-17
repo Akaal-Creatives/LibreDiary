@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api, API_BASE } from './api';
 import type { UploadProgressCallback } from './api';
 import type { FileInfo, StorageInfo, StorageConnectionResult } from '@librediary/shared';
 
@@ -34,7 +34,7 @@ export const filesService = {
   },
 
   async downloadFile(orgId: string, fileId: string): Promise<Blob> {
-    const response = await fetch(`/api/v1/organizations/${orgId}/files/${fileId}/download`, {
+    const response = await fetch(`${API_BASE}/organizations/${orgId}/files/${fileId}/download`, {
       credentials: 'include',
     });
     if (!response.ok) {

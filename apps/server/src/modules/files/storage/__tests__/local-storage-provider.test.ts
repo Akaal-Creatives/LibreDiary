@@ -230,30 +230,25 @@ describe('LocalStorageProvider', () => {
   // ===========================================
 
   describe('getUrl', () => {
-    it('should return /uploads/{key} when no baseUrl is configured', async () => {
+    it('should return a relative /uploads/{key} path', async () => {
       const url = await provider.getUrl('org-1/file.txt');
 
       expect(url).toBe('/uploads/org-1/file.txt');
     });
 
-    it('should prepend baseUrl when configured', async () => {
-      const providerWithBase = new LocalStorageProvider(basePath, 'https://api.example.com');
-      vi.clearAllMocks();
-      mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
+    it('should always return a relative path regardless of constructor arguments', async () => {
+      // Even if a baseUrl was historically passed, getUrl should return relative paths
+      // so the client can resolve against the correct API origin
+      const url = await provider.getUrl('org-1/file.txt');
 
-      const url = await providerWithBase.getUrl('org-1/file.txt');
-
-      expect(url).toBe('https://api.example.com/uploads/org-1/file.txt');
+      expect(url).toMatch(/^\/uploads\//);
+      expect(url).not.toMatch(/^https?:\/\//);
     });
 
-    it('should return absolute URL for a deeply nested key', async () => {
-      const providerWithBase = new LocalStorageProvider(basePath, 'https://api.example.com');
-      vi.clearAllMocks();
-      mockedFs.realpathSync.mockImplementation((p: fs.PathLike) => String(p));
+    it('should return /uploads/{key} for a deeply nested key', async () => {
+      const url = await provider.getUrl('org-1/sub/deep/photo.jpg');
 
-      const url = await providerWithBase.getUrl('org-1/sub/deep/photo.jpg');
-
-      expect(url).toBe('https://api.example.com/uploads/org-1/sub/deep/photo.jpg');
+      expect(url).toBe('/uploads/org-1/sub/deep/photo.jpg');
     });
 
     it('should return /uploads/{key} for a root-level key', async () => {

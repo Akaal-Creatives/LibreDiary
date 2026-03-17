@@ -6,10 +6,7 @@ import type { StorageProvider, StorageConnectionResult } from './storage-provide
 export class LocalStorageProvider implements StorageProvider {
   private readonly canonicalBase: string;
 
-  constructor(
-    private basePath: string,
-    private baseUrl: string = ''
-  ) {
+  constructor(private basePath: string) {
     if (!fs.existsSync(basePath)) {
       fs.mkdirSync(basePath, { recursive: true });
     }
@@ -81,7 +78,7 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async getUrl(key: string): Promise<string> {
-    return `${this.baseUrl}/uploads/${key}`;
+    return `/uploads/${key}`;
   }
 
   async testConnection(): Promise<StorageConnectionResult> {
