@@ -60,6 +60,9 @@ RUN pnpm turbo run build --filter=@librediary/server
 # ------------------------------------------
 FROM node:20-slim AS runner
 
+ARG APP_VERSION=0.0.0
+ENV APP_VERSION=$APP_VERSION
+
 # Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openssl dumb-init wget && \

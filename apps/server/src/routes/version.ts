@@ -10,7 +10,7 @@ export async function versionRoutes(fastify: FastifyInstance) {
     const response: ApiResponse<VersionResponse> = {
       success: true,
       data: {
-        version: process.env.npm_package_version ?? '0.0.0',
+        version: process.env.APP_VERSION || process.env.npm_package_version || '0.0.0',
       },
     };
 

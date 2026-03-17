@@ -16,7 +16,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: process.env.npm_package_version ?? '0.0.0',
+        version: process.env.APP_VERSION || process.env.npm_package_version || '0.0.0',
       },
     };
 
