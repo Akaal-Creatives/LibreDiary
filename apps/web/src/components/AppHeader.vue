@@ -46,6 +46,13 @@ const saveTemplateModal = ref<{
 
 function openMoreMenu() {
   if (!pagesStore.currentPage || !moreBtnRef.value) return;
+
+  // Toggle: close if already open
+  if (contextMenu.value.show) {
+    contextMenu.value.show = false;
+    return;
+  }
+
   const rect = moreBtnRef.value.getBoundingClientRect();
   contextMenu.value = {
     show: true,
@@ -318,7 +325,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
           type="button"
           :title="$t('header.moreOptions')"
           :aria-label="$t('header.moreOptions')"
-          @click="openMoreMenu"
+          @click.stop="openMoreMenu"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="1.5" fill="currentColor" />

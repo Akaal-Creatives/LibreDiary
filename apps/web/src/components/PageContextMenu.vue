@@ -29,7 +29,7 @@ const menuActions = [
   'moveToTrash',
 ];
 
-function handleClickOutside(event: MouseEvent) {
+function handleClickOutside(event: PointerEvent | MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
     emit('close');
   }
@@ -93,7 +93,7 @@ function handleAction(action: string) {
 
 onMounted(async () => {
   await nextTick();
-  document.addEventListener('click', handleClickOutside);
+  document.addEventListener('pointerdown', handleClickOutside);
   document.addEventListener('keydown', handleKeydown);
 
   // Adjust position if menu would go off screen
@@ -115,7 +115,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('pointerdown', handleClickOutside);
   document.removeEventListener('keydown', handleKeydown);
 });
 </script>
@@ -126,7 +126,7 @@ onUnmounted(() => {
     class="context-menu"
     :style="{ left: `${x}px`, top: `${y}px` }"
     role="menu"
-    @click.stop
+    @pointerdown.stop
   >
     <button class="menu-item" role="menuitem" @click="handleAction('addSubpage')">
       <svg class="menu-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
