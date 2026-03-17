@@ -534,7 +534,10 @@ export async function organizationRoutes(fastify: FastifyInstance): Promise<void
         return {
           success: true,
           data: {
-            invite,
+            invite: {
+              ...invite,
+              status: orgService.getInviteStatus(invite),
+            },
             message: 'Invite resent successfully',
           },
         };
