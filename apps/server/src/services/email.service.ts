@@ -1,5 +1,6 @@
 import { createTransport, type Transporter } from 'nodemailer';
 import { env } from '../config/index.js';
+import { logger } from '../lib/logger.js';
 
 let transporter: Transporter | null = null;
 
@@ -34,13 +35,28 @@ export interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<void> {
   const transport = getTransporter();
 
-  await transport.sendMail({
-    from: env.SMTP_FROM,
-    to: options.to,
-    subject: options.subject,
-    html: options.html,
-    text: options.text ?? stripHtml(options.html),
-  });
+  logger.info({ to: options.to, subject: options.subject }, '[email] sending email');
+
+  try {
+    const info = await transport.sendMail({
+      from: env.SMTP_FROM,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text ?? stripHtml(options.html),
+    });
+
+    logger.info(
+      { to: options.to, messageId: info.messageId, response: info.response },
+      '[email] email sent successfully'
+    );
+  } catch (err) {
+    logger.error(
+      { err, to: options.to, subject: options.subject, host: env.SMTP_HOST, port: env.SMTP_PORT },
+      '[email] failed to send email'
+    );
+    throw err;
+  }
 }
 
 /**
