@@ -845,8 +845,8 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 /* Footer */
 .sidebar-footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--color-border);
 }
@@ -856,8 +856,15 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   gap: var(--space-3);
   align-items: center;
   min-width: 0;
+  padding: var(--space-2);
   text-decoration: none;
   color: inherit;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.user-section:hover {
+  background: var(--color-hover);
 }
 
 .user-avatar {
@@ -899,8 +906,9 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
 .footer-actions {
   display: flex;
-  gap: var(--space-1);
   align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-1);
 }
 
 .logout-btn {
