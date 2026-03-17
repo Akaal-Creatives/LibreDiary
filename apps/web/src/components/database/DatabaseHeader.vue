@@ -418,12 +418,7 @@ async function deleteView(viewId: string) {
   display: flex;
   gap: var(--space-1);
   align-items: center;
-  overflow-x: auto;
-  min-width: 0;
-}
-
-.view-tabs::-webkit-scrollbar {
-  display: none;
+  flex-wrap: wrap;
 }
 
 .view-tab {
