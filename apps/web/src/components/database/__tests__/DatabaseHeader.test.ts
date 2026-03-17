@@ -109,10 +109,11 @@ describe('DatabaseHeader', () => {
 
   it('shows add view menu on plus button click', async () => {
     setupStore();
-    const wrapper = mount(DatabaseHeader);
+    const wrapper = mount(DatabaseHeader, { attachTo: document.body });
     const addBtn = wrapper.find('.add-view-btn');
     await addBtn.trigger('click');
-    expect(wrapper.find('.new-view-menu').exists()).toBe(true);
+    expect(document.querySelector('.new-view-menu')).toBeTruthy();
+    wrapper.unmount();
   });
 
   it('enters edit mode when clicking database name', async () => {
@@ -177,14 +178,15 @@ describe('DatabaseHeader', () => {
     };
     mockDatabasesService.createView.mockResolvedValue({ view: newView });
 
-    const wrapper = mount(DatabaseHeader);
+    const wrapper = mount(DatabaseHeader, { attachTo: document.body });
     const addBtn = wrapper.find('.add-view-btn');
     await addBtn.trigger('click');
 
-    const kanbanOption = wrapper
-      .findAll('.new-view-option')
-      .find((btn) => btn.text().includes('Kanban'));
-    await kanbanOption?.trigger('click');
+    const menuOptions = document.querySelectorAll('.new-view-option');
+    const kanbanOption = Array.from(menuOptions).find((btn) =>
+      btn.textContent?.includes('Kanban')
+    ) as HTMLElement | undefined;
+    kanbanOption?.click();
     await flushPromises();
 
     expect(mockDatabasesService.createView).toHaveBeenCalledWith('org-1', 'db-1', {
@@ -192,6 +194,7 @@ describe('DatabaseHeader', () => {
       type: 'KANBAN',
     });
     expect(store.activeViewId).toBe('view-2');
+    wrapper.unmount();
   });
 
   it('does not delete view when only one view exists', async () => {

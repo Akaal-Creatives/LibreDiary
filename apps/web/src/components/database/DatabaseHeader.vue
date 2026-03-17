@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, nextTick, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDatabasesStore } from '@/stores';
 import type { ViewType } from '@librediary/shared';
@@ -10,6 +10,34 @@ const databasesStore = useDatabasesStore();
 const isEditingName = ref(false);
 const editName = ref('');
 const showNewViewMenu = ref(false);
+const addViewBtnRef = ref<HTMLButtonElement | null>(null);
+const menuPosition = ref({ top: '0px', left: '0px' });
+
+function toggleMenu() {
+  showNewViewMenu.value = !showNewViewMenu.value;
+  if (showNewViewMenu.value) {
+    nextTick(() => positionMenu());
+  }
+}
+
+function positionMenu() {
+  if (!addViewBtnRef.value) return;
+  const rect = addViewBtnRef.value.getBoundingClientRect();
+  menuPosition.value = {
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+  };
+}
+
+function onClickOutside(event: MouseEvent) {
+  if (!showNewViewMenu.value) return;
+  const target = event.target as Node;
+  if (addViewBtnRef.value?.contains(target)) return;
+  showNewViewMenu.value = false;
+}
+
+document.addEventListener('click', onClickOutside, true);
+onBeforeUnmount(() => document.removeEventListener('click', onClickOutside, true));
 
 function startEditing() {
   editName.value = databasesStore.currentDatabase?.name ?? '';
@@ -229,139 +257,146 @@ async function deleteView(viewId: string) {
       <!-- Add View Button -->
       <div class="add-view-wrapper">
         <button
+          ref="addViewBtnRef"
           class="add-view-btn"
           :title="$t('databases.addView')"
-          @click="showNewViewMenu = !showNewViewMenu"
+          @click="toggleMenu"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 2.5V11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             <path d="M2.5 7H11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
         </button>
-        <div v-if="showNewViewMenu" class="new-view-menu">
-          <button class="new-view-option" @click="addView('TABLE')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect
-                x="1"
-                y="1"
-                width="12"
-                height="12"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <line x1="1" y1="4.5" x2="13" y2="4.5" stroke="currentColor" stroke-width="1.2" />
-              <line x1="5" y1="4.5" x2="5" y2="13" stroke="currentColor" stroke-width="1.2" />
-            </svg>
-            {{ $t('databases.table') }}
-          </button>
-          <button class="new-view-option" @click="addView('KANBAN')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect
-                x="1"
-                y="1"
-                width="3.5"
-                height="8"
-                rx="0.75"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <rect
-                x="5.25"
-                y="1"
-                width="3.5"
-                height="11"
-                rx="0.75"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <rect
-                x="9.5"
-                y="1"
-                width="3.5"
-                height="6"
-                rx="0.75"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-            </svg>
-            {{ $t('databases.kanban') }}
-          </button>
-          <button class="new-view-option" @click="addView('CALENDAR')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect
-                x="1"
-                y="2.5"
-                width="12"
-                height="10.5"
-                rx="1.5"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <line x1="1" y1="5.5" x2="13" y2="5.5" stroke="currentColor" stroke-width="1.2" />
-              <line
-                x1="4"
-                y1="1"
-                x2="4"
-                y2="3.5"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linecap="round"
-              />
-              <line
-                x1="10"
-                y1="1"
-                x2="10"
-                y2="3.5"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linecap="round"
-              />
-            </svg>
-            {{ $t('databases.calendar') }}
-          </button>
-          <button class="new-view-option" @click="addView('GALLERY')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect
-                x="1"
-                y="1"
-                width="5"
-                height="5"
-                rx="1"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <rect
-                x="8"
-                y="1"
-                width="5"
-                height="5"
-                rx="1"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <rect
-                x="1"
-                y="8"
-                width="5"
-                height="5"
-                rx="1"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-              <rect
-                x="8"
-                y="8"
-                width="5"
-                height="5"
-                rx="1"
-                stroke="currentColor"
-                stroke-width="1.2"
-              />
-            </svg>
-            {{ $t('databases.gallery') }}
-          </button>
-        </div>
+        <Teleport to="body">
+          <div
+            v-if="showNewViewMenu"
+            class="new-view-menu"
+            :style="{ top: menuPosition.top, left: menuPosition.left }"
+          >
+            <button class="new-view-option" @click="addView('TABLE')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect
+                  x="1"
+                  y="1"
+                  width="12"
+                  height="12"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <line x1="1" y1="4.5" x2="13" y2="4.5" stroke="currentColor" stroke-width="1.2" />
+                <line x1="5" y1="4.5" x2="5" y2="13" stroke="currentColor" stroke-width="1.2" />
+              </svg>
+              {{ $t('databases.table') }}
+            </button>
+            <button class="new-view-option" @click="addView('KANBAN')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect
+                  x="1"
+                  y="1"
+                  width="3.5"
+                  height="8"
+                  rx="0.75"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <rect
+                  x="5.25"
+                  y="1"
+                  width="3.5"
+                  height="11"
+                  rx="0.75"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <rect
+                  x="9.5"
+                  y="1"
+                  width="3.5"
+                  height="6"
+                  rx="0.75"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+              </svg>
+              {{ $t('databases.kanban') }}
+            </button>
+            <button class="new-view-option" @click="addView('CALENDAR')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect
+                  x="1"
+                  y="2.5"
+                  width="12"
+                  height="10.5"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <line x1="1" y1="5.5" x2="13" y2="5.5" stroke="currentColor" stroke-width="1.2" />
+                <line
+                  x1="4"
+                  y1="1"
+                  x2="4"
+                  y2="3.5"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="10"
+                  y1="1"
+                  x2="10"
+                  y2="3.5"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              {{ $t('databases.calendar') }}
+            </button>
+            <button class="new-view-option" @click="addView('GALLERY')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect
+                  x="1"
+                  y="1"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <rect
+                  x="8"
+                  y="1"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <rect
+                  x="1"
+                  y="8"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <rect
+                  x="8"
+                  y="8"
+                  width="5"
+                  height="5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+              </svg>
+              {{ $t('databases.gallery') }}
+            </button>
+          </div>
+        </Teleport>
       </div>
     </div>
   </div>
@@ -463,7 +498,7 @@ async function deleteView(viewId: string) {
 
 /* Add View */
 .add-view-wrapper {
-  position: relative;
+  flex-shrink: 0;
 }
 
 .add-view-btn {
@@ -485,16 +520,15 @@ async function deleteView(viewId: string) {
   color: var(--color-text-primary);
   background: var(--color-hover);
 }
+</style>
 
+<style>
 .new-view-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: fixed;
   z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
   min-width: 160px;
-  margin-top: var(--space-1);
   padding: var(--space-1);
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
