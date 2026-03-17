@@ -96,8 +96,8 @@ function emailTemplate(content: string): string {
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
       line-height: 1.6;
-      color: #374151;
-      background-color: #f3f4f6;
+      color: #2C2F2C;
+      background-color: #EFF2EF;
       margin: 0;
       padding: 0;
     }
@@ -110,24 +110,27 @@ function emailTemplate(content: string): string {
       background: #ffffff;
       border-radius: 12px;
       padding: 40px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #D8DDD8;
     }
     .logo {
       text-align: center;
       margin-bottom: 32px;
     }
-    .logo-text {
-      font-size: 24px;
-      font-weight: 600;
-      color: #111827;
-    }
     .logo-icon {
-      color: #6366f1;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 600;
+      color: #2C2F2C;
+      vertical-align: middle;
     }
     h1 {
       font-size: 20px;
       font-weight: 600;
-      color: #111827;
+      color: #2C2F2C;
       margin: 0 0 16px 0;
     }
     p {
@@ -135,35 +138,42 @@ function emailTemplate(content: string): string {
     }
     .button {
       display: inline-block;
-      background: #6366f1;
+      background: #6B8F71;
       color: #ffffff !important;
-      padding: 12px 24px;
+      padding: 12px 28px;
       border-radius: 8px;
       text-decoration: none;
       font-weight: 500;
       margin: 16px 0;
     }
-    .button:hover {
-      background: #4f46e5;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 32px;
-      font-size: 14px;
-      color: #6b7280;
-    }
     .code {
-      background: #f3f4f6;
+      background: #EFF2EF;
       padding: 12px 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-family: monospace;
       font-size: 14px;
       margin: 16px 0;
       word-break: break-all;
+      color: #4A6B50;
     }
     .muted {
-      color: #6b7280;
+      color: #6B7B6E;
       font-size: 14px;
+    }
+    .divider {
+      height: 1px;
+      background: #D8DDD8;
+      margin: 24px 0;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 13px;
+      color: #6B7B6E;
+    }
+    .footer a {
+      color: #6B8F71;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -171,14 +181,20 @@ function emailTemplate(content: string): string {
   <div class="container">
     <div class="card">
       <div class="logo">
-        <span class="logo-icon">&#128218;</span>
+        <span class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="3" width="16" height="22" rx="2" stroke="#6B8F71" stroke-width="1.5"/>
+            <path d="M8 8H16M8 12H16M8 16H12" stroke="#6B8F71" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M20 7V23C20 24.1046 20.8954 25 22 25H22C23.1046 25 24 24.1046 24 23V7" stroke="#6B8F71" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
         <span class="logo-text">LibreDiary</span>
       </div>
       ${content}
     </div>
     <div class="footer">
-      <p>LibreDiary - Your collaborative workspace</p>
-      <p class="muted">Developed by Akaal Creatives</p>
+      <p>LibreDiary &mdash; Your collaborative workspace</p>
+      <p>Developed by <a href="https://www.akaalcreatives.com">Akaal Creatives</a></p>
     </div>
   </div>
 </body>
