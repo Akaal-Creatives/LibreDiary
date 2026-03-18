@@ -188,7 +188,10 @@ export const DragHandleExtension = Extension.create({
             if (state.hoveredBlockPos === null) return;
 
             event.dataTransfer!.effectAllowed = 'move';
-            event.dataTransfer!.setData('text/plain', state.hoveredBlockPos.toString());
+            event.dataTransfer!.setData(
+              'application/x-librediary-block',
+              state.hoveredBlockPos.toString()
+            );
 
             state.draggedBlockPos = state.hoveredBlockPos;
             handle.style.cursor = 'grabbing';
