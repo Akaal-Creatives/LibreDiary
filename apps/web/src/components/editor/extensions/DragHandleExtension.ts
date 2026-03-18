@@ -349,12 +349,16 @@ export const DragHandleExtension = Extension.create({
           };
 
           // Attach event listeners
+          // mousemove/mouseleave go on the parent container so the handle
+          // (a sibling of ProseMirror) doesn't trigger mouseleave
+          const containerEl = editorElement || editorView.dom;
+
           handle.draggable = true;
           handle.addEventListener('dragstart', handleDragStart);
           handle.addEventListener('dragend', handleDragEnd);
 
-          editorView.dom.addEventListener('mousemove', handleMouseMove);
-          editorView.dom.addEventListener('mouseleave', handleMouseLeave);
+          containerEl.addEventListener('mousemove', handleMouseMove);
+          containerEl.addEventListener('mouseleave', handleMouseLeave);
           editorView.dom.addEventListener('dragover', handleDragOver);
           editorView.dom.addEventListener('dragleave', handleDragLeave);
           editorView.dom.addEventListener('drop', handleDrop);
@@ -363,8 +367,8 @@ export const DragHandleExtension = Extension.create({
             destroy() {
               handle.removeEventListener('dragstart', handleDragStart);
               handle.removeEventListener('dragend', handleDragEnd);
-              editorView.dom.removeEventListener('mousemove', handleMouseMove);
-              editorView.dom.removeEventListener('mouseleave', handleMouseLeave);
+              containerEl.removeEventListener('mousemove', handleMouseMove);
+              containerEl.removeEventListener('mouseleave', handleMouseLeave);
               editorView.dom.removeEventListener('dragover', handleDragOver);
               editorView.dom.removeEventListener('dragleave', handleDragLeave);
               editorView.dom.removeEventListener('drop', handleDrop);
