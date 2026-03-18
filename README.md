@@ -40,6 +40,7 @@ LibreDiary is an open-source alternative to Notion, designed for complete data s
 - Onboarding wizard with getting started checklist
 - KaTeX math blocks and markdown round-trip serialisation
 - PWA support with offline viewing
+- Mobile-optimised experience with bottom navigation and quick-capture mode
 
 ## Tech Stack
 

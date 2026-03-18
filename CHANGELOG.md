@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Mobile bottom navigation**: 5-tab fixed bottom nav (Home, Search, Capture, Pages, Settings) with raised FAB, auto-hides on scroll down, safe-area padding for notched devices
+- **Quick capture**: Bottom sheet (mobile) / centred modal (desktop) for rapid note capture with title, body, and parent page selector defaulting to auto-created Inbox page
+- **Offline capture queue**: Captures are queued in localStorage when offline and automatically synced when the browser comes back online
+- **Inbox page**: Auto-created root-level Inbox page per organisation for quick captures, cached in localStorage, re-created if trashed
+- **PWA shortcuts**: Quick Capture and New Page shortcuts in the web app manifest for home screen launch
+- **Keyboard shortcut**: Mod+Shift+C opens quick capture from any viewport
+
 ### Changed
 
 - Move version display from sidebar to main content footer
+- Add bottom padding on mobile to prevent content occlusion by the bottom nav
+- Improve PWA caching with app shell pre-caching (globPatterns) and navigation preload
 
 ### Internal
 
