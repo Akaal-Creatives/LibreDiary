@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
+import { i18n } from '@/i18n';
 
 const { mockTemplatesStore } = vi.hoisted(() => ({
   mockTemplatesStore: {
@@ -33,6 +34,7 @@ function mountModal(props: Partial<typeof defaultProps> = {}) {
   return mount(SaveAsTemplateModal, {
     props: { ...defaultProps, ...props },
     global: {
+      plugins: [i18n],
       stubs: { Teleport: true },
     },
   });
