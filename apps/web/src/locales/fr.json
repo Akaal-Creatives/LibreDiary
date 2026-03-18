@@ -637,7 +637,9 @@
     "categoryNavigation": "Navigation",
     "categoryEditor": "Éditeur",
     "categoryGeneral": "Général",
-    "close": "Fermer"
+    "close": "Fermer",
+    "quickCapture": "Capture rapide",
+    "quickCaptureDescription": "Ouvrir la feuille de capture rapide"
   },
   "responsive": {
     "openMenu": "Ouvrir le menu",
@@ -664,6 +666,32 @@
   "a11y": {
     "skipToContent": "Aller au contenu",
     "toggleTheme": "Changer le thème de couleur"
+  },
+  "inbox": {
+    "title": "Boîte de réception",
+    "description": "Les captures rapides et les notes éphémères arrivent ici",
+    "recreated": "Page Boîte de réception recréée",
+    "failedToCreate": "Échec de la création de la page Boîte de réception"
+  },
+  "quickCapture": {
+    "title": "Capture rapide",
+    "titlePlaceholder": "Qu'avez-vous en tête ?",
+    "bodyPlaceholder": "Ajouter plus de détails (facultatif)...",
+    "parentLabel": "Enregistrer dans",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saved": "Capturé !",
+    "failedToSave": "Échec de l'enregistrement de la capture",
+    "queuedOffline": "Enregistré hors ligne — sera synchronisé une fois en ligne",
+    "shortcutHint": "Capture rapide",
+    "shortcutDescription": "Ouvrir la feuille de capture rapide"
+  },
+  "bottomNav": {
+    "home": "Accueil",
+    "search": "Rechercher",
+    "capture": "Capturer",
+    "pages": "Pages",
+    "settings": "Paramètres"
   },
   "pageTitle": {
     "home": "Accueil",

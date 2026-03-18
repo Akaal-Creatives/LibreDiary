@@ -637,7 +637,9 @@
     "categoryNavigation": "Navigatie",
     "categoryEditor": "Editor",
     "categoryGeneral": "Algemeen",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "quickCapture": "Snelle vastlegging",
+    "quickCaptureDescription": "Snelle vastlegging openen"
   },
   "responsive": {
     "openMenu": "Menu openen",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Wachtwoord wijzigen mislukt",
     "passwordMinLength": "Wachtwoord moet minimaal 8 tekens bevatten",
     "passwordsMustMatch": "Wachtwoorden komen niet overeen"
+  },
+  "inbox": {
+    "title": "Postvak IN",
+    "description": "Snelle notities en vluchtige gedachten komen hier terecht",
+    "recreated": "Postvak IN-pagina opnieuw aangemaakt",
+    "failedToCreate": "Kan Postvak IN-pagina niet aanmaken"
+  },
+  "quickCapture": {
+    "title": "Snelle vastlegging",
+    "titlePlaceholder": "Waar denk je aan?",
+    "bodyPlaceholder": "Voeg meer details toe (optioneel)...",
+    "parentLabel": "Opslaan in",
+    "save": "Opslaan",
+    "saving": "Opslaan...",
+    "saved": "Vastgelegd!",
+    "failedToSave": "Kan vastlegging niet opslaan",
+    "queuedOffline": "Offline opgeslagen — wordt gesynchroniseerd wanneer je weer online bent",
+    "shortcutHint": "Snelle vastlegging",
+    "shortcutDescription": "Snelle vastlegging openen"
+  },
+  "bottomNav": {
+    "home": "Start",
+    "search": "Zoeken",
+    "capture": "Vastleggen",
+    "pages": "Pagina's",
+    "settings": "Instellingen"
   }
 }

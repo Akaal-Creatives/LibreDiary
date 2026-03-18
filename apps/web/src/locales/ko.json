@@ -637,7 +637,9 @@
     "categoryNavigation": "탐색",
     "categoryEditor": "편집기",
     "categoryGeneral": "일반",
-    "close": "닫기"
+    "close": "닫기",
+    "quickCapture": "빠른 캡처",
+    "quickCaptureDescription": "빠른 캡처 시트 열기"
   },
   "responsive": {
     "openMenu": "메뉴 열기",
@@ -763,5 +765,31 @@
     "passwordChangeError": "비밀번호를 변경하지 못하였습니다",
     "passwordMinLength": "비밀번호는 8자 이상이어야 합니다",
     "passwordsMustMatch": "비밀번호가 일치하지 않습니다"
+  },
+  "inbox": {
+    "title": "받은편지함",
+    "description": "빠른 캡처와 임시 메모가 여기에 도착합니다",
+    "recreated": "받은편지함 페이지가 다시 생성되었습니다",
+    "failedToCreate": "받은편지함 페이지 생성에 실패했습니다"
+  },
+  "quickCapture": {
+    "title": "빠른 캡처",
+    "titlePlaceholder": "무슨 생각을 하고 있나요?",
+    "bodyPlaceholder": "자세한 내용 추가 (선택사항)...",
+    "parentLabel": "저장 위치",
+    "save": "저장",
+    "saving": "저장 중...",
+    "saved": "캡처 완료!",
+    "failedToSave": "캡처 저장에 실패했습니다",
+    "queuedOffline": "오프라인으로 저장됨 — 온라인 복귀 시 동기화됩니다",
+    "shortcutHint": "빠른 캡처",
+    "shortcutDescription": "빠른 캡처 시트 열기"
+  },
+  "bottomNav": {
+    "home": "홈",
+    "search": "검색",
+    "capture": "캡처",
+    "pages": "페이지",
+    "settings": "설정"
   }
 }

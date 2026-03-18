@@ -637,7 +637,9 @@
     "categoryNavigation": "ナビゲーション",
     "categoryEditor": "エディター",
     "categoryGeneral": "一般",
-    "close": "閉じる"
+    "close": "閉じる",
+    "quickCapture": "クイックキャプチャ",
+    "quickCaptureDescription": "クイックキャプチャシートを開く"
   },
   "responsive": {
     "openMenu": "メニューを開く",
@@ -763,5 +765,31 @@
     "passwordChangeError": "パスワードの変更に失敗しました",
     "passwordMinLength": "パスワードは 8 文字以上にしてください",
     "passwordsMustMatch": "パスワードが一致しません"
+  },
+  "inbox": {
+    "title": "受信トレイ",
+    "description": "クイックキャプチャと一時的なメモがここに届きます",
+    "recreated": "受信トレイページを再作成しました",
+    "failedToCreate": "受信トレイページの作成に失敗しました"
+  },
+  "quickCapture": {
+    "title": "クイックキャプチャ",
+    "titlePlaceholder": "何を考えていますか？",
+    "bodyPlaceholder": "詳細を追加（任意）...",
+    "parentLabel": "保存先",
+    "save": "保存",
+    "saving": "保存中...",
+    "saved": "キャプチャしました！",
+    "failedToSave": "キャプチャの保存に失敗しました",
+    "queuedOffline": "オフラインで保存 — オンラインに戻ると同期されます",
+    "shortcutHint": "クイックキャプチャ",
+    "shortcutDescription": "クイックキャプチャシートを開く"
+  },
+  "bottomNav": {
+    "home": "ホーム",
+    "search": "検索",
+    "capture": "キャプチャ",
+    "pages": "ページ",
+    "settings": "設定"
   }
 }

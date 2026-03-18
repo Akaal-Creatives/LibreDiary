@@ -637,7 +637,9 @@
     "categoryNavigation": "Navigering",
     "categoryEditor": "Redigerare",
     "categoryGeneral": "Allmänt",
-    "close": "Stäng"
+    "close": "Stäng",
+    "quickCapture": "Snabbinmatning",
+    "quickCaptureDescription": "Öppna snabbinmatningspanelen"
   },
   "responsive": {
     "openMenu": "Öppna meny",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Kunde inte ändra lösenord",
     "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
     "passwordsMustMatch": "Lösenorden matchar inte"
+  },
+  "inbox": {
+    "title": "Inkorg",
+    "description": "Snabba anteckningar och flyktiga tankar hamnar här",
+    "recreated": "Inkorgssidan återskapad",
+    "failedToCreate": "Kunde inte skapa inkorgssidan"
+  },
+  "quickCapture": {
+    "title": "Snabbinmatning",
+    "titlePlaceholder": "Vad tänker du på?",
+    "bodyPlaceholder": "Lägg till mer detaljer (valfritt)...",
+    "parentLabel": "Spara i",
+    "save": "Spara",
+    "saving": "Sparar...",
+    "saved": "Fångat!",
+    "failedToSave": "Kunde inte spara inmatningen",
+    "queuedOffline": "Sparad offline — synkroniseras när du är online igen",
+    "shortcutHint": "Snabbinmatning",
+    "shortcutDescription": "Öppna snabbinmatningspanelen"
+  },
+  "bottomNav": {
+    "home": "Hem",
+    "search": "Sök",
+    "capture": "Fånga",
+    "pages": "Sidor",
+    "settings": "Inställningar"
   }
 }

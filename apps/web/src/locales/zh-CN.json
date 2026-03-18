@@ -637,7 +637,9 @@
     "categoryNavigation": "导航",
     "categoryEditor": "编辑器",
     "categoryGeneral": "通用",
-    "close": "关闭"
+    "close": "关闭",
+    "quickCapture": "快速捕获",
+    "quickCaptureDescription": "打开快速捕获面板"
   },
   "responsive": {
     "openMenu": "打开菜单",
@@ -763,5 +765,31 @@
     "passwordChangeError": "更改密码失败",
     "passwordMinLength": "密码至少需要 8 个字符",
     "passwordsMustMatch": "两次输入的密码不一致"
+  },
+  "inbox": {
+    "title": "收件箱",
+    "description": "快速捕获和临时笔记会存放在这里",
+    "recreated": "收件箱页面已重新创建",
+    "failedToCreate": "无法创建收件箱页面"
+  },
+  "quickCapture": {
+    "title": "快速捕获",
+    "titlePlaceholder": "你在想什么？",
+    "bodyPlaceholder": "添加更多细节（可选）...",
+    "parentLabel": "保存至",
+    "save": "保存",
+    "saving": "保存中...",
+    "saved": "已捕获！",
+    "failedToSave": "保存捕获失败",
+    "queuedOffline": "已离线保存 — 恢复在线后将自动同步",
+    "shortcutHint": "快速捕获",
+    "shortcutDescription": "打开快速捕获面板"
+  },
+  "bottomNav": {
+    "home": "首页",
+    "search": "搜索",
+    "capture": "捕获",
+    "pages": "页面",
+    "settings": "设置"
   }
 }

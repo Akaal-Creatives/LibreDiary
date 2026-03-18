@@ -637,7 +637,9 @@
     "categoryNavigation": "Navegação",
     "categoryEditor": "Editor",
     "categoryGeneral": "Geral",
-    "close": "Fechar"
+    "close": "Fechar",
+    "quickCapture": "Captura rápida",
+    "quickCaptureDescription": "Abrir folha de captura rápida"
   },
   "responsive": {
     "openMenu": "Abrir menu",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Falha ao alterar senha",
     "passwordMinLength": "A senha deve ter no mínimo 8 caracteres",
     "passwordsMustMatch": "As senhas não coincidem"
+  },
+  "inbox": {
+    "title": "Caixa de entrada",
+    "description": "Capturas rápidas e notas passageiras chegam aqui",
+    "recreated": "Página da caixa de entrada recriada",
+    "failedToCreate": "Falha ao criar a página da caixa de entrada"
+  },
+  "quickCapture": {
+    "title": "Captura rápida",
+    "titlePlaceholder": "O que está pensando?",
+    "bodyPlaceholder": "Adicionar mais detalhes (opcional)...",
+    "parentLabel": "Salvar em",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "saved": "Capturado!",
+    "failedToSave": "Falha ao salvar a captura",
+    "queuedOffline": "Salvo offline — será sincronizado quando voltar a ficar online",
+    "shortcutHint": "Captura rápida",
+    "shortcutDescription": "Abrir folha de captura rápida"
+  },
+  "bottomNav": {
+    "home": "Início",
+    "search": "Pesquisar",
+    "capture": "Capturar",
+    "pages": "Páginas",
+    "settings": "Configurações"
   }
 }

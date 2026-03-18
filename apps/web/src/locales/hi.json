@@ -637,7 +637,9 @@
     "categoryNavigation": "नेविगेशन",
     "categoryEditor": "एडिटर",
     "categoryGeneral": "सामान्य",
-    "close": "बंद करें"
+    "close": "बंद करें",
+    "quickCapture": "त्वरित कैप्चर",
+    "quickCaptureDescription": "त्वरित कैप्चर शीट खोलें"
   },
   "responsive": {
     "openMenu": "मेनू खोलें",
@@ -763,5 +765,31 @@
     "passwordChangeError": "पासवर्ड बदलने में विफल",
     "passwordMinLength": "पासवर्ड कम से कम 8 अक्षर का होना चाहिए",
     "passwordsMustMatch": "पासवर्ड मेल नहीं खाते"
+  },
+  "inbox": {
+    "title": "इनबॉक्स",
+    "description": "त्वरित कैप्चर और क्षणिक नोट्स यहाँ आते हैं",
+    "recreated": "इनबॉक्स पृष्ठ पुनः बनाया गया",
+    "failedToCreate": "इनबॉक्स पृष्ठ बनाने में विफल"
+  },
+  "quickCapture": {
+    "title": "त्वरित कैप्चर",
+    "titlePlaceholder": "आपके मन में क्या है?",
+    "bodyPlaceholder": "अधिक विवरण जोड़ें (वैकल्पिक)...",
+    "parentLabel": "इसमें सहेजें",
+    "save": "सहेजें",
+    "saving": "सहेजा जा रहा है...",
+    "saved": "कैप्चर हो गया!",
+    "failedToSave": "कैप्चर सहेजने में विफल",
+    "queuedOffline": "ऑफ़लाइन सहेजा गया — ऑनलाइन होने पर सिंक होगा",
+    "shortcutHint": "त्वरित कैप्चर",
+    "shortcutDescription": "त्वरित कैप्चर शीट खोलें"
+  },
+  "bottomNav": {
+    "home": "होम",
+    "search": "खोजें",
+    "capture": "कैप्चर",
+    "pages": "पृष्ठ",
+    "settings": "सेटिंग्स"
   }
 }

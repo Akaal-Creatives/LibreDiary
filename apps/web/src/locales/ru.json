@@ -637,7 +637,9 @@
     "categoryNavigation": "Навигация",
     "categoryEditor": "Редактор",
     "categoryGeneral": "Общее",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "quickCapture": "Быстрая запись",
+    "quickCaptureDescription": "Открыть панель быстрой записи"
   },
   "responsive": {
     "openMenu": "Открыть меню",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Не удалось изменить пароль",
     "passwordMinLength": "Пароль должен содержать не менее 8 символов",
     "passwordsMustMatch": "Пароли не совпадают"
+  },
+  "inbox": {
+    "title": "Входящие",
+    "description": "Быстрые заметки и мимолётные мысли попадают сюда",
+    "recreated": "Страница Входящие создана заново",
+    "failedToCreate": "Не удалось создать страницу Входящие"
+  },
+  "quickCapture": {
+    "title": "Быстрая запись",
+    "titlePlaceholder": "Что у вас на уме?",
+    "bodyPlaceholder": "Добавить подробности (необязательно)...",
+    "parentLabel": "Сохранить в",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "saved": "Записано!",
+    "failedToSave": "Не удалось сохранить запись",
+    "queuedOffline": "Сохранено офлайн — синхронизируется при подключении к сети",
+    "shortcutHint": "Быстрая запись",
+    "shortcutDescription": "Открыть панель быстрой записи"
+  },
+  "bottomNav": {
+    "home": "Главная",
+    "search": "Поиск",
+    "capture": "Записать",
+    "pages": "Страницы",
+    "settings": "Настройки"
   }
 }

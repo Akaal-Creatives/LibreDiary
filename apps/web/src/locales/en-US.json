@@ -97,7 +97,9 @@
     "categoryNavigation": "Navigation",
     "categoryEditor": "Editor",
     "categoryGeneral": "General",
-    "close": "Close"
+    "close": "Close",
+    "quickCapture": "Quick Capture",
+    "quickCaptureDescription": "Open quick capture sheet"
   },
   "responsive": {
     "openMenu": "Open menu",
@@ -155,5 +157,31 @@
     "passwordMinLength": "Password must be at least 8 characters",
     "passwordsMustMatch": "Passwords do not match"
   },
-  "common": {}
+  "common": {},
+  "inbox": {
+    "title": "Inbox",
+    "description": "Quick captures and fleeting notes land here",
+    "recreated": "Inbox page re-created",
+    "failedToCreate": "Failed to create Inbox page"
+  },
+  "quickCapture": {
+    "title": "Quick Capture",
+    "titlePlaceholder": "What's on your mind?",
+    "bodyPlaceholder": "Add more detail (optional)...",
+    "parentLabel": "Save to",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Captured!",
+    "failedToSave": "Failed to save capture",
+    "queuedOffline": "Saved offline — will sync when back online",
+    "shortcutHint": "Quick capture",
+    "shortcutDescription": "Open quick capture sheet"
+  },
+  "bottomNav": {
+    "home": "Home",
+    "search": "Search",
+    "capture": "Capture",
+    "pages": "Pages",
+    "settings": "Settings"
+  }
 }

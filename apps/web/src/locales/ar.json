@@ -637,7 +637,9 @@
     "categoryNavigation": "التنقل",
     "categoryEditor": "المحرر",
     "categoryGeneral": "عام",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "quickCapture": "التقاط سريع",
+    "quickCaptureDescription": "فتح لوحة الالتقاط السريع"
   },
   "responsive": {
     "openMenu": "فتح القائمة",
@@ -763,5 +765,31 @@
     "passwordChangeError": "فشل تغيير كلمة المرور",
     "passwordMinLength": "يجب أن تتكون كلمة المرور من ٨ أحرف على الأقل",
     "passwordsMustMatch": "كلمتا المرور غير متطابقتين"
+  },
+  "inbox": {
+    "title": "صندوق الوارد",
+    "description": "الملاحظات السريعة والأفكار العابرة تصل إلى هنا",
+    "recreated": "تم إعادة إنشاء صفحة صندوق الوارد",
+    "failedToCreate": "فشل في إنشاء صفحة صندوق الوارد"
+  },
+  "quickCapture": {
+    "title": "التقاط سريع",
+    "titlePlaceholder": "ما الذي يدور في ذهنك؟",
+    "bodyPlaceholder": "أضف المزيد من التفاصيل (اختياري)...",
+    "parentLabel": "حفظ في",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "saved": "تم الالتقاط!",
+    "failedToSave": "فشل في حفظ الالتقاط",
+    "queuedOffline": "تم الحفظ دون اتصال — ستتم المزامنة عند العودة للاتصال",
+    "shortcutHint": "التقاط سريع",
+    "shortcutDescription": "فتح لوحة الالتقاط السريع"
+  },
+  "bottomNav": {
+    "home": "الرئيسية",
+    "search": "بحث",
+    "capture": "التقاط",
+    "pages": "الصفحات",
+    "settings": "الإعدادات"
   }
 }

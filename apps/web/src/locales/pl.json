@@ -637,7 +637,9 @@
     "categoryNavigation": "Nawigacja",
     "categoryEditor": "Edytor",
     "categoryGeneral": "Ogólne",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "quickCapture": "Szybkie przechwytywanie",
+    "quickCaptureDescription": "Otwórz arkusz szybkiego przechwytywania"
   },
   "responsive": {
     "openMenu": "Otwórz menu",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Nie udało się zmienić hasła",
     "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków",
     "passwordsMustMatch": "Hasła nie są zgodne"
+  },
+  "inbox": {
+    "title": "Skrzynka odbiorcza",
+    "description": "Szybkie notatki i ulotne myśli trafiają tutaj",
+    "recreated": "Strona Skrzynka odbiorcza została odtworzona",
+    "failedToCreate": "Nie udało się utworzyć strony Skrzynka odbiorcza"
+  },
+  "quickCapture": {
+    "title": "Szybkie przechwytywanie",
+    "titlePlaceholder": "Co masz na myśli?",
+    "bodyPlaceholder": "Dodaj więcej szczegółów (opcjonalnie)...",
+    "parentLabel": "Zapisz w",
+    "save": "Zapisz",
+    "saving": "Zapisywanie...",
+    "saved": "Przechwycono!",
+    "failedToSave": "Nie udało się zapisać przechwycenia",
+    "queuedOffline": "Zapisano offline — zsynchronizuje się po powrocie do sieci",
+    "shortcutHint": "Szybkie przechwytywanie",
+    "shortcutDescription": "Otwórz arkusz szybkiego przechwytywania"
+  },
+  "bottomNav": {
+    "home": "Strona główna",
+    "search": "Szukaj",
+    "capture": "Przechwyć",
+    "pages": "Strony",
+    "settings": "Ustawienia"
   }
 }

@@ -637,7 +637,9 @@
     "categoryNavigation": "Gezinme",
     "categoryEditor": "Düzenleyici",
     "categoryGeneral": "Genel",
-    "close": "Kapat"
+    "close": "Kapat",
+    "quickCapture": "Hızlı Yakalama",
+    "quickCaptureDescription": "Hızlı yakalama sayfasını aç"
   },
   "responsive": {
     "openMenu": "Menüyü aç",
@@ -763,5 +765,31 @@
     "passwordChangeError": "Şifre değiştirilemedi",
     "passwordMinLength": "Şifre en az 8 karakter olmalıdır",
     "passwordsMustMatch": "Şifreler eşleşmiyor"
+  },
+  "inbox": {
+    "title": "Gelen Kutusu",
+    "description": "Hızlı yakalamalar ve anlık notlar buraya gelir",
+    "recreated": "Gelen Kutusu sayfası yeniden oluşturuldu",
+    "failedToCreate": "Gelen Kutusu sayfası oluşturulamadı"
+  },
+  "quickCapture": {
+    "title": "Hızlı Yakalama",
+    "titlePlaceholder": "Aklında ne var?",
+    "bodyPlaceholder": "Daha fazla ayrıntı ekle (isteğe bağlı)...",
+    "parentLabel": "Kaydet",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor...",
+    "saved": "Yakalandı!",
+    "failedToSave": "Yakalama kaydedilemedi",
+    "queuedOffline": "Çevrimdışı kaydedildi — çevrimiçi olunca senkronize edilecek",
+    "shortcutHint": "Hızlı yakalama",
+    "shortcutDescription": "Hızlı yakalama sayfasını aç"
+  },
+  "bottomNav": {
+    "home": "Ana Sayfa",
+    "search": "Ara",
+    "capture": "Yakala",
+    "pages": "Sayfalar",
+    "settings": "Ayarlar"
   }
 }
