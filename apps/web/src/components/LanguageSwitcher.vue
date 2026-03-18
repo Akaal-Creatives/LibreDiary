@@ -121,7 +121,7 @@ function handleClickOutside(event: MouseEvent) {
 
 .language-menu {
   position: absolute;
-  right: 0;
+  left: 0;
   bottom: 100%;
   z-index: 50;
   min-width: 200px;

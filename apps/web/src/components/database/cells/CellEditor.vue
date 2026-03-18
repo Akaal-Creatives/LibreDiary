@@ -29,6 +29,8 @@ const showFilesDropdown = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const localUploading = ref(false);
 const localUploadProgress = ref(0);
+const dropdownRef = ref<HTMLElement | null>(null);
+const dropdownStyle = ref<Record<string, string>>({});
 
 const organizationsStore = useOrganizationsStore();
 const databasesStore = useDatabasesStore();
@@ -134,6 +136,28 @@ function removeFile(fileId: string) {
   emit('save', updated);
 }
 
+async function positionDropdown() {
+  await nextTick();
+  const el = dropdownRef.value;
+  if (!el) return;
+  const parent = el.closest('.cell-editor')?.parentElement;
+  if (!parent) return;
+
+  const cellRect = parent.getBoundingClientRect();
+  const dropdownHeight = el.offsetHeight;
+  const spaceBelow = window.innerHeight - cellRect.bottom;
+  const openAbove = spaceBelow < dropdownHeight && cellRect.top > spaceBelow;
+
+  dropdownStyle.value = {
+    position: 'fixed',
+    left: `${cellRect.left}px`,
+    minWidth: `${Math.max(cellRect.width, 180)}px`,
+    ...(openAbove
+      ? { bottom: `${window.innerHeight - cellRect.top}px`, top: 'auto' }
+      : { top: `${cellRect.bottom}px`, bottom: 'auto' }),
+  };
+}
+
 onMounted(async () => {
   if (props.type === 'CHECKBOX') {
     emit('save', props.value !== true);
@@ -142,6 +166,7 @@ onMounted(async () => {
 
   if (props.type === 'PERSON') {
     showPersonDropdown.value = true;
+    positionDropdown();
     return;
   }
 
@@ -151,17 +176,20 @@ onMounted(async () => {
     if (targetDbId) {
       databasesStore.fetchRelatedDatabase(targetDbId);
     }
+    positionDropdown();
     return;
   }
 
   if (props.type === 'FILES') {
     showFilesDropdown.value = true;
+    positionDropdown();
     return;
   }
 
   if (props.type === 'SELECT' || props.type === 'MULTI_SELECT') {
     showSelectDropdown.value = true;
     editValue.value = String(props.value ?? '');
+    positionDropdown();
   } else if (props.type === 'DURATION') {
     if (props.value != null) {
       const ms = Number(props.value);
@@ -257,7 +285,12 @@ function getInputType(): string {
 <template>
   <div class="cell-editor">
     <!-- Person dropdown -->
-    <div v-if="type === 'PERSON' && showPersonDropdown" class="person-dropdown">
+    <div
+      v-if="type === 'PERSON' && showPersonDropdown"
+      ref="dropdownRef"
+      class="person-dropdown"
+      :style="dropdownStyle"
+    >
       <button v-if="value" class="person-clear" @mousedown.prevent="clearPerson">
         Clear selection
       </button>
@@ -281,7 +314,12 @@ function getInputType(): string {
     </div>
 
     <!-- Relation dropdown -->
-    <div v-if="type === 'RELATION' && showRelationDropdown" class="relation-dropdown">
+    <div
+      v-if="type === 'RELATION' && showRelationDropdown"
+      ref="dropdownRef"
+      class="relation-dropdown"
+      :style="dropdownStyle"
+    >
       <button
         v-for="row in relationRows"
         :key="row.id"
@@ -313,7 +351,12 @@ function getInputType(): string {
     </div>
 
     <!-- Files dropdown -->
-    <div v-if="type === 'FILES' && showFilesDropdown" class="files-dropdown">
+    <div
+      v-if="type === 'FILES' && showFilesDropdown"
+      ref="dropdownRef"
+      class="files-dropdown"
+      :style="dropdownStyle"
+    >
       <div v-if="currentFiles.length > 0" class="files-list">
         <div v-for="file in currentFiles" :key="file.id" class="file-item">
           <span class="file-item-name">{{ file.name }}</span>
@@ -350,7 +393,9 @@ function getInputType(): string {
     <!-- Select / Multi-select dropdown -->
     <div
       v-if="(type === 'SELECT' || type === 'MULTI_SELECT') && showSelectDropdown"
+      ref="dropdownRef"
       class="select-dropdown"
+      :style="dropdownStyle"
     >
       <button
         v-for="option in getSelectOptions()"
@@ -449,9 +494,7 @@ function getInputType(): string {
 
 /* Select Dropdown */
 .select-dropdown {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
   z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
@@ -528,9 +571,7 @@ function getInputType(): string {
 
 /* Person Dropdown */
 .person-dropdown {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
   z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
@@ -617,9 +658,7 @@ function getInputType(): string {
 
 /* Relation Dropdown */
 .relation-dropdown {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
   z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
@@ -680,9 +719,7 @@ function getInputType(): string {
 
 /* Files Dropdown */
 .files-dropdown {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
   z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
