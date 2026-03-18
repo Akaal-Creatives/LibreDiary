@@ -58,7 +58,7 @@ services:
   # Server (Fastify API)
   # ===========================================
   server:
-    image: librediary/server:0.1.0
+    image: ghcr.io/akaal-creatives/librediary-server:latest
     container_name: librediary-server
     expose:
       - "3000"
@@ -97,7 +97,7 @@ services:
   # Web (Vue SPA)
   # ===========================================
   web:
-    image: librediary/web:0.1.0
+    image: ghcr.io/akaal-creatives/librediary-web:latest
     container_name: librediary-web
     expose:
       - "80"
