@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: release-${{ github.event_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
