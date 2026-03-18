@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore, usePagesStore, useTemplatesStore } from '@/stores';
 import { useDialog, useToast } from '@/composables';
@@ -10,6 +10,7 @@ import TemplateLibrary from '@/components/TemplateLibrary.vue';
 import GettingStartedChecklist from '@/components/GettingStartedChecklist.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const pagesStore = usePagesStore();
@@ -29,6 +30,27 @@ onMounted(() => {
       tour.start();
     }
   }, 1000);
+
+  // Handle PWA shortcut actions via query param
+  const action = route.query.action as string | undefined;
+  if (action === 'quick-capture') {
+    // Dispatch the quick capture keyboard shortcut to open the sheet
+    setTimeout(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'C',
+          shiftKey: true,
+          metaKey: true,
+          bubbles: true,
+        })
+      );
+    }, 500);
+    // Clean up the query param
+    router.replace({ ...route, query: {} });
+  } else if (action === 'new-page') {
+    createNewPage();
+    router.replace({ ...route, query: {} });
+  }
 });
 
 function navigateToPage(pageId: string) {

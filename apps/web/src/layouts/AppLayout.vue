@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { RouterView } from 'vue-router';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal.vue';
 import OnboardingTour from '@/components/OnboardingTour.vue';
 import OfflineIndicator from '@/components/OfflineIndicator.vue';
+import MobileBottomNav from '@/components/MobileBottomNav.vue';
+import QuickCaptureSheet from '@/components/QuickCaptureSheet.vue';
 import { useTheme } from '@/composables';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { useSidebar } from '@/composables/useSidebar';
@@ -14,6 +17,26 @@ import { APP_VERSION } from '@/utils/version';
 useTheme();
 
 const sidebar = useSidebar();
+
+const showQuickCapture = ref(false);
+
+function openQuickCapture() {
+  showQuickCapture.value = true;
+}
+
+function closeQuickCapture() {
+  showQuickCapture.value = false;
+}
+
+function handleMobileSearch() {
+  // Trigger the existing search shortcut
+  const event = new KeyboardEvent('keydown', {
+    key: 'k',
+    metaKey: true,
+    bubbles: true,
+  });
+  document.dispatchEvent(event);
+}
 
 // Register global shortcuts
 const { register: registerShortcut, toggleHelp } = useKeyboardShortcuts();
@@ -61,6 +84,18 @@ registerShortcut({
   description: 'shortcuts.helpDescription',
   handler: () => {
     toggleHelp();
+  },
+  global: false,
+  category: 'general',
+});
+
+registerShortcut({
+  id: 'quick-capture',
+  keys: 'mod+shift+c',
+  label: 'quickCapture.shortcutHint',
+  description: 'quickCapture.shortcutDescription',
+  handler: () => {
+    openQuickCapture();
   },
   global: false,
   category: 'general',
@@ -124,6 +159,16 @@ function handleBackdropClick() {
         </footer>
       </main>
     </div>
+    <!-- Mobile bottom nav (< 768px only) -->
+    <MobileBottomNav
+      v-if="sidebar.isMobile.value"
+      @capture="openQuickCapture"
+      @search="handleMobileSearch"
+    />
+
+    <!-- Quick capture sheet (all viewports via Mod+Shift+C, mobile via FAB) -->
+    <QuickCaptureSheet :open="showQuickCapture" @close="closeQuickCapture" />
+
     <KeyboardShortcutsModal />
     <OnboardingTour />
   </div>
@@ -229,10 +274,16 @@ function handleBackdropClick() {
 @media (max-width: 767px) {
   .app-content-body {
     padding: var(--space-4);
+    padding-bottom: calc(
+      var(--bottom-nav-height) + var(--space-4) + env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .app-footer {
     padding: var(--space-3) var(--space-4);
+    padding-bottom: calc(
+      var(--bottom-nav-height) + var(--space-3) + env(safe-area-inset-bottom, 0px)
+    );
   }
 }
 

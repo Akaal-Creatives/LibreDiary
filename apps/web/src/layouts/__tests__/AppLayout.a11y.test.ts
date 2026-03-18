@@ -17,6 +17,7 @@ vi.mock('@/composables/useSidebar', () => ({
   useSidebar: () => ({
     isOverlay: { value: false },
     isOpen: { value: true },
+    isMobile: { value: false },
     toggle: vi.fn(),
     close: vi.fn(),
   }),
@@ -60,6 +61,8 @@ describe('AppLayout accessibility', () => {
           KeyboardShortcutsModal: { template: '<div />' },
           OnboardingTour: { template: '<div />' },
           OfflineIndicator: { template: '<div />' },
+          MobileBottomNav: { template: '<div />' },
+          QuickCaptureSheet: { template: '<div />' },
           RouterView: { template: '<div />' },
           Transition: true,
         },

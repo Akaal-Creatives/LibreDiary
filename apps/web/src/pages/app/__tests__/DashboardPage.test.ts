@@ -9,6 +9,7 @@ const mockRouter = vi.hoisted(() => ({
 
 vi.mock('vue-router', () => ({
   useRouter: () => mockRouter,
+  useRoute: () => ({ query: {}, name: 'dashboard', fullPath: '/app/dashboard', params: {} }),
 }));
 
 const { mockAuthStore, mockPagesStore, mockTemplatesStore, mockDialog, mockToast } = vi.hoisted(

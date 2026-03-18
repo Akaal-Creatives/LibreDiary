@@ -69,6 +69,9 @@
   --z-dropdown: 200;
   --z-modal: 300;
   --z-tooltip: 400;
+
+  /* Component Sizes */
+  --bottom-nav-height: 56px;
 }
 
 /* ============================================

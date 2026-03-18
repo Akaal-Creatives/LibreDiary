@@ -26,5 +26,9 @@ export {
   type ClientSearchOptions,
 } from './useClientSearch';
 
+export { useInbox } from './useInbox';
+export { useOfflineQueue, type QueuedCapture } from './useOfflineQueue';
+export { useScrollDirection, type ScrollDirection } from './useScrollDirection';
+
 // Re-export design tokens for convenience
 export * from '@/styles/design-tokens';

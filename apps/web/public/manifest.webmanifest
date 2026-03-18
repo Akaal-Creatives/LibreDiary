@@ -23,5 +23,33 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Capture",
+      "short_name": "Capture",
+      "description": "Quickly capture a new note",
+      "url": "/app/dashboard?action=quick-capture",
+      "icons": [
+        {
+          "src": "/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "New Page",
+      "short_name": "New Page",
+      "description": "Create a new page",
+      "url": "/app/dashboard?action=new-page",
+      "icons": [
+        {
+          "src": "/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

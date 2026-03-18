@@ -28,6 +28,8 @@ export default defineConfig({
       manifest: false,
       workbox: {
         navigateFallback: '/index.html',
+        navigationPreload: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^\/api\/v1\/organizations\/[^/]+\/pages\/[^/]+$/,
