@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { authService, ApiError } from '@/services';
 import AuthLayout from '@/components/AuthLayout.vue';
@@ -10,6 +11,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { t } = useI18n();
 const authStore = useAuthStore();
 
 const email = ref('');
@@ -23,6 +25,9 @@ const loading = ref(false);
 const loadingInvite = ref(true);
 const error = ref('');
 const inviteError = ref('');
+
+/** True when the current user is already signed in */
+const isLoggedIn = computed(() => authStore.isAuthenticated);
 
 onMounted(async () => {
   try {
@@ -69,6 +74,24 @@ async function handleSubmit() {
   }
 }
 
+async function handleAcceptInvite() {
+  error.value = '';
+  loading.value = true;
+
+  try {
+    await authStore.acceptInvite(props.token);
+    router.push('/app');
+  } catch (err) {
+    if (err instanceof ApiError) {
+      error.value = err.message;
+    } else {
+      error.value = t('auth.acceptInviteError');
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
 function goToLogin() {
   router.push('/login');
 }
@@ -109,7 +132,34 @@ function goToLogin() {
       </button>
     </div>
 
-    <!-- Registration Form -->
+    <!-- Accept Invite (already signed in) -->
+    <template v-else-if="isLoggedIn">
+      <div class="accept-invite-section">
+        <p class="signed-in-info">
+          {{ $t('auth.joinOrganisationAs', { email: authStore.user?.email }) }}
+        </p>
+
+        <div v-if="error" class="error-message" role="alert" aria-live="polite">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M8 5V8.5M8 11V11.01"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          {{ error }}
+        </div>
+
+        <button type="button" class="submit-btn" :disabled="loading" @click="handleAcceptInvite">
+          <span v-if="loading" class="loading-spinner"></span>
+          <span v-else>{{ $t('auth.acceptInvite') }}</span>
+        </button>
+      </div>
+    </template>
+
+    <!-- Registration Form (new user) -->
     <template v-else>
       <form class="auth-form" @submit.prevent="handleSubmit">
         <div v-if="error" class="error-message" role="alert" aria-live="polite">
@@ -464,5 +514,17 @@ function goToLogin() {
 
 .link-btn:hover {
   color: var(--color-accent-hover);
+}
+
+.accept-invite-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.signed-in-info {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 </style>

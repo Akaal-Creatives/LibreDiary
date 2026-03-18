@@ -653,6 +653,57 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
   );
 
   /**
+   * POST /auth/accept-invite
+   * Accept an invite for an already-authenticated user
+   */
+  fastify.post(
+    '/accept-invite',
+    { preHandler: [requireAuth], ...authRateLimit },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = z.object({ inviteToken: z.string().min(1) }).safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+          },
+        });
+      }
+
+      try {
+        const user = getAuthUser(request);
+        const result = await authService.acceptInvite(body.data.inviteToken, user.id);
+
+        logAudit({
+          action: 'MEMBER_ADDED',
+          userId: user.id,
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'],
+          metadata: { inviteToken: body.data.inviteToken },
+        });
+
+        return {
+          success: true,
+          data: {
+            organizations: result.organizations,
+            memberships: result.memberships,
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to accept invite';
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'ACCEPT_INVITE_ERROR',
+            message,
+          },
+        });
+      }
+    }
+  );
+
+  /**
    * GET /auth/invite/:token
    * Get invite details
    */

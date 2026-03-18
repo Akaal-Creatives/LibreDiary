@@ -144,6 +144,18 @@ export const authService = {
   },
 
   /**
+   * Accept an invite for an already-authenticated user
+   */
+  async acceptInvite(
+    inviteToken: string
+  ): Promise<{ organizations: Organization[]; memberships: OrgMembership[] }> {
+    return api.post<{ organizations: Organization[]; memberships: OrgMembership[] }>(
+      '/auth/accept-invite',
+      { inviteToken }
+    );
+  },
+
+  /**
    * Get invite info by token
    */
   async getInvite(token: string): Promise<InviteInfo> {

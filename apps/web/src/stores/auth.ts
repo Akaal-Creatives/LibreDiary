@@ -111,6 +111,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * Accept an invite for the current authenticated user
+   */
+  async function acceptInvite(inviteToken: string): Promise<void> {
+    loading.value = true;
+    try {
+      const data = await authService.acceptInvite(inviteToken);
+      setOrganizations(data.organizations, data.memberships);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /**
    * Logout and clear state
    */
   async function logout(): Promise<void> {
@@ -197,6 +210,7 @@ export const useAuthStore = defineStore('auth', () => {
     initialize,
     login,
     register,
+    acceptInvite,
     logout,
     verifyEmail,
     resendVerificationEmail,

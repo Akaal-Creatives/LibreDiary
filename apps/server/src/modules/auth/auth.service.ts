@@ -244,6 +244,93 @@ export async function login(
 }
 
 /**
+ * Accept an invite for an existing authenticated user.
+ * Creates organisation membership and marks the invite as accepted.
+ */
+export async function acceptInvite(
+  inviteToken: string,
+  userId: string
+): Promise<{
+  organizations: Organization[];
+  memberships: Array<{ organizationId: string; role: string }>;
+}> {
+  const invite = await prisma.invite.findUnique({
+    where: { token: inviteToken },
+    include: { organization: true },
+  });
+
+  if (!invite) {
+    throw new Error('Invalid invite token');
+  }
+
+  if (invite.acceptedAt) {
+    throw new Error('Invite has already been used');
+  }
+
+  if (isExpired(invite.expiresAt)) {
+    throw new Error('Invite has expired');
+  }
+
+  // Verify the authenticated user's email matches the invite
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (invite.email.toLowerCase() !== user.email.toLowerCase()) {
+    throw new Error('Email does not match invite');
+  }
+
+  // Check user is not already a member of this organisation
+  const existingMember = await prisma.organizationMember.findUnique({
+    where: {
+      userId_organizationId: {
+        userId,
+        organizationId: invite.organizationId,
+      },
+    },
+  });
+
+  if (existingMember) {
+    throw new Error('Already a member of this organisation');
+  }
+
+  // Create membership and mark invite accepted in a transaction
+  await prisma.$transaction(async (tx) => {
+    await tx.organizationMember.create({
+      data: {
+        userId,
+        organizationId: invite.organizationId,
+        role: invite.role,
+      },
+    });
+
+    await tx.invite.update({
+      where: { id: invite.id },
+      data: { acceptedAt: new Date() },
+    });
+  });
+
+  triggerWebhooks(invite.organizationId, 'member.added', { userId }).catch((err) =>
+    logger.error(err, 'webhook delivery failed')
+  );
+
+  // Return updated organisations list
+  const membershipRecords = await prisma.organizationMember.findMany({
+    where: { userId },
+    include: { organization: true },
+  });
+
+  return {
+    organizations: membershipRecords.map((m) => m.organization),
+    memberships: membershipRecords.map((m) => ({
+      organizationId: m.organizationId,
+      role: m.role,
+    })),
+  };
+}
+
+/**
  * Logout - destroy session
  */
 export async function logout(sessionToken: string): Promise<void> {

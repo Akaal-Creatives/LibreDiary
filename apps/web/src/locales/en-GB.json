@@ -119,7 +119,12 @@
     "continueWithGoogle": "Continue with Google",
     "linkGitHub": "Link GitHub",
     "linkGoogle": "Link Google",
-    "revoking": "Revoking..."
+    "revoking": "Revoking...",
+    "joinOrganisationAs": "You're signed in as {email}",
+    "acceptInvite": "Join Organisation",
+    "accepting": "Joining...",
+    "inviteAccepted": "You've joined {organisationName}",
+    "acceptInviteError": "Failed to accept invite"
   },
   "setup": {
     "welcomeToLibreDiary": "Welcome to LibreDiary",

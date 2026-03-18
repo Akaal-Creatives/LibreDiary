@@ -33,7 +33,7 @@ const routes: RouteRecordRaw[] = [
     path: '/register/:token',
     name: 'register',
     component: () => import('@/pages/RegisterPage.vue'),
-    meta: { guest: true, title: 'pageTitle.register' },
+    meta: { title: 'pageTitle.register' },
     props: true,
   },
   {
