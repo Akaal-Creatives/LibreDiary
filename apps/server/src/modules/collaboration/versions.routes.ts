@@ -40,11 +40,12 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
 
       try {
         const versions = await versionsService.getVersions(orgId, pageId);
-        return reply.send(versions);
+        return reply.send({ success: true, data: versions });
       } catch (error) {
         const status = getErrorStatus(error as Error);
         return reply.status(status).send({
-          error: (error as Error).message,
+          success: false,
+          error: { code: (error as Error).message, message: (error as Error).message },
         });
       }
     }
@@ -64,15 +65,17 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
 
         if (!version) {
           return reply.status(404).send({
-            error: 'VERSION_NOT_FOUND',
+            success: false,
+            error: { code: 'VERSION_NOT_FOUND', message: 'Version not found' },
           });
         }
 
-        return reply.send(version);
+        return reply.send({ success: true, data: version });
       } catch (error) {
         const status = getErrorStatus(error as Error);
         return reply.status(status).send({
-          error: (error as Error).message,
+          success: false,
+          error: { code: (error as Error).message, message: (error as Error).message },
         });
       }
     }
@@ -90,11 +93,12 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
 
       try {
         const version = await versionsService.createVersion(orgId, pageId, userId);
-        return reply.status(201).send(version);
+        return reply.status(201).send({ success: true, data: version });
       } catch (error) {
         const status = getErrorStatus(error as Error);
         return reply.status(status).send({
-          error: (error as Error).message,
+          success: false,
+          error: { code: (error as Error).message, message: (error as Error).message },
         });
       }
     }
@@ -115,18 +119,22 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
 
       if (!compareWith) {
         return reply.status(400).send({
-          error: 'MISSING_COMPARE_WITH',
-          message: 'Query parameter "compareWith" is required (version ID or "current")',
+          success: false,
+          error: {
+            code: 'MISSING_COMPARE_WITH',
+            message: 'Query parameter "compareWith" is required (version ID or "current")',
+          },
         });
       }
 
       try {
         const diff = await versionsService.diffVersions(orgId, pageId, versionId!, compareWith);
-        return reply.send(diff);
+        return reply.send({ success: true, data: diff });
       } catch (error) {
         const status = getErrorStatus(error as Error);
         return reply.status(status).send({
-          error: (error as Error).message,
+          success: false,
+          error: { code: (error as Error).message, message: (error as Error).message },
         });
       }
     }
@@ -144,11 +152,12 @@ export default async function versionsRoutes(fastify: FastifyInstance) {
 
       try {
         const page = await versionsService.restoreVersion(orgId, pageId, versionId!, userId);
-        return reply.send(page);
+        return reply.send({ success: true, data: page });
       } catch (error) {
         const status = getErrorStatus(error as Error);
         return reply.status(status).send({
-          error: (error as Error).message,
+          success: false,
+          error: { code: (error as Error).message, message: (error as Error).message },
         });
       }
     }

@@ -191,7 +191,8 @@ describe('Versions Routes', () => {
 
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.body);
-      expect(body.version).toBe(3);
+      expect(body.success).toBe(true);
+      expect(body.data.version).toBe(3);
     });
 
     it('should return 404 if page not found', async () => {
@@ -254,8 +255,9 @@ describe('Versions Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body).toHaveLength(3);
-      expect(body[0].version).toBe(3);
+      expect(body.success).toBe(true);
+      expect(body.data).toHaveLength(3);
+      expect(body.data[0].version).toBe(3);
     });
 
     it('should return 404 if page not found', async () => {
@@ -288,7 +290,8 @@ describe('Versions Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.id).toBe('version-123');
+      expect(body.success).toBe(true);
+      expect(body.data.id).toBe('version-123');
     });
 
     it('should return 404 if version not found', async () => {
@@ -339,7 +342,8 @@ describe('Versions Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.id).toBe('page-123');
+      expect(body.success).toBe(true);
+      expect(body.data.id).toBe('page-123');
     });
 
     it('should return 404 if page not found', async () => {

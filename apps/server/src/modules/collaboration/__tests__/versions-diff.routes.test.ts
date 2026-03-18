@@ -192,10 +192,11 @@ describe('Version Diff Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.from).toBeDefined();
-      expect(body.to).toBeDefined();
-      expect(body.changes).toBeDefined();
-      expect(body.stats).toBeDefined();
+      expect(body.success).toBe(true);
+      expect(body.data.from).toBeDefined();
+      expect(body.data.to).toBeDefined();
+      expect(body.data.changes).toBeDefined();
+      expect(body.data.stats).toBeDefined();
     });
 
     it('should return 400 when compareWith is missing', async () => {
@@ -221,7 +222,8 @@ describe('Version Diff Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.to.versionId).toBe('current');
+      expect(body.success).toBe(true);
+      expect(body.data.to.versionId).toBe('current');
     });
 
     it('should return 404 if page not found', async () => {
