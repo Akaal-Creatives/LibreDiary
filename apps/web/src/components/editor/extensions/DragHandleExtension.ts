@@ -4,6 +4,8 @@ import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
 const dragHandlePluginKey = new PluginKey('dragHandle');
 
+const HANDLE_SIZE = 24;
+
 export const DragHandleExtension = Extension.create({
   name: 'dragHandle',
 
@@ -28,28 +30,30 @@ export const DragHandleExtension = Extension.create({
           const state = dragHandlePluginKey.getState(editorView.state);
           if (!state) return {};
 
-          // Create drag handle element
+          // Create drag handle element — positioned inside the editor
+          // to avoid being clipped by ancestor overflow: auto containers
           const handle = document.createElement('div');
           handle.className = 'drag-handle';
           handle.style.cssText = `
             position: absolute;
-            left: -32px;
-            width: 24px;
-            height: 24px;
+            left: 0;
+            width: ${HANDLE_SIZE}px;
+            height: ${HANDLE_SIZE}px;
             display: none;
             align-items: center;
             justify-content: center;
             cursor: grab;
             color: var(--color-text-tertiary);
-            transition: color var(--transition-fast);
+            border-radius: var(--radius-sm, 4px);
+            transition: color var(--transition-fast), background-color var(--transition-fast);
             z-index: 50;
             user-select: none;
           `;
 
           // Create SVG element safely
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          svg.setAttribute('width', '20');
-          svg.setAttribute('height', '20');
+          svg.setAttribute('width', '16');
+          svg.setAttribute('height', '16');
           svg.setAttribute('viewBox', '0 0 20 20');
           svg.setAttribute('fill', 'currentColor');
 
@@ -65,9 +69,11 @@ export const DragHandleExtension = Extension.create({
           // Add hover effect
           handle.addEventListener('mouseenter', () => {
             handle.style.color = 'var(--color-text-secondary)';
+            handle.style.backgroundColor = 'var(--color-hover, rgba(0,0,0,0.05))';
           });
           handle.addEventListener('mouseleave', () => {
             handle.style.color = 'var(--color-text-tertiary)';
+            handle.style.backgroundColor = 'transparent';
           });
 
           // Create drop indicator
@@ -148,16 +154,15 @@ export const DragHandleExtension = Extension.create({
             const editorRect = editorView.dom.getBoundingClientRect();
 
             handle.style.display = 'flex';
-            handle.style.top = `${rect.top - editorRect.top + (rect.height - 24) / 2}px`;
+            handle.style.top = `${rect.top - editorRect.top + (rect.height - HANDLE_SIZE) / 2}px`;
             state.hoveredBlockPos = block.pos;
           };
 
           // Mouse move handler
           const handleMouseMove = (event: MouseEvent) => {
-            // Check if mouse is within editor bounds
             const editorRect = editorView.dom.getBoundingClientRect();
             const isInEditor =
-              event.clientX >= editorRect.left - 40 &&
+              event.clientX >= editorRect.left &&
               event.clientX <= editorRect.right &&
               event.clientY >= editorRect.top &&
               event.clientY <= editorRect.bottom;

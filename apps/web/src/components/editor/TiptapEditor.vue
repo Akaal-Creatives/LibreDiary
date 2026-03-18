@@ -575,6 +575,7 @@ defineExpose({
 .editor-content .ProseMirror {
   min-height: 200px;
   padding: var(--space-2) 0;
+  padding-left: 28px;
   outline: none;
 }
 
@@ -1277,6 +1278,7 @@ defineExpose({
 
 .editor-content .drag-handle:hover {
   color: var(--color-text-secondary);
+  background-color: var(--color-hover, rgba(0, 0, 0, 0.05));
 }
 
 .editor-content .drop-indicator {
