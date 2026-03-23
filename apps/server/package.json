@@ -50,7 +50,7 @@
     "fastify-plugin": "^5.1.0",
     "file-type": "^21.3.2",
     "marked": "^17.0.4",
-    "meilisearch": "^0.55.0",
+    "meilisearch": "^0.56.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.2",
     "pino": "^10.3.1",
