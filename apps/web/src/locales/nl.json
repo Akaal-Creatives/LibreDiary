@@ -791,5 +791,23 @@
     "capture": "Vastleggen",
     "pages": "Pagina's",
     "settings": "Instellingen"
+  },
+  "annotations": {
+    "annotateImage": "Afbeelding annoteren",
+    "closeAnnotations": "Annotaties sluiten",
+    "tools": {
+      "select": "Selecteren",
+      "freehand": "Vrije hand",
+      "rectangle": "Rechthoek",
+      "ellipse": "Ellips",
+      "arrow": "Pijl",
+      "text": "Tekst",
+      "pin": "Opmerking vastpinnen"
+    },
+    "colour": "Kleur",
+    "strokeWidth": "Lijndikte",
+    "exportImage": "Geannoteerde afbeelding exporteren",
+    "pinCommentPlaceholder": "Opmerking toevoegen...",
+    "noAnnotations": "Nog geen annotaties"
   }
 }

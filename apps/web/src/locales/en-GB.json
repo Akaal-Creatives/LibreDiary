@@ -796,5 +796,23 @@
     "passwordChangeError": "Failed to change password",
     "passwordMinLength": "Password must be at least 8 characters",
     "passwordsMustMatch": "Passwords do not match"
+  },
+  "annotations": {
+    "annotateImage": "Annotate image",
+    "closeAnnotations": "Close annotations",
+    "tools": {
+      "select": "Select",
+      "freehand": "Freehand",
+      "rectangle": "Rectangle",
+      "ellipse": "Ellipse",
+      "arrow": "Arrow",
+      "text": "Text",
+      "pin": "Pin comment"
+    },
+    "colour": "Colour",
+    "strokeWidth": "Stroke width",
+    "exportImage": "Export annotated image",
+    "pinCommentPlaceholder": "Add a comment...",
+    "noAnnotations": "No annotations yet"
   }
 }

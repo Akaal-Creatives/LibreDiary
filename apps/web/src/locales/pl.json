@@ -791,5 +791,23 @@
     "capture": "Przechwyć",
     "pages": "Strony",
     "settings": "Ustawienia"
+  },
+  "annotations": {
+    "annotateImage": "Dodaj adnotacje do obrazu",
+    "closeAnnotations": "Zamknij adnotacje",
+    "tools": {
+      "select": "Zaznacz",
+      "freehand": "Odręcznie",
+      "rectangle": "Prostokąt",
+      "ellipse": "Elipsa",
+      "arrow": "Strzałka",
+      "text": "Tekst",
+      "pin": "Przypnij komentarz"
+    },
+    "colour": "Kolor",
+    "strokeWidth": "Grubość linii",
+    "exportImage": "Eksportuj obraz z adnotacjami",
+    "pinCommentPlaceholder": "Dodaj komentarz...",
+    "noAnnotations": "Brak adnotacji"
   }
 }

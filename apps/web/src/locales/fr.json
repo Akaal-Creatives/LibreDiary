@@ -791,5 +791,23 @@
     "passwordChangeError": "Échec du changement de mot de passe",
     "passwordMinLength": "Le mot de passe doit comporter au moins 8 caractères",
     "passwordsMustMatch": "Les mots de passe ne correspondent pas"
+  },
+  "annotations": {
+    "annotateImage": "Annoter l'image",
+    "closeAnnotations": "Fermer les annotations",
+    "tools": {
+      "select": "Sélectionner",
+      "freehand": "Main levée",
+      "rectangle": "Rectangle",
+      "ellipse": "Ellipse",
+      "arrow": "Flèche",
+      "text": "Texte",
+      "pin": "Épingler un commentaire"
+    },
+    "colour": "Couleur",
+    "strokeWidth": "Épaisseur du trait",
+    "exportImage": "Exporter l'image annotée",
+    "pinCommentPlaceholder": "Ajouter un commentaire...",
+    "noAnnotations": "Aucune annotation pour le moment"
   }
 }

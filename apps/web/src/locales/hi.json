@@ -791,5 +791,23 @@
     "capture": "कैप्चर",
     "pages": "पृष्ठ",
     "settings": "सेटिंग्स"
+  },
+  "annotations": {
+    "annotateImage": "छवि पर टिप्पणी करें",
+    "closeAnnotations": "टिप्पणियाँ बंद करें",
+    "tools": {
+      "select": "चुनें",
+      "freehand": "फ्रीहैंड",
+      "rectangle": "आयत",
+      "ellipse": "दीर्घवृत्त",
+      "arrow": "तीर",
+      "text": "पाठ",
+      "pin": "टिप्पणी पिन करें"
+    },
+    "colour": "रंग",
+    "strokeWidth": "स्ट्रोक की चौड़ाई",
+    "exportImage": "टिप्पणी सहित छवि निर्यात करें",
+    "pinCommentPlaceholder": "टिप्पणी जोड़ें...",
+    "noAnnotations": "अभी तक कोई टिप्पणी नहीं"
   }
 }

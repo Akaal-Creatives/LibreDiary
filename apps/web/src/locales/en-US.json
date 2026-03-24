@@ -183,5 +183,23 @@
     "capture": "Capture",
     "pages": "Pages",
     "settings": "Settings"
+  },
+  "annotations": {
+    "annotateImage": "Annotate image",
+    "closeAnnotations": "Close annotations",
+    "tools": {
+      "select": "Select",
+      "freehand": "Freehand",
+      "rectangle": "Rectangle",
+      "ellipse": "Ellipse",
+      "arrow": "Arrow",
+      "text": "Text",
+      "pin": "Pin comment"
+    },
+    "colour": "Color",
+    "strokeWidth": "Stroke width",
+    "exportImage": "Export annotated image",
+    "pinCommentPlaceholder": "Add a comment...",
+    "noAnnotations": "No annotations yet"
   }
 }

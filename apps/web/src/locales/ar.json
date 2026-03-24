@@ -791,5 +791,23 @@
     "capture": "التقاط",
     "pages": "الصفحات",
     "settings": "الإعدادات"
+  },
+  "annotations": {
+    "annotateImage": "إضافة تعليقات على الصورة",
+    "closeAnnotations": "إغلاق التعليقات التوضيحية",
+    "tools": {
+      "select": "تحديد",
+      "freehand": "رسم حر",
+      "rectangle": "مستطيل",
+      "ellipse": "شكل بيضاوي",
+      "arrow": "سهم",
+      "text": "نص",
+      "pin": "تعليق مثبت"
+    },
+    "colour": "اللون",
+    "strokeWidth": "عرض الخط",
+    "exportImage": "تصدير الصورة مع التعليقات",
+    "pinCommentPlaceholder": "أضف تعليقًا...",
+    "noAnnotations": "لا توجد تعليقات توضيحية بعد"
   }
 }

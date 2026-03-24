@@ -791,5 +791,23 @@
     "capture": "캡처",
     "pages": "페이지",
     "settings": "설정"
+  },
+  "annotations": {
+    "annotateImage": "이미지에 주석 달기",
+    "closeAnnotations": "주석 닫기",
+    "tools": {
+      "select": "선택",
+      "freehand": "자유 그리기",
+      "rectangle": "사각형",
+      "ellipse": "타원",
+      "arrow": "화살표",
+      "text": "텍스트",
+      "pin": "댓글 고정"
+    },
+    "colour": "색상",
+    "strokeWidth": "선 두께",
+    "exportImage": "주석이 달린 이미지 내보내기",
+    "pinCommentPlaceholder": "댓글 추가...",
+    "noAnnotations": "아직 주석이 없습니다"
   }
 }

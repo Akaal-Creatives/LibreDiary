@@ -791,5 +791,23 @@
     "capture": "Cattura",
     "pages": "Pagine",
     "settings": "Impostazioni"
+  },
+  "annotations": {
+    "annotateImage": "Annota immagine",
+    "closeAnnotations": "Chiudi annotazioni",
+    "tools": {
+      "select": "Seleziona",
+      "freehand": "Mano libera",
+      "rectangle": "Rettangolo",
+      "ellipse": "Ellisse",
+      "arrow": "Freccia",
+      "text": "Testo",
+      "pin": "Commento fissato"
+    },
+    "colour": "Colore",
+    "strokeWidth": "Spessore tratto",
+    "exportImage": "Esporta immagine annotata",
+    "pinCommentPlaceholder": "Aggiungi un commento...",
+    "noAnnotations": "Nessuna annotazione ancora"
   }
 }

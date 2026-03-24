@@ -791,5 +791,23 @@
     "capture": "Erfassen",
     "pages": "Seiten",
     "settings": "Einstellungen"
+  },
+  "annotations": {
+    "annotateImage": "Bild annotieren",
+    "closeAnnotations": "Annotationen schließen",
+    "tools": {
+      "select": "Auswählen",
+      "freehand": "Freihand",
+      "rectangle": "Rechteck",
+      "ellipse": "Ellipse",
+      "arrow": "Pfeil",
+      "text": "Text",
+      "pin": "Kommentar anheften"
+    },
+    "colour": "Farbe",
+    "strokeWidth": "Strichstärke",
+    "exportImage": "Annotiertes Bild exportieren",
+    "pinCommentPlaceholder": "Kommentar hinzufügen...",
+    "noAnnotations": "Noch keine Annotationen"
   }
 }

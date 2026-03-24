@@ -791,5 +791,23 @@
     "capture": "Fånga",
     "pages": "Sidor",
     "settings": "Inställningar"
+  },
+  "annotations": {
+    "annotateImage": "Annotera bild",
+    "closeAnnotations": "Stäng annoteringar",
+    "tools": {
+      "select": "Välj",
+      "freehand": "Frihand",
+      "rectangle": "Rektangel",
+      "ellipse": "Ellips",
+      "arrow": "Pil",
+      "text": "Text",
+      "pin": "Fäst kommentar"
+    },
+    "colour": "Färg",
+    "strokeWidth": "Linjebredd",
+    "exportImage": "Exportera annoterad bild",
+    "pinCommentPlaceholder": "Lägg till en kommentar...",
+    "noAnnotations": "Inga annoteringar ännu"
   }
 }

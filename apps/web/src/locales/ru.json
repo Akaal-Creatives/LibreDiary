@@ -791,5 +791,23 @@
     "capture": "Записать",
     "pages": "Страницы",
     "settings": "Настройки"
+  },
+  "annotations": {
+    "annotateImage": "Аннотировать изображение",
+    "closeAnnotations": "Закрыть аннотации",
+    "tools": {
+      "select": "Выбрать",
+      "freehand": "Свободное рисование",
+      "rectangle": "Прямоугольник",
+      "ellipse": "Эллипс",
+      "arrow": "Стрелка",
+      "text": "Текст",
+      "pin": "Закрепить комментарий"
+    },
+    "colour": "Цвет",
+    "strokeWidth": "Толщина линии",
+    "exportImage": "Экспортировать аннотированное изображение",
+    "pinCommentPlaceholder": "Добавить комментарий...",
+    "noAnnotations": "Аннотаций пока нет"
   }
 }

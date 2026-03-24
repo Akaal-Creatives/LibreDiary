@@ -791,5 +791,23 @@
     "capture": "Yakala",
     "pages": "Sayfalar",
     "settings": "Ayarlar"
+  },
+  "annotations": {
+    "annotateImage": "Görüntüye açıklama ekle",
+    "closeAnnotations": "Açıklamaları kapat",
+    "tools": {
+      "select": "Seç",
+      "freehand": "Serbest çizim",
+      "rectangle": "Dikdörtgen",
+      "ellipse": "Elips",
+      "arrow": "Ok",
+      "text": "Metin",
+      "pin": "Yorum sabitle"
+    },
+    "colour": "Renk",
+    "strokeWidth": "Çizgi kalınlığı",
+    "exportImage": "Açıklamalı görüntüyü dışa aktar",
+    "pinCommentPlaceholder": "Yorum ekle...",
+    "noAnnotations": "Henüz açıklama yok"
   }
 }

@@ -791,5 +791,23 @@
     "capture": "キャプチャ",
     "pages": "ページ",
     "settings": "設定"
+  },
+  "annotations": {
+    "annotateImage": "画像に注釈を付ける",
+    "closeAnnotations": "注釈を閉じる",
+    "tools": {
+      "select": "選択",
+      "freehand": "フリーハンド",
+      "rectangle": "四角形",
+      "ellipse": "楕円",
+      "arrow": "矢印",
+      "text": "テキスト",
+      "pin": "コメントをピン留め"
+    },
+    "colour": "色",
+    "strokeWidth": "線の太さ",
+    "exportImage": "注釈付き画像をエクスポート",
+    "pinCommentPlaceholder": "コメントを追加...",
+    "noAnnotations": "注釈はまだありません"
   }
 }
