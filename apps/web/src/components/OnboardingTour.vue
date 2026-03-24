@@ -42,8 +42,8 @@ function positionTooltip() {
   const tooltipHeight = 180;
   const margin = 8; // Minimum distance from viewport edges
 
-  let top = 0;
-  let left = 0;
+  let top = 0; // eslint-disable-line no-useless-assignment -- reassigned in switch below
+  let left = 0; // eslint-disable-line no-useless-assignment -- reassigned in switch below
 
   switch (stepData.placement) {
     case 'right':

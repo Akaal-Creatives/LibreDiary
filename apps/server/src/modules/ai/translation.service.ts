@@ -66,7 +66,7 @@ export async function translateText(input: TranslateInput): Promise<TranslateRes
     if (message === 'AI is disabled' || message === 'No API key configured') {
       throw error;
     }
-    throw new Error('TRANSLATION_FAILED');
+    throw new Error('TRANSLATION_FAILED', { cause: error });
   }
 
   const choices = (result as { choices?: Array<{ message?: { content?: string } }> })?.choices;

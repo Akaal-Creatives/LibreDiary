@@ -9,6 +9,7 @@
     "./vue": "./vue.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.0",
     "eslint-plugin-vue": "^10.8.0",

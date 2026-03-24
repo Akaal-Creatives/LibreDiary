@@ -12,7 +12,7 @@ export function htmlToText(html: string): string {
   text = text.replace(/<br\s*\/?>/gi, '\n');
 
   // Strip all remaining HTML tags (loop to handle nested/malformed markup like <<script>script>)
-  let prev = '';
+  let prev = ''; // eslint-disable-line no-useless-assignment -- used in do-while condition
   do {
     prev = text;
     text = text.replace(/<[^>]*>/g, '');

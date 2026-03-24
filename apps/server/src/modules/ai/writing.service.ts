@@ -71,7 +71,7 @@ export async function writeText(input: WriteTextInput): Promise<WriteTextResult>
     if (message === 'AI is disabled' || message === 'No API key configured') {
       throw error;
     }
-    throw new Error('WRITING_FAILED');
+    throw new Error('WRITING_FAILED', { cause: error });
   }
 
   const choices = (result as { choices?: Array<{ message?: { content?: string } }> })?.choices;

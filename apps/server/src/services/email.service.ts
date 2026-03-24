@@ -66,7 +66,7 @@ function stripHtml(html: string): string {
   let text = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n');
 
   // Loop to handle nested/malformed markup like <<script>script>
-  let prev = '';
+  let prev = ''; // eslint-disable-line no-useless-assignment -- used in do-while condition
   do {
     prev = text;
     text = text.replace(/<[^>]*>/g, '');

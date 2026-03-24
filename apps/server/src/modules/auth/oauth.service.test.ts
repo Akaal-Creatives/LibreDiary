@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   mockPrisma,
