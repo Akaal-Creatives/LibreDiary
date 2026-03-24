@@ -250,6 +250,11 @@
     "removeSort": "정렬 제거",
     "viewNotSupported": "{view} 보기는 아직 지원되지 않습니다.",
     "failedToLoad": "데이터베이스를 불러오지 못하였습니다",
+    "delete": "삭제",
+    "deleted": "데이터베이스가 삭제되었습니다",
+    "failedToDelete": "데이터베이스를 삭제하지 못하였습니다",
+    "confirmDeleteTitle": "데이터베이스 삭제",
+    "confirmDeleteMessage": "이 데이터베이스를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "templatePicker": {
       "title": "템플릿 선택",
       "hint": "템플릿을 선택하여 시작하거나 처음부터 시작하세요.",

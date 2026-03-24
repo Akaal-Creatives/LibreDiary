@@ -250,6 +250,11 @@
     "removeSort": "Sortering verwijderen",
     "viewNotSupported": "{view}-weergave wordt nog niet ondersteund.",
     "failedToLoad": "Database laden mislukt",
+    "delete": "Verwijderen",
+    "deleted": "Database verwijderd",
+    "failedToDelete": "Database verwijderen mislukt",
+    "confirmDeleteTitle": "Database verwijderen",
+    "confirmDeleteMessage": "Weet u zeker dat u deze database wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
     "templatePicker": {
       "title": "Kies een sjabloon",
       "hint": "Kies een sjabloon om te beginnen of start vanaf nul.",

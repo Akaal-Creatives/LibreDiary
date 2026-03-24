@@ -250,6 +250,11 @@
     "removeSort": "Quitar ordenamiento",
     "viewNotSupported": "La vista {view} aún no es compatible.",
     "failedToLoad": "No se pudo cargar la base de datos",
+    "delete": "Eliminar",
+    "deleted": "Base de datos eliminada",
+    "failedToDelete": "No se pudo eliminar la base de datos",
+    "confirmDeleteTitle": "Eliminar base de datos",
+    "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta base de datos? Esta acción no se puede deshacer.",
     "templatePicker": {
       "title": "Elige una plantilla",
       "hint": "Elige una plantilla para comenzar o empieza desde cero.",

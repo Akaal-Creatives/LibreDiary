@@ -250,6 +250,11 @@
     "removeSort": "Sortierung entfernen",
     "viewNotSupported": "Die Ansicht {view} wird noch nicht unterstützt.",
     "failedToLoad": "Datenbank konnte nicht geladen werden",
+    "delete": "Löschen",
+    "deleted": "Datenbank gelöscht",
+    "failedToDelete": "Datenbank konnte nicht gelöscht werden",
+    "confirmDeleteTitle": "Datenbank löschen",
+    "confirmDeleteMessage": "Sind Sie sicher, dass Sie diese Datenbank löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "templatePicker": {
       "title": "Vorlage auswählen",
       "hint": "Wähle eine Vorlage zum Starten oder beginne von Grund auf.",

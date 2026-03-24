@@ -250,6 +250,11 @@
     "removeSort": "並べ替えを削除",
     "viewNotSupported": "{view} ビューはまだサポートされていません。",
     "failedToLoad": "データベースの読み込みに失敗しました",
+    "delete": "削除",
+    "deleted": "データベースを削除しました",
+    "failedToDelete": "データベースの削除に失敗しました",
+    "confirmDeleteTitle": "データベースの削除",
+    "confirmDeleteMessage": "このデータベースを削除してもよろしいですか？この操作は元に戻せません。",
     "templatePicker": {
       "title": "テンプレートを選択",
       "hint": "テンプレートを選んで始めるか、白紙から始めましょう。",

@@ -9,6 +9,10 @@ vi.mock('@/stores', () => ({
     toggleFavorite: vi.fn(),
   }),
   useSyncStore: () => ({ status: 'idle', statusMessage: '' }),
+  useDatabasesStore: () => ({
+    currentDatabase: null,
+    deleteDatabase: vi.fn(),
+  }),
 }));
 
 vi.mock('vue-router', () => ({
@@ -68,6 +72,7 @@ describe('AppHeader accessibility', () => {
           CommentsPanel: { template: '<div />' },
           PageContextMenu: { template: '<div />' },
           SaveAsTemplateModal: { template: '<div />' },
+          ConfirmDialog: { template: '<div />' },
           Teleport: true,
           Transition: true,
         },

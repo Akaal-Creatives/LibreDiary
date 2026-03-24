@@ -250,6 +250,11 @@
     "removeSort": "Sıralamayı kaldır",
     "viewNotSupported": "{view} görünümü henüz desteklenmiyor.",
     "failedToLoad": "Veritabanı yüklenemedi",
+    "delete": "Sil",
+    "deleted": "Veritabanı silindi",
+    "failedToDelete": "Veritabanı silinemedi",
+    "confirmDeleteTitle": "Veritabanını sil",
+    "confirmDeleteMessage": "Bu veritabanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "templatePicker": {
       "title": "Bir şablon seçin",
       "hint": "Başlamak için bir şablon seçin veya sıfırdan başlayın.",

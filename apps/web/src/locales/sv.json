@@ -250,6 +250,11 @@
     "removeSort": "Ta bort sortering",
     "viewNotSupported": "{view}-vy stöds inte ännu.",
     "failedToLoad": "Kunde inte ladda databas",
+    "delete": "Radera",
+    "deleted": "Databas raderad",
+    "failedToDelete": "Kunde inte radera databas",
+    "confirmDeleteTitle": "Radera databas",
+    "confirmDeleteMessage": "Är du säker på att du vill radera denna databas? Denna åtgärd kan inte ångras.",
     "templatePicker": {
       "title": "Välj en mall",
       "hint": "Välj en mall för att komma igång eller börja från grunden.",

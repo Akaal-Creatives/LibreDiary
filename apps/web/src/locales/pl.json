@@ -250,6 +250,11 @@
     "removeSort": "Usuń sortowanie",
     "viewNotSupported": "Widok {view} nie jest jeszcze obsługiwany.",
     "failedToLoad": "Nie udało się załadować bazy danych",
+    "delete": "Usuń",
+    "deleted": "Baza danych usunięta",
+    "failedToDelete": "Nie udało się usunąć bazy danych",
+    "confirmDeleteTitle": "Usuń bazę danych",
+    "confirmDeleteMessage": "Czy na pewno chcesz usunąć tę bazę danych? Tej operacji nie można cofnąć.",
     "templatePicker": {
       "title": "Wybierz szablon",
       "hint": "Wybierz szablon, aby rozpocząć, lub zacznij od zera.",

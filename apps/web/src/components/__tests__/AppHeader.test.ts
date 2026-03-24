@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import { usePagesStore, useSyncStore } from '@/stores';
+import { usePagesStore, useSyncStore, useDatabasesStore } from '@/stores';
 
 // Mock the stores barrel export so we can control return values per test
 vi.mock('@/stores', () => ({
   usePagesStore: vi.fn(),
   useSyncStore: vi.fn(),
+  useDatabasesStore: vi.fn(),
 }));
 
 vi.mock('vue-router', () => ({
@@ -66,6 +67,7 @@ function mountHeader() {
         CommentsPanel: { template: '<div />' },
         PageContextMenu: { template: '<div />' },
         SaveAsTemplateModal: { template: '<div />' },
+        ConfirmDialog: { template: '<div />' },
         Teleport: true,
         Transition: true,
       },
@@ -89,6 +91,11 @@ describe('AppHeader', () => {
       status: 'idle',
       statusMessage: '',
     } as unknown as ReturnType<typeof useSyncStore>);
+
+    vi.mocked(useDatabasesStore).mockReturnValue({
+      currentDatabase: null,
+      deleteDatabase: vi.fn(),
+    } as unknown as ReturnType<typeof useDatabasesStore>);
   });
 
   // -----------------------------------------------------------------
@@ -254,6 +261,99 @@ describe('AppHeader', () => {
 
       const moreBtn = wrapper.find('.more-btn');
       expect(moreBtn.exists()).toBe(true);
+    });
+  });
+
+  // -----------------------------------------------------------------
+  // Database view context
+  // -----------------------------------------------------------------
+
+  describe('database view context', () => {
+    beforeEach(() => {
+      // No current page, but a current database
+      vi.mocked(usePagesStore).mockReturnValue({
+        currentPage: null,
+        isFavorite: vi.fn().mockReturnValue(false),
+        toggleFavorite: vi.fn(),
+      } as unknown as ReturnType<typeof usePagesStore>);
+
+      vi.mocked(useDatabasesStore).mockReturnValue({
+        currentDatabase: { id: 'db-1', name: 'Task Tracker' },
+        deleteDatabase: vi.fn(),
+      } as unknown as ReturnType<typeof useDatabasesStore>);
+    });
+
+    it('shows database name in breadcrumbs when currentDatabase is set', () => {
+      const wrapper = mountHeader();
+
+      expect(wrapper.find('.breadcrumbs').exists()).toBe(true);
+      expect(wrapper.find('.breadcrumb-title').text()).toBe('Task Tracker');
+    });
+
+    it('shows database icon in breadcrumbs', () => {
+      const wrapper = mountHeader();
+
+      const icon = wrapper.find('.breadcrumb-icon');
+      expect(icon.exists()).toBe(true);
+    });
+
+    it('does not show page-specific action buttons (history, comments, favourite)', () => {
+      const wrapper = mountHeader();
+
+      const actionButtons = wrapper.findAll('.action-btn');
+      expect(actionButtons).toHaveLength(0);
+    });
+
+    it('does not show share button on database view', () => {
+      const wrapper = mountHeader();
+
+      expect(wrapper.find('.share-btn').exists()).toBe(false);
+    });
+
+    it('shows a more-options button for databases', () => {
+      const wrapper = mountHeader();
+
+      expect(wrapper.find('.db-more-btn').exists()).toBe(true);
+    });
+
+    it('shows database dropdown menu when more-options is clicked', async () => {
+      const wrapper = mountHeader();
+
+      await wrapper.find('.db-more-btn').trigger('click');
+
+      expect(wrapper.find('.db-context-menu').exists()).toBe(true);
+    });
+
+    it('shows rename and delete options in database dropdown', async () => {
+      const wrapper = mountHeader();
+
+      await wrapper.find('.db-more-btn').trigger('click');
+
+      const menuText = wrapper.find('.db-context-menu').text();
+      expect(menuText).toContain('Rename');
+      expect(menuText).toContain('Delete');
+    });
+  });
+
+  // -----------------------------------------------------------------
+  // Neither page nor database (dashboard)
+  // -----------------------------------------------------------------
+
+  describe('dashboard context', () => {
+    it('shows "Dashboard" when neither page nor database is set', () => {
+      const wrapper = mountHeader();
+
+      expect(wrapper.find('.header-title').text()).toBe('Dashboard');
+      expect(wrapper.find('.breadcrumbs').exists()).toBe(false);
+    });
+
+    it('does not show any action buttons on dashboard', () => {
+      const wrapper = mountHeader();
+
+      expect(wrapper.findAll('.action-btn')).toHaveLength(0);
+      expect(wrapper.find('.share-btn').exists()).toBe(false);
+      expect(wrapper.find('.more-btn').exists()).toBe(false);
+      expect(wrapper.find('.db-more-btn').exists()).toBe(false);
     });
   });
 });

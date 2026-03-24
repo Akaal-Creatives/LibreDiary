@@ -255,6 +255,11 @@
     "removeSort": "Remove sort",
     "viewNotSupported": "{view} view is not yet supported.",
     "failedToLoad": "Failed to load database",
+    "delete": "Delete",
+    "deleted": "Database deleted",
+    "failedToDelete": "Failed to delete database",
+    "confirmDeleteTitle": "Delete database",
+    "confirmDeleteMessage": "Are you sure you want to delete this database? This action cannot be undone.",
     "templatePicker": {
       "title": "Choose a template",
       "hint": "Pick a template to get started, or start from scratch.",

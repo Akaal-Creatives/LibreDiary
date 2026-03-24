@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { usePagesStore, useSyncStore } from '@/stores';
+import { usePagesStore, useSyncStore, useDatabasesStore } from '@/stores';
 import { useToast } from '@/composables';
 import { useSidebar } from '@/composables/useSidebar';
 import { usePagePanels } from '@/composables/usePagePanels';
 import type { Page, PageWithChildren } from '@librediary/shared';
+import ConfirmDialog from './ui/ConfirmDialog.vue';
 import PageContextMenu from './PageContextMenu.vue';
 import SaveAsTemplateModal from './SaveAsTemplateModal.vue';
 
@@ -14,6 +15,7 @@ const router = useRouter();
 const { t } = useI18n();
 const toast = useToast();
 const pagesStore = usePagesStore();
+const databasesStore = useDatabasesStore();
 const syncStore = useSyncStore();
 const sidebar = useSidebar();
 const { openComments, openVersionHistory, openShare, commentCount } = usePagePanels();
@@ -113,6 +115,54 @@ function closeSaveTemplateModal() {
   saveTemplateModal.value.open = false;
 }
 
+// Database more-options menu
+const dbMenuOpen = ref(false);
+const dbMoreBtnRef = ref<HTMLButtonElement>();
+const showDeleteConfirm = ref(false);
+
+function onDbClickOutside(event: MouseEvent) {
+  if (!dbMenuOpen.value) return;
+  const target = event.target as Node;
+  if (dbMoreBtnRef.value?.contains(target)) return;
+  dbMenuOpen.value = false;
+}
+
+document.addEventListener('click', onDbClickOutside, true);
+onBeforeUnmount(() => document.removeEventListener('click', onDbClickOutside, true));
+
+function toggleDbMenu() {
+  dbMenuOpen.value = !dbMenuOpen.value;
+}
+
+function closeDbMenu() {
+  dbMenuOpen.value = false;
+}
+
+function handleDbRename() {
+  closeDbMenu();
+  // Navigate to database — the DatabaseHeader component handles inline rename
+  if (databasesStore.currentDatabase) {
+    router.push({ name: 'database', params: { databaseId: databasesStore.currentDatabase.id } });
+  }
+}
+
+function handleDbDeleteRequest() {
+  closeDbMenu();
+  showDeleteConfirm.value = true;
+}
+
+async function handleDbDeleteConfirm() {
+  showDeleteConfirm.value = false;
+  if (!databasesStore.currentDatabase) return;
+  try {
+    await databasesStore.deleteDatabase(databasesStore.currentDatabase.id);
+    toast.success(t('databases.deleted'));
+    router.push({ name: 'dashboard' });
+  } catch {
+    toast.error(t('databases.failedToDelete'));
+  }
+}
+
 async function handleMoveToTrash(page: Page | PageWithChildren) {
   try {
     await pagesStore.trashPage(page.id);
@@ -152,6 +202,31 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <nav v-if="pagesStore.currentPage" class="breadcrumbs">
         <span class="breadcrumb-icon">{{ pagesStore.currentPage.icon ?? '📄' }}</span>
         <span class="breadcrumb-title">{{ pagesStore.currentPage.title }}</span>
+      </nav>
+      <nav v-else-if="databasesStore.currentDatabase" class="breadcrumbs">
+        <span class="breadcrumb-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect
+              x="2.25"
+              y="2.25"
+              width="13.5"
+              height="13.5"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <line
+              x1="2.25"
+              y1="6.75"
+              x2="15.75"
+              y2="6.75"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <line x1="7.5" y1="6.75" x2="7.5" y2="15.75" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </span>
+        <span class="breadcrumb-title">{{ databasesStore.currentDatabase.name }}</span>
       </nav>
       <span v-else class="header-title">{{ $t('nav.dashboard') }}</span>
     </div>
@@ -334,7 +409,65 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
           </svg>
         </button>
       </template>
+
+      <!-- Database Actions (only visible when viewing a database) -->
+      <template v-if="!pagesStore.currentPage && databasesStore.currentDatabase">
+        <button
+          ref="dbMoreBtnRef"
+          class="db-more-btn"
+          type="button"
+          :title="$t('header.moreOptions')"
+          :aria-label="$t('header.moreOptions')"
+          @click.stop="toggleDbMenu"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+            <circle cx="9" cy="4.5" r="1.5" fill="currentColor" />
+            <circle cx="9" cy="13.5" r="1.5" fill="currentColor" />
+          </svg>
+        </button>
+
+        <!-- Database Context Menu -->
+        <div v-if="dbMenuOpen" class="db-context-menu">
+          <button class="db-menu-item" @click="handleDbRename">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M11.333 2a1.886 1.886 0 0 1 2.667 2.667L5.667 13l-3.667 1 1-3.667L11.333 2Z"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {{ $t('databases.rename') }}
+          </button>
+          <button class="db-menu-item db-menu-item--danger" @click="handleDbDeleteRequest">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 4h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+              <path
+                d="M5.333 4V2.667A.667.667 0 0 1 6 2h4a.667.667 0 0 1 .667.667V4M12.667 4l-.667 9.333a1.333 1.333 0 0 1-1.333 1.334H5.333A1.333 1.333 0 0 1 4 13.333L3.333 4"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {{ $t('databases.delete') }}
+          </button>
+        </div>
+      </template>
     </div>
+
+    <!-- Delete Database Confirm Dialog -->
+    <ConfirmDialog
+      :open="showDeleteConfirm"
+      :title="$t('databases.confirmDeleteTitle')"
+      :message="$t('databases.confirmDeleteMessage')"
+      :confirm-text="$t('databases.delete')"
+      variant="danger"
+      @confirm="handleDbDeleteConfirm"
+      @cancel="showDeleteConfirm = false"
+    />
 
     <!-- Context Menu (teleported to body for correct positioning) -->
     <Teleport to="body">
@@ -366,6 +499,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 
 <style scoped>
 .header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -535,6 +669,70 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
 .more-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
   background: var(--color-hover);
+}
+
+/* Database More Button */
+.db-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.db-more-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+}
+
+/* Database Context Menu */
+.db-context-menu {
+  position: absolute;
+  top: 100%;
+  right: var(--space-4);
+  z-index: var(--z-dropdown, 100);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated, var(--color-surface-raised));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.db-menu-item {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.db-menu-item:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+}
+
+.db-menu-item--danger:hover {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 
 /* ===========================================

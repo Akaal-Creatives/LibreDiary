@@ -250,6 +250,11 @@
     "removeSort": "إزالة الترتيب",
     "viewNotSupported": "عرض {view} غير مدعوم بعد.",
     "failedToLoad": "فشل تحميل قاعدة البيانات",
+    "delete": "حذف",
+    "deleted": "تم حذف قاعدة البيانات",
+    "failedToDelete": "فشل حذف قاعدة البيانات",
+    "confirmDeleteTitle": "حذف قاعدة البيانات",
+    "confirmDeleteMessage": "هل أنت متأكد أنك تريد حذف قاعدة البيانات هذه؟ لا يمكن التراجع عن هذا الإجراء.",
     "templatePicker": {
       "title": "اختر قالبًا",
       "hint": "اختر قالبًا للبدء، أو ابدأ من الصفر.",

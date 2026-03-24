@@ -250,6 +250,11 @@
     "removeSort": "Supprimer le tri",
     "viewNotSupported": "La vue {view} n'est pas encore prise en charge.",
     "failedToLoad": "Échec du chargement de la base de données",
+    "delete": "Supprimer",
+    "deleted": "Base de données supprimée",
+    "failedToDelete": "Échec de la suppression de la base de données",
+    "confirmDeleteTitle": "Supprimer la base de données",
+    "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cette base de données ? Cette action est irréversible.",
     "templatePicker": {
       "title": "Choisir un modèle",
       "hint": "Choisissez un modèle pour commencer ou partez de zéro.",

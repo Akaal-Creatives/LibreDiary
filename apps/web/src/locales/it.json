@@ -250,6 +250,11 @@
     "removeSort": "Rimuovi ordinamento",
     "viewNotSupported": "La vista {view} non è ancora supportata.",
     "failedToLoad": "Impossibile caricare il database",
+    "delete": "Elimina",
+    "deleted": "Database eliminato",
+    "failedToDelete": "Impossibile eliminare il database",
+    "confirmDeleteTitle": "Elimina database",
+    "confirmDeleteMessage": "Sei sicuro di voler eliminare questo database? Questa azione non può essere annullata.",
     "templatePicker": {
       "title": "Scegli un modello",
       "hint": "Scegli un modello per iniziare oppure parti da zero.",
