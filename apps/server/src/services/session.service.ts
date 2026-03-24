@@ -72,7 +72,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
       where: { id: sessionId },
     })
     .catch((error: unknown) => {
-      console.warn(`Failed to delete session ${sessionId} — it may already be deleted`, error);
+      console.warn('Failed to delete session — it may already be deleted', sessionId, error);
     });
 }
 
