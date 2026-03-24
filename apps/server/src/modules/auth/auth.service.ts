@@ -284,9 +284,9 @@ export async function acceptInvite(
   // Check user is not already a member of this organisation
   const existingMember = await prisma.organizationMember.findUnique({
     where: {
-      userId_organizationId: {
-        userId,
+      organizationId_userId: {
         organizationId: invite.organizationId,
+        userId,
       },
     },
   });
