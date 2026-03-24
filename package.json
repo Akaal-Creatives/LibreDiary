@@ -72,7 +72,7 @@
     "playwright": "^1.50.0",
     "prettier": "^3.4.0",
     "semantic-release": "^25.0.3",
-    "turbo": "^2.8.17"
+    "turbo": "^2.8.20"
   },
   "lint-staged": {
     "*.{ts,tsx,vue}": [
