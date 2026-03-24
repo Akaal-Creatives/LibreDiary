@@ -49,7 +49,7 @@ function updateStrokeWidth(event: Event) {
         class="annotation-toolbar__tool-btn"
         :class="{ 'annotation-toolbar__tool-btn--active': toolState.activeTool === tool.id }"
         :aria-label="tool.label"
-        :aria-pressed="String(toolState.activeTool === tool.id)"
+        :aria-pressed="toolState.activeTool === tool.id"
         @click="selectTool(tool.id)"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
