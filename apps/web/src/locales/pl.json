@@ -250,6 +250,11 @@
     "removeSort": "Usuń sortowanie",
     "viewNotSupported": "Widok {view} nie jest jeszcze obsługiwany.",
     "failedToLoad": "Nie udało się załadować bazy danych",
+    "templatePicker": {
+      "title": "Wybierz szablon",
+      "hint": "Wybierz szablon, aby rozpocząć, lub zacznij od zera.",
+      "propertyCount": "{count} właściwości"
+    },
     "filterOperators": {
       "contains": "zawiera",
       "equals": "równa się",

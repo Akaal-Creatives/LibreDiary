@@ -250,6 +250,11 @@
     "removeSort": "Удалить сортировку",
     "viewNotSupported": "Представление «{view}» пока не поддерживается.",
     "failedToLoad": "Не удалось загрузить базу данных",
+    "templatePicker": {
+      "title": "Выберите шаблон",
+      "hint": "Выберите шаблон для начала или начните с нуля.",
+      "propertyCount": "{count} свойств"
+    },
     "filterOperators": {
       "contains": "содержит",
       "equals": "равно",

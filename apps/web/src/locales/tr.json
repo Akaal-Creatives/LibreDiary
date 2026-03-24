@@ -250,6 +250,11 @@
     "removeSort": "Sıralamayı kaldır",
     "viewNotSupported": "{view} görünümü henüz desteklenmiyor.",
     "failedToLoad": "Veritabanı yüklenemedi",
+    "templatePicker": {
+      "title": "Bir şablon seçin",
+      "hint": "Başlamak için bir şablon seçin veya sıfırdan başlayın.",
+      "propertyCount": "{count} özellik"
+    },
     "filterOperators": {
       "contains": "içerir",
       "equals": "eşittir",

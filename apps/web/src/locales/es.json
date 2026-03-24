@@ -250,6 +250,11 @@
     "removeSort": "Quitar ordenamiento",
     "viewNotSupported": "La vista {view} aún no es compatible.",
     "failedToLoad": "No se pudo cargar la base de datos",
+    "templatePicker": {
+      "title": "Elige una plantilla",
+      "hint": "Elige una plantilla para comenzar o empieza desde cero.",
+      "propertyCount": "{count} propiedades"
+    },
     "filterOperators": {
       "contains": "contiene",
       "equals": "es igual a",

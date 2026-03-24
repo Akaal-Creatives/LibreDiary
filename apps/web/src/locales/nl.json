@@ -250,6 +250,11 @@
     "removeSort": "Sortering verwijderen",
     "viewNotSupported": "{view}-weergave wordt nog niet ondersteund.",
     "failedToLoad": "Database laden mislukt",
+    "templatePicker": {
+      "title": "Kies een sjabloon",
+      "hint": "Kies een sjabloon om te beginnen of start vanaf nul.",
+      "propertyCount": "{count} eigenschappen"
+    },
     "filterOperators": {
       "contains": "bevat",
       "equals": "is gelijk aan",

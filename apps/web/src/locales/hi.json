@@ -250,6 +250,11 @@
     "removeSort": "क्रम हटाएँ",
     "viewNotSupported": "{view} व्यू अभी उपलब्ध नहीं है।",
     "failedToLoad": "डेटाबेस लोड करने में विफल",
+    "templatePicker": {
+      "title": "एक टेम्पलेट चुनें",
+      "hint": "शुरू करने के लिए एक टेम्पलेट चुनें, या शुरू से शुरू करें।",
+      "propertyCount": "{count} गुण"
+    },
     "filterOperators": {
       "contains": "शामिल है",
       "equals": "बराबर है",

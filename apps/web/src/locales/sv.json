@@ -250,6 +250,11 @@
     "removeSort": "Ta bort sortering",
     "viewNotSupported": "{view}-vy stöds inte ännu.",
     "failedToLoad": "Kunde inte ladda databas",
+    "templatePicker": {
+      "title": "Välj en mall",
+      "hint": "Välj en mall för att komma igång eller börja från grunden.",
+      "propertyCount": "{count} egenskaper"
+    },
     "filterOperators": {
       "contains": "innehåller",
       "equals": "är lika med",

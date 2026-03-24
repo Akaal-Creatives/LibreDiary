@@ -250,6 +250,11 @@
     "removeSort": "Supprimer le tri",
     "viewNotSupported": "La vue {view} n'est pas encore prise en charge.",
     "failedToLoad": "Échec du chargement de la base de données",
+    "templatePicker": {
+      "title": "Choisir un modèle",
+      "hint": "Choisissez un modèle pour commencer ou partez de zéro.",
+      "propertyCount": "{count} propriétés"
+    },
     "filterOperators": {
       "contains": "contient",
       "equals": "est égal à",

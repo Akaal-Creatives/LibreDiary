@@ -40,6 +40,9 @@ vi.mock('../LanguageSwitcher.vue', () => ({
 vi.mock('../SaveAsTemplateModal.vue', () => ({
   default: { template: '<div class="save-template-modal-stub" />' },
 }));
+vi.mock('../database/DatabaseTemplatePicker.vue', () => ({
+  default: { template: '<div class="database-template-picker-stub" />' },
+}));
 
 // Mock composables
 vi.mock('@/composables', () => ({

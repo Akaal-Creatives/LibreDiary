@@ -250,6 +250,11 @@
     "removeSort": "並べ替えを削除",
     "viewNotSupported": "{view} ビューはまだサポートされていません。",
     "failedToLoad": "データベースの読み込みに失敗しました",
+    "templatePicker": {
+      "title": "テンプレートを選択",
+      "hint": "テンプレートを選んで始めるか、白紙から始めましょう。",
+      "propertyCount": "{count} 個のプロパティ"
+    },
     "filterOperators": {
       "contains": "を含む",
       "equals": "に等しい",

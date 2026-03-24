@@ -255,6 +255,11 @@
     "removeSort": "Remove sort",
     "viewNotSupported": "{view} view is not yet supported.",
     "failedToLoad": "Failed to load database",
+    "templatePicker": {
+      "title": "Choose a template",
+      "hint": "Pick a template to get started, or start from scratch.",
+      "propertyCount": "{count} properties"
+    },
     "filterOperators": {
       "contains": "contains",
       "equals": "equals",

@@ -250,6 +250,11 @@
     "removeSort": "Rimuovi ordinamento",
     "viewNotSupported": "La vista {view} non è ancora supportata.",
     "failedToLoad": "Impossibile caricare il database",
+    "templatePicker": {
+      "title": "Scegli un modello",
+      "hint": "Scegli un modello per iniziare oppure parti da zero.",
+      "propertyCount": "{count} proprietà"
+    },
     "filterOperators": {
       "contains": "contiene",
       "equals": "è uguale a",

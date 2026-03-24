@@ -250,6 +250,11 @@
     "removeSort": "移除排序",
     "viewNotSupported": "{view} 视图暂不支持。",
     "failedToLoad": "加载数据库失败",
+    "templatePicker": {
+      "title": "选择模板",
+      "hint": "选择一个模板开始，或从头开始。",
+      "propertyCount": "{count} 个属性"
+    },
     "filterOperators": {
       "contains": "包含",
       "equals": "等于",

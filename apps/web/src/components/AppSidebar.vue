@@ -16,6 +16,7 @@ import NotificationBell from './NotificationBell.vue';
 import LanguageSwitcher from './LanguageSwitcher.vue';
 import SearchModal from './SearchModal.vue';
 import SidebarSkeleton from './skeletons/SidebarSkeleton.vue';
+import DatabaseTemplatePicker from './database/DatabaseTemplatePicker.vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -49,6 +50,7 @@ const saveTemplateModal = ref<{ open: boolean; pageId: string; pageTitle: string
   pageId: '',
   pageTitle: '',
 });
+const showDatabaseTemplatePicker = ref(false);
 
 function openSearch() {
   showSearchModal.value = true;
@@ -190,9 +192,14 @@ async function handleToggleFavorite(page: Page | PageWithChildren) {
   }
 }
 
-async function createNewDatabase() {
+function openDatabaseTemplatePicker() {
+  showDatabaseTemplatePicker.value = true;
+}
+
+async function handleDatabaseTemplateSelect(templateId: string) {
+  showDatabaseTemplatePicker.value = false;
   try {
-    const db = await databasesStore.createDatabase({ name: t('databases.untitledDatabase') });
+    const db = await databasesStore.createDatabaseFromTemplate(templateId);
     router.push({ name: 'database', params: { databaseId: db.id } });
   } catch (e) {
     console.error('Failed to create database:', e);
@@ -391,7 +398,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
             class="section-action"
             :title="$t('sidebar.addDatabase')"
             :aria-label="$t('sidebar.addNewDatabase')"
-            @click="createNewDatabase"
+            @click="openDatabaseTemplatePicker"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path
@@ -610,6 +617,13 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       :page-title="saveTemplateModal.pageTitle"
       @close="closeSaveTemplateModal"
       @saved="closeSaveTemplateModal"
+    />
+
+    <!-- Database Template Picker -->
+    <DatabaseTemplatePicker
+      :open="showDatabaseTemplatePicker"
+      @select="handleDatabaseTemplateSelect"
+      @close="showDatabaseTemplatePicker = false"
     />
   </aside>
 </template>
