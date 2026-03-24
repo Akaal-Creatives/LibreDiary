@@ -1,6 +1,9 @@
 import Image from '@tiptap/extension-image';
 import type { ChainedCommands } from '@tiptap/core';
+import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import type { Component } from 'vue';
 import { resolveUploadUrl } from '@/utils/uploadUrl';
+import ImageNodeView from '@/components/annotations/ImageNodeView.vue';
 
 /**
  * ImageUploadExtension wraps the standard Tiptap Image extension and adds
@@ -16,6 +19,10 @@ export const ImageUploadExtension = Image.extend({
       alt: { default: null },
       title: { default: null },
     };
+  },
+
+  addNodeView() {
+    return VueNodeViewRenderer(ImageNodeView as Component);
   },
 
   addCommands() {
