@@ -20,6 +20,7 @@ const emit = defineEmits<{
 const isDrawing = ref(false);
 const currentPoints = ref<number[]>([]);
 const drawStart = ref<{ x: number; y: number } | null>(null);
+const drawCurrent = ref<{ x: number; y: number } | null>(null);
 
 const stageConfig = computed(() => ({
   width: props.imageWidth,
@@ -111,6 +112,8 @@ function handleStageMouseMove(e: {
   const pos = stage.getPointerPosition();
   if (!pos) return;
 
+  drawCurrent.value = pos;
+
   if (props.toolState.activeTool === 'freehand') {
     currentPoints.value = [...currentPoints.value, pos.x, pos.y];
   }
@@ -120,6 +123,8 @@ function handleStageMouseUp() {
   if (!isDrawing.value || !drawStart.value) return;
 
   isDrawing.value = false;
+  const start = drawStart.value;
+  const end = drawCurrent.value ?? start;
 
   if (props.toolState.activeTool === 'freehand' && currentPoints.value.length > 2) {
     const annotation: Annotation = {
@@ -135,10 +140,66 @@ function handleStageMouseUp() {
       createdAt: new Date().toISOString(),
     };
     emit('annotation:create', annotation);
+  } else if (props.toolState.activeTool === 'rectangle') {
+    const width = end.x - start.x;
+    const height = end.y - start.y;
+    if (Math.abs(width) > 2 || Math.abs(height) > 2) {
+      emit('annotation:create', {
+        id: generateId(),
+        type: 'rectangle',
+        x: Math.min(start.x, end.x),
+        y: Math.min(start.y, end.y),
+        width: Math.abs(width),
+        height: Math.abs(height),
+        stroke: props.toolState.strokeColour,
+        strokeWidth: props.toolState.strokeWidth,
+        fill: props.toolState.fillColour,
+        opacity: props.toolState.fillOpacity,
+        createdBy: '',
+        createdAt: new Date().toISOString(),
+      });
+    }
+  } else if (props.toolState.activeTool === 'ellipse') {
+    const radiusX = Math.abs(end.x - start.x) / 2;
+    const radiusY = Math.abs(end.y - start.y) / 2;
+    if (radiusX > 1 || radiusY > 1) {
+      emit('annotation:create', {
+        id: generateId(),
+        type: 'ellipse',
+        x: (start.x + end.x) / 2,
+        y: (start.y + end.y) / 2,
+        radiusX,
+        radiusY,
+        stroke: props.toolState.strokeColour,
+        strokeWidth: props.toolState.strokeWidth,
+        fill: props.toolState.fillColour,
+        opacity: props.toolState.fillOpacity,
+        createdBy: '',
+        createdAt: new Date().toISOString(),
+      });
+    }
+  } else if (props.toolState.activeTool === 'arrow') {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      emit('annotation:create', {
+        id: generateId(),
+        type: 'arrow',
+        x: 0,
+        y: 0,
+        points: [start.x, start.y, end.x, end.y],
+        stroke: props.toolState.strokeColour,
+        strokeWidth: props.toolState.strokeWidth,
+        opacity: 1,
+        createdBy: '',
+        createdAt: new Date().toISOString(),
+      });
+    }
   }
 
   currentPoints.value = [];
   drawStart.value = null;
+  drawCurrent.value = null;
 }
 
 // Konva configs for each annotation type
