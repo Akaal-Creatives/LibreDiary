@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AnnotationLayer from './AnnotationLayer.vue';
+import AnnotationToolbar from './AnnotationToolbar.vue';
 import { DEFAULT_TOOL_STATE } from './types';
 import type { Annotation, AnnotationToolState } from './types';
 
@@ -104,6 +105,14 @@ onMounted(() => {
         </svg>
       </button>
 
+      <!-- Annotation toolbar -->
+      <AnnotationToolbar
+        v-if="annotating"
+        :tool-state="toolState"
+        class="image-node-view__toolbar"
+        @update:tool-state="toolState = $event"
+      />
+
       <!-- Annotation overlay -->
       <AnnotationLayer
         v-if="annotating"
@@ -190,5 +199,14 @@ onMounted(() => {
 
 .image-node-view__close-btn:hover {
   background: #b04848;
+}
+
+/* Toolbar — positioned above the image */
+.image-node-view__toolbar {
+  position: absolute;
+  bottom: calc(100% + var(--space-2, 8px));
+  left: 50%;
+  z-index: 30;
+  transform: translateX(-50%);
 }
 </style>
