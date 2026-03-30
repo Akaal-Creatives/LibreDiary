@@ -35,9 +35,9 @@
     "@librediary/eslint-config": "workspace:*",
     "@librediary/shared": "workspace:*",
     "@librediary/tsconfig": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.2"
   }
 }
