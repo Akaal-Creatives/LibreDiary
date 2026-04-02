@@ -1,1 +1,30 @@
 pnpm lint-staged
+
+# Typecheck packages that have staged TypeScript/Vue changes
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+NEED_SERVER=false
+NEED_WEB=false
+NEED_SHARED=false
+NEED_MCP=false
+
+for f in $STAGED; do
+  case "$f" in
+    apps/server/src/*.ts)        NEED_SERVER=true ;;
+    apps/web/src/*.ts|apps/web/src/*.vue) NEED_WEB=true ;;
+    packages/shared/src/*.ts)    NEED_SHARED=true ;;
+    packages/mcp-server/src/*.ts) NEED_MCP=true ;;
+    packages/tsconfig/*)         NEED_SERVER=true; NEED_WEB=true; NEED_SHARED=true; NEED_MCP=true ;;
+  esac
+done
+
+FILTERS=""
+if $NEED_SHARED; then FILTERS="$FILTERS --filter @librediary/shared"; fi
+if $NEED_MCP; then FILTERS="$FILTERS --filter @librediary/mcp-server"; fi
+if $NEED_SERVER; then FILTERS="$FILTERS --filter @librediary/server"; fi
+if $NEED_WEB; then FILTERS="$FILTERS --filter @librediary/web"; fi
+
+if [ -n "$FILTERS" ]; then
+  echo "Running typecheck for changed packages..."
+  pnpm $FILTERS run typecheck
+fi
