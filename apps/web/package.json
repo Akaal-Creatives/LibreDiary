@@ -64,7 +64,7 @@
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.9.1",
-    "axe-core": "^4.11.1",
+    "axe-core": "^4.11.2",
     "happy-dom": "^20.8.9",
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-sub": "^2.0.0",
