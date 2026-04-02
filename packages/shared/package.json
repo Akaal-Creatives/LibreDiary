@@ -48,7 +48,7 @@
     "@librediary/tsconfig": "workspace:*",
     "@types/libsodium-wrappers-sumo": "^0.8.2",
     "tsup": "^8.3.0",
-    "typescript": "^5.7.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.0"
   }
 }
