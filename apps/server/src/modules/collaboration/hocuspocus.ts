@@ -197,10 +197,7 @@ export function createHocuspocusServer(): Hocuspocus {
 
             if (hasHtmlContent) {
               logger.warn(
-                '[hocuspocus] yjsState for %s has no text content but htmlContent exists (%d chars) — ' +
-                  'skipping yjsState load so frontend can restore from htmlContent',
-                documentName,
-                page.htmlContent!.length
+                `[hocuspocus] yjsState for ${documentName} has no text content but htmlContent exists (${page.htmlContent!.length} chars) — skipping yjsState load so frontend can restore from htmlContent`
               );
               return data.document;
             }
@@ -367,7 +364,30 @@ export function getHocuspocusServer(): Hocuspocus {
 export async function destroyHocuspocusServer(): Promise<void> {
   if (serverInstance) {
     logger.info('[hocuspocus] flushing all documents before shutdown...');
-    await serverInstance.destroy();
+
+    // Flush every in-memory document to the database
+    const flushPromises: Promise<unknown>[] = [];
+    for (const [, document] of serverInstance.documents) {
+      flushPromises.push(
+        serverInstance
+          .storeDocumentHooks(document, {
+            clientsCount: document.getConnectionsCount(),
+            context: {},
+            document,
+            documentName: document.name,
+            instance: serverInstance,
+            requestHeaders: {},
+            requestParameters: new URLSearchParams(),
+            socketId: '',
+          })
+          .catch((err) => {
+            logger.error(err, `[hocuspocus] failed to flush document ${document.name}`);
+          })
+      );
+    }
+    await Promise.all(flushPromises);
+
+    serverInstance.closeConnections();
     lastKnownUserByDocument.clear();
     serverInstance = null;
     logger.info('[hocuspocus] shutdown complete');
