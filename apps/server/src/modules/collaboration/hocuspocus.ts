@@ -13,6 +13,12 @@ import { encryptYjsState, decryptYjsState, isEncryptedYjsState } from './yjs-enc
 const SESSION_COOKIE_NAME = 'session_token';
 
 /**
+ * Track the last authenticated userId per document so that onStoreDocument
+ * can still persist changes even after all users have disconnected.
+ */
+const lastKnownUserByDocument = new Map<string, string>();
+
+/**
  * Parse cookies from a cookie header string
  */
 function parseCookies(cookieHeader: string | undefined): Record<string, string> {
@@ -64,11 +70,22 @@ export function parseDocumentName(
 }
 
 /**
+ * Minimum yjsState size (in bytes) to consider valid.
+ * An empty Yjs document is ~2-70 bytes depending on structure.
+ * Real content with even a short paragraph is typically > 100 bytes.
+ */
+const MIN_VALID_YJS_STATE_SIZE = 100;
+
+/**
  * Create and configure the Hocuspocus instance for Fastify integration
  */
 export function createHocuspocusServer(): Hocuspocus {
   const server = new Hocuspocus({
     name: 'librediary-collab',
+
+    // Explicit debounce: save 2s after last change, max 10s after first change
+    debounce: 2000,
+    maxDebounce: 10000,
 
     /**
      * Authentication hook - validates session and page access
@@ -129,6 +146,10 @@ export function createHocuspocusServer(): Hocuspocus {
         throw new Error('Access denied to this document');
       }
 
+      // Track last authenticated user for this document so onStoreDocument
+      // can still save after all users disconnect
+      lastKnownUserByDocument.set(documentName, userId);
+
       // Return context for subsequent hooks
       return {
         userId,
@@ -160,6 +181,34 @@ export function createHocuspocusServer(): Hocuspocus {
             yjsState = decryptYjsState(yjsState, parsed.organizationId);
           }
 
+          // Validate yjsState is not suspiciously small
+          if (yjsState.length < MIN_VALID_YJS_STATE_SIZE) {
+            // Check if the page has htmlContent that could be used as fallback
+            const page = await prisma.page.findFirst({
+              where: { id: parsed.pageId, organizationId: parsed.organizationId },
+              select: { htmlContent: true },
+            });
+
+            const hasHtmlContent =
+              page?.htmlContent &&
+              page.htmlContent.trim() &&
+              page.htmlContent !== '<p></p>' &&
+              page.htmlContent !== '<p><br></p>';
+
+            if (hasHtmlContent) {
+              logger.warn(
+                '[hocuspocus] yjsState for %s is only %d bytes but htmlContent exists (%d chars) — ' +
+                  'skipping yjsState load so frontend can restore from htmlContent',
+                documentName,
+                yjsState.length,
+                page.htmlContent!.length
+              );
+              // Do NOT apply the tiny yjsState — let the frontend's
+              // insertInitialContentIfEmpty() restore from htmlContent instead
+              return data.document;
+            }
+          }
+
           // Apply stored state to the Yjs document
           const update = new Uint8Array(yjsState);
           Y.applyUpdate(data.document, update);
@@ -179,7 +228,19 @@ export function createHocuspocusServer(): Hocuspocus {
       const { documentName, context, document } = data;
 
       const parsed = parseDocumentName(documentName);
-      if (!parsed || !context?.userId) {
+      if (!parsed) {
+        return;
+      }
+
+      // Use context userId if available, otherwise fall back to the last
+      // authenticated user for this document. This ensures the final save
+      // after all users disconnect still persists.
+      const userId = context?.userId || lastKnownUserByDocument.get(documentName);
+      if (!userId) {
+        logger.warn(
+          '[hocuspocus] no userId available for storing document %s — skipping save',
+          documentName
+        );
         return;
       }
 
@@ -202,7 +263,7 @@ export function createHocuspocusServer(): Hocuspocus {
           parsed.organizationId,
           parsed.pageId,
           yjsState,
-          context.userId
+          userId
         );
 
         if (!org?.isEncrypted) {
@@ -300,4 +361,18 @@ export function getHocuspocusServer(): Hocuspocus {
     serverInstance = createHocuspocusServer();
   }
   return serverInstance;
+}
+
+/**
+ * Gracefully shut down the Hocuspocus server.
+ * Flushes all in-memory documents to the database before closing.
+ */
+export async function destroyHocuspocusServer(): Promise<void> {
+  if (serverInstance) {
+    logger.info('[hocuspocus] flushing all documents before shutdown...');
+    await serverInstance.destroy();
+    lastKnownUserByDocument.clear();
+    serverInstance = null;
+    logger.info('[hocuspocus] shutdown complete');
+  }
 }

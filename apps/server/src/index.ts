@@ -8,6 +8,7 @@ import {
   startEncryptionPurgeScheduler,
   stopEncryptionPurgeScheduler,
 } from './modules/encryption/index.js';
+import { destroyHocuspocusServer } from './modules/collaboration/hocuspocus.js';
 
 async function main() {
   const app = await buildApp();
@@ -47,6 +48,8 @@ async function main() {
         stopTrashCleanupScheduler();
         stopDemoReseedScheduler();
         stopEncryptionPurgeScheduler();
+        // Flush all in-memory Yjs documents to database before closing
+        await destroyHocuspocusServer();
         await app.close();
         app.log.info('Server closed');
         process.exit(0);
