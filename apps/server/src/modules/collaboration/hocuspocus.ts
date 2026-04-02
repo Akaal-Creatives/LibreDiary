@@ -70,13 +70,6 @@ export function parseDocumentName(
 }
 
 /**
- * Minimum yjsState size (in bytes) to consider valid.
- * An empty Yjs document is ~2-70 bytes depending on structure.
- * Real content with even a short paragraph is typically > 100 bytes.
- */
-const MIN_VALID_YJS_STATE_SIZE = 100;
-
-/**
  * Create and configure the Hocuspocus instance for Fastify integration
  */
 export function createHocuspocusServer(): Hocuspocus {
@@ -181,9 +174,16 @@ export function createHocuspocusServer(): Hocuspocus {
             yjsState = decryptYjsState(yjsState, parsed.organizationId);
           }
 
-          // Validate yjsState is not suspiciously small
-          if (yjsState.length < MIN_VALID_YJS_STATE_SIZE) {
-            // Check if the page has htmlContent that could be used as fallback
+          // Decode yjsState and check whether it carries any real text.
+          // If it's empty but the page has htmlContent, skip loading the
+          // Yjs state so the frontend's insertInitialContentIfEmpty()
+          // can restore from the HTML backup instead.
+          const tempDoc = new Y.Doc();
+          Y.applyUpdate(tempDoc, new Uint8Array(yjsState));
+          const yjsText = yjsDocToText(tempDoc).trim();
+          tempDoc.destroy();
+
+          if (!yjsText) {
             const page = await prisma.page.findFirst({
               where: { id: parsed.pageId, organizationId: parsed.organizationId },
               select: { htmlContent: true },
@@ -197,14 +197,11 @@ export function createHocuspocusServer(): Hocuspocus {
 
             if (hasHtmlContent) {
               logger.warn(
-                '[hocuspocus] yjsState for %s is only %d bytes but htmlContent exists (%d chars) — ' +
+                '[hocuspocus] yjsState for %s has no text content but htmlContent exists (%d chars) — ' +
                   'skipping yjsState load so frontend can restore from htmlContent',
                 documentName,
-                yjsState.length,
                 page.htmlContent!.length
               );
-              // Do NOT apply the tiny yjsState — let the frontend's
-              // insertInitialContentIfEmpty() restore from htmlContent instead
               return data.document;
             }
           }
