@@ -238,7 +238,6 @@ export const DragHandleExtension = Extension.create({
               const lastBlock = blocks[blocks.length - 1]!;
               if (lastBlock.dom) {
                 const rect = lastBlock.dom.getBoundingClientRect();
-                insertPos = lastBlock.pos + lastBlock.node.nodeSize;
                 indicatorY = rect.bottom;
               }
             }

@@ -41,6 +41,10 @@ const mockFetch = vi.fn().mockResolvedValue({
 });
 vi.stubGlobal('fetch', mockFetch);
 
+// Set VITE_API_URL so getWebSocketUrl can construct a valid URL
+// (happy-dom 20.8.9+ validates URL strictly)
+vi.stubEnv('VITE_API_URL', 'http://localhost:3000');
+
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { useCollaboration } from '../useCollaboration';
 

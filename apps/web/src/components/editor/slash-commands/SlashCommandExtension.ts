@@ -1,8 +1,11 @@
 import { Extension } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
+import type { SuggestionOptions } from '@tiptap/suggestion';
 
-export const SlashCommandExtension = Extension.create({
+export const SlashCommandExtension = Extension.create<{
+  suggestion: Partial<SuggestionOptions>;
+}>({
   name: 'slashCommands',
 
   addOptions() {

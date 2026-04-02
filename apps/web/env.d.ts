@@ -6,6 +6,8 @@ declare module '*.vue' {
   export default component;
 }
 
+declare module 'vuestic-ui/css';
+
 declare const __APP_VERSION__: string;
 
 interface ImportMetaEnv {

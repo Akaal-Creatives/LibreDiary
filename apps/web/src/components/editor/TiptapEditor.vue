@@ -59,7 +59,7 @@ const CollaborationCursor = Extension.create({
   // @ts-expect-error — custom command type not in tiptap's RawCommands interface
   addCommands() {
     return {
-      updateUser: (attributes: { name?: string; color?: string }) => () => {
+      updateUser: (attributes: { name: string; color: string }) => () => {
         this.options.user = attributes;
         this.options.provider?.awareness?.setLocalStateField('user', this.options.user);
         return true;

@@ -464,7 +464,7 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       :title="$t('databases.confirmDeleteTitle')"
       :message="$t('databases.confirmDeleteMessage')"
       :confirm-text="$t('databases.delete')"
-      variant="danger"
+      variant="destructive"
       @confirm="handleDbDeleteConfirm"
       @cancel="showDeleteConfirm = false"
     />
