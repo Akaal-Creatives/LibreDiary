@@ -35,7 +35,7 @@
     "@librediary/eslint-config": "workspace:*",
     "@librediary/shared": "workspace:*",
     "@librediary/tsconfig": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "^4.1.2",
     "tsup": "^8.3.0",
     "typescript": "^6.0.2",
