@@ -39,7 +39,7 @@
     "@tiptap/starter-kit": "^3.21.0",
     "@tiptap/suggestion": "^3.21.0",
     "@tiptap/vue-3": "^3.21.0",
-    "dompurify": "^3.3.3",
+    "dompurify": "^3.4.0",
     "katex": "^0.16.44",
     "konva": "^10.2.3",
     "lowlight": "^3.3.0",
