@@ -47,10 +47,10 @@
     "minisearch": "^7.2.0",
     "pinia": "^3.0.4",
     "tiptap-markdown": "^0.9.0",
-    "vue": "^3.5.31",
-    "vue-i18n": "^11.3.0",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.0",
     "vue-konva": "^3.4.0",
-    "vue-router": "^5.0.4",
+    "vue-router": "^5.0.6",
     "vuestic-ui": "^1.10.0",
     "yjs": "^13.6.30"
   },
@@ -62,7 +62,7 @@
     "@types/katex": "^0.16.8",
     "@types/markdown-it-footnote": "^3.0.4",
     "@vitejs/plugin-vue": "^6.0.5",
-    "@vue/test-utils": "^2.4.6",
+    "@vue/test-utils": "^2.4.8",
     "@vue/tsconfig": "^0.9.1",
     "axe-core": "^4.11.2",
     "happy-dom": "^20.8.9",
@@ -75,6 +75,6 @@
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.2",
-    "vue-tsc": "^3.2.6"
+    "vue-tsc": "^3.2.7"
   }
 }
