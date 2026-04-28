@@ -42,6 +42,20 @@ updates:
           - "@vue/*"
           - pinia
           - vue-router
+      tiptap-ecosystem:
+        patterns:
+          - "@tiptap/*"
+          - tiptap-markdown
+      web-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      web-dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
 
   # Server app
   - package-ecosystem: npm
@@ -64,6 +78,16 @@ updates:
         patterns:
           - prisma
           - "@prisma/*"
+      server-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      server-dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
 
   # GitHub Actions
   - package-ecosystem: github-actions
