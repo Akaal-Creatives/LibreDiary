@@ -214,7 +214,7 @@ importers:
         version: 5.0.6
       '@vitest/coverage-v8':
         specifier: ^4.1.2
-        version: 4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))
+        version: 4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))
       prisma:
         specifier: ^7.6.0
         version: 7.6.0(@types/react@19.2.13)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
@@ -229,7 +229,7 @@ importers:
         version: 6.0.2
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   apps/web:
     dependencies:
@@ -362,7 +362,7 @@ importers:
         version: 3.0.4
       '@vitejs/plugin-vue':
         specifier: ^6.0.5
-        version: 6.0.5(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vue@3.5.33(typescript@6.0.2))
+        version: 6.0.5(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vue@3.5.33(typescript@6.0.2))
       '@vue/test-utils':
         specifier: ^2.4.6
         version: 2.4.6
@@ -386,22 +386,22 @@ importers:
         version: 2.0.0
       rollup-plugin-visualizer:
         specifier: ^7.0.1
-        version: 7.0.1(rolldown@1.0.0-rc.12)(rollup@2.80.0)
+        version: 7.0.1(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(rollup@2.80.0)
       typescript:
         specifier: ^6.0.2
         version: 6.0.2
       vite:
-        specifier: ^8.0.3
-        version: 8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
+        specifier: ^8.0.5
+        version: 8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
       vite-plugin-compression2:
         specifier: ^2.5.3
         version: 2.5.3(rollup@2.80.0)
       vite-plugin-pwa:
         specifier: ^1.2.0
-        version: 1.2.0(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(workbox-build@7.4.0)(workbox-window@7.4.0)
+        version: 1.2.0(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(workbox-build@7.4.0)(workbox-window@7.4.0)
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
       vue-tsc:
         specifier: ^3.2.6
         version: 3.2.6(typescript@6.0.2)
@@ -450,7 +450,7 @@ importers:
         version: 25.5.0
       '@vitest/coverage-v8':
         specifier: ^4.1.2
-        version: 4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))
+        version: 4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.12)(tsx@4.21.0)(typescript@6.0.2)(yaml@2.8.3)
@@ -459,7 +459,7 @@ importers:
         version: 6.0.2
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   packages/shared:
     dependencies:
@@ -490,7 +490,7 @@ importers:
         version: 6.0.2
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+        version: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   packages/tsconfig: {}
 
@@ -1697,8 +1697,11 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
-  '@napi-rs/wasm-runtime@1.1.1':
-    resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
+  '@napi-rs/wasm-runtime@1.1.4':
+    resolution: {integrity: sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1
+      '@emnapi/runtime': ^1.7.1
 
   '@nodable/entities@2.1.0':
     resolution: {integrity: sha512-nyT7T3nbMyBI/lvr6L5TyWbFJAI9FTgVRakNoBqCD+PmID8DzFrrNdLLtHMwMszOtqZa8PAOV24ZqDnQrhQINA==}
@@ -6085,10 +6088,6 @@ packages:
     resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.8:
-    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postgres-array@2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
@@ -7162,14 +7161,14 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  vite@8.0.3:
-    resolution: {integrity: sha512-B9ifbFudT1TFhfltfaIPgjo9Z3mDynBTJSUYxTjOQruf/zHH+ezCQKcoqO+h7a9Pw9Nm/OtlXAiGT1axBgwqrQ==}
+  vite@8.0.5:
+    resolution: {integrity: sha512-nmu43Qvq9UopTRfMx2jOYW5l16pb3iDC1JH6yMuPkpVbzK0k+L7dfsEDH4jRgYFmsg0sTAqkojoZgzLMlwHsCQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.1.0
-      esbuild: ^0.27.0
+      esbuild: ^0.27.0 || ^0.28.0
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -9270,7 +9269,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@napi-rs/wasm-runtime@1.1.1':
+  '@napi-rs/wasm-runtime@1.1.4(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)':
     dependencies:
       '@emnapi/core': 1.9.1
       '@emnapi/runtime': 1.9.1
@@ -9633,9 +9632,12 @@ snapshots:
   '@rolldown/binding-openharmony-arm64@1.0.0-rc.12':
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-rc.12':
+  '@rolldown/binding-wasm32-wasi@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.1
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.12':
@@ -10842,13 +10844,13 @@ snapshots:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  '@vitejs/plugin-vue@6.0.5(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vue@3.5.33(typescript@6.0.2))':
+  '@vitejs/plugin-vue@6.0.5(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vue@3.5.33(typescript@6.0.2))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.2
-      vite: 8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
+      vite: 8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
       vue: 3.5.33(typescript@6.0.2)
 
-  '@vitest/coverage-v8@4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))':
+  '@vitest/coverage-v8@4.1.2(vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.2
@@ -10860,7 +10862,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   '@vitest/expect@4.1.2':
     dependencies:
@@ -10871,13 +10873,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.2(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))':
+  '@vitest/mocker@4.1.2(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
       '@vitest/spy': 4.1.2
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
+      vite: 8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
 
   '@vitest/pretty-format@4.1.2':
     dependencies:
@@ -13888,12 +13890,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.8:
-    dependencies:
-      nanoid: 3.3.11
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
   postgres-array@2.0.0: {}
 
   postgres-array@3.0.4: {}
@@ -14236,7 +14232,7 @@ snapshots:
 
   robust-predicates@3.0.2: {}
 
-  rolldown@1.0.0-rc.12:
+  rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1):
     dependencies:
       '@oxc-project/types': 0.122.0
       '@rolldown/pluginutils': 1.0.0-rc.12
@@ -14253,18 +14249,21 @@ snapshots:
       '@rolldown/binding-linux-x64-gnu': 1.0.0-rc.12
       '@rolldown/binding-linux-x64-musl': 1.0.0-rc.12
       '@rolldown/binding-openharmony-arm64': 1.0.0-rc.12
-      '@rolldown/binding-wasm32-wasi': 1.0.0-rc.12
+      '@rolldown/binding-wasm32-wasi': 1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
       '@rolldown/binding-win32-arm64-msvc': 1.0.0-rc.12
       '@rolldown/binding-win32-x64-msvc': 1.0.0-rc.12
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
-  rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.12)(rollup@2.80.0):
+  rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(rollup@2.80.0):
     dependencies:
       open: 11.0.0
       picomatch: 4.0.4
       source-map: 0.7.6
       yargs: 18.0.0
     optionalDependencies:
-      rolldown: 1.0.0-rc.12
+      rolldown: 1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
       rollup: 2.80.0
 
   rollup@2.80.0:
@@ -15103,24 +15102,24 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-plugin-pwa@1.2.0(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(workbox-build@7.4.0)(workbox-window@7.4.0):
+  vite-plugin-pwa@1.2.0(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(workbox-build@7.4.0)(workbox-window@7.4.0):
     dependencies:
       debug: 4.4.3
       pretty-bytes: 6.1.1
       tinyglobby: 0.2.15
-      vite: 8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
+      vite: 8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
       workbox-build: 7.4.0
       workbox-window: 7.4.0
     transitivePeerDependencies:
       - supports-color
 
-  vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3):
+  vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.8
-      rolldown: 1.0.0-rc.12
-      tinyglobby: 0.2.15
+      postcss: 8.5.12
+      rolldown: 1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
+      tinyglobby: 0.2.16
     optionalDependencies:
       '@types/node': 25.5.0
       esbuild: 0.27.2
@@ -15129,11 +15128,14 @@ snapshots:
       terser: 5.46.2
       tsx: 4.21.0
       yaml: 2.8.3
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
-  vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)):
+  vitest@4.1.2(@types/node@25.5.0)(happy-dom@20.8.9)(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.2
-      '@vitest/mocker': 4.1.2(vite@8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.2(vite@8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
       '@vitest/pretty-format': 4.1.2
       '@vitest/runner': 4.1.2
       '@vitest/snapshot': 4.1.2
@@ -15150,7 +15152,7 @@ snapshots:
       tinyexec: 1.0.4
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.0
-      vite: 8.0.3(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
+      vite: 8.0.5(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.5.0
