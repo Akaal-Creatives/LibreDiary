@@ -62,7 +62,7 @@
     "@types/katex": "^0.16.8",
     "@types/markdown-it-footnote": "^3.0.4",
     "@vitejs/plugin-vue": "^6.0.5",
-    "@vue/test-utils": "^2.4.6",
+    "@vue/test-utils": "^2.4.9",
     "@vue/tsconfig": "^0.9.1",
     "axe-core": "^4.11.2",
     "happy-dom": "^20.8.9",
@@ -75,6 +75,6 @@
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.2",
-    "vue-tsc": "^3.2.6"
+    "vue-tsc": "^3.2.7"
   }
 }
