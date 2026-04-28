@@ -17,7 +17,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@hocuspocus/provider": "^3.4.4",
+    "@hocuspocus/provider": "^4.0.0",
     "@librediary/shared": "workspace:*",
     "@tiptap/extension-bubble-menu": "^3.22.4",
     "@tiptap/extension-code-block-lowlight": "^3.22.4",
