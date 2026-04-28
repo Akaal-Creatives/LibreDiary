@@ -45,7 +45,7 @@
     "arctic": "^3.7.0",
     "argon2": "^0.44.0",
     "codemirror": "^6.0.2",
-    "diff": "^8.0.4",
+    "diff": "^9.0.0",
     "fastify": "^5.8.5",
     "fastify-plugin": "^5.1.0",
     "file-type": "^22.0.1",
