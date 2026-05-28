@@ -3,6 +3,7 @@ import { createApp, ref } from 'vue';
 import AiInputDialog from '@/components/editor/AiInputDialog.vue';
 import { generateSchedule, generateTodos, createAiDatabase } from '@/services/ai-content.service';
 import { useAuthStore } from '@/stores';
+import { useToast } from '@/composables';
 
 /**
  * Helper to cast a chained command to access custom extension commands
@@ -32,6 +33,9 @@ function openAiDialog(
       loading.value = true;
       try {
         await onSubmit(value);
+      } catch (err) {
+        const { error } = useToast();
+        error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       } finally {
         loading.value = false;
         app.unmount();

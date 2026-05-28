@@ -1,5 +1,5 @@
 import { chatCompletion, getAiConfig } from './ai.service.js';
-import { createDatabase, createProperty } from '../databases/databases.service.js';
+import { createDatabase, createProperty, deleteDatabase } from '../databases/databases.service.js';
 
 const VALID_TYPES = [
   'TEXT',
@@ -44,7 +44,13 @@ export async function generateDatabaseSchema(description: string): Promise<Gener
     { model: config.model, temperature: 0.3 }
   )) as { choices: [{ message: { content: string } }] };
 
-  const json = JSON.parse(raw.choices[0].message.content.trim()) as {
+  // Strip optional markdown code fences — models sometimes wrap JSON in ```json ... ``` despite the prompt
+  const rawContent = raw.choices[0].message.content
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '');
+
+  const json = JSON.parse(rawContent) as {
     name?: unknown;
     properties?: unknown[];
   };
@@ -78,15 +84,21 @@ export async function createAiDatabase(orgId: string, userId: string, descriptio
 
   const database = await createDatabase(orgId, userId, { name: schema.name });
 
-  for (const [i, prop] of schema.properties.entries()) {
-    // Skip auto-created default "Title" TEXT property (position 0)
-    if (i === 0 && prop.type === 'TEXT' && prop.name.toLowerCase() === 'title') continue;
+  try {
+    for (const [i, prop] of schema.properties.entries()) {
+      // Skip auto-created default "Title" TEXT property (position 0)
+      if (i === 0 && prop.type === 'TEXT' && prop.name.toLowerCase() === 'title') continue;
 
-    await createProperty(orgId, database.id, {
-      name: prop.name,
-      type: prop.type,
-      config: prop.config,
-    });
+      await createProperty(orgId, database.id, {
+        name: prop.name,
+        type: prop.type,
+        config: prop.config,
+      });
+    }
+  } catch (err) {
+    // Roll back the database so the user doesn't see an orphaned incomplete schema
+    await deleteDatabase(orgId, database.id).catch(() => undefined);
+    throw err;
   }
 
   return {
