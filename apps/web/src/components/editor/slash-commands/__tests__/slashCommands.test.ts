@@ -3,8 +3,8 @@ import type { Editor } from '@tiptap/core';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 25 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(25);
+  it('has 28 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(28);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -44,6 +44,9 @@ describe('SLASH_COMMANDS', () => {
       'table',
       'image',
       'embed',
+      'aiDatabase',
+      'aiSchedule',
+      'aiTodos',
       'calloutInfo',
       'calloutWarning',
       'calloutError',
@@ -132,7 +135,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(25);
+    expect(result).toHaveLength(28);
   });
 
   it('filters by id match', () => {
@@ -473,8 +476,10 @@ describe('command actions', () => {
     expect(run).toHaveBeenCalled();
   });
 
-  // image and embed use editor.commands directly rather than the chain API
-  const CHAIN_COMMANDS = SLASH_COMMANDS.filter((c) => c.id !== 'image' && c.id !== 'embed');
+  // image, embed, and AI commands use editor.commands or external dialogs rather than the chain API
+  const CHAIN_COMMANDS = SLASH_COMMANDS.filter(
+    (c) => !['image', 'embed', 'aiDatabase', 'aiSchedule', 'aiTodos'].includes(c.id)
+  );
 
   it('every chain-based action calls focus()', () => {
     for (const cmd of CHAIN_COMMANDS) {

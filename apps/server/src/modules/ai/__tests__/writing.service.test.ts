@@ -280,4 +280,59 @@ describe('Writing Service', () => {
 
     await expect(writeText(validInput)).rejects.toThrow('WRITING_FAILED');
   });
+
+  it('should generate a schedule as an HTML table', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: '<table><tbody><tr><td>9am</td><td>Standup</td></tr></tbody></table>',
+          },
+        },
+      ],
+    });
+
+    const result = await writeText({
+      action: 'schedule',
+      text: 'a typical engineering week',
+      organizationId: 'org-123',
+    });
+
+    expect(result.content).toContain('<table>');
+    expect(mockChatCompletion).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'system', content: expect.stringContaining('schedule') }),
+      ]),
+      { temperature: 0.5 }
+    );
+  });
+
+  it('should generate todos as a task list', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({ aiEnabled: true });
+    mockChatCompletion.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content:
+              '<ul data-type="taskList"><li data-type="taskItem" data-checked="false">Write tests</li></ul>',
+          },
+        },
+      ],
+    });
+
+    const result = await writeText({
+      action: 'todos',
+      text: 'launch a product',
+      organizationId: 'org-123',
+    });
+
+    expect(result.content).toContain('data-type="taskList"');
+    expect(mockChatCompletion).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'system', content: expect.stringContaining('taskList') }),
+      ]),
+      { temperature: 0.5 }
+    );
+  });
 });

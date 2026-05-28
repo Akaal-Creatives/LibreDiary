@@ -34,7 +34,7 @@ import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
 import { apiTokenRoutes } from './modules/api-tokens/index.js';
 import { webhookRoutes } from './modules/webhooks/index.js';
 import { auditRoutes } from './modules/audit/index.js';
-import { translationRoutes, writingRoutes } from './modules/ai/index.js';
+import { translationRoutes, writingRoutes, databaseCreationRoutes } from './modules/ai/index.js';
 import { gdprRoutes } from './modules/gdpr/index.js';
 import { markdownRoutes } from './modules/markdown/index.js';
 import { encryptionRoutes } from './modules/encryption/index.js';
@@ -204,6 +204,11 @@ export async function buildApp() {
       // AI writing routes (org-scoped)
       await api.register(writingRoutes, {
         prefix: '/organizations/:orgId/ai/write',
+      });
+
+      // AI database creation routes (org-scoped)
+      await api.register(databaseCreationRoutes, {
+        prefix: '/organizations/:orgId/ai/database',
       });
 
       // E2EE encryption routes

@@ -1,4 +1,8 @@
 import type { Editor, ChainedCommands } from '@tiptap/core';
+import { createApp, ref } from 'vue';
+import AiInputDialog from '@/components/editor/AiInputDialog.vue';
+import { generateSchedule, generateTodos, createAiDatabase } from '@/services/ai-content.service';
+import { useAuthStore } from '@/stores';
 
 /**
  * Helper to cast a chained command to access custom extension commands
@@ -7,6 +11,40 @@ import type { Editor, ChainedCommands } from '@tiptap/core';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function custom(chain: ChainedCommands): any {
   return chain;
+}
+
+function openAiDialog(
+  opts: { title: string; placeholder: string },
+  onSubmit: (value: string) => Promise<void>
+) {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const loading = ref(false);
+
+  const app = createApp(AiInputDialog, {
+    title: opts.title,
+    placeholder: opts.placeholder,
+    get loading() {
+      return loading.value;
+    },
+    onSubmit: async (value: string) => {
+      if (loading.value) return;
+      loading.value = true;
+      try {
+        await onSubmit(value);
+      } finally {
+        loading.value = false;
+        app.unmount();
+        container.remove();
+      }
+    },
+    onCancel: () => {
+      if (loading.value) return;
+      app.unmount();
+      container.remove();
+    },
+  });
+  app.mount(container);
 }
 
 export interface SlashCommand {
@@ -207,6 +245,79 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     keywords: ['embed', 'youtube', 'vimeo', 'figma', 'maps', 'video', 'iframe', 'link'],
     action: (editor) => {
       editor.commands.insertEmbed();
+    },
+  },
+  {
+    id: 'aiDatabase',
+    labelKey: 'slashCommands.aiDatabase',
+    descriptionKey: 'slashCommands.aiDatabaseDescription',
+    icon: 'M3 10h18M3 14h18M3 6h18M3 18h18M9 6v12M15 6v12',
+    group: 'advanced',
+    keywords: ['ai', 'database', 'table', 'schema', 'generate'],
+    action: (editor) => {
+      const orgId = useAuthStore().currentOrganizationId;
+      if (!orgId) return;
+      openAiDialog(
+        {
+          title: 'AI Database',
+          placeholder:
+            'Describe your database… e.g. "a project tracker with name, status, deadline, and priority"',
+        },
+        async (description) => {
+          const { databaseId, name } = await createAiDatabase(orgId, description);
+          editor
+            .chain()
+            .focus()
+            .insertContent(
+              `<p><a href="/app/database/${databaseId}">${name} (AI-generated database)</a></p>`
+            )
+            .run();
+        }
+      );
+    },
+  },
+  {
+    id: 'aiSchedule',
+    labelKey: 'slashCommands.aiSchedule',
+    descriptionKey: 'slashCommands.aiScheduleDescription',
+    icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    group: 'advanced',
+    keywords: ['ai', 'schedule', 'calendar', 'plan', 'week', 'timetable'],
+    action: (editor) => {
+      const orgId = useAuthStore().currentOrganizationId;
+      if (!orgId) return;
+      openAiDialog(
+        {
+          title: 'AI Schedule',
+          placeholder: 'Describe your schedule… e.g. "a typical engineering sprint week"',
+        },
+        async (description) => {
+          const { content } = await generateSchedule(orgId, description);
+          editor.chain().focus().insertContent(content).run();
+        }
+      );
+    },
+  },
+  {
+    id: 'aiTodos',
+    labelKey: 'slashCommands.aiTodos',
+    descriptionKey: 'slashCommands.aiTodosDescription',
+    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    group: 'advanced',
+    keywords: ['ai', 'todos', 'tasks', 'checklist', 'generate', 'list'],
+    action: (editor) => {
+      const orgId = useAuthStore().currentOrganizationId;
+      if (!orgId) return;
+      openAiDialog(
+        {
+          title: 'AI To-Do List',
+          placeholder: 'Describe your goal… e.g. "tasks to launch a new mobile app"',
+        },
+        async (description) => {
+          const { content } = await generateTodos(orgId, description);
+          editor.chain().focus().insertContent(content).run();
+        }
+      );
     },
   },
   {

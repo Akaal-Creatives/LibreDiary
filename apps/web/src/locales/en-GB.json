@@ -341,7 +341,13 @@
     "mathBlock": "Math Block",
     "mathBlockDescription": "Insert a LaTeX equation rendered with KaTeX",
     "embed": "Embed",
-    "embedDescription": "Embed a YouTube, Vimeo, Figma, or Google Maps link"
+    "embedDescription": "Embed a YouTube, Vimeo, Figma, or Google Maps link",
+    "aiDatabase": "AI Database",
+    "aiDatabaseDescription": "Generate a database schema with AI",
+    "aiSchedule": "AI Schedule",
+    "aiScheduleDescription": "Generate a schedule or timetable with AI",
+    "aiTodos": "AI To-Do List",
+    "aiTodosDescription": "Generate a task list from a goal with AI"
   },
   "comments": {
     "title": "Comments",

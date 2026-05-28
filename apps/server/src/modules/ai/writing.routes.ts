@@ -10,7 +10,14 @@ import { logAudit } from '../audit/audit.service.js';
 // WRITING ACTIONS
 // ===========================================
 
-export const WRITING_ACTIONS = ['generate', 'expand', 'summarise', 'improve'] as const;
+export const WRITING_ACTIONS = [
+  'generate',
+  'expand',
+  'summarise',
+  'improve',
+  'schedule',
+  'todos',
+] as const;
 
 // ===========================================
 // REQUEST SCHEMAS
