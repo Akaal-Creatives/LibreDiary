@@ -612,6 +612,7 @@ function formatDate(dateString: string): string {
           :provider-synced="isSynced"
           :user-name="userName"
           :user-color="userColor"
+          :org-id="authStore.currentOrganizationId ?? undefined"
           @update:model-value="onContentUpdate"
         />
         <AiBubbleMenu v-if="editorRef?.editor" :editor="editorRef.editor" />
