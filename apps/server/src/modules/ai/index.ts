@@ -23,3 +23,12 @@ export {
 
 export { default as writingRoutes } from './writing.routes.js';
 export { WRITING_ACTIONS } from './writing.routes.js';
+
+export {
+  generateDatabaseSchema,
+  createAiDatabase,
+  type GeneratedSchema,
+  type GeneratedProperty,
+} from './database-creation.service.js';
+
+export { default as databaseCreationRoutes } from './database-creation.routes.js';
