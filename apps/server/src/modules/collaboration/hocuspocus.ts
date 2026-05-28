@@ -87,7 +87,9 @@ export function createHocuspocusServer(): Hocuspocus {
       const { documentName, requestHeaders } = data;
 
       // Extract token from cookie header (browser sends cookies with WebSocket upgrade)
-      const cookies = parseCookies(requestHeaders?.cookie);
+      // requestHeaders is typed as web-standard Headers in v4 but the Node.js ws adapter
+      // still passes plain IncomingHttpHeaders at runtime — cast to access .cookie directly.
+      const cookies = parseCookies((requestHeaders as unknown as Record<string, string>)?.cookie);
       const cookieToken = cookies[SESSION_COOKIE_NAME];
 
       // Also check for token passed directly from client (WS token or session token)
@@ -219,17 +221,19 @@ export function createHocuspocusServer(): Hocuspocus {
      * Store document to database (debounced by Hocuspocus)
      */
     async onStoreDocument(data) {
-      const { documentName, context, document } = data;
+      // In Hocuspocus v4, the per-connection auth context is exposed as
+      // `lastContext` (renamed from `context` in v3).
+      const { documentName, lastContext, document } = data;
 
       const parsed = parseDocumentName(documentName);
       if (!parsed) {
         return;
       }
 
-      // Use context userId if available, otherwise fall back to the last
+      // Use lastContext userId if available, otherwise fall back to the last
       // authenticated user for this document. This ensures the final save
       // after all users disconnect still persists.
-      const userId = context?.userId || lastKnownUserByDocument.get(documentName);
+      const userId = lastContext?.userId || lastKnownUserByDocument.get(documentName);
       if (!userId) {
         logger.warn(
           '[hocuspocus] no userId available for storing document %s — skipping save',
@@ -372,13 +376,11 @@ export async function destroyHocuspocusServer(): Promise<void> {
         serverInstance
           .storeDocumentHooks(document, {
             clientsCount: document.getConnectionsCount(),
-            context: {},
+            lastContext: {},
+            lastTransactionOrigin: undefined,
             document,
             documentName: document.name,
             instance: serverInstance,
-            requestHeaders: {},
-            requestParameters: new URLSearchParams(),
-            socketId: '',
           })
           .catch((err) => {
             logger.error(err, `[hocuspocus] failed to flush document ${document.name}`);

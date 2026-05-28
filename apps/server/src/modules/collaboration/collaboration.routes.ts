@@ -56,7 +56,8 @@ const collaborationRoutes: FastifyPluginAsync = async (fastify) => {
     const documentName = `${orgId}/${pageId}`;
 
     // Handle the WebSocket connection with Hocuspocus
-    hocuspocus.handleConnection(socket, request.raw, {
+    // v4 types handleConnection with web-standard Request; cast from Node.js IncomingMessage
+    hocuspocus.handleConnection(socket, request.raw as unknown as Request, {
       documentName,
       token,
       requestHeaders: request.headers as Record<string, string>,

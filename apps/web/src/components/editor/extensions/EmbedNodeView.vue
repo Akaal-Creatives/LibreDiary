@@ -18,13 +18,14 @@ const props = defineProps<{
 // Start in edit mode when url or embedUrl is missing (handles legacy/incomplete data too)
 const editing = ref(!props.node.attrs.url || !props.node.attrs.embedUrl);
 
-// Sync editing state with external attribute changes (e.g. from collaboration)
+// Sync editing state with external attribute changes (e.g. from collaboration).
+// Watch both url and embedUrl — either becoming null should re-enter edit mode.
 watch(
-  () => props.node.attrs.url,
-  (newUrl) => {
-    if (!newUrl) {
+  () => [props.node.attrs.url, props.node.attrs.embedUrl] as const,
+  ([newUrl, newEmbedUrl]) => {
+    if (!newUrl || !newEmbedUrl) {
       editing.value = true;
-    } else if (props.node.attrs.embedUrl) {
+    } else {
       editing.value = false;
     }
   }
