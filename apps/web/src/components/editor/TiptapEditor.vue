@@ -114,6 +114,7 @@ const props = withDefaults(
     providerSynced?: boolean;
     userName?: string;
     userColor?: string;
+    orgId?: string;
   }>(),
   {
     modelValue: '',
@@ -125,6 +126,7 @@ const props = withDefaults(
     providerSynced: false,
     userName: 'Anonymous',
     userColor: '#6B8F71',
+    orgId: undefined,
   }
 );
 
@@ -260,6 +262,8 @@ function buildExtensions(
     ImageUploadExtension.configure({
       inline: false,
       allowBase64: false,
+      // @ts-expect-error -- orgId is added by ImageUploadExtension.addOptions(), not in ImageOptions
+      orgId: props.orgId ?? null,
     }),
     Typography,
     Superscript,
@@ -502,6 +506,28 @@ watch([() => props.userName, () => props.userColor], ([name, color]) => {
   }
 });
 
+function handleFileDrop(event: DragEvent) {
+  if (!editor.value || !props.orgId || !props.editable) return;
+  const files = Array.from(event.dataTransfer?.files ?? []);
+  const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+  for (const file of imageFiles) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (editor.value.commands as any).uploadImage(file, props.orgId);
+  }
+}
+
+function handlePaste(event: ClipboardEvent) {
+  if (!editor.value || !props.orgId || !props.editable) return;
+  const files = Array.from(event.clipboardData?.files ?? []);
+  const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+  if (imageFiles.length === 0) return;
+  event.preventDefault();
+  for (const file of imageFiles) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (editor.value.commands as any).uploadImage(file, props.orgId);
+  }
+}
+
 onBeforeUnmount(() => {
   editor.value?.destroy();
 });
@@ -519,7 +545,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="tiptap-editor">
+  <div class="tiptap-editor" @dragover.prevent @drop.prevent="handleFileDrop" @paste="handlePaste">
     <template v-if="editorMode === 'wysiwyg'">
       <EditorContent v-if="editor" :editor="editor" class="editor-content" />
       <div v-else class="editor-loading">
