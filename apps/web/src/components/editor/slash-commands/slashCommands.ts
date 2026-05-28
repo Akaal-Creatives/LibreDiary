@@ -268,9 +268,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
           editor
             .chain()
             .focus()
-            .insertContent(
-              `<p><a href="/app/database/${databaseId}">${name} (AI-generated database)</a></p>`
-            )
+            .insertContent({
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: `${name} (AI-generated database)`,
+                  marks: [{ type: 'link', attrs: { href: `/app/database/${databaseId}` } }],
+                },
+              ],
+            })
             .run();
         }
       );
