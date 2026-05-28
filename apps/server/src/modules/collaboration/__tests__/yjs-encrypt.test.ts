@@ -79,6 +79,13 @@ describe('yjs-encrypt', () => {
 
       expect(decrypted.length).toBe(0);
     });
+
+    it('should decrypt a Uint8Array back to original data', () => {
+      const encrypted = encryptYjsState(sampleYjsState, orgId);
+      const asUint8Array = new Uint8Array(encrypted);
+      const decrypted = decryptYjsState(asUint8Array, orgId);
+      expect(decrypted.equals(sampleYjsState)).toBe(true);
+    });
   });
 
   describe('isEncryptedYjsState', () => {
@@ -99,6 +106,17 @@ describe('yjs-encrypt', () => {
     it('should return false for buffer too short to be encrypted', () => {
       const shortBuffer = Buffer.from([1, 2, 3]);
       expect(isEncryptedYjsState(shortBuffer)).toBe(false);
+    });
+
+    it('should return true for encrypted yjsState passed as Uint8Array', () => {
+      const encrypted = encryptYjsState(sampleYjsState, orgId);
+      const asUint8Array = new Uint8Array(encrypted); // simulates what Prisma returns
+      expect(isEncryptedYjsState(asUint8Array)).toBe(true);
+    });
+
+    it('should return false for unencrypted yjsState passed as Uint8Array', () => {
+      const asUint8Array = new Uint8Array(sampleYjsState);
+      expect(isEncryptedYjsState(asUint8Array)).toBe(false);
     });
   });
 });

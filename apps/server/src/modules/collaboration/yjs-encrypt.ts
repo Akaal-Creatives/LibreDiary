@@ -60,26 +60,28 @@ export function encryptYjsState(yjsState: Buffer, orgId: string): Buffer {
 /**
  * Decrypt a yjsState buffer that was encrypted with encryptYjsState.
  * Throws if the orgId is wrong or data is corrupted.
+ * Accepts Uint8Array because @prisma/adapter-pg returns Uint8Array for Bytes columns.
  */
-export function decryptYjsState(encrypted: Buffer, orgId: string): Buffer {
-  const magic = encrypted.subarray(0, 4);
+export function decryptYjsState(encrypted: Buffer | Uint8Array, orgId: string): Buffer {
+  const buf = Buffer.isBuffer(encrypted) ? encrypted : Buffer.from(encrypted);
+  const magic = buf.subarray(0, 4);
   if (!magic.equals(HEADER_MAGIC)) {
     throw new Error('Invalid encrypted yjsState: missing LDYE header');
   }
 
-  const version = encrypted.readUInt8(4);
+  const version = buf.readUInt8(4);
   if (version !== HEADER_VERSION) {
     throw new Error(`Unsupported yjsState encryption version: ${version}`);
   }
 
   let offset = 5;
-  const iv = encrypted.subarray(offset, offset + IV_LENGTH);
+  const iv = buf.subarray(offset, offset + IV_LENGTH);
   offset += IV_LENGTH;
 
-  const authTag = encrypted.subarray(offset, offset + TAG_LENGTH);
+  const authTag = buf.subarray(offset, offset + TAG_LENGTH);
   offset += TAG_LENGTH;
 
-  const ciphertext = encrypted.subarray(offset);
+  const ciphertext = buf.subarray(offset);
 
   const key = deriveKey(orgId);
   const decipher = createDecipheriv('aes-256-gcm', key, iv);
@@ -95,8 +97,10 @@ export function decryptYjsState(encrypted: Buffer, orgId: string): Buffer {
 /**
  * Check if a buffer is an encrypted yjsState (has LDYE header).
  * Used to handle migration — existing unencrypted states are loaded as-is.
+ * Accepts Uint8Array because @prisma/adapter-pg returns Uint8Array for Bytes columns.
  */
-export function isEncryptedYjsState(buffer: Buffer | null | undefined): boolean {
+export function isEncryptedYjsState(buffer: Buffer | Uint8Array | null | undefined): boolean {
   if (!buffer || buffer.length < HEADER_LENGTH) return false;
-  return buffer.subarray(0, 4).equals(HEADER_MAGIC);
+  const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+  return buf.subarray(0, 4).equals(HEADER_MAGIC);
 }
