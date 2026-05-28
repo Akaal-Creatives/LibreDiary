@@ -22,6 +22,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Link from '@tiptap/extension-link';
 import { ImageUploadExtension } from './extensions/ImageUploadExtension';
+import { EmbedExtension } from './extensions/EmbedExtension';
 import Typography from '@tiptap/extension-typography';
 import { FootnoteExtension } from './extensions/FootnoteExtension';
 import { MermaidExtension } from './extensions/MermaidExtension';
@@ -265,6 +266,7 @@ function buildExtensions(
       // @ts-expect-error -- orgId is added by ImageUploadExtension.addOptions(), not in ImageOptions
       orgId: props.orgId ?? null,
     }),
+    EmbedExtension,
     Typography,
     Superscript,
     Subscript,

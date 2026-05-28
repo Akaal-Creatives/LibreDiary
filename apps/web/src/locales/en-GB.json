@@ -339,7 +339,9 @@
     "mermaidDiagram": "Mermaid Diagram",
     "mermaidDiagramDescription": "Insert a Mermaid flowchart or diagram",
     "mathBlock": "Math Block",
-    "mathBlockDescription": "Insert a LaTeX equation rendered with KaTeX"
+    "mathBlockDescription": "Insert a LaTeX equation rendered with KaTeX",
+    "embed": "Embed",
+    "embedDescription": "Embed a YouTube, Vimeo, Figma, or Google Maps link"
   },
   "comments": {
     "title": "Comments",

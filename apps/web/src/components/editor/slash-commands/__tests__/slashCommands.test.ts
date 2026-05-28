@@ -3,8 +3,8 @@ import type { Editor } from '@tiptap/core';
 import { SLASH_COMMANDS, filterCommands } from '../slashCommands';
 
 describe('SLASH_COMMANDS', () => {
-  it('has 24 entries', () => {
-    expect(SLASH_COMMANDS).toHaveLength(24);
+  it('has 25 entries', () => {
+    expect(SLASH_COMMANDS).toHaveLength(25);
   });
 
   it.each(SLASH_COMMANDS)('command "$id" has all required fields', (command) => {
@@ -43,6 +43,7 @@ describe('SLASH_COMMANDS', () => {
       'taskList',
       'table',
       'image',
+      'embed',
       'calloutInfo',
       'calloutWarning',
       'calloutError',
@@ -131,7 +132,7 @@ describe('SLASH_COMMANDS', () => {
 describe('filterCommands', () => {
   it('returns all commands when query is empty', () => {
     const result = filterCommands('');
-    expect(result).toHaveLength(24);
+    expect(result).toHaveLength(25);
   });
 
   it('filters by id match', () => {
@@ -421,14 +422,31 @@ describe('command actions', () => {
     expect(run).toHaveBeenCalled();
   });
 
-  it('image action calls setImage when URL is provided', () => {
-    const { editor, run, chainMethods } = createMockEditor();
-    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
+  it('image action creates a file input and clicks it', () => {
+    const { editor } = createMockEditor();
+    const input = {
+      type: '',
+      accept: '',
+      onchange: null as unknown,
+      click: vi.fn(),
+      remove: vi.fn(),
+    };
+    vi.spyOn(document, 'createElement').mockReturnValueOnce(input as unknown as HTMLElement);
+    vi.spyOn(document.body, 'appendChild').mockImplementationOnce(() => input as unknown as Node);
     const cmd = SLASH_COMMANDS.find((c) => c.id === 'image')!;
     cmd.action(editor as unknown as Editor);
-    expect(chainMethods['setImage']).toHaveBeenCalledWith({ src: 'https://example.com/img.png' });
-    expect(run).toHaveBeenCalled();
-    window.prompt = undefined as unknown as typeof window.prompt;
+    expect(input.type).toBe('file');
+    expect(input.accept).toBe('image/*');
+    expect(input.click).toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+
+  it('embed action calls insertEmbed', () => {
+    const insertEmbed = vi.fn();
+    const editor = { commands: { insertEmbed } } as unknown as Editor;
+    const cmd = SLASH_COMMANDS.find((c) => c.id === 'embed')!;
+    cmd.action(editor);
+    expect(insertEmbed).toHaveBeenCalled();
   });
 
   it('mathBlock action calls insertMathBlock', () => {
@@ -455,24 +473,23 @@ describe('command actions', () => {
     expect(run).toHaveBeenCalled();
   });
 
-  it('every action calls focus() in the chain', () => {
-    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
-    for (const cmd of SLASH_COMMANDS) {
+  // image and embed use editor.commands directly rather than the chain API
+  const CHAIN_COMMANDS = SLASH_COMMANDS.filter((c) => c.id !== 'image' && c.id !== 'embed');
+
+  it('every chain-based action calls focus()', () => {
+    for (const cmd of CHAIN_COMMANDS) {
       const { editor, chainMethods } = createMockEditor();
       cmd.action(editor as unknown as Editor);
-      expect(chainMethods['focus']).toHaveBeenCalled();
+      expect(chainMethods['focus'], `${cmd.id} should call focus()`).toHaveBeenCalled();
     }
-    window.prompt = undefined as unknown as typeof window.prompt;
   });
 
-  it('every action calls chain() then run()', () => {
-    window.prompt = vi.fn().mockReturnValue('https://example.com/img.png');
-    for (const cmd of SLASH_COMMANDS) {
+  it('every chain-based action calls chain() then run()', () => {
+    for (const cmd of CHAIN_COMMANDS) {
       const { editor, run } = createMockEditor();
       cmd.action(editor as unknown as Editor);
-      expect(editor.chain).toHaveBeenCalledTimes(1);
-      expect(run).toHaveBeenCalledTimes(1);
+      expect(editor.chain, `${cmd.id} should call chain()`).toHaveBeenCalledTimes(1);
+      expect(run, `${cmd.id} should call run()`).toHaveBeenCalledTimes(1);
     }
-    window.prompt = undefined as unknown as typeof window.prompt;
   });
 });
