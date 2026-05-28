@@ -241,11 +241,11 @@ export async function diffVersions(
 
   // Decrypt yjsState if stored encrypted (encrypted workspaces)
   let fromYjsState: Uint8Array | Buffer | null = fromVersion.yjsState;
-  if (fromYjsState && isEncryptedYjsState(fromYjsState as Buffer)) {
-    fromYjsState = decryptYjsState(fromYjsState as Buffer, organizationId);
+  if (fromYjsState && isEncryptedYjsState(fromYjsState)) {
+    fromYjsState = decryptYjsState(fromYjsState, organizationId);
   }
-  if (toYjsState && isEncryptedYjsState(toYjsState as Buffer)) {
-    toYjsState = decryptYjsState(toYjsState as Buffer, organizationId);
+  if (toYjsState && isEncryptedYjsState(toYjsState)) {
+    toYjsState = decryptYjsState(toYjsState, organizationId);
   }
 
   // Extract plain text from Yjs states
