@@ -183,10 +183,19 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     group: 'advanced',
     keywords: ['image', 'picture', 'photo', 'img'],
     action: (editor) => {
-      const url = window.prompt('Enter image URL');
-      if (url) {
-        editor.chain().focus().setImage({ src: url }).run();
-      }
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (file) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (editor.commands as any).uploadImage(file);
+        }
+        input.remove();
+      };
+      document.body.appendChild(input);
+      input.click();
     },
   },
   {
