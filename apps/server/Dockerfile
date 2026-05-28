@@ -12,7 +12,7 @@
 # ------------------------------------------
 # Stage 1: Base - Setup pnpm
 # ------------------------------------------
-FROM node:20-slim AS base
+FROM node:22-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -58,7 +58,7 @@ RUN pnpm turbo run build --filter=@librediary/server
 # ------------------------------------------
 # Stage 4: Runner - Production image
 # ------------------------------------------
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 
 ARG APP_VERSION=0.0.0
 ENV APP_VERSION=$APP_VERSION
