@@ -40,6 +40,11 @@ describe('embedProviders', () => {
         'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
       );
     });
+    it('converts YouTube Shorts URL to youtube-nocookie embed', () => {
+      expect(toEmbedUrl('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe(
+        'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
+      );
+    });
     it('converts Vimeo URL to player URL', () => {
       expect(toEmbedUrl('https://vimeo.com/123456789')).toBe(
         'https://player.vimeo.com/video/123456789'

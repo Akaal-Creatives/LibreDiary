@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { matchProvider, toEmbedUrl, getProviderLabel } from './embed/embedProviders';
 import type { EmbedProvider } from './embed/embedProviders';
 
@@ -15,7 +15,20 @@ const props = defineProps<{
   editor: { isEditable: boolean };
 }>();
 
-const editing = ref(!props.node.attrs.url);
+// Start in edit mode when url or embedUrl is missing (handles legacy/incomplete data too)
+const editing = ref(!props.node.attrs.url || !props.node.attrs.embedUrl);
+
+// Sync editing state with external attribute changes (e.g. from collaboration)
+watch(
+  () => props.node.attrs.url,
+  (newUrl) => {
+    if (!newUrl) {
+      editing.value = true;
+    } else if (props.node.attrs.embedUrl) {
+      editing.value = false;
+    }
+  }
+);
 const inputUrl = ref(props.node.attrs.url ?? '');
 const urlError = ref('');
 const iframeLoading = ref(true);
@@ -103,7 +116,7 @@ function onIframeLoad() {
           <span class="embed-loading-spinner" />
         </div>
         <iframe
-          :src="node.attrs.embedUrl!"
+          :src="node.attrs.embedUrl ?? undefined"
           class="embed-iframe"
           sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
           allowfullscreen

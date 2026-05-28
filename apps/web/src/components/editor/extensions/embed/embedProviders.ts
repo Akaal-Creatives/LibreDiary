@@ -36,8 +36,10 @@ export function toEmbedUrl(url: string): string | null {
   if (hostname.includes('youtube.com')) {
     const v = searchParams.get('v');
     if (v) return `https://www.youtube-nocookie.com/embed/${v}`;
-    const m = pathname.match(/^\/embed\/([a-zA-Z0-9_-]+)/);
-    if (m) return `https://www.youtube-nocookie.com/embed/${m[1]}`;
+    const embedMatch = pathname.match(/^\/embed\/([a-zA-Z0-9_-]+)/);
+    if (embedMatch) return `https://www.youtube-nocookie.com/embed/${embedMatch[1]}`;
+    const shortsMatch = pathname.match(/^\/shorts\/([a-zA-Z0-9_-]+)/);
+    if (shortsMatch) return `https://www.youtube-nocookie.com/embed/${shortsMatch[1]}`;
   }
   if (hostname === 'youtu.be') {
     const id = pathname.slice(1).split('?')[0];

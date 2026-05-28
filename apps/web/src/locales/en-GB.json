@@ -333,7 +333,7 @@
     "table": "Table",
     "tableDescription": "Insert a table with rows and columns",
     "image": "Image",
-    "imageDescription": "Insert an image from a URL",
+    "imageDescription": "Upload an image from your device",
     "footnote": "Footnote",
     "footnoteDescription": "Add a footnote reference and content",
     "mermaidDiagram": "Mermaid Diagram",

@@ -84,6 +84,13 @@ export const EmbedExtension = Node.create({
             const embedUrl = toEmbedUrl(text);
             if (!embedUrl) return false;
 
+            // Only auto-embed when pasting into an empty paragraph — if the cursor
+            // is inside existing text, fall through to Tiptap's link handling instead.
+            const { $from } = view.state.selection;
+            const isEmptyParagraph =
+              $from.parent.type.name === 'paragraph' && $from.parent.content.size === 0;
+            if (!isEmptyParagraph) return false;
+
             const embedType = view.state.schema.nodes['embed'];
             if (!embedType) return false;
 

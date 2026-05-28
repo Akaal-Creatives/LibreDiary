@@ -19,7 +19,6 @@ export async function helmetPlugin(fastify: FastifyInstance) {
           'https://player.vimeo.com',
           'https://www.figma.com',
           'https://maps.google.com',
-          'https://www.google.com',
         ],
         frameAncestors: ["'none'"],
         baseUri: ["'self'"],
