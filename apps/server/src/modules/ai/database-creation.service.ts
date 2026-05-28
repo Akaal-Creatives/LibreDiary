@@ -44,16 +44,20 @@ export async function generateDatabaseSchema(description: string): Promise<Gener
     { model: config.model, temperature: 0.3 }
   )) as { choices: [{ message: { content: string } }] };
 
-  // Strip optional markdown code fences — models sometimes wrap JSON in ```json ... ``` despite the prompt
-  const rawContent = raw.choices[0].message.content
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '');
+  // Strip optional markdown code fences — models sometimes wrap JSON in ```json ... ``` despite the prompt.
+  // Falls back to extracting the first {...} block if the simple fence strip still leaves non-JSON text.
+  const trimmed = raw.choices[0].message.content.trim();
+  const stripped = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
 
-  const json = JSON.parse(rawContent) as {
-    name?: unknown;
-    properties?: unknown[];
-  };
+  let json: { name?: unknown; properties?: unknown[] };
+  try {
+    json = JSON.parse(stripped) as { name?: unknown; properties?: unknown[] };
+  } catch {
+    // Fallback: extract the first {...} block (handles preamble/trailing explanatory text)
+    const braceMatch = stripped.match(/\{[\s\S]*\}/);
+    if (!braceMatch) throw new Error('DATABASE_CREATION_FAILED');
+    json = JSON.parse(braceMatch[0]) as { name?: unknown; properties?: unknown[] };
+  }
 
   const schema: GeneratedSchema = {
     name: String(json.name ?? 'AI Database').slice(0, 200),
@@ -95,10 +99,11 @@ export async function createAiDatabase(orgId: string, userId: string, descriptio
         config: prop.config,
       });
     }
-  } catch (err) {
+  } catch {
     // Roll back the database so the user doesn't see an orphaned incomplete schema
     await deleteDatabase(orgId, database.id).catch(() => undefined);
-    throw err;
+    // Throw a mapped error code so the route returns a user-friendly 503
+    throw new Error('DATABASE_CREATION_FAILED');
   }
 
   return {
