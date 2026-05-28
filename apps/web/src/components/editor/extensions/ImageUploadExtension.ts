@@ -13,6 +13,16 @@ import ImageNodeView from '@/components/annotations/ImageNodeView.vue';
 export const ImageUploadExtension = Image.extend({
   name: 'image',
 
+  addOptions() {
+    return {
+      inline: false,
+      allowBase64: false,
+      HTMLAttributes: {} as Record<string, unknown>,
+      resize: false as const,
+      orgId: null as string | null,
+    };
+  },
+
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -29,13 +39,19 @@ export const ImageUploadExtension = Image.extend({
     return {
       ...this.parent?.(),
       uploadImage:
-        (file: File, orgId: string) =>
+        (file: File, orgId?: string) =>
         ({ chain }: { chain: () => ChainedCommands }) => {
+          const effectiveOrgId = orgId ?? (this.options as { orgId?: string | null }).orgId;
+          if (!effectiveOrgId) {
+            console.error('Image upload failed: no orgId configured');
+            return false;
+          }
+
           const formData = new FormData();
           formData.append('file', file);
 
           const apiBase = import.meta.env.VITE_API_URL || '/api/v1';
-          return fetch(`${apiBase}/organizations/${orgId}/files`, {
+          return fetch(`${apiBase}/organizations/${effectiveOrgId}/files`, {
             method: 'POST',
             body: formData,
             credentials: 'include',
