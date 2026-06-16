@@ -41,7 +41,7 @@
     "@node-rs/argon2": "^2.0.2",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "arctic": "^3.7.0",
     "argon2": "^0.44.0",
     "codemirror": "^6.0.2",
