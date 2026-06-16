@@ -1,7 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import archiver from 'archiver';
+import { createRequire } from 'node:module';
+const archiver = createRequire(import.meta.url)('archiver') as typeof import('archiver').default;
 import { prisma } from '../../lib/prisma.js';
 import { env } from '../../config/index.js';
 import type { DataExportStatus } from '../../generated/prisma/client.js';
