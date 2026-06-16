@@ -58,6 +58,7 @@ model User {
   notifications      Notification[]
   createdDatabases   Database[]           @relation("DatabaseCreatedBy")
   createdDatabaseRows DatabaseRow[]       @relation("DatabaseRowCreatedBy")
+  createdAutomations  Automation[]         @relation("AutomationCreatedBy")
   createdTemplates   Template[]           @relation("TemplateCreatedBy")
   uploadedFiles      File[]               @relation("FileUploadedBy")
   triggeredBackups   Backup[]             @relation("BackupTriggeredBy")
@@ -183,6 +184,7 @@ model Organization {
   files          File[]
   backups        Backup[]
   webhooks       Webhook[]
+  automations    Automation[]
   keyShares              WorkspaceKeyShare[]
   encryptionChangeRequests EncryptionChangeRequest[]
 
@@ -554,6 +556,7 @@ model Database {
   properties   DatabaseProperty[]
   views        DatabaseView[]
   rows         DatabaseRow[]
+  automations  Automation[]
 
   @@index([organizationId])
   @@index([pageId])
@@ -618,6 +621,74 @@ model DatabaseRow {
   @@index([createdById])
   @@index([nextOccurrenceAt])
   @@index([recurrenceStatus, nextOccurrenceAt])
+}
+
+// ============================================
+// AUTOMATIONS
+// ============================================
+
+enum AutomationTriggerType {
+  ROW_CREATED
+  PROPERTY_UPDATED
+  DATE_REACHED
+}
+
+enum AutomationActionType {
+  UPDATE_PROPERTY
+  SEND_NOTIFICATION
+  CREATE_PAGE
+}
+
+enum AutomationLogStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+model Automation {
+  id             String                @id @default(cuid())
+  organizationId String
+  databaseId     String
+  name           String
+  isEnabled      Boolean               @default(true)
+  triggerType    AutomationTriggerType
+  triggerConfig  Json?                 // { propertyId?, matchValue?, daysBeforeDate? }
+  actionType     AutomationActionType
+  actionConfig   Json?                 // { propertyId?, value?, message?, pageTitle? }
+  createdById    String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  database     Database        @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  createdBy    User            @relation("AutomationCreatedBy", fields: [createdById], references: [id])
+  logs         AutomationLog[]
+
+  @@index([organizationId])
+  @@index([databaseId])
+  @@index([databaseId, isEnabled, triggerType])
+}
+
+model AutomationLog {
+  id           String              @id @default(cuid())
+  automationId String
+  triggerRowId String?             // The row that fired the trigger (null for DATE_REACHED)
+  status       AutomationLogStatus
+  errorMessage String?
+  durationMs   Int?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId])
+  @@index([automationId, createdAt])
+  @@index([createdAt])
 }
 
 // ============================================
@@ -1034,6 +1105,10 @@ enum AuditAction {
   DATABASE_DELETED
   DATABASE_ROW_RECURRENCE_SET
   DATABASE_ROW_RECURRENCE_TRIGGERED
+  AUTOMATION_CREATED
+  AUTOMATION_UPDATED
+  AUTOMATION_DELETED
+  AUTOMATION_TRIGGERED
   BACKUP_CREATED
   BACKUP_DOWNLOADED
   BACKUP_DELETED

@@ -42,6 +42,10 @@ export type PropertyType =
 
 export type RecurrenceStatus = 'ACTIVE' | 'PAUSED' | 'CANCELLED';
 
+export type AutomationTriggerType = 'ROW_CREATED' | 'PROPERTY_UPDATED' | 'DATE_REACHED';
+export type AutomationActionType = 'UPDATE_PROPERTY' | 'SEND_NOTIFICATION' | 'CREATE_PAGE';
+export type AutomationLogStatus = 'SUCCESS' | 'FAILED' | 'SKIPPED';
+
 export type ViewType = 'TABLE' | 'KANBAN' | 'CALENDAR' | 'GALLERY';
 
 // ===========================================
@@ -286,6 +290,35 @@ export interface DatabaseWithRelations extends Database {
   properties: DatabaseProperty[];
   views: DatabaseView[];
   rows: DatabaseRow[];
+}
+
+// ===========================================
+// AUTOMATIONS
+// ===========================================
+
+export interface Automation {
+  id: string;
+  organizationId: string;
+  databaseId: string;
+  name: string;
+  isEnabled: boolean;
+  triggerType: AutomationTriggerType;
+  triggerConfig: Record<string, unknown> | null;
+  actionType: AutomationActionType;
+  actionConfig: Record<string, unknown> | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AutomationLog {
+  id: string;
+  automationId: string;
+  triggerRowId: string | null;
+  status: AutomationLogStatus;
+  errorMessage: string | null;
+  durationMs: number | null;
+  createdAt: string;
 }
 
 // ===========================================

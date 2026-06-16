@@ -291,6 +291,52 @@ export const reorderSchema = z.object({
 });
 
 // ===========================================
+// AUTOMATION SCHEMAS
+// ===========================================
+
+export const automationTriggerTypeSchema = z.enum([
+  'ROW_CREATED',
+  'PROPERTY_UPDATED',
+  'DATE_REACHED',
+]);
+
+export const automationActionTypeSchema = z.enum([
+  'UPDATE_PROPERTY',
+  'SEND_NOTIFICATION',
+  'CREATE_PAGE',
+]);
+
+export const triggerConfigSchema = z.object({
+  propertyId: z.string().optional(),
+  matchValue: z.string().max(500).optional(),
+  daysBeforeDate: z.number().int().min(0).max(365).optional(),
+});
+
+export const actionConfigSchema = z.object({
+  propertyId: z.string().optional(),
+  value: z.unknown().optional(),
+  message: z.string().max(1000).optional(),
+  pageTitle: z.string().max(200).optional(),
+});
+
+export const createAutomationSchema = z.object({
+  name: z.string().min(1).max(200).trim(),
+  triggerType: automationTriggerTypeSchema,
+  triggerConfig: triggerConfigSchema.optional(),
+  actionType: automationActionTypeSchema,
+  actionConfig: actionConfigSchema.optional(),
+});
+
+export const updateAutomationSchema = z.object({
+  name: z.string().min(1).max(200).trim().optional(),
+  isEnabled: z.boolean().optional(),
+  triggerType: automationTriggerTypeSchema.optional(),
+  triggerConfig: triggerConfigSchema.nullable().optional(),
+  actionType: automationActionTypeSchema.optional(),
+  actionConfig: actionConfigSchema.nullable().optional(),
+});
+
+// ===========================================
 // TEMPLATE SCHEMAS
 // ===========================================
 
@@ -457,3 +503,7 @@ export type FileListQueryInput = z.infer<typeof fileListQuerySchema>;
 export type CreateOrgBackupInput = z.infer<typeof createOrgBackupSchema>;
 export type CreateSystemBackupInput = z.infer<typeof createSystemBackupSchema>;
 export type RestoreOrgBackupInput = z.infer<typeof restoreOrgBackupSchema>;
+export type CreateAutomationInput = z.infer<typeof createAutomationSchema>;
+export type UpdateAutomationInput = z.infer<typeof updateAutomationSchema>;
+export type TriggerConfigInput = z.infer<typeof triggerConfigSchema>;
+export type ActionConfigInput = z.infer<typeof actionConfigSchema>;
