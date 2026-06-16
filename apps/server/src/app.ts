@@ -27,7 +27,7 @@ import { publicRoutes } from './modules/public/index.js';
 import { setupRoutes } from './modules/setup/index.js';
 import { adminRoutes } from './modules/admin/index.js';
 import { searchRoutes, searchAdminRoutes } from './modules/search/index.js';
-import { databasesRoutes } from './modules/databases/index.js';
+import { databasesRoutes, automationsRoutes } from './modules/databases/index.js';
 import { templatesRoutes } from './modules/templates/index.js';
 import { filesRoutes } from './modules/files/index.js';
 import { adminBackupRoutes, orgBackupRoutes } from './modules/backups/index.js';
@@ -162,6 +162,11 @@ export async function buildApp() {
 
       // Database routes
       await api.register(databasesRoutes, {
+        prefix: '/organizations/:orgId/databases',
+      });
+
+      // Automation routes (nested under databases prefix)
+      await api.register(automationsRoutes, {
         prefix: '/organizations/:orgId/databases',
       });
 

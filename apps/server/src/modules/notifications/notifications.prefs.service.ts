@@ -12,6 +12,7 @@ export interface NotificationPreferences {
   emailCommentResolved: boolean;
   emailInvitation: boolean;
   emailTaskDue: boolean;
+  emailAutomation: boolean;
 }
 
 export interface UpdateNotificationPreferencesInput {
@@ -21,6 +22,7 @@ export interface UpdateNotificationPreferencesInput {
   emailCommentResolved?: boolean;
   emailInvitation?: boolean;
   emailTaskDue?: boolean;
+  emailAutomation?: boolean;
 }
 
 // Map notification types to preference keys
@@ -31,6 +33,7 @@ const NOTIFICATION_TYPE_TO_PREF_KEY: Record<NotificationType, keyof Notification
   COMMENT_RESOLVED: 'emailCommentResolved',
   INVITATION: 'emailInvitation',
   TASK_DUE: 'emailTaskDue',
+  AUTOMATION: 'emailAutomation',
 };
 
 // Default preferences (all enabled)
@@ -41,6 +44,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   emailCommentResolved: true,
   emailInvitation: true,
   emailTaskDue: true,
+  emailAutomation: true,
 };
 
 // ===========================================

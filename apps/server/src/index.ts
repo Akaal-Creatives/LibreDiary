@@ -11,6 +11,8 @@ import {
 import {
   startRecurrenceScheduler,
   stopRecurrenceScheduler,
+  startAutomationScheduler,
+  stopAutomationScheduler,
 } from './modules/databases/index.js';
 import { destroyHocuspocusServer } from './modules/collaboration/hocuspocus.js';
 
@@ -35,6 +37,7 @@ async function main() {
     startDemoReseedScheduler();
     startEncryptionPurgeScheduler();
     startRecurrenceScheduler();
+    startAutomationScheduler();
   } catch (error) {
     app.log.error(error);
     process.exit(1);
@@ -54,6 +57,7 @@ async function main() {
         stopDemoReseedScheduler();
         stopEncryptionPurgeScheduler();
         stopRecurrenceScheduler();
+        stopAutomationScheduler();
         // Flush all in-memory Yjs documents to database before closing
         await destroyHocuspocusServer();
         await app.close();

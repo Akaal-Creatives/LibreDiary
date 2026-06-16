@@ -496,6 +496,7 @@ enum NotificationType {
   COMMENT_RESOLVED  // Your comment was resolved
   INVITATION        // You were invited to an organization
   TASK_DUE          // A recurring task row is due
+  AUTOMATION        // An automation fired a SEND_NOTIFICATION action
 }
 
 // ============================================

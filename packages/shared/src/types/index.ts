@@ -16,7 +16,8 @@ export type NotificationType =
   | 'PAGE_SHARED'
   | 'COMMENT_RESOLVED'
   | 'INVITATION'
-  | 'TASK_DUE';
+  | 'TASK_DUE'
+  | 'AUTOMATION';
 
 export type PropertyType =
   | 'TEXT'

@@ -70,6 +70,9 @@ CREATE INDEX IF NOT EXISTS "AutomationLog_automationId_createdAt_idx"
 CREATE INDEX IF NOT EXISTS "AutomationLog_createdAt_idx"
   ON "AutomationLog" ("createdAt");
 
+-- New NotificationType value
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'AUTOMATION';
+
 -- New AuditAction values
 ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'AUTOMATION_CREATED';
 ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'AUTOMATION_UPDATED';
