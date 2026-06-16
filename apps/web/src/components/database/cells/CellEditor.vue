@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
-import type { PropertyType, FilesCellItem } from '@librediary/shared';
+import type { PropertyType, FilesCellItem, RecurrenceStatus } from '@librediary/shared';
 import { formatDuration, parseDuration } from '@librediary/shared/utils';
 import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
@@ -18,11 +18,14 @@ const emit = defineEmits<{
   save: [value: unknown];
   cancel: [];
   startTimer: [];
+  skipRecurrence: [];
+  setRecurrenceStatus: [status: RecurrenceStatus];
 }>();
 
 const editValue = ref<string>('');
 const inputRef = ref<HTMLInputElement | null>(null);
 const showSelectDropdown = ref(false);
+const showRecurrenceDropdown = ref(false);
 const showPersonDropdown = ref(false);
 const showRelationDropdown = ref(false);
 const showFilesDropdown = ref(false);
@@ -164,6 +167,12 @@ onMounted(async () => {
     return;
   }
 
+  if (props.type === 'RECURRENCE') {
+    showRecurrenceDropdown.value = true;
+    positionDropdown();
+    return;
+  }
+
   if (props.type === 'PERSON') {
     showPersonDropdown.value = true;
     positionDropdown();
@@ -263,6 +272,26 @@ function isSelected(option: string): boolean {
   }
   return String(props.value ?? '') === option;
 }
+
+interface RecurrenceValue {
+  rule: string | null;
+  status: RecurrenceStatus | null;
+  nextAt: string | null;
+}
+
+const recurrenceOptions: Array<{ label: string; rule: string }> = [
+  { label: 'Daily', rule: 'FREQ=DAILY' },
+  { label: 'Weekly', rule: 'FREQ=WEEKLY' },
+  { label: 'Every 2 weeks', rule: 'FREQ=WEEKLY;INTERVAL=2' },
+  { label: 'Monthly', rule: 'FREQ=MONTHLY' },
+  { label: 'Quarterly', rule: 'FREQ=MONTHLY;INTERVAL=3' },
+  { label: 'Yearly', rule: 'FREQ=YEARLY' },
+];
+
+const currentRecurrence = computed<RecurrenceValue>(() => {
+  const v = props.value as RecurrenceValue | null;
+  return { rule: v?.rule ?? null, status: v?.status ?? null, nextAt: v?.nextAt ?? null };
+});
 
 function getInputType(): string {
   switch (props.type) {
@@ -388,6 +417,74 @@ function getInputType(): string {
         Upload file
       </button>
       <button class="files-done-btn" @mousedown.prevent="emit('save', currentFiles)">Done</button>
+    </div>
+
+    <!-- Recurrence dropdown -->
+    <div
+      v-if="type === 'RECURRENCE' && showRecurrenceDropdown"
+      ref="dropdownRef"
+      class="recurrence-dropdown"
+      :style="dropdownStyle"
+    >
+      <div class="recurrence-section-label">Repeat</div>
+      <button
+        v-for="opt in recurrenceOptions"
+        :key="opt.rule"
+        class="recurrence-option"
+        :class="{ selected: currentRecurrence.rule === opt.rule }"
+        @mousedown.prevent="emit('save', opt.rule); emit('cancel')"
+      >
+        <span class="option-check">
+          <svg
+            v-if="currentRecurrence.rule === opt.rule"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+          >
+            <path
+              d="M2.5 6L5 8.5L9.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        {{ opt.label }}
+      </button>
+
+      <template v-if="currentRecurrence.rule && currentRecurrence.status !== 'CANCELLED'">
+        <div class="recurrence-divider" />
+        <div class="recurrence-actions">
+          <button
+            class="recurrence-action-btn"
+            @mousedown.prevent="emit('skipRecurrence'); emit('cancel')"
+          >
+            Skip next
+          </button>
+          <button
+            v-if="currentRecurrence.status !== 'PAUSED'"
+            class="recurrence-action-btn"
+            @mousedown.prevent="emit('setRecurrenceStatus', 'PAUSED'); emit('cancel')"
+          >
+            Pause
+          </button>
+          <button
+            v-else
+            class="recurrence-action-btn"
+            @mousedown.prevent="emit('setRecurrenceStatus', 'ACTIVE'); emit('cancel')"
+          >
+            Resume
+          </button>
+          <button
+            class="recurrence-action-btn recurrence-action-btn--danger"
+            @mousedown.prevent="emit('setRecurrenceStatus', 'CANCELLED'); emit('cancel')"
+          >
+            Cancel
+          </button>
+        </div>
+      </template>
     </div>
 
     <!-- Select / Multi-select dropdown -->
@@ -860,5 +957,94 @@ function getInputType(): string {
 .duration-timer-btn:hover {
   color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+/* Recurrence Dropdown */
+.recurrence-dropdown {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: var(--space-1);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.recurrence-section-label {
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recurrence-option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.recurrence-option:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.recurrence-option.selected {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.recurrence-divider {
+  height: 1px;
+  margin: var(--space-1) var(--space-2);
+  background: var(--color-border-subtle);
+}
+
+.recurrence-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-1);
+}
+
+.recurrence-action-btn {
+  padding: var(--space-1-5) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.recurrence-action-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.recurrence-action-btn--danger {
+  color: var(--color-error);
+}
+
+.recurrence-action-btn--danger:hover {
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 </style>

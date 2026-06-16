@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { PropertyType, FilesCellItem } from '@librediary/shared';
+import type { PropertyType, FilesCellItem, RecurrenceStatus } from '@librediary/shared';
 import { formatDuration } from '@librediary/shared/utils';
 import type { DurationConfig } from '@librediary/shared/utils';
 import { useOrganizationsStore } from '@/stores/organizations';
@@ -64,6 +64,26 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+interface RecurrenceValue {
+  rule: string | null;
+  status: RecurrenceStatus | null;
+  nextAt: string | null;
+}
+
+const recurrenceValue = computed<RecurrenceValue | null>(() => {
+  if (props.type !== 'RECURRENCE') return null;
+  const v = props.value as RecurrenceValue | null;
+  if (!v?.rule) return null;
+  return v;
+});
+
+function formatNextOccurrence(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 const rollupValue = computed<string>(() => {
@@ -343,6 +363,31 @@ function getSelectColour(val: string): string {
       </a>
     </template>
 
+    <!-- Recurrence -->
+    <template v-else-if="type === 'RECURRENCE' && recurrenceValue">
+      <span
+        class="recurrence-badge"
+        :class="`recurrence-badge--${(recurrenceValue.status ?? 'active').toLowerCase()}`"
+      >
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+          <path
+            d="M1.5 5.5A4 4 0 0 1 9 3.5M9.5 5.5A4 4 0 0 1 2 7.5"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
+          <path
+            d="M7.5 2L9 3.5L7.5 5"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        {{ recurrenceValue.status === 'PAUSED' ? 'Paused' : recurrenceValue.status === 'CANCELLED' ? 'Cancelled' : formatNextOccurrence(recurrenceValue.nextAt) || 'Active' }}
+      </span>
+    </template>
+
     <!-- Rollup -->
     <template v-else-if="type === 'ROLLUP' && rollupValue">
       {{ rollupValue }}
@@ -505,5 +550,29 @@ function getSelectColour(val: string): string {
 .url-link:hover,
 .email-link:hover {
   text-decoration: underline;
+}
+
+/* Recurrence */
+.recurrence-badge {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  padding: 1px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.recurrence-badge--paused {
+  color: var(--color-warning, #d97706);
+  background: color-mix(in srgb, var(--color-warning, #d97706) 10%, transparent);
+}
+
+.recurrence-badge--cancelled {
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-sunken);
 }
 </style>

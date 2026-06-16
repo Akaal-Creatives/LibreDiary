@@ -39,6 +39,7 @@ const isSelectType = computed(
 const isNumberType = computed(() => localType.value === 'NUMBER');
 const isFilesType = computed(() => localType.value === 'FILES');
 const isDurationType = computed(() => localType.value === 'DURATION');
+const isRecurrenceType = computed(() => localType.value === 'RECURRENCE');
 
 const localDurationPrecision = ref(getInitialDurationPrecision());
 const localDurationFormat = ref(getInitialDurationFormat());
@@ -142,6 +143,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'PHONE', label: 'Phone' },
   { value: 'FILES', label: 'Files' },
   { value: 'DURATION', label: 'Duration' },
+  { value: 'RECURRENCE', label: 'Recurrence' },
 ];
 </script>
 
@@ -254,6 +256,14 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
         <option value="hms">Hours, minutes, seconds</option>
         <option value="decimal">Decimal hours (1.50h)</option>
       </select>
+    </div>
+
+    <!-- RECURRENCE info -->
+    <div v-if="isRecurrenceType" class="config-field">
+      <span class="config-hint">
+        Click any cell in this column to set a repeating schedule for that row. Supported
+        frequencies: daily, weekly, every&nbsp;2&nbsp;weeks, monthly, quarterly, and yearly.
+      </span>
     </div>
   </div>
 </template>

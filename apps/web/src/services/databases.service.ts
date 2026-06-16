@@ -7,6 +7,7 @@ import type {
   DatabaseWithRelations,
   PropertyType,
   ViewType,
+  RecurrenceStatus,
 } from '@librediary/shared';
 
 // ===========================================
@@ -53,6 +54,14 @@ export interface UpdateViewInput {
   name?: string;
   type?: ViewType;
   config?: Record<string, unknown> | null;
+}
+
+export interface SetRecurrenceInput {
+  recurrenceRule: string;
+}
+
+export interface SetRecurrenceStatusInput {
+  status: RecurrenceStatus;
 }
 
 // ===========================================
@@ -242,6 +251,43 @@ export const databasesService = {
     return api.post<{ message: string }>(
       `/organizations/${orgId}/databases/${databaseId}/views/reorder`,
       { orderedIds }
+    );
+  },
+
+  // --- Recurrence ---
+
+  async setRowRecurrence(
+    orgId: string,
+    databaseId: string,
+    rowId: string,
+    input: SetRecurrenceInput
+  ): Promise<{ row: DatabaseRow }> {
+    return api.patch<{ row: DatabaseRow }>(
+      `/organizations/${orgId}/databases/${databaseId}/rows/${rowId}/recurrence`,
+      input
+    );
+  },
+
+  async skipRowOccurrence(
+    orgId: string,
+    databaseId: string,
+    rowId: string
+  ): Promise<{ row: DatabaseRow }> {
+    return api.post<{ row: DatabaseRow }>(
+      `/organizations/${orgId}/databases/${databaseId}/rows/${rowId}/recurrence/skip`,
+      {}
+    );
+  },
+
+  async setRowRecurrenceStatus(
+    orgId: string,
+    databaseId: string,
+    rowId: string,
+    input: SetRecurrenceStatusInput
+  ): Promise<{ row: DatabaseRow }> {
+    return api.patch<{ row: DatabaseRow }>(
+      `/organizations/${orgId}/databases/${databaseId}/rows/${rowId}/recurrence/status`,
+      input
     );
   },
 };

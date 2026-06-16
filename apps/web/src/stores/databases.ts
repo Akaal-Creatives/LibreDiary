@@ -6,6 +6,7 @@ import type {
   DatabaseView,
   DatabaseRow,
   DatabaseWithRelations,
+  RecurrenceStatus,
 } from '@librediary/shared';
 import { databasesService } from '@/services';
 import { getTemplate } from '@/components/database/databaseTemplates';
@@ -383,6 +384,40 @@ export const useDatabasesStore = defineStore('databases', () => {
     return data.count;
   }
 
+  function patchRow(updated: DatabaseRow) {
+    const idx = rows.value.findIndex((r) => r.id === updated.id);
+    if (idx !== -1) rows.value[idx] = updated;
+  }
+
+  async function setRowRecurrence(rowId: string, rule: string): Promise<DatabaseRow> {
+    const orgId = getOrgId();
+    const dbId = currentDatabaseId.value!;
+    const data = await databasesService.setRowRecurrence(orgId, dbId, rowId, {
+      recurrenceRule: rule,
+    });
+    patchRow(data.row);
+    return data.row;
+  }
+
+  async function skipRowOccurrence(rowId: string): Promise<DatabaseRow> {
+    const orgId = getOrgId();
+    const dbId = currentDatabaseId.value!;
+    const data = await databasesService.skipRowOccurrence(orgId, dbId, rowId);
+    patchRow(data.row);
+    return data.row;
+  }
+
+  async function setRowRecurrenceStatus(
+    rowId: string,
+    status: RecurrenceStatus
+  ): Promise<DatabaseRow> {
+    const orgId = getOrgId();
+    const dbId = currentDatabaseId.value!;
+    const data = await databasesService.setRowRecurrenceStatus(orgId, dbId, rowId, { status });
+    patchRow(data.row);
+    return data.row;
+  }
+
   // ===========================================
   // API ACTIONS - VIEW MANAGEMENT
   // ===========================================
@@ -483,6 +518,9 @@ export const useDatabasesStore = defineStore('databases', () => {
     deleteRow,
     reorderRows,
     bulkDeleteRows,
+    setRowRecurrence,
+    skipRowOccurrence,
+    setRowRecurrenceStatus,
     // API Actions - Views
     createView,
     updateView,

@@ -80,6 +80,36 @@ function startTimerForRow(rowId: string, propertyId: string) {
 function getDurationPropertyForRow(): { id: string } | undefined {
   return databasesStore.sortedProperties.find((p) => p.type === 'DURATION');
 }
+
+function getRecurrenceValue(row: (typeof databasesStore.filteredAndSortedRows)[number]) {
+  return {
+    rule: row.recurrenceRule,
+    status: row.recurrenceStatus,
+    nextAt: row.nextOccurrenceAt,
+  };
+}
+
+function getCellValueForProp(
+  row: (typeof databasesStore.filteredAndSortedRows)[number],
+  propId: string,
+  propType: string
+) {
+  if (propType === 'RECURRENCE') return getRecurrenceValue(row);
+  return getCellValue(row, propId);
+}
+
+async function handleSaveCell(
+  rowId: string,
+  propId: string,
+  propType: string,
+  value: unknown
+) {
+  if (propType === 'RECURRENCE') {
+    await databasesStore.setRowRecurrence(rowId, value as string);
+  } else {
+    await saveCell(rowId, propId, value);
+  }
+}
 </script>
 
 <template>
@@ -164,16 +194,18 @@ function getDurationPropertyForRow(): { id: string } | undefined {
             >
               <CellEditor
                 v-if="editingCell?.rowId === row.id && editingCell?.propertyId === prop.id"
-                :value="getCellValue(row, prop.id)"
+                :value="getCellValueForProp(row, prop.id, prop.type)"
                 :type="prop.type"
                 :config="(prop.config as Record<string, unknown>) ?? null"
-                @save="(v) => saveCell(row.id, prop.id, v)"
+                @save="(v) => handleSaveCell(row.id, prop.id, prop.type, v)"
                 @cancel="cancelEdit"
                 @start-timer="startTimerForRow(row.id, prop.id)"
+                @skip-recurrence="databasesStore.skipRowOccurrence(row.id)"
+                @set-recurrence-status="(s) => databasesStore.setRowRecurrenceStatus(row.id, s)"
               />
               <CellRenderer
                 v-else
-                :value="getCellValue(row, prop.id)"
+                :value="getCellValueForProp(row, prop.id, prop.type)"
                 :type="prop.type"
                 :config="(prop.config as Record<string, unknown>) ?? null"
                 :row-cells="row.cells as Record<string, unknown>"

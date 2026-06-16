@@ -98,4 +98,6 @@ export type {
   UpdateRowInput as UpdateRowServiceInput,
   CreateViewInput as CreateViewServiceInput,
   UpdateViewInput as UpdateViewServiceInput,
+  SetRecurrenceInput as SetRecurrenceServiceInput,
+  SetRecurrenceStatusInput as SetRecurrenceStatusServiceInput,
 } from './databases.service';

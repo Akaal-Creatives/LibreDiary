@@ -27,6 +27,7 @@ const propertyTypes: Array<{ value: PropertyType; label: string }> = [
   { value: 'ROLLUP', label: 'Rollup' },
   { value: 'FORMULA', label: 'Formula' },
   { value: 'DURATION', label: 'Duration' },
+  { value: 'RECURRENCE', label: 'Recurrence' },
 ];
 
 /** Validate and emit the new property, then reset the form. */
