@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import * as databasesService from './databases.service.js';
+import * as recurrenceService from './recurrence.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
@@ -31,6 +32,14 @@ const updateDatabaseSchema = z.object({
 
 const bulkDeleteSchema = z.object({
   rowIds: z.array(z.string().min(1)).min(1),
+});
+
+const setRecurrenceSchema = z.object({
+  recurrenceRule: z.string().min(1).max(500),
+});
+
+const setRecurrenceStatusSchema = z.object({
+  status: z.enum(['ACTIVE', 'PAUSED', 'CANCELLED']),
 });
 
 // ===========================================
@@ -91,6 +100,16 @@ const errorMap: ErrorMap = {
     status: 400,
     code: 'CANNOT_DELETE_LAST_VIEW',
     message: 'Cannot delete the last remaining view',
+  },
+  INVALID_RECURRENCE_RULE: {
+    status: 400,
+    code: 'INVALID_RECURRENCE_RULE',
+    message: 'Invalid recurrence rule — use FREQ=DAILY|WEEKLY|MONTHLY|YEARLY with optional INTERVAL=n',
+  },
+  ROW_NOT_RECURRING: {
+    status: 400,
+    code: 'ROW_NOT_RECURRING',
+    message: 'Row does not have an active recurrence rule',
   },
 };
 
@@ -502,6 +521,85 @@ export async function databasesRoutes(fastify: FastifyInstance): Promise<void> {
           success: true,
           data: { count, message: `${count} rows deleted` },
         };
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
+
+  // --- Recurrence ---
+
+  fastify.patch<{ Params: RowParams }>(
+    '/:databaseId/rows/:rowId/recurrence',
+    async (request: FastifyRequest<{ Params: RowParams }>, reply: FastifyReply) => {
+      const body = setRecurrenceSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        const row = await recurrenceService.setRecurrenceRule(
+          request.params.orgId,
+          request.params.databaseId,
+          request.params.rowId,
+          body.data,
+          getAuthUser(request).id
+        );
+        return { success: true, data: { row } };
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
+
+  fastify.post<{ Params: RowParams }>(
+    '/:databaseId/rows/:rowId/recurrence/skip',
+    async (request: FastifyRequest<{ Params: RowParams }>, reply: FastifyReply) => {
+      try {
+        const row = await recurrenceService.skipOccurrence(
+          request.params.orgId,
+          request.params.databaseId,
+          request.params.rowId,
+          getAuthUser(request).id
+        );
+        return { success: true, data: { row } };
+      } catch (error) {
+        return mapServiceError(error, reply, errorMap);
+      }
+    }
+  );
+
+  fastify.patch<{ Params: RowParams }>(
+    '/:databaseId/rows/:rowId/recurrence/status',
+    async (request: FastifyRequest<{ Params: RowParams }>, reply: FastifyReply) => {
+      const body = setRecurrenceStatusSchema.safeParse(request.body);
+      if (!body.success) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            details: body.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      try {
+        const row = await recurrenceService.setRecurrenceStatus(
+          request.params.orgId,
+          request.params.databaseId,
+          request.params.rowId,
+          body.data.status,
+          getAuthUser(request).id
+        );
+        return { success: true, data: { row } };
       } catch (error) {
         return mapServiceError(error, reply, errorMap);
       }
