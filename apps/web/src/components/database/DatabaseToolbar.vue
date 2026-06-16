@@ -2,12 +2,14 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDatabasesStore } from '@/stores';
+import AutomationPanel from './AutomationPanel.vue';
 
 const { t } = useI18n();
 const databasesStore = useDatabasesStore();
 
 const showFilterPanel = ref(false);
 const showSortPanel = ref(false);
+const showAutomationPanel = ref(false);
 
 type FilterEntry = { propertyId: string; operator: string; value: unknown };
 type SortEntry = { propertyId: string; direction: 'asc' | 'desc' };
@@ -29,9 +31,16 @@ const activeSorts = computed(() => {
 const localFilters = ref<FilterEntry[]>([]);
 const localSorts = ref<SortEntry[]>([]);
 
+function toggleAutomationPanel() {
+  showAutomationPanel.value = !showAutomationPanel.value;
+  showFilterPanel.value = false;
+  showSortPanel.value = false;
+}
+
 function toggleFilterPanel() {
   showFilterPanel.value = !showFilterPanel.value;
   showSortPanel.value = false;
+  showAutomationPanel.value = false;
   if (showFilterPanel.value) {
     localFilters.value = [...activeFilters.value];
   }
@@ -40,6 +49,7 @@ function toggleFilterPanel() {
 function toggleSortPanel() {
   showSortPanel.value = !showSortPanel.value;
   showFilterPanel.value = false;
+  showAutomationPanel.value = false;
   if (showSortPanel.value) {
     localSorts.value = [...activeSorts.value];
   }
@@ -200,6 +210,26 @@ function onFilterPropertyChange(index: number) {
           {{ activeSorts.length }}
         </span>
       </button>
+
+      <!-- Automations Button -->
+      <button
+        class="toolbar-btn toolbar-btn-automations"
+        :class="{ active: showAutomationPanel || databasesStore.automations.length > 0 }"
+        @click="toggleAutomationPanel"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1.5L8.8 5.2L13 5.8L10 8.7L10.7 13L7 11L3.3 13L4 8.7L1 5.8L5.2 5.2L7 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />
+        </svg>
+        Automations
+        <span v-if="databasesStore.automations.length > 0" class="toolbar-badge automation-badge">
+          {{ databasesStore.automations.length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Automation Panel -->
+    <div v-if="showAutomationPanel" class="automation-panel-wrapper">
+      <AutomationPanel />
     </div>
 
     <!-- Filter Panel -->
@@ -321,6 +351,7 @@ function onFilterPropertyChange(index: number) {
 
 <style scoped>
 .database-toolbar {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -516,5 +547,18 @@ function onFilterPropertyChange(index: number) {
 .add-filter-btn:hover,
 .add-sort-btn:hover {
   background: var(--color-hover);
+}
+
+.automation-badge {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.automation-panel-wrapper {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: var(--z-dropdown);
+  margin-top: var(--space-1);
 }
 </style>

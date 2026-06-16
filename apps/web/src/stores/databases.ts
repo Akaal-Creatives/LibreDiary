@@ -7,6 +7,8 @@ import type {
   DatabaseRow,
   DatabaseWithRelations,
   RecurrenceStatus,
+  Automation,
+  AutomationLog,
 } from '@librediary/shared';
 import { databasesService } from '@/services';
 import { getTemplate } from '@/components/database/databaseTemplates';
@@ -19,6 +21,8 @@ import type {
   UpdateRowServiceInput,
   CreateViewServiceInput,
   UpdateViewServiceInput,
+  CreateAutomationServiceInput,
+  UpdateAutomationServiceInput,
 } from '@/services';
 import { useAuthStore } from './auth';
 
@@ -35,6 +39,7 @@ export const useDatabasesStore = defineStore('databases', () => {
   const activeViewId = ref<string | null>(null);
   const loading = ref(false);
   const relatedDatabases = ref<Map<string, DatabaseWithRelations>>(new Map());
+  const automations = ref<Automation[]>([]);
 
   // ===========================================
   // GETTERS
@@ -468,6 +473,58 @@ export const useDatabasesStore = defineStore('databases', () => {
   }
 
   // ===========================================
+  // AUTOMATIONS
+  // ===========================================
+
+  async function fetchAutomations() {
+    const orgId = useAuthStore().currentOrgId;
+    if (!orgId || !currentDatabaseId.value) return;
+    const res = await databasesService.listAutomations(orgId, currentDatabaseId.value);
+    automations.value = res.data;
+  }
+
+  async function createAutomation(input: CreateAutomationServiceInput) {
+    const orgId = useAuthStore().currentOrgId;
+    if (!orgId || !currentDatabaseId.value) return;
+    const res = await databasesService.createAutomation(orgId, currentDatabaseId.value, input);
+    automations.value.push(res.data);
+    return res.data;
+  }
+
+  async function updateAutomation(automationId: string, input: UpdateAutomationServiceInput) {
+    const orgId = useAuthStore().currentOrgId;
+    if (!orgId || !currentDatabaseId.value) return;
+    const res = await databasesService.updateAutomation(
+      orgId,
+      currentDatabaseId.value,
+      automationId,
+      input
+    );
+    const idx = automations.value.findIndex((a) => a.id === automationId);
+    if (idx !== -1) automations.value[idx] = res.data;
+    return res.data;
+  }
+
+  async function deleteAutomation(automationId: string) {
+    const orgId = useAuthStore().currentOrgId;
+    if (!orgId || !currentDatabaseId.value) return;
+    await databasesService.deleteAutomation(orgId, currentDatabaseId.value, automationId);
+    automations.value = automations.value.filter((a) => a.id !== automationId);
+  }
+
+  async function fetchAutomationLogs(automationId: string, limit = 50): Promise<AutomationLog[]> {
+    const orgId = useAuthStore().currentOrgId;
+    if (!orgId || !currentDatabaseId.value) return [];
+    const res = await databasesService.getAutomationLogs(
+      orgId,
+      currentDatabaseId.value,
+      automationId,
+      limit
+    );
+    return res.data;
+  }
+
+  // ===========================================
   // RESET
   // ===========================================
 
@@ -479,6 +536,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     rows.value = [];
     activeViewId.value = null;
     relatedDatabases.value.clear();
+    automations.value = [];
   }
 
   return {
@@ -491,6 +549,7 @@ export const useDatabasesStore = defineStore('databases', () => {
     activeViewId,
     loading,
     relatedDatabases,
+    automations,
     // Getters
     currentDatabase,
     databaseList,
@@ -527,6 +586,12 @@ export const useDatabasesStore = defineStore('databases', () => {
     deleteView,
     reorderViews,
     setActiveView,
+    // API Actions - Automations
+    fetchAutomations,
+    createAutomation,
+    updateAutomation,
+    deleteAutomation,
+    fetchAutomationLogs,
     // Reset
     reset,
   };

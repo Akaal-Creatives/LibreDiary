@@ -8,6 +8,10 @@ import type {
   PropertyType,
   ViewType,
   RecurrenceStatus,
+  Automation,
+  AutomationLog,
+  AutomationTriggerType,
+  AutomationActionType,
 } from '@librediary/shared';
 
 // ===========================================
@@ -62,6 +66,23 @@ export interface SetRecurrenceInput {
 
 export interface SetRecurrenceStatusInput {
   status: RecurrenceStatus;
+}
+
+export interface CreateAutomationInput {
+  name: string;
+  triggerType: AutomationTriggerType;
+  triggerConfig?: { propertyId?: string; matchValue?: string; daysBeforeDate?: number };
+  actionType: AutomationActionType;
+  actionConfig?: { propertyId?: string; value?: unknown; message?: string; pageTitle?: string };
+}
+
+export interface UpdateAutomationInput {
+  name?: string;
+  isEnabled?: boolean;
+  triggerType?: AutomationTriggerType;
+  triggerConfig?: { propertyId?: string; matchValue?: string; daysBeforeDate?: number } | null;
+  actionType?: AutomationActionType;
+  actionConfig?: { propertyId?: string; value?: unknown; message?: string; pageTitle?: string } | null;
 }
 
 // ===========================================
@@ -288,6 +309,58 @@ export const databasesService = {
     return api.patch<{ row: DatabaseRow }>(
       `/organizations/${orgId}/databases/${databaseId}/rows/${rowId}/recurrence/status`,
       input
+    );
+  },
+
+  // --- Automations ---
+
+  async listAutomations(orgId: string, databaseId: string): Promise<{ data: Automation[] }> {
+    return api.get<{ data: Automation[] }>(
+      `/organizations/${orgId}/databases/${databaseId}/automations`
+    );
+  },
+
+  async createAutomation(
+    orgId: string,
+    databaseId: string,
+    input: CreateAutomationInput
+  ): Promise<{ data: Automation }> {
+    return api.post<{ data: Automation }>(
+      `/organizations/${orgId}/databases/${databaseId}/automations`,
+      input
+    );
+  },
+
+  async updateAutomation(
+    orgId: string,
+    databaseId: string,
+    automationId: string,
+    input: UpdateAutomationInput
+  ): Promise<{ data: Automation }> {
+    return api.patch<{ data: Automation }>(
+      `/organizations/${orgId}/databases/${databaseId}/automations/${automationId}`,
+      input
+    );
+  },
+
+  async deleteAutomation(
+    orgId: string,
+    databaseId: string,
+    automationId: string
+  ): Promise<void> {
+    return api.delete<void>(
+      `/organizations/${orgId}/databases/${databaseId}/automations/${automationId}`
+    );
+  },
+
+  async getAutomationLogs(
+    orgId: string,
+    databaseId: string,
+    automationId: string,
+    limit = 50
+  ): Promise<{ data: AutomationLog[] }> {
+    return api.get<{ data: AutomationLog[] }>(
+      `/organizations/${orgId}/databases/${databaseId}/automations/${automationId}/logs?limit=${limit}`
     );
   },
 };

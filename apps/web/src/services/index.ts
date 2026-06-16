@@ -100,4 +100,6 @@ export type {
   UpdateViewInput as UpdateViewServiceInput,
   SetRecurrenceInput as SetRecurrenceServiceInput,
   SetRecurrenceStatusInput as SetRecurrenceStatusServiceInput,
+  CreateAutomationInput as CreateAutomationServiceInput,
+  UpdateAutomationInput as UpdateAutomationServiceInput,
 } from './databases.service';
