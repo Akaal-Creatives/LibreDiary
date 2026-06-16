@@ -35,7 +35,11 @@ function toggleExpanded(event: MouseEvent) {
 }
 
 function navigateToPage() {
-  router.push({ name: 'page', params: { pageId: props.page.id } });
+  if (props.page.type === 'canvas') {
+    router.push({ name: 'canvas', params: { canvasId: props.page.id } });
+  } else {
+    router.push({ name: 'page', params: { pageId: props.page.id } });
+  }
 }
 
 function handleContextMenu(event: MouseEvent) {
@@ -233,6 +237,13 @@ function isDescendant(page: PageWithChildren, targetId: string): boolean {
       <!-- Page Icon -->
       <span class="page-icon">
         <template v-if="page.icon">{{ page.icon }}</template>
+        <!-- Canvas icon -->
+        <svg v-else-if="page.type === 'canvas'" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.25"/>
+          <path d="M4 11L6.5 7L8.5 9.5L10.5 6.5L12 9" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="5" cy="5.5" r="1" fill="currentColor"/>
+        </svg>
+        <!-- Document icon -->
         <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M3 2.5H9.5L13 6V13.5C13 13.7761 12.7761 14 12.5 14H3.5C3.22386 14 3 13.7761 3 13.5V3C3 2.72386 3.22386 2.5 3.5 2.5Z"

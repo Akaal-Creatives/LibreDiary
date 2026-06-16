@@ -86,6 +86,13 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'pageTitle.page' },
       },
       {
+        path: 'canvas/:canvasId',
+        name: 'canvas',
+        component: () => import('@/pages/app/CanvasView.vue'),
+        props: true,
+        meta: { title: 'pageTitle.canvas' },
+      },
+      {
         path: 'database/:databaseId',
         name: 'database',
         component: () => import('@/pages/app/DatabaseView.vue'),

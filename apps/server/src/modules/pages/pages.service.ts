@@ -16,6 +16,7 @@ export interface CreatePageInput {
   title?: string;
   parentId?: string | null;
   icon?: string | null;
+  type?: 'document' | 'canvas';
 }
 
 export interface UpdatePageInput {
@@ -126,6 +127,7 @@ export async function createPage(
       title: input.title ?? 'Untitled',
       parentId: input.parentId ?? null,
       icon: input.icon ?? null,
+      type: input.type ?? 'document',
       position,
     },
   });

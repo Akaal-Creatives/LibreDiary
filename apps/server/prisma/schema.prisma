@@ -226,6 +226,9 @@ model Page {
   parentId String?
   position Int     @default(0) // For ordering siblings
 
+  // Page type: 'document' | 'canvas'
+  type     String  @default("document")
+
   // Content
   title    String  @default("Untitled")
   icon     String? // Emoji or icon identifier

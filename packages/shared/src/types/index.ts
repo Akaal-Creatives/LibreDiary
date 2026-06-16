@@ -151,11 +151,14 @@ export interface Invitation {
 // PAGE & CONTENT
 // ===========================================
 
+export type PageType = 'document' | 'canvas';
+
 export interface Page {
   id: string;
   organizationId: string;
   parentId: string | null;
   position: number;
+  type: PageType;
   title: string;
   icon: string | null;
   coverUrl: string | null;

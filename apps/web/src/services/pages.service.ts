@@ -9,6 +9,7 @@ export interface CreatePageInput {
   title?: string;
   parentId?: string | null;
   icon?: string | null;
+  type?: 'document' | 'canvas';
 }
 
 export interface UpdatePageInput {

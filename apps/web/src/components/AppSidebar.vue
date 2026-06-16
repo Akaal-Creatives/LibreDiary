@@ -147,6 +147,16 @@ async function createNewPage(parentId?: string) {
   }
 }
 
+async function createNewCanvas() {
+  try {
+    const page = await pagesStore.createCanvas();
+    router.push({ name: 'canvas', params: { canvasId: page.id } });
+  } catch (e) {
+    console.error('Failed to create canvas:', e);
+    toast.error(t('pages.failedToCreate'));
+  }
+}
+
 function showContextMenu(event: MouseEvent, page: PageWithChildren) {
   event.preventDefault();
   contextMenu.value = {
@@ -324,27 +334,43 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
       <div class="nav-section">
         <div class="nav-section-header">
           <span class="nav-section-title">{{ $t('nav.pages') }}</span>
-          <button
-            class="section-action"
-            :title="$t('sidebar.addPage')"
-            :aria-label="$t('sidebar.addNewPage')"
-            @click="createNewPage()"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M7 2.5V11.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-              <path
-                d="M2.5 7H11.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
+          <div class="section-actions">
+            <!-- New Canvas -->
+            <button
+              class="section-action"
+              title="New Canvas"
+              aria-label="Add new canvas"
+              @click="createNewCanvas()"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M3.5 9.5L5.5 6.5L7 8.5L8.5 6L10 8.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="4.5" cy="4.5" r="0.75" fill="currentColor"/>
+              </svg>
+            </button>
+            <!-- New Page -->
+            <button
+              class="section-action"
+              :title="$t('sidebar.addPage')"
+              :aria-label="$t('sidebar.addNewPage')"
+              @click="createNewPage()"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M7 2.5V11.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M2.5 7H11.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Loading State -->
@@ -735,6 +761,12 @@ async function handleMoveToTrash(page: Page | PageWithChildren) {
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .section-action {

@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { createVuestic, createIconsConfig } from 'vuestic-ui';
 import 'vuestic-ui/css';
 import { registerSW } from 'virtual:pwa-register';
+import VueKonva from 'vue-konva';
 
 import App from './App.vue';
 import router from './router';
@@ -17,6 +18,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(i18n);
 app.use(router);
+app.use(VueKonva);
 app.use(
   createVuestic({
     config: {

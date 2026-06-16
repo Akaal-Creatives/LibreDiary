@@ -292,6 +292,10 @@ export const usePagesStore = defineStore('pages', () => {
     }
   }
 
+  async function createCanvas(parentId?: string | null): Promise<Page> {
+    return createPage({ title: 'Untitled Canvas', type: 'canvas', parentId: parentId ?? null });
+  }
+
   async function updatePageData(pageId: string, input: UpdatePageInput): Promise<Page> {
     const orgId = getOrgId();
     const encryptedInput = await encryptUpdateInput(input);
@@ -474,6 +478,7 @@ export const usePagesStore = defineStore('pages', () => {
     fetchPageTree,
     fetchPage,
     createPage,
+    createCanvas,
     updatePageData,
     trashPage,
     // API Actions - Hierarchy

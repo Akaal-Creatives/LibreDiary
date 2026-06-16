@@ -14,6 +14,7 @@ const createPageSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   parentId: z.string().nullish(),
   icon: z.string().max(50).nullish(),
+  type: z.enum(['document', 'canvas']).optional(),
 });
 
 const updatePageSchema = z.object({
