@@ -171,6 +171,7 @@ export const propertyTypeSchema = z.enum([
   'UPDATED_TIME',
   'UPDATED_BY',
   'DURATION',
+  'RECURRENCE',
 ]);
 
 // ===========================================
@@ -213,6 +214,11 @@ export const formulaConfigSchema = z.object({
   expression: z.string().max(5000),
 });
 
+export const recurrenceConfigSchema = z.object({
+  // Default RRULE applied to new rows using this property; individual rows can override via recurrenceRule
+  defaultRule: z.string().max(500).optional(),
+});
+
 /** Map of property types to their config schemas. Types not listed accept no config. */
 const propertyConfigSchemas: Partial<Record<z.infer<typeof propertyTypeSchema>, z.ZodType>> = {
   SELECT: selectConfigSchema,
@@ -223,6 +229,7 @@ const propertyConfigSchemas: Partial<Record<z.infer<typeof propertyTypeSchema>, 
   RELATION: relationConfigSchema,
   ROLLUP: rollupConfigSchema,
   FORMULA: formulaConfigSchema,
+  RECURRENCE: recurrenceConfigSchema,
 };
 
 /**

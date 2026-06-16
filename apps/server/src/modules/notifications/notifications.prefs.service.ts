@@ -11,6 +11,7 @@ export interface NotificationPreferences {
   emailPageShared: boolean;
   emailCommentResolved: boolean;
   emailInvitation: boolean;
+  emailTaskDue: boolean;
 }
 
 export interface UpdateNotificationPreferencesInput {
@@ -19,6 +20,7 @@ export interface UpdateNotificationPreferencesInput {
   emailPageShared?: boolean;
   emailCommentResolved?: boolean;
   emailInvitation?: boolean;
+  emailTaskDue?: boolean;
 }
 
 // Map notification types to preference keys
@@ -28,6 +30,7 @@ const NOTIFICATION_TYPE_TO_PREF_KEY: Record<NotificationType, keyof Notification
   PAGE_SHARED: 'emailPageShared',
   COMMENT_RESOLVED: 'emailCommentResolved',
   INVITATION: 'emailInvitation',
+  TASK_DUE: 'emailTaskDue',
 };
 
 // Default preferences (all enabled)
@@ -37,6 +40,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   emailPageShared: true,
   emailCommentResolved: true,
   emailInvitation: true,
+  emailTaskDue: true,
 };
 
 // ===========================================

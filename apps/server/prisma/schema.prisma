@@ -493,6 +493,7 @@ enum NotificationType {
   PAGE_SHARED       // A page was shared with you
   COMMENT_RESOLVED  // Your comment was resolved
   INVITATION        // You were invited to an organization
+  TASK_DUE          // A recurring task row is due
 }
 
 // ============================================
@@ -519,6 +520,13 @@ enum PropertyType {
   UPDATED_TIME
   UPDATED_BY
   DURATION
+  RECURRENCE
+}
+
+enum RecurrenceStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
 }
 
 enum ViewType {
@@ -589,17 +597,27 @@ model DatabaseRow {
   cells      Json   @default("{}")
   createdById String
 
+  // Recurrence
+  recurrenceRule     String?           // RRULE string, e.g. "FREQ=WEEKLY;BYDAY=MO"
+  recurrenceStatus   RecurrenceStatus?
+  nextOccurrenceAt   DateTime?         // When the next copy should be created
+  recurrenceParentId String?           // Points to the original row this was cloned from
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  database  Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
-  createdBy User     @relation("DatabaseRowCreatedBy", fields: [createdById], references: [id])
+  database          Database      @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  createdBy         User          @relation("DatabaseRowCreatedBy", fields: [createdById], references: [id])
+  recurrenceParent  DatabaseRow?  @relation("RecurrenceChain", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
+  recurrenceChildren DatabaseRow[] @relation("RecurrenceChain")
 
   @@index([databaseId])
   @@index([databaseId, position])
   @@index([createdById])
+  @@index([nextOccurrenceAt])
+  @@index([recurrenceStatus, nextOccurrenceAt])
 }
 
 // ============================================
@@ -1014,6 +1032,8 @@ enum AuditAction {
   // Resources
   DATABASE_CREATED
   DATABASE_DELETED
+  DATABASE_ROW_RECURRENCE_SET
+  DATABASE_ROW_RECURRENCE_TRIGGERED
   BACKUP_CREATED
   BACKUP_DOWNLOADED
   BACKUP_DELETED

@@ -15,7 +15,8 @@ export type NotificationType =
   | 'COMMENT_REPLY'
   | 'PAGE_SHARED'
   | 'COMMENT_RESOLVED'
-  | 'INVITATION';
+  | 'INVITATION'
+  | 'TASK_DUE';
 
 export type PropertyType =
   | 'TEXT'
@@ -36,7 +37,10 @@ export type PropertyType =
   | 'CREATED_BY'
   | 'UPDATED_TIME'
   | 'UPDATED_BY'
-  | 'DURATION';
+  | 'DURATION'
+  | 'RECURRENCE';
+
+export type RecurrenceStatus = 'ACTIVE' | 'PAUSED' | 'CANCELLED';
 
 export type ViewType = 'TABLE' | 'KANBAN' | 'CALENDAR' | 'GALLERY';
 
@@ -272,6 +276,10 @@ export interface DatabaseRow {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  recurrenceRule: string | null;
+  recurrenceStatus: RecurrenceStatus | null;
+  nextOccurrenceAt: string | null;
+  recurrenceParentId: string | null;
 }
 
 export interface DatabaseWithRelations extends Database {
