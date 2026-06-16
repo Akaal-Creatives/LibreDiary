@@ -15,9 +15,18 @@ ALTER TABLE "DatabaseRow"
   ADD COLUMN IF NOT EXISTS "recurrenceParentId" TEXT;
 
 -- Foreign key linking a row back to its origin
-ALTER TABLE "DatabaseRow"
-  ADD CONSTRAINT IF NOT EXISTS "DatabaseRow_recurrenceParentId_fkey"
-  FOREIGN KEY ("recurrenceParentId") REFERENCES "DatabaseRow"("id") ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE table_name = 'DatabaseRow'
+      AND constraint_name = 'DatabaseRow_recurrenceParentId_fkey'
+  ) THEN
+    ALTER TABLE "DatabaseRow"
+      ADD CONSTRAINT "DatabaseRow_recurrenceParentId_fkey"
+      FOREIGN KEY ("recurrenceParentId") REFERENCES "DatabaseRow"("id") ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Indexes for the scheduler query (find due rows) and chain traversal
 CREATE INDEX IF NOT EXISTS "DatabaseRow_nextOccurrenceAt_idx"
