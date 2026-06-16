@@ -4,6 +4,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import { triggerWebhooks } from '../webhooks/webhook-delivery.service.js';
 import { logAudit } from '../audit/audit.service.js';
 import { logger } from '../../lib/logger.js';
+import { runAutomations } from './automation-engine.js';
 
 // ===========================================
 // TYPES
@@ -379,7 +380,7 @@ export async function createRow(
 
   const position = await getNextRowPosition(databaseId);
 
-  return prisma.databaseRow.create({
+  const row = await prisma.databaseRow.create({
     data: {
       databaseId,
       createdById: userId,
@@ -387,6 +388,10 @@ export async function createRow(
       cells: (input.cells ?? {}) as Prisma.InputJsonValue,
     },
   });
+
+  void runAutomations(databaseId, 'ROW_CREATED', row.id);
+
+  return row;
 }
 
 export async function getRow(orgId: string, databaseId: string, rowId: string) {
@@ -433,12 +438,23 @@ export async function updateRow(
 
   // Merge cells: spread new values over existing
   const existingCells = (row.cells as Record<string, unknown>) ?? {};
-  const mergedCells = { ...existingCells, ...(input.cells ?? {}) };
+  const incomingCells = input.cells ?? {};
+  const mergedCells = { ...existingCells, ...incomingCells };
 
-  return prisma.databaseRow.update({
+  const updated = await prisma.databaseRow.update({
     where: { id: rowId },
     data: { cells: mergedCells as Prisma.InputJsonValue },
   });
+
+  // Fire PROPERTY_UPDATED automations for each property whose value changed
+  const changedPropertyIds = Object.keys(incomingCells).filter(
+    (k) => incomingCells[k] !== existingCells[k]
+  );
+  for (const propId of changedPropertyIds) {
+    void runAutomations(databaseId, 'PROPERTY_UPDATED', rowId, propId);
+  }
+
+  return updated;
 }
 
 export async function deleteRow(orgId: string, databaseId: string, rowId: string) {
