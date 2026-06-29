@@ -10,11 +10,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.4.0",
+    "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.0",
-    "eslint-plugin-vue": "^10.9.1",
-    "globals": "^17.6.0",
-    "typescript-eslint": "^8.59.3",
-    "vue-eslint-parser": "^10.1.0"
+    "eslint-plugin-vue": "^10.9.2",
+    "globals": "^17.7.0",
+    "typescript-eslint": "^8.62.0",
+    "vue-eslint-parser": "^10.4.1"
   }
 }
