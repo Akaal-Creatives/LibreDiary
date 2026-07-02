@@ -57,6 +57,16 @@ const notificationMeta: Record<NotificationType, { icon: string; color: string; 
       color: '#e879a9',
       bgColor: 'rgba(232, 121, 169, 0.15)',
     },
+    TASK_DUE: {
+      icon: '⏰',
+      color: 'var(--color-warning, #f59e0b)',
+      bgColor: 'rgba(245, 158, 11, 0.15)',
+    },
+    AUTOMATION: {
+      icon: '⚡',
+      color: 'var(--color-accent)',
+      bgColor: 'rgba(124, 154, 140, 0.15)',
+    },
   };
 
 // Methods

@@ -477,14 +477,14 @@ export const useDatabasesStore = defineStore('databases', () => {
   // ===========================================
 
   async function fetchAutomations() {
-    const orgId = useAuthStore().currentOrgId;
+    const orgId = useAuthStore().currentOrganizationId;
     if (!orgId || !currentDatabaseId.value) return;
     const res = await databasesService.listAutomations(orgId, currentDatabaseId.value);
     automations.value = res.data;
   }
 
   async function createAutomation(input: CreateAutomationServiceInput) {
-    const orgId = useAuthStore().currentOrgId;
+    const orgId = useAuthStore().currentOrganizationId;
     if (!orgId || !currentDatabaseId.value) return;
     const res = await databasesService.createAutomation(orgId, currentDatabaseId.value, input);
     automations.value.push(res.data);
@@ -492,7 +492,7 @@ export const useDatabasesStore = defineStore('databases', () => {
   }
 
   async function updateAutomation(automationId: string, input: UpdateAutomationServiceInput) {
-    const orgId = useAuthStore().currentOrgId;
+    const orgId = useAuthStore().currentOrganizationId;
     if (!orgId || !currentDatabaseId.value) return;
     const res = await databasesService.updateAutomation(
       orgId,
@@ -506,14 +506,14 @@ export const useDatabasesStore = defineStore('databases', () => {
   }
 
   async function deleteAutomation(automationId: string) {
-    const orgId = useAuthStore().currentOrgId;
+    const orgId = useAuthStore().currentOrganizationId;
     if (!orgId || !currentDatabaseId.value) return;
     await databasesService.deleteAutomation(orgId, currentDatabaseId.value, automationId);
     automations.value = automations.value.filter((a) => a.id !== automationId);
   }
 
   async function fetchAutomationLogs(automationId: string, limit = 50): Promise<AutomationLog[]> {
-    const orgId = useAuthStore().currentOrgId;
+    const orgId = useAuthStore().currentOrganizationId;
     if (!orgId || !currentDatabaseId.value) return [];
     const res = await databasesService.getAutomationLogs(
       orgId,
