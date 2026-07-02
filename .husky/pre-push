@@ -1,0 +1,10 @@
+# Advisory secure-design-review over the outgoing push diff (LPDoS / replay /
+# clipboard). Phase 1: NEVER blocks the push — it writes findings to
+# .tmp/reports/secure-design-review.json for the developer to review.
+# Reuses the developer's existing local model-CLI auth; needs no CI/remote secret.
+SDR="/Volumes/UserData/Repos/AkaalCreatives/skills/secure-design-review/scripts/run-headless.sh"
+if [ -x "$SDR" ]; then
+  bash "$SDR" "@{push}...HEAD" || true
+else
+  echo "secure-design-review runner not found at $SDR — skipping (advisory)."
+fi

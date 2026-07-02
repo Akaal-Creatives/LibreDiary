@@ -1,3 +1,27 @@
+# Block commits containing sensitive path keywords
+BLOCKED_WORDS=("Anthropic" "claude")
+# Exclude the hook file itself so its own blocklist definition is not flagged.
+DIFF=$(git diff --cached --unified=0 -- . ':(exclude).husky/pre-commit')
+for word in "${BLOCKED_WORDS[@]}"; do
+  if echo "$DIFF" | grep -iq "^+.*$word"; then
+    echo "COMMIT BLOCKED: staged changes contain the forbidden word \"$word\"."
+    echo "Review your staged files and remove any references before committing."
+    exit 1
+  fi
+done
+
+# Secret gate — block a commit that stages a secret. gitleaks 8.18+ uses the
+# `git` subcommand; older releases used `protect`. Skips (with a notice) if
+# gitleaks is not installed, so the hook never hard-fails on a fresh machine.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --redact --no-banner || {
+    echo "gitleaks: staged secret detected — commit blocked."
+    exit 1
+  }
+else
+  echo "gitleaks not installed — skipping secret scan (brew install gitleaks)."
+fi
+
 pnpm lint-staged
 
 # Typecheck packages that have staged TypeScript/Vue changes

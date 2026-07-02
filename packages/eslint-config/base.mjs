@@ -1,12 +1,21 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import redos from 'eslint-plugin-redos';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
+  {
+    // ReDoS gate: flag catastrophic-backtracking regex. CI has no dedicated
+    // ReDoS ruleset, so this local rule is the primary control. Advisory
+    // ('warn') on adoption so it never breaks existing lint/CI; promote to
+    // 'error' once the pre-existing findings are triaged and cleared.
+    plugins: { redos },
+    rules: { 'redos/no-vulnerable': 'warn' },
+  },
   {
     rules: {
       '@typescript-eslint/no-unused-vars': [
