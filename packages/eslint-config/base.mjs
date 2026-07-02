@@ -17,6 +17,11 @@ export default [
     rules: { 'redos/no-vulnerable': 'warn' },
   },
   {
+    // Test files use controlled, in-repo fixtures — ReDoS analysis there is noise.
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**'],
+    rules: { 'redos/no-vulnerable': 'off' },
+  },
+  {
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',

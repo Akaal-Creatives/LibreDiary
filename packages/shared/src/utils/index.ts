@@ -8,14 +8,17 @@
 export function slugify(text: string): string {
   // Limit input length to prevent ReDoS on untrusted data
   const safe = text.slice(0, 500);
-  return safe
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+  return (
+    safe
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-+/, '')
+      // eslint-disable-next-line redos/no-vulnerable -- input bounded to 500 chars (safe field above); quadratic worst case ~250k ops
+      .replace(/-+$/, '')
+  );
 }
 
 /**
@@ -259,6 +262,7 @@ export function parseDuration(input: string): number | null {
   if (!trimmed) return null;
 
   // Try "Xh Ym Zs" format
+  // eslint-disable-next-line redos/no-vulnerable -- input bounded to 100 chars (trimmed.slice above); quadratic worst case ~10k ops
   const hmsMatch = trimmed.match(/^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+)s)?$/i);
   if (hmsMatch && (hmsMatch[1] || hmsMatch[2] || hmsMatch[3])) {
     const h = parseInt(hmsMatch[1] || '0', 10);
