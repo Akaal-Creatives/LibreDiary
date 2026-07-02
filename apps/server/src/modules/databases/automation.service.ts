@@ -2,7 +2,7 @@ import { prisma } from '../../lib/prisma.js';
 import { logAudit } from '../audit/audit.service.js';
 import { logger } from '../../lib/logger.js';
 import type { CreateAutomationInput, UpdateAutomationInput } from '@librediary/shared/schemas';
-import type { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
 
 const AUTOMATION_LIMIT = 50;
 

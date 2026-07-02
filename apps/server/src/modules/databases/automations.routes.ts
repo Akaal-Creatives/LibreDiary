@@ -4,10 +4,7 @@ import * as automationService from './automation.service.js';
 import { requireAuth } from '../auth/auth.middleware.js';
 import { requireOrgAccess } from '../organizations/organizations.middleware.js';
 import { getAuthUser, mapServiceError, type ErrorMap } from '../../utils/errors.js';
-import {
-  createAutomationSchema,
-  updateAutomationSchema,
-} from '@librediary/shared/schemas';
+import { createAutomationSchema, updateAutomationSchema } from '@librediary/shared/schemas';
 
 // ===========================================
 // PARAM TYPES
@@ -57,31 +54,25 @@ const errorMap: ErrorMap = {
 
 export async function automationsRoutes(fastify: FastifyInstance) {
   // List automations
-  fastify.get(
+  fastify.get<{ Params: DatabaseParams }>(
     '/:databaseId/automations',
     { preHandler: [requireAuth, requireOrgAccess] },
-    async (
-      req: FastifyRequest<{ Params: DatabaseParams }>,
-      reply: FastifyReply
-    ) => {
+    async (req: FastifyRequest<{ Params: DatabaseParams }>, reply: FastifyReply) => {
       try {
         const { orgId, databaseId } = req.params;
         const automations = await automationService.listAutomations(orgId, databaseId);
         return reply.send({ success: true, data: automations });
       } catch (err) {
-        return mapServiceError(reply, err, errorMap);
+        return mapServiceError(err, reply, errorMap);
       }
     }
   );
 
   // Create automation
-  fastify.post(
+  fastify.post<{ Params: DatabaseParams; Body: unknown }>(
     '/:databaseId/automations',
     { preHandler: [requireAuth, requireOrgAccess] },
-    async (
-      req: FastifyRequest<{ Params: DatabaseParams; Body: unknown }>,
-      reply: FastifyReply
-    ) => {
+    async (req: FastifyRequest<{ Params: DatabaseParams; Body: unknown }>, reply: FastifyReply) => {
       try {
         const { orgId, databaseId } = req.params;
         const user = getAuthUser(req);
@@ -94,13 +85,13 @@ export async function automationsRoutes(fastify: FastifyInstance) {
         );
         return reply.status(201).send({ success: true, data: automation });
       } catch (err) {
-        return mapServiceError(reply, err, errorMap);
+        return mapServiceError(err, reply, errorMap);
       }
     }
   );
 
   // Update automation
-  fastify.patch(
+  fastify.patch<{ Params: AutomationParams; Body: unknown }>(
     '/:databaseId/automations/:automationId',
     { preHandler: [requireAuth, requireOrgAccess] },
     async (
@@ -119,32 +110,29 @@ export async function automationsRoutes(fastify: FastifyInstance) {
         );
         return reply.send({ success: true, data: automation });
       } catch (err) {
-        return mapServiceError(reply, err, errorMap);
+        return mapServiceError(err, reply, errorMap);
       }
     }
   );
 
   // Delete automation
-  fastify.delete(
+  fastify.delete<{ Params: AutomationParams }>(
     '/:databaseId/automations/:automationId',
     { preHandler: [requireAuth, requireOrgAccess] },
-    async (
-      req: FastifyRequest<{ Params: AutomationParams }>,
-      reply: FastifyReply
-    ) => {
+    async (req: FastifyRequest<{ Params: AutomationParams }>, reply: FastifyReply) => {
       try {
         const { orgId, automationId } = req.params;
         const user = getAuthUser(req);
         await automationService.deleteAutomation(orgId, automationId, user.id);
         return reply.status(204).send();
       } catch (err) {
-        return mapServiceError(reply, err, errorMap);
+        return mapServiceError(err, reply, errorMap);
       }
     }
   );
 
   // Get automation logs
-  fastify.get(
+  fastify.get<{ Params: AutomationParams; Querystring: unknown }>(
     '/:databaseId/automations/:automationId/logs',
     { preHandler: [requireAuth, requireOrgAccess] },
     async (
@@ -157,7 +145,7 @@ export async function automationsRoutes(fastify: FastifyInstance) {
         const logs = await automationService.getAutomationLogs(orgId, automationId, limit);
         return reply.send({ success: true, data: logs });
       } catch (err) {
-        return mapServiceError(reply, err, errorMap);
+        return mapServiceError(err, reply, errorMap);
       }
     }
   );
