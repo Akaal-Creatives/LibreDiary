@@ -11,12 +11,16 @@ export function htmlToText(html: string): string {
   text = text.replace(/<\/(p|div|h[1-6]|li|tr|blockquote|pre|br\s*\/?)>/gi, '\n');
   text = text.replace(/<br\s*\/?>/gi, '\n');
 
-  // Strip all remaining HTML tags (loop to handle nested/malformed markup like <<script>script>)
+  // Strip all remaining HTML tags. [^<>] keeps each pass linear (avoids quadratic
+  // backtracking on input like "<<<<<"); the bounded loop still handles
+  // nested/malformed markup (e.g. <<script>script>) without an unbounded number
+  // of passes.
   let prev: string;
+  let guard = 0;
   do {
     prev = text;
-    text = text.replace(/<[^>]*>/g, '');
-  } while (text !== prev);
+    text = text.replace(/<[^<>]*>/g, '');
+  } while (text !== prev && ++guard < 50);
 
   // Decode common HTML entities (decode &amp; last to avoid double-unescaping e.g. &amp;lt; → &lt; → <)
   text = text

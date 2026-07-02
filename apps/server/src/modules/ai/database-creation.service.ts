@@ -53,10 +53,13 @@ export async function generateDatabaseSchema(description: string): Promise<Gener
   try {
     json = JSON.parse(stripped) as { name?: unknown; properties?: unknown[] };
   } catch {
-    // Fallback: extract the first {...} block (handles preamble/trailing explanatory text)
-    const braceMatch = stripped.match(/\{[\s\S]*\}/);
-    if (!braceMatch) throw new Error('DATABASE_CREATION_FAILED');
-    json = JSON.parse(braceMatch[0]) as { name?: unknown; properties?: unknown[] };
+    // Fallback: extract the first {...} block (handles preamble/trailing explanatory
+    // text). indexOf/lastIndexOf instead of a greedy /\{[\s\S]*\}/ to avoid quadratic
+    // backtracking on unbounded model output — equivalent (first '{' to last '}').
+    const start = stripped.indexOf('{');
+    const end = stripped.lastIndexOf('}');
+    if (start === -1 || end === -1 || end < start) throw new Error('DATABASE_CREATION_FAILED');
+    json = JSON.parse(stripped.slice(start, end + 1)) as { name?: unknown; properties?: unknown[] };
   }
 
   const schema: GeneratedSchema = {

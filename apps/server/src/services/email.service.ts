@@ -65,12 +65,15 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
 function stripHtml(html: string): string {
   let text = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n');
 
-  // Loop to handle nested/malformed markup like <<script>script>
+  // [^<>] keeps each pass linear (avoids quadratic backtracking on input like
+  // "<<<<<"); the bounded loop still handles nested/malformed markup like
+  // <<script>script>.
   let prev: string;
+  let guard = 0;
   do {
     prev = text;
-    text = text.replace(/<[^>]*>/g, '');
-  } while (text !== prev);
+    text = text.replace(/<[^<>]*>/g, '');
+  } while (text !== prev && ++guard < 50);
 
   // Decode entities (decode &amp; last to avoid double-unescaping)
   return text
