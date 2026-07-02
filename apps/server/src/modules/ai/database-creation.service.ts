@@ -47,7 +47,10 @@ export async function generateDatabaseSchema(description: string): Promise<Gener
   // Strip optional markdown code fences — models sometimes wrap JSON in ```json ... ``` despite the prompt.
   // Falls back to extracting the first {...} block if the simple fence strip still leaves non-JSON text.
   const trimmed = raw.choices[0].message.content.trim();
-  const stripped = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  // Strip markdown code fences. Leading fence via an anchored (linear) regex;
+  // trailing fence via endsWith/slice to avoid a ReDoS-prone `/\s*```$/`.
+  let stripped = trimmed.replace(/^```(?:json)?\s*/i, '');
+  if (stripped.endsWith('```')) stripped = stripped.slice(0, -3).trimEnd();
 
   let json: { name?: unknown; properties?: unknown[] };
   try {

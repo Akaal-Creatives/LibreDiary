@@ -34,22 +34,30 @@ watch(orgName, (name) => {
 });
 
 function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 63);
+  return (
+    text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      // Prior collapse leaves at most one leading/trailing '-', so single-char
+      // anchored strips suffice — and avoid the ReDoS-prone /^-+|-+$/.
+      .replace(/^-/, '')
+      .replace(/-$/, '')
+      .slice(0, 63)
+  );
 }
 
 // Validation
 const step1Valid = computed(() => siteName.value.trim().length > 0);
 
 const step2Valid = computed(() => {
+  const email = adminEmail.value;
+  // eslint-disable-next-line redos/no-vulnerable -- admin-only setup field, length-capped below (RFC 5321 max); not attacker-reachable
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return (
-    emailRegex.test(adminEmail.value) &&
+    email.length <= 254 &&
+    emailRegex.test(email) &&
     adminPassword.value.length >= 8 &&
     adminPassword.value === adminPasswordConfirm.value
   );
