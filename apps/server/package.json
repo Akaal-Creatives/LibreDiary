@@ -47,7 +47,7 @@
     "codemirror": "^6.0.2",
     "diff": "^9.0.0",
     "fastify": "^5.8.5",
-    "fastify-plugin": "^5.1.0",
+    "fastify-plugin": "^6.0.0",
     "file-type": "^22.0.1",
     "marked": "^18.0.2",
     "meilisearch": "^0.57.0",
