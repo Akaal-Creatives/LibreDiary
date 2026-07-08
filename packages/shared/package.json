@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "libsodium-wrappers-sumo": "^0.8.4",
-    "zod": "^3.24.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@librediary/eslint-config": "workspace:*",
