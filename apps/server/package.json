@@ -71,11 +71,11 @@
     "@types/nodemailer": "^8.0.0",
     "@types/tar": "^7.0.87",
     "@types/turndown": "^5.0.6",
-    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/coverage-v8": "^4.1.10",
     "prisma": "^7.8.0",
     "tsup": "^8.3.0",
-    "tsx": "^4.22.1",
+    "tsx": "^4.23.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.10"
   }
 }
