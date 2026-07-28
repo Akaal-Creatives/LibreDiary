@@ -34,7 +34,7 @@
     "@fastify/multipart": "^10.0.0",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/sensible": "^6.0.0",
-    "@fastify/static": "^9.1.3",
+    "@fastify/static": "^10.1.2",
     "@fastify/websocket": "^11.2.0",
     "@hocuspocus/server": "^4.0.0",
     "@librediary/shared": "workspace:*",
