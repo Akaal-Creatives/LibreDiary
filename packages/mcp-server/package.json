@@ -29,7 +29,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.28.0"
+    "@modelcontextprotocol/sdk": "^1.30.0"
   },
   "devDependencies": {
     "@librediary/eslint-config": "workspace:*",
