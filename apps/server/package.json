@@ -72,9 +72,9 @@
     "@types/tar": "^7.0.87",
     "@types/turndown": "^5.0.6",
     "@vitest/coverage-v8": "^4.1.6",
-    "prisma": "^7.8.0",
+    "prisma": "^7.10.0",
     "tsup": "^8.3.0",
-    "tsx": "^4.22.1",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
   }
